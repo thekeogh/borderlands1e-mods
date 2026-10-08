@@ -1,0 +1,257 @@
+{
+  "source": "pt3-economy-20261007-210503-996932.json",
+  "game": "Game.BL1E",
+  "weapon_level_bonuses": {
+    "gd_weap_combat_rifle.A_Weapon.WeaponType_combat_rifle": {
+      "BaseValueConstant": 2.0,
+      "BaseValueAttribute": {
+        "ref": "gd_Balance.LevelLimits.Proficiency_CombatRifle_LevelBonus",
+        "class": "AttributeDefinition"
+      },
+      "InitializationDefinition": null,
+      "BaseValueScaleConstant": 1.0
+    },
+    "gd_weap_sniper_rifle.A_Weapon.WeaponType_sniper_rifle": {
+      "BaseValueConstant": 2.0,
+      "BaseValueAttribute": {
+        "ref": "gd_Balance.LevelLimits.Proficiency_Sniper_LevelBonus",
+        "class": "AttributeDefinition"
+      },
+      "InitializationDefinition": null,
+      "BaseValueScaleConstant": 1.0
+    },
+    "gd_weap_repeater_pistol.A_Weapon.WeaponType_repeater_pistol": {
+      "BaseValueConstant": 1.0,
+      "BaseValueAttribute": {
+        "ref": "gd_Balance.LevelLimits.Proficiency_Pistol_LevelBonus",
+        "class": "AttributeDefinition"
+      },
+      "InitializationDefinition": null,
+      "BaseValueScaleConstant": 1.0
+    },
+    "gd_weap_patrol_smg.A_Weapon.WeaponType_patrol_smg": {
+      "BaseValueConstant": 2.0,
+      "BaseValueAttribute": {
+        "ref": "gd_Balance.LevelLimits.Proficiency_SMG_LevelBonus",
+        "class": "AttributeDefinition"
+      },
+      "InitializationDefinition": null,
+      "BaseValueScaleConstant": 1.0
+    },
+    "gd_weap_rocket_launcher.A_Weapon.WeaponType_rocket_launcher": {
+      "BaseValueConstant": 2.0,
+      "BaseValueAttribute": {
+        "ref": "gd_Balance.LevelLimits.Proficiency_RocketLauncer_LevelBonus",
+        "class": "AttributeDefinition"
+      },
+      "InitializationDefinition": null,
+      "BaseValueScaleConstant": 1.0
+    },
+    "WillowGame.Default__WeaponTypeDefinition": {
+      "BaseValueConstant": 2.0,
+      "BaseValueAttribute": null,
+      "InitializationDefinition": null,
+      "BaseValueScaleConstant": 1.0
+    },
+    "gd_weap_combat_shotgun.A_Weapon.WeaponType_combat_shotgun": {
+      "BaseValueConstant": 2.0,
+      "BaseValueAttribute": {
+        "ref": "gd_Balance.LevelLimits.Proficiency_Shotgun_LevelBonus",
+        "class": "AttributeDefinition"
+      },
+      "InitializationDefinition": null,
+      "BaseValueScaleConstant": 1.0
+    }
+  },
+  "proficiency_resolvers": {
+    "gd_Balance.LevelLimits.Proficiency_CombatRifle_LevelBonus:SimpleMathValueResolver_0": {
+      "Arg1Option": 1,
+      "Operand": 0,
+      "Arg1Attribute": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 0.0,
+          "BaseValueAttribute": {
+            "ref": "gd_skills_common.SkillGrades.SkillGrade_WeapProficiency_CombatRifle",
+            "class": "AttributeDefinition"
+          },
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 0.25
+        }
+      },
+      "Argument": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        }
+      }
+    },
+    "gd_Balance.LevelLimits.Proficiency_Sniper_LevelBonus:SimpleMathValueResolver_0": {
+      "Arg1Option": 1,
+      "Operand": 0,
+      "Arg1Attribute": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 0.0,
+          "BaseValueAttribute": {
+            "ref": "gd_skills_common.SkillGrades.SkillGrade_WeapProficiency_Sniper",
+            "class": "AttributeDefinition"
+          },
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 0.25
+        }
+      },
+      "Argument": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        }
+      }
+    },
+    "gd_Balance.LevelLimits.Proficiency_Pistol_LevelBonus:SimpleMathValueResolver_0": {
+      "Arg1Option": 1,
+      "Operand": 0,
+      "Arg1Attribute": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 0.0,
+          "BaseValueAttribute": {
+            "ref": "gd_skills_common.SkillGrades.SkillGrade_WeapProficiency_Pistol",
+            "class": "AttributeDefinition"
+          },
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 0.25
+        }
+      },
+      "Argument": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        }
+      }
+    },
+    "gd_Balance.LevelLimits.Proficiency_SMG_LevelBonus:SimpleMathValueResolver_0": {
+      "Arg1Option": 1,
+      "Operand": 0,
+      "Arg1Attribute": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 0.0,
+          "BaseValueAttribute": {
+            "ref": "gd_skills_common.SkillGrades.SkillGrade_WeapProficiency_SMG",
+            "class": "AttributeDefinition"
+          },
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 0.25
+        }
+      },
+      "Argument": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        }
+      }
+    },
+    "gd_Balance.LevelLimits.Proficiency_RocketLauncer_LevelBonus:SimpleMathValueResolver_0": {
+      "Arg1Option": 1,
+      "Operand": 0,
+      "Arg1Attribute": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 0.0,
+          "BaseValueAttribute": {
+            "ref": "gd_skills_common.SkillGrades.SkillGrade_WeapProficiency_RocketLauncher",
+            "class": "AttributeDefinition"
+          },
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 0.25
+        }
+      },
+      "Argument": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        }
+      }
+    }
+  },
+  "functions": {
+    "Engine.WillowInventory:GetControllerPlayerExpLevelRequiredToUse": {
+      "flags": 131330,
+      "fields": [
+        {
+          "name": "OtherController",
+          "type": "ObjectProperty",
+          "PropertyFlags": 128,
+          "ArrayDim": 1,
+          "PropertyClass": "Engine.Controller"
+        },
+        {
+          "name": "ReturnValue",
+          "type": "IntProperty",
+          "PropertyFlags": 1408,
+          "ArrayDim": 1
+        },
+        {
+          "name": "InventoryDefinition",
+          "type": "ObjectProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1,
+          "PropertyClass": "Engine.WillowInventoryDefinition"
+        },
+        {
+          "name": "LevelBonus",
+          "type": "IntProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1
+        },
+        {
+          "name": "rslt",
+          "type": "IntProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1
+        }
+      ]
+    },
+    "Engine.WillowInventory:GetPlayerExpLevelRequiredToUse": {
+      "flags": 131330,
+      "fields": [
+        {
+          "name": "Other",
+          "type": "ObjectProperty",
+          "PropertyFlags": 128,
+          "ArrayDim": 1,
+          "PropertyClass": "Engine.Pawn"
+        },
+        {
+          "name": "ReturnValue",
+          "type": "IntProperty",
+          "PropertyFlags": 1408,
+          "ArrayDim": 1
+        },
+        {
+          "name": "OtherController",
+          "type": "ObjectProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1,
+          "PropertyClass": "Engine.Controller"
+        }
+      ]
+    }
+  }
+}

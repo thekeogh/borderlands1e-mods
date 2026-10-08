@@ -1,0 +1,15 @@
+[project]
+name = "ConsistentWeaponLevels"
+version = "1.0.0"
+authors = [{ name = "keogh" }]
+description = "Shows the ordinary weapon level on equipped and comparison cards, without the proficiency-based reduction."
+
+[tool.sdkmod]
+name = "Consistent Weapon Levels"
+supported_games = ["BL1E"]
+coop_support = "ClientSide"
+auto_enable = true
+
+[tool.sdkmod.license]
+name = "MIT"
+url = "https://opensource.org/licenses/MIT"
