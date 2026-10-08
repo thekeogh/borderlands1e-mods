@@ -1,0 +1,19 @@
+[project]
+name = "AutopickupBL1E"
+version = "2.0.0"
+authors = [{ name = "keogh" }]
+description = """\
+Automatically collects nearby ammo, currency, health and quest tally pickups. \
+Uses native pickup handling and cleans stale targets to address blocked \
+container and station interactions in GOTY Enhanced.
+"""
+
+[tool.sdkmod]
+name = "AutopickupBL1E"
+supported_games = ["BL1", "BL1E"]
+coop_support = "Unknown"
+auto_enable = true
+
+[tool.sdkmod.license]
+name = "GPL3"
+url = "https://choosealicense.com/licenses/gpl-3.0/"
