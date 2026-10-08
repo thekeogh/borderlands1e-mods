@@ -1,0 +1,13 @@
+[project]
+name = "Playthrough 3"
+version = "2.0.0"
+authors = [{ name = "keogh" }]
+description = "Adds a third playthrough with level-1 cash prices and rewards. Includes BL1 Enhanced economy support."
+
+[tool.sdkmod]
+name = "Playthrough 3"
+mod_type = "Standard" # or "Library"
+supported_games = ["BL1", "BL1E"]
+coop_support = "Unknown"
+auto_enable = true
+license = {name = "GPL3", url = "https://choosealicense.com/licenses/gpl-3.0/" }

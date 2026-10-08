@@ -1,0 +1,1901 @@
+{
+  "source": "logs/pt3-economy-20261007-202603-978502.json",
+  "game": "Game.BL1E",
+  "context": {
+    "playthrough_index": 2,
+    "character_level": 69,
+    "wallet": 3262489,
+    "map": "arid_p"
+  },
+  "definitions": {
+    "gd_Balance_Inventory.Commerce.WeaponItemValue": {
+      "class": "AttributeInitializationDefinition",
+      "fields": {
+        "BaseValueMode": 0,
+        "RoundingMode": 0,
+        "ValueFormula": {
+          "struct": "Engine.AttributeInitializationDefinition:BalanceFormula",
+          "fields": {
+            "bEnabled": true,
+            "Formula": "",
+            "Multiplier": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": {
+                  "ref": "d_attributes.Inventory.InventoryPartCashValueModifierTotal",
+                  "class": "AttributeDefinition"
+                },
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Level": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 1.159999966621399,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Power": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": {
+                  "ref": "d_attributes.Inventory.UnownedItemLevel",
+                  "class": "AttributeDefinition"
+                },
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Offset": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "ConditionalInitialization": {
+          "struct": "Engine.AttributeInitializationDefinition:ConditionalInitializationExpressions",
+          "fields": {
+            "bEnabled": false,
+            "Note": "",
+            "ConditionalExpressionList": [],
+            "DefaultBaseValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "RandomVariance": {
+          "struct": "Engine.AttributeInitializationDefinition:Variance",
+          "fields": {
+            "bEnabled": false,
+            "bUseIntegerRandomization": false,
+            "LowerBound": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "UpperBound": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "RangeRestriction": {
+          "struct": "Engine.AttributeInitializationDefinition:Range",
+          "fields": {
+            "bEnableMinValueRestriction": true,
+            "MinValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 1.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "bEnableMaxValueRestriction": false,
+            "MaxValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        }
+      }
+    },
+    "gd_Balance_Inventory.Commerce.CurrencyCreditsValue": {
+      "class": "AttributeInitializationDefinition",
+      "fields": {
+        "BaseValueMode": 0,
+        "RoundingMode": 1,
+        "ValueFormula": {
+          "struct": "Engine.AttributeInitializationDefinition:BalanceFormula",
+          "fields": {
+            "bEnabled": true,
+            "Formula": "",
+            "Multiplier": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 1.0,
+                "BaseValueAttribute": {
+                  "ref": "d_attributes.Inventory.InventoryPartCashValueModifierTotal",
+                  "class": "AttributeDefinition"
+                },
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Level": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 1.1200000047683716,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Power": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 1.0,
+                "BaseValueAttribute": {
+                  "ref": "d_attributes.Inventory.CurrencyItemLevel",
+                  "class": "AttributeDefinition"
+                },
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Offset": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "ConditionalInitialization": {
+          "struct": "Engine.AttributeInitializationDefinition:ConditionalInitializationExpressions",
+          "fields": {
+            "bEnabled": false,
+            "Note": "",
+            "ConditionalExpressionList": [],
+            "DefaultBaseValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "RandomVariance": {
+          "struct": "Engine.AttributeInitializationDefinition:Variance",
+          "fields": {
+            "bEnabled": false,
+            "bUseIntegerRandomization": false,
+            "LowerBound": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "UpperBound": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "RangeRestriction": {
+          "struct": "Engine.AttributeInitializationDefinition:Range",
+          "fields": {
+            "bEnableMinValueRestriction": true,
+            "MinValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 1.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "bEnableMaxValueRestriction": false,
+            "MaxValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        }
+      }
+    },
+    "gd_Balance.Missions.MissionCreditRewardFormula": {
+      "class": "AttributeInitializationDefinition",
+      "fields": {
+        "BaseValueMode": 0,
+        "RoundingMode": 0,
+        "ValueFormula": {
+          "struct": "Engine.AttributeInitializationDefinition:BalanceFormula",
+          "fields": {
+            "bEnabled": true,
+            "Formula": "",
+            "Multiplier": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 250.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Level": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 1.1200000047683716,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Power": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 1.0,
+                "BaseValueAttribute": {
+                  "ref": "d_attributes.Balance.GameStage",
+                  "class": "AttributeDefinition"
+                },
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Offset": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "ConditionalInitialization": {
+          "struct": "Engine.AttributeInitializationDefinition:ConditionalInitializationExpressions",
+          "fields": {
+            "bEnabled": false,
+            "Note": "",
+            "ConditionalExpressionList": [],
+            "DefaultBaseValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "RandomVariance": {
+          "struct": "Engine.AttributeInitializationDefinition:Variance",
+          "fields": {
+            "bEnabled": false,
+            "bUseIntegerRandomization": false,
+            "LowerBound": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "UpperBound": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "RangeRestriction": {
+          "struct": "Engine.AttributeInitializationDefinition:Range",
+          "fields": {
+            "bEnableMinValueRestriction": true,
+            "MinValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 1.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "bEnableMaxValueRestriction": false,
+            "MaxValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        }
+      }
+    },
+    "gd_globals.Skills.CostToResetSkillPoints": {
+      "class": "AttributeInitializationDefinition",
+      "fields": {
+        "BaseValueMode": 0,
+        "RoundingMode": 0,
+        "ValueFormula": {
+          "struct": "Engine.AttributeInitializationDefinition:BalanceFormula",
+          "fields": {
+            "bEnabled": true,
+            "Formula": "",
+            "Multiplier": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 115.65999603271484,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Level": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": {
+                  "ref": "d_attributes.ExperienceResourcePool.PlayerExperienceLevel",
+                  "class": "AttributeDefinition"
+                },
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Power": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 1.1399999856948853,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Offset": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "ConditionalInitialization": {
+          "struct": "Engine.AttributeInitializationDefinition:ConditionalInitializationExpressions",
+          "fields": {
+            "bEnabled": false,
+            "Note": "",
+            "ConditionalExpressionList": [],
+            "DefaultBaseValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "RandomVariance": {
+          "struct": "Engine.AttributeInitializationDefinition:Variance",
+          "fields": {
+            "bEnabled": false,
+            "bUseIntegerRandomization": false,
+            "LowerBound": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "UpperBound": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "RangeRestriction": {
+          "struct": "Engine.AttributeInitializationDefinition:Range",
+          "fields": {
+            "bEnableMinValueRestriction": false,
+            "MinValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "bEnableMaxValueRestriction": false,
+            "MaxValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        }
+      }
+    },
+    "gd_Balance_Inventory.Commerce.CostToResetSkillPoints": {
+      "class": "AttributeInitializationDefinition",
+      "fields": {
+        "BaseValueMode": 0,
+        "RoundingMode": 0,
+        "ValueFormula": {
+          "struct": "Engine.AttributeInitializationDefinition:BalanceFormula",
+          "fields": {
+            "bEnabled": true,
+            "Formula": "",
+            "Multiplier": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 600.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Level": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 1.2000000476837158,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Power": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": {
+                  "ref": "d_attributes.ExperienceResourcePool.PlayerExperienceLevel",
+                  "class": "AttributeDefinition"
+                },
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Offset": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "ConditionalInitialization": {
+          "struct": "Engine.AttributeInitializationDefinition:ConditionalInitializationExpressions",
+          "fields": {
+            "bEnabled": false,
+            "Note": "",
+            "ConditionalExpressionList": [],
+            "DefaultBaseValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "RandomVariance": {
+          "struct": "Engine.AttributeInitializationDefinition:Variance",
+          "fields": {
+            "bEnabled": false,
+            "bUseIntegerRandomization": false,
+            "LowerBound": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "UpperBound": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "RangeRestriction": {
+          "struct": "Engine.AttributeInitializationDefinition:Range",
+          "fields": {
+            "bEnableMinValueRestriction": false,
+            "MinValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "bEnableMaxValueRestriction": false,
+            "MaxValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        }
+      }
+    },
+    "gd_Balance_Inventory.Commerce.DeathPenaltyCap": {
+      "class": "AttributeInitializationDefinition",
+      "fields": {
+        "BaseValueMode": 0,
+        "RoundingMode": 0,
+        "ValueFormula": {
+          "struct": "Engine.AttributeInitializationDefinition:BalanceFormula",
+          "fields": {
+            "bEnabled": true,
+            "Formula": "",
+            "Multiplier": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 100.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Level": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 1.309999942779541,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Power": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": {
+                  "ref": "d_attributes.ExperienceResourcePool.PlayerExperienceLevel",
+                  "class": "AttributeDefinition"
+                },
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "Offset": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "ConditionalInitialization": {
+          "struct": "Engine.AttributeInitializationDefinition:ConditionalInitializationExpressions",
+          "fields": {
+            "bEnabled": false,
+            "Note": "",
+            "ConditionalExpressionList": [],
+            "DefaultBaseValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "RandomVariance": {
+          "struct": "Engine.AttributeInitializationDefinition:Variance",
+          "fields": {
+            "bEnabled": false,
+            "bUseIntegerRandomization": false,
+            "LowerBound": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "UpperBound": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        },
+        "RangeRestriction": {
+          "struct": "Engine.AttributeInitializationDefinition:Range",
+          "fields": {
+            "bEnableMinValueRestriction": false,
+            "MinValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "bEnableMaxValueRestriction": false,
+            "MaxValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            }
+          }
+        }
+      }
+    },
+    "d_attributes.Inventory.UnownedItemLevel": {
+      "class": "AttributeDefinition",
+      "fields": {
+        "Attribute": "ExpLevel"
+      }
+    },
+    "d_attributes.Inventory.CurrencyItemLevel": {
+      "class": "AttributeDefinition",
+      "fields": {
+        "Attribute": "ExpLevel"
+      }
+    },
+    "d_attributes.Inventory.InventoryPartCashValueModifierTotal": {
+      "class": "AttributeDefinition",
+      "fields": {
+        "Attribute": "CashValueModifierTotal"
+      }
+    },
+    "d_attributes.Balance.GameStage": {
+      "class": "AttributeDefinition",
+      "fields": {
+        "Attribute": "None"
+      }
+    },
+    "d_attributes.ExperienceResourcePool.PlayerExperienceLevel": {
+      "class": "AttributeDefinition",
+      "fields": {
+        "Attribute": "ExpLevel"
+      }
+    },
+    "gd_shields.A_Item.Item_Shield": {
+      "class": "ItemDefinition",
+      "fields": {
+        "AttributeSlotEffects": [],
+        "AttributeSlotUpgrades": [],
+        "CashValue": {
+          "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+          "fields": {
+            "BaseValueConstant": 0.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": {
+              "ref": "gd_Balance_Inventory.Commerce.WeaponItemValue",
+              "class": "AttributeInitializationDefinition"
+            },
+            "BaseValueScaleConstant": 1.0
+          }
+        },
+        "BaseCashValueModifier": 60
+      }
+    },
+    "gd_ammodrops.Shop.AmmoShop_Grenade_Protean": {
+      "class": "ItemDefinition",
+      "fields": {
+        "AttributeSlotEffects": [],
+        "AttributeSlotUpgrades": [],
+        "CashValue": {
+          "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+          "fields": {
+            "BaseValueConstant": 14.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": null,
+            "BaseValueScaleConstant": 1.0
+          }
+        },
+        "BaseCashValueModifier": 0
+      }
+    },
+    "gd_HealthDrops.A_Item.HealthVial_5": {
+      "class": "ItemDefinition",
+      "fields": {
+        "AttributeSlotEffects": [],
+        "AttributeSlotUpgrades": [],
+        "CashValue": {
+          "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+          "fields": {
+            "BaseValueConstant": 75.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": null,
+            "BaseValueScaleConstant": 1.0
+          }
+        },
+        "BaseCashValueModifier": 0
+      }
+    },
+    "gd_currency.A_Item.Currency": {
+      "class": "ItemDefinition",
+      "fields": {
+        "AttributeSlotEffects": [
+          {
+            "struct": "WillowGame.ItemDefinition:ItemAttributeSlotEffectData",
+            "fields": {
+              "SlotName": "BaseCredits",
+              "AttributeToModify": {
+                "ref": "d_attributes.Inventory.PlayerCurrencyOnHand",
+                "class": "AttributeDefinition"
+              },
+              "ConstraintAttribute": null,
+              "ModifierType": 1,
+              "BaseModifierValue": {
+                "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                "fields": {
+                  "BaseValueConstant": 0.0,
+                  "BaseValueAttribute": null,
+                  "InitializationDefinition": {
+                    "ref": "gd_Balance_Inventory.Commerce.CurrencyCreditsValue",
+                    "class": "AttributeInitializationDefinition"
+                  },
+                  "BaseValueScaleConstant": 1.0
+                }
+              },
+              "PerGradeUpgrade": {
+                "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                "fields": {
+                  "BaseValueConstant": 0.0,
+                  "BaseValueAttribute": null,
+                  "InitializationDefinition": {
+                    "ref": "gd_Balance_Inventory.Commerce.CurrencyCreditsValue",
+                    "class": "AttributeInitializationDefinition"
+                  },
+                  "BaseValueScaleConstant": 0.10000000149011612
+                }
+              },
+              "bIncludeAlliesAsTarget": false,
+              "TargetInstanceDataName": "None"
+            }
+          }
+        ],
+        "AttributeSlotUpgrades": [
+          {
+            "struct": "WillowGame.ItemDefinition:ItemAttributeSlotUpgradeData",
+            "fields": {
+              "SlotName": "BaseCredits",
+              "GradeIncrease": 0,
+              "bActivateSlot": true
+            }
+          }
+        ],
+        "CashValue": {
+          "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+          "fields": {
+            "BaseValueConstant": 0.0,
+            "BaseValueAttribute": {
+              "ref": "gd_currency.Attributes.AttrSlotValue_BaseCredits",
+              "class": "AttributeDefinition"
+            },
+            "InitializationDefinition": null,
+            "BaseValueScaleConstant": 1.0
+          }
+        },
+        "BaseCashValueModifier": 1
+      }
+    }
+  },
+  "inventory_cases": [
+    {
+      "path": "Loader.TheWorld:PersistentLevel.WillowEquipAbleItem_6",
+      "class": "WillowEquipAbleItem",
+      "CashValue": 1248503,
+      "ExpLevel": 70,
+      "DefinitionData": {
+        "struct": "WillowGame.WillowItemTypes:ItemDefinitionData",
+        "fields": {
+          "ItemDefinition": {
+            "ref": "gd_shields.A_Item.Item_Shield",
+            "class": "ItemDefinition"
+          },
+          "BalanceDefinition": {
+            "ref": "gd_itemgrades.Gear.ItemGrade_Gear_Shield",
+            "class": "InventoryBalanceDefinition"
+          },
+          "ManufacturerDefinition": {
+            "ref": "gd_manufacturers.Manufacturers.tediore",
+            "class": "ManufacturerDefinition"
+          },
+          "ManufacturerGradeIndex": 4587525,
+          "BodyItemPartDefinition": {
+            "ref": "gd_shields.Body.body1",
+            "class": "ItemPartDefinition"
+          },
+          "LeftSideItemPartDefinition": {
+            "ref": "gd_shields.LeftSide.leftside1",
+            "class": "ItemPartDefinition"
+          },
+          "RightSideItemPartDefinition": {
+            "ref": "gd_shields.RightSide.rightside1",
+            "class": "ItemPartDefinition"
+          },
+          "MaterialItemPartDefinition": {
+            "ref": "gd_shields.ManufacturerMaterials.Material_Tediore_1",
+            "class": "ItemPartDefinition"
+          },
+          "PrefixItemNamePartDefinition": {
+            "ref": "gd_shields.Prefix.Prefix_Standard",
+            "class": "ItemNamePartDefinition"
+          },
+          "TitleItemNamePartDefinition": {
+            "ref": "gd_shields.Title.Title_Tediore1_HealingShield",
+            "class": "ItemNamePartDefinition"
+          }
+        }
+      },
+      "AttributeSlots": [
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        },
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        },
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        },
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        },
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        },
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        }
+      ],
+      "Quantity": 1,
+      "inventory_definition": {
+        "ref": "gd_shields.A_Item.Item_Shield",
+        "class": "ItemDefinition"
+      }
+    },
+    {
+      "path": "Loader.TheWorld:PersistentLevel.WillowUsableItem_1",
+      "class": "WillowUsableItem",
+      "CashValue": 75,
+      "ExpLevel": 50,
+      "DefinitionData": {
+        "struct": "WillowGame.WillowItemTypes:ItemDefinitionData",
+        "fields": {
+          "ItemDefinition": {
+            "ref": "gd_HealthDrops.A_Item.HealthVial_5",
+            "class": "ItemDefinition"
+          },
+          "BalanceDefinition": {
+            "ref": "gd_itemgrades.Ammo.ItemGrade_HealthDrops",
+            "class": "InventoryBalanceDefinition"
+          },
+          "ManufacturerDefinition": {
+            "ref": "gd_manufacturers.Manufacturers.Stock",
+            "class": "ManufacturerDefinition"
+          },
+          "ManufacturerGradeIndex": 4,
+          "BodyItemPartDefinition": null,
+          "LeftSideItemPartDefinition": null,
+          "RightSideItemPartDefinition": null,
+          "MaterialItemPartDefinition": null,
+          "PrefixItemNamePartDefinition": null,
+          "TitleItemNamePartDefinition": null
+        }
+      },
+      "AttributeSlots": [
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        },
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        },
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        },
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        },
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        },
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        }
+      ],
+      "Quantity": 1,
+      "inventory_definition": {
+        "ref": "gd_HealthDrops.A_Item.HealthVial_5",
+        "class": "ItemDefinition"
+      }
+    },
+    {
+      "path": "Loader.TheWorld:PersistentLevel.WillowUsableItem_9",
+      "class": "WillowUsableItem",
+      "CashValue": 14,
+      "ExpLevel": 10,
+      "DefinitionData": {
+        "struct": "WillowGame.WillowItemTypes:ItemDefinitionData",
+        "fields": {
+          "ItemDefinition": {
+            "ref": "gd_ammodrops.Shop.AmmoShop_Grenade_Protean",
+            "class": "ItemDefinition"
+          },
+          "BalanceDefinition": {
+            "ref": "gd_itemgrades.Ammo_Shop.ItemGrade_AmmoShop_Grenade",
+            "class": "InventoryBalanceDefinition"
+          },
+          "ManufacturerDefinition": {
+            "ref": "gd_manufacturers.Manufacturers.Stock",
+            "class": "ManufacturerDefinition"
+          },
+          "ManufacturerGradeIndex": 1,
+          "BodyItemPartDefinition": null,
+          "LeftSideItemPartDefinition": null,
+          "RightSideItemPartDefinition": null,
+          "MaterialItemPartDefinition": null,
+          "PrefixItemNamePartDefinition": null,
+          "TitleItemNamePartDefinition": null
+        }
+      },
+      "AttributeSlots": [
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        },
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        },
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        },
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        },
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        },
+        {
+          "struct": "WillowGame.WillowItem:ItemAttributeSlotData",
+          "fields": {
+            "SlotName": "None",
+            "bActivated": false,
+            "bIncludeAlliesAsTarget": false,
+            "bIncludeInModifierText": false,
+            "TargetInstanceDataName": "None",
+            "EffectGrade": 0,
+            "AttributeToModify": null,
+            "ConstraintAttribute": null,
+            "ModifierType": 0,
+            "BaseModifierValue": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "PerGradeUpgrade": {
+              "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+              "fields": {
+                "BaseValueConstant": 0.0,
+                "BaseValueAttribute": null,
+                "InitializationDefinition": null,
+                "BaseValueScaleConstant": 1.0
+              }
+            },
+            "ComputedModifierValue": 0.0
+          }
+        }
+      ],
+      "Quantity": 1,
+      "inventory_definition": {
+        "ref": "gd_ammodrops.Shop.AmmoShop_Grenade_Protean",
+        "class": "ItemDefinition"
+      }
+    }
+  ],
+  "native_functions": {
+    "Engine.WillowInventory:ComputeCashValue": {
+      "flags": 131074,
+      "fields": [
+        {
+          "name": "ReturnValue",
+          "type": "IntProperty",
+          "PropertyFlags": 1408,
+          "ArrayDim": 1
+        },
+        {
+          "name": "rslt",
+          "type": "IntProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1
+        }
+      ]
+    },
+    "WillowGame.WillowItem:InitializeAttributeSlots": {
+      "flags": 525313,
+      "fields": [
+        {
+          "name": "bIncludeNameParts",
+          "type": "BoolProperty",
+          "PropertyFlags": 128,
+          "ArrayDim": 1
+        }
+      ]
+    },
+    "WillowGame.WillowVendingMachine:GetResetCost": {
+      "flags": 131330,
+      "fields": [
+        {
+          "name": "ReturnValue",
+          "type": "IntProperty",
+          "PropertyFlags": 1408,
+          "ArrayDim": 1
+        },
+        {
+          "name": "rslt",
+          "type": "IntProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1
+        },
+        {
+          "name": "GlobalsDef",
+          "type": "ObjectProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1,
+          "PropertyClass": "WillowGame.GlobalsDefinition"
+        }
+      ]
+    },
+    "WillowGame.WillowVendingMachine:PlayerBuyBackItem": {
+      "flags": 131330,
+      "fields": [
+        {
+          "name": "Item",
+          "type": "ObjectProperty",
+          "PropertyFlags": 128,
+          "ArrayDim": 1,
+          "PropertyClass": "Engine.WillowInventory"
+        },
+        {
+          "name": "WPC",
+          "type": "ObjectProperty",
+          "PropertyFlags": 128,
+          "ArrayDim": 1,
+          "PropertyClass": "WillowGame.WillowPlayerController"
+        },
+        {
+          "name": "ReturnValue",
+          "type": "BoolProperty",
+          "PropertyFlags": 1408,
+          "ArrayDim": 1
+        },
+        {
+          "name": "InvPawn",
+          "type": "ObjectProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1,
+          "PropertyClass": "Engine.Pawn"
+        },
+        {
+          "name": "InvManager",
+          "type": "ObjectProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1,
+          "PropertyClass": "WillowGame.WillowInventoryManager"
+        }
+      ]
+    },
+    "WillowGame.WillowVendingMachine:PlayerBuyItem": {
+      "flags": 147714,
+      "fields": [
+        {
+          "name": "Item",
+          "type": "ObjectProperty",
+          "PropertyFlags": 128,
+          "ArrayDim": 1,
+          "PropertyClass": "Engine.WillowInventory"
+        },
+        {
+          "name": "WPC",
+          "type": "ObjectProperty",
+          "PropertyFlags": 128,
+          "ArrayDim": 1,
+          "PropertyClass": "WillowGame.WillowPlayerController"
+        },
+        {
+          "name": "Quantity",
+          "type": "IntProperty",
+          "PropertyFlags": 144,
+          "ArrayDim": 1
+        },
+        {
+          "name": "bIsFeaturedItem",
+          "type": "BoolProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1
+        },
+        {
+          "name": "LegendaryCount",
+          "type": "IntProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1
+        },
+        {
+          "name": "PickedUpCount",
+          "type": "IntProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1
+        }
+      ]
+    },
+    "WillowGame.WillowVendingMachine:PlayerSellItem": {
+      "flags": 147714,
+      "fields": [
+        {
+          "name": "Item",
+          "type": "ObjectProperty",
+          "PropertyFlags": 128,
+          "ArrayDim": 1,
+          "PropertyClass": "Engine.WillowInventory"
+        },
+        {
+          "name": "WPC",
+          "type": "ObjectProperty",
+          "PropertyFlags": 128,
+          "ArrayDim": 1,
+          "PropertyClass": "WillowGame.WillowPlayerController"
+        },
+        {
+          "name": "Quantity",
+          "type": "IntProperty",
+          "PropertyFlags": 144,
+          "ArrayDim": 1
+        },
+        {
+          "name": "InvPawn",
+          "type": "ObjectProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1,
+          "PropertyClass": "Engine.Pawn"
+        },
+        {
+          "name": "InvManager",
+          "type": "ObjectProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1,
+          "PropertyClass": "WillowGame.WillowInventoryManager"
+        }
+      ]
+    },
+    "WillowGame.WillowVendingMachine:GetSellingPriceForInventory": {
+      "flags": 148736,
+      "fields": [
+        {
+          "name": "InventoryForSale",
+          "type": "ObjectProperty",
+          "PropertyFlags": 128,
+          "ArrayDim": 1,
+          "PropertyClass": "Engine.WillowInventory"
+        },
+        {
+          "name": "Quantity",
+          "type": "IntProperty",
+          "PropertyFlags": 144,
+          "ArrayDim": 1
+        },
+        {
+          "name": "ReturnValue",
+          "type": "IntProperty",
+          "PropertyFlags": 1408,
+          "ArrayDim": 1
+        }
+      ]
+    },
+    "WillowGame.VendingMachineGFxMovie:SetPrice": {
+      "flags": 132096,
+      "fields": [
+        {
+          "name": "WP",
+          "type": "ObjectProperty",
+          "PropertyFlags": 128,
+          "ArrayDim": 1,
+          "PropertyClass": "WillowGame.WillowPawn"
+        },
+        {
+          "name": "Thing",
+          "type": "ObjectProperty",
+          "PropertyFlags": 128,
+          "ArrayDim": 1,
+          "PropertyClass": "Engine.WillowInventory"
+        },
+        {
+          "name": "CardIndex",
+          "type": "IntProperty",
+          "PropertyFlags": 128,
+          "ArrayDim": 1
+        }
+      ]
+    },
+    "WillowGame.WillowPlayerController:OnExpLevelChange": {
+      "flags": 147458,
+      "fields": [
+        {
+          "name": "bNoSpecialEffects",
+          "type": "BoolProperty",
+          "PropertyFlags": 144,
+          "ArrayDim": 1
+        },
+        {
+          "name": "WillowPRI",
+          "type": "ObjectProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1,
+          "PropertyClass": "WillowGame.WillowPlayerReplicationInfo"
+        },
+        {
+          "name": "WPawn",
+          "type": "ObjectProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1,
+          "PropertyClass": "WillowGame.WillowPawn"
+        },
+        {
+          "name": "BodyInterface",
+          "type": "InterfaceProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1
+        },
+        {
+          "name": "OldExpLevel",
+          "type": "IntProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1
+        }
+      ]
+    },
+    "WillowGame.MissionDefinition:GetCreditReward": {
+      "flags": 131074,
+      "fields": [
+        {
+          "name": "InWPC",
+          "type": "ObjectProperty",
+          "PropertyFlags": 128,
+          "ArrayDim": 1,
+          "PropertyClass": "WillowGame.WillowPlayerController"
+        },
+        {
+          "name": "ReturnValue",
+          "type": "IntProperty",
+          "PropertyFlags": 1408,
+          "ArrayDim": 1
+        },
+        {
+          "name": "GlobalsDef",
+          "type": "ObjectProperty",
+          "PropertyFlags": 0,
+          "ArrayDim": 1,
+          "PropertyClass": "WillowGame.GlobalsDefinition"
+        }
+      ]
+    }
+  }
+}

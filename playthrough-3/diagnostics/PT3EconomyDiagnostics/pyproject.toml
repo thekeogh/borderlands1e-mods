@@ -1,0 +1,12 @@
+[project]
+name = "PT3EconomyDiagnostics"
+version = "2.0.0"
+description = "Read-only pricing data export for investigating PT3 on BL1 Enhanced."
+authors = [{ name = "keogh" }]
+
+[tool.sdkmod]
+name = "PT3 Economy Diagnostics"
+mod_type = "Standard"
+supported_games = ["BL1", "BL1E"]
+coop_support = "Unknown"
+auto_enable = true

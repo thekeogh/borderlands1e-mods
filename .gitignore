@@ -1,0 +1,6 @@
+reference/
+.reference/
+.research/
+logs/
+.DS_Store
+Thumbs.db
