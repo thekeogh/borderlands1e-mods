@@ -28,8 +28,8 @@ class Hook:
 
 def load_mod():
     module = ModuleType("ConsistentWeaponLevels")
-    module.__version__ = "1.0.0"
-    module.__version_info__ = (1, 0, 0)
+    module.__version__ = "1.0.1"
+    module.__version_info__ = (1, 0, 1)
     base = ModuleType("mods_base")
     base.SETTINGS_DIR = ROOT / "test-settings"
     base.get_pc = lambda: None
@@ -83,11 +83,11 @@ class Weapon:
 
     def native(self, argument):
         self.calls.append(argument)
-        # A model of the observed proficiency expression and a delegated clamp.
-        # The mod itself does not implement this expression or these limits.
+        # Model the observed expression without inventing a native maximum.
+        # The reported Lady Finger case shows that the native query can return 70.
         value = (self.proficiency * .25 + 2 if self.bonus.BaseValueAttribute
                  else self.bonus.BaseValueConstant)
-        return max(1, min(69, self.ExpLevel - int(value * self.bonus.BaseValueScaleConstant)))
+        return max(1, self.ExpLevel - int(value * self.bonus.BaseValueScaleConstant))
 
 
 class LevelTests(unittest.TestCase):
@@ -237,10 +237,43 @@ class LevelTests(unittest.TestCase):
                 self.assertEqual(self.query(w)[1], 40 - int(base))
                 self.assertIs(w.bonus.BaseValueAttribute, w.attribute)
 
-    def test_game_clamp_is_delegated(self):
+    def test_native_minimum_and_display_maximum(self):
         self.enter()
         self.assertEqual(self.query(Weapon(exp=1))[1], 1)
         self.assertEqual(self.query(Weapon(exp=1000))[1], 69)
+
+    def test_lady_finger_70_is_capped_in_both_card_wrappers(self):
+        fields = FIXTURE["weapon_level_bonuses"][
+            "gd_weap_repeater_pistol.A_Weapon.WeaponType_repeater_pistol"]
+        weapon = Weapon(exp=71, base=fields["BaseValueConstant"],
+                        kind="Pistol", proficiency=0)
+        self.assertEqual(weapon.native(self.controller), 69)
+        self.enter()
+        self.assertEqual(self.query(weapon)[1], 69)
+        self.assertEqual(self.mod.pawn_level(
+            weapon, NS(Other=object()), None, weapon.native)[1], 69)
+        self.exit()
+        self.assertEqual(weapon.native(self.controller), 69)
+        self.assertIs(weapon.bonus.BaseValueAttribute, weapon.attribute)
+
+    def test_display_cap_preserves_every_normal_level(self):
+        self.enter()
+        for level in range(1, 70):
+            with self.subTest(level=level):
+                self.assertEqual(self.query(Weapon(exp=level + 2))[1], level)
+
+    def test_diagnostics_use_same_display_cap(self):
+        weapon = Weapon(exp=71, base=1, kind="Pistol", proficiency=0)
+        pc = NS(Pawn=object())
+        weapon.Owner = pc.Pawn
+        self.mod.get_pc = lambda: pc
+        self.mod.find_all = lambda cls: [weapon]
+        with tempfile.TemporaryDirectory() as temp:
+            self.mod.SETTINGS_DIR = Path(temp)
+            self.mod.export_diagnostics()
+            report = json.loads(next(Path(temp).rglob("*.json")).read_text())
+        self.assertEqual(report["weapons"][0]["card_level_without_proficiency"], 69)
+        self.assertIs(weapon.bonus.BaseValueAttribute, weapon.attribute)
 
     def test_scale_constant_is_preserved(self):
         self.weapon.bonus.BaseValueScaleConstant = 3

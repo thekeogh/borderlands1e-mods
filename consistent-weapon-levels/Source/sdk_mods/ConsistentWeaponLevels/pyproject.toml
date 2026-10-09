@@ -1,6 +1,6 @@
 [project]
 name = "ConsistentWeaponLevels"
-version = "1.0.0"
+version = "1.0.1"
 authors = [{ name = "keogh" }]
 description = "Shows the ordinary weapon level on equipped and comparison cards, without the proficiency-based reduction."
 

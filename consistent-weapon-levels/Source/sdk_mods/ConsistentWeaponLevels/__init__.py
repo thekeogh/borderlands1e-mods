@@ -11,6 +11,10 @@ from mods_base import ButtonOption, SETTINGS_DIR, build_mod, get_pc, hook
 from unrealsdk import find_all, logging
 from unrealsdk.hooks import Block, Type, prevent_hooking_direct_calls
 
+# GOTY Enhanced's normal player cap. Internal item levels can exceed it, and
+# the pistol fallback offset can otherwise produce an impossible level-70 card.
+MAX_DISPLAY_LEVEL = 69
+
 PROFICIENCY_ATTRIBUTES = frozenset(
     f"Proficiency_{kind}_LevelBonus"
     for kind in (
@@ -75,7 +79,7 @@ def context_free_level(weapon, native_function, argument):
     BL1E exports show PlayerUseLevelBonus.BaseValueAttribute selecting the
     proficiency resolver, with BaseValueConstant providing the backpack fallback.
     Different weapon definitions have different constants; do not hardcode 2 or
-    display raw ExpLevel. The native function retains its own rounding and caps.
+    display raw ExpLevel. Keep native rounding, then cap the display at 69.
 
     Only the one attribute reference is temporarily changed, synchronously, and
     restored even if the query fails. No definition is retained between hooks.
@@ -93,7 +97,7 @@ def context_free_level(weapon, native_function, argument):
     try:
         bonus.BaseValueAttribute = None
         with prevent_hooking_direct_calls():
-            return native_function(argument)
+            return min(MAX_DISPLAY_LEVEL, native_function(argument))
     finally:
         try:
             # WrappedStruct fields write through to native memory.

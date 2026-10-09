@@ -1,15 +1,18 @@
 # Consistent Weapon Levels
 
-Private Borderlands GOTY Enhanced Python SDK mod. Author **keogh**, version **1.0.0**.
+Private Borderlands GOTY Enhanced Python SDK mod. Author **keogh**, version **1.0.1**.
 
 Corrects the proficiency-dependent level on equipped weapon cards. Intended result:
 a weapon shown as level 69 in the backpack remains level 69 when equipped.
 Uses the native level calculation with the weapon definition's ordinary fallback
 bonus, rather than displaying its internal `ExpLevel` directly.
+Displayed levels are capped at **69**. Version 1.0.1 fixes the reported Lady Finger
+level-70 card; the pistol fallback can yield 70 even when the weapon is usable.
 
 ## Install
 
 1. Copy `dist/ConsistentWeaponLevels.sdkmod` to the Windows game's `sdk_mods/` folder.
+   Replace the previous archive when upgrading.
 2. Restart the game. Enable **Consistent Weapon Levels** in the Mods menu.
 3. Run alongside your Playthrough 3 and AutopickupBL1E mods.
 
@@ -29,7 +32,8 @@ comparisons, vendors, the bank, pickup comparisons, equipped HUD cards and rewar
 During those calls only, hooks on both native required-level query wrappers
 recalculate a weapon's level with its definition's proficiency attribute reference
 temporarily cleared. The reference is restored synchronously in `finally`, including
-on errors. The game handles its own rounding, lower bounds and level caps.
+on errors. The game handles its own rounding and lower bounds; the mod applies a
+maximum of 69 to the corrected display value, including diagnostic exports.
 
 Outside card rendering, level queries pass through unchanged. The mod does not
 edit proficiency skills, weapon stats, saves, weapon generation or persistent
@@ -40,11 +44,13 @@ No polling or timers. The original game UI is expected to render on its game thr
 
 - Compare the same weapon in backpack and equipped slots, with keyboard and mouse.
 - Repeat with a pistol and another weapon type; compare two weapons too.
+- Lady Finger must show 69 rather than 70 at the cap, and remain usable.
 - Check vendor and pickup comparison cards. Low-proficiency weapons should agree too.
 - Check an actually too-high-level weapon still cannot be equipped.
 
-**Native Windows verification remains pending.** The regression suite models SDK
-callbacks; it cannot prove BL1E's UI dispatches every level query through those hooks.
+The original inventory fix was confirmed in game by the user. **Version 1.0.1's
+Lady Finger correction still needs Windows verification.** The regression suite
+models SDK callbacks; it cannot prove every native UI path is covered.
 If a card still differs, use the mod's **Export level diagnostics** button after
 viewing it. Export location:
 
@@ -67,8 +73,9 @@ python3 -m unittest discover -s consistent-weapon-levels/tests -v
 python3 consistent-weapon-levels/package.py
 ```
 
-21 regression checks cover the 69-versus-57 example, exported definition-specific
-fallbacks, native clamping, nested and blocked UI calls, thread-specific scopes,
+24 regression checks cover the 69-versus-57 example, exported definition-specific
+fallbacks, the Lady Finger level-70 regression, display capping, preservation of
+levels 1–69, nested and blocked UI calls, thread-specific scopes,
 both query signatures, non-weapons/custom definitions, recursion and exception
 cleanup, disable/re-enable, gameplay boundaries and diagnostic restoration.
 The small fixture is extracted from `logs/pt3-economy-20261007-210503-996932.json`;
