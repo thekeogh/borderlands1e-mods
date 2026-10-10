@@ -19,20 +19,32 @@ from .named_enemies import NAMED_LEVEL, named_enemy
 
 BASE_LEVEL = 69
 WEIGHTS = {
-    0: (100,), 1: (65, 35), 2: (50, 35, 15),
-    3: (45, 35, 15, 5), 4: (45, 35, 12, 5, 3),
-    5: (45, 35, 10, 5, 3, 2),
+    0: (100,), 1: (30, 70), 2: (10, 35, 55),
+    3: (5, 20, 55, 20), 4: (5, 15, 50, 25, 5),
+    5: (5, 10, 45, 30, 7, 3),
 }
+LEVEL_DESCRIPTION = (
+    f"Listed named enemies/bosses: fixed at {NAMED_LEVEL}, at every spread.\n\n"
+    "Ordinary enemies (level: chance):\n"
+    + "\n".join(
+        f"Spread {value}: " + ", ".join(
+            f"{BASE_LEVEL + offset}: {weight}%" for offset, weight in enumerate(weights)
+        ) for value, weights in WEIGHTS.items()
+    )
+    + "\n\nDefault spread: 3. Each spawn rolls independently."
+)
+MOD_DESCRIPTION = (
+    "Adds a third playthrough with level-1 cash prices and rewards.\n\n"
+    + LEVEL_DESCRIPTION
+    + "\n\nChanges apply to new supported spawns/restores in PT3. Supports BL1 Enhanced."
+)
 INPUT_FIELDS = ("BaseValueConstant", "BaseValueAttribute",
                 "InitializationDefinition", "BaseValueScaleConstant")
 KEEP_ALIVE = 0x4000
 EXACT_STAGE = "gd_Balance.EnemyLevel.EnemyLevel_GameStage_exact"
 spread = SliderOption(
     "Enemy Level Spread", 3, 0, 5, 1, True,
-    description=("PT3 enemy populations start at 69, maximum 69 + spread. "
-                 "Default 3: 69/70/71/72 at 45/35/15/5%. "
-                 "Named enemies/bosses stay at 69. "
-                 "Applies when native populations spawn or restore."),
+    description=LEVEL_DESCRIPTION,
 )
 spawn_trace = BoolOption(
     "Enemy Spawn Debug Logging", False,
@@ -208,7 +220,7 @@ def spawn(obj, args, func, *, restore=False, vehicle=False):
         if restore:
             call_args.append(args.AIPawnMemento)
         # Named vehicles may have only an archetype. Their existing native
-        # factory receives stage 69; never invent AI balance data or rescale.
+        # factory receives the fixed named level; never invent AI data or rescale.
         level_data = (native_level_data(definition, args.GameStage, target)
                       if definition is not None else nullcontext())
         with level_data:

@@ -400,6 +400,7 @@ def on_disable():
 
 
 build_mod(
+    description=enemy_levels.MOD_DESCRIPTION,
     hooks=[OnButtonClicked, FinishLoadGame, HandleInputKey, OnExpLevelChange, PressStart, *economy.HOOKS, *enemy_levels.HOOKS],
     options=[GameStage, enemy_levels.spawn_trace],
     settings_file=Path(f"{SETTINGS_DIR}/PT3.json"),

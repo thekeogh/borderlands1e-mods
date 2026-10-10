@@ -1,4 +1,4 @@
-Playthrough 3 2.2.0: named enemies fixed at level 69
+Playthrough 3 2.3.0: named enemies fixed at level 71
 Author: keogh
 
 71 named entities; exact balance/archetype IDs, case-insensitive.
@@ -7,7 +7,7 @@ Applies to supported native population spawns/restores in PT3 on the host.
 Friendly/player/neutral spawns remain excluded, even if an ID matches.
 Underdome copies of listed base-game bosses are included where IDs are known.
 Scripted paths outside the existing factories are not covered; test in BL1E.
-Mad Mel/Krom's Turret: native vehicle factory stage 69; verify displayed level in-game.
+Mad Mel/Krom's Turret: native vehicle factory stage 71; verify displayed level in-game.
 F10 named_enemy_counts reports successful matches; ordinary_assigned_counts excludes them.
 Existing enemies need a new spawn/restore; restart the game when installing.
 

@@ -96,7 +96,7 @@ def load():
 class SpawnTests(unittest.TestCase):
     def setUp(self):
         self.mod, self.pc, self.modules = load()
-        self.mod.randrange = lambda total: 99  # rare 72 at default spread
+        self.mod.randrange = lambda total: 99  # 72 at default spread
         self.attribute, self.initializer = Object("attribute"), Object("initializer")
         self.requirement = NS(MinGameStage=1, MaxGameStage=69)
         self.grade = NS(GameStageRequirement=self.requirement,
@@ -134,9 +134,9 @@ class SpawnTests(unittest.TestCase):
         return self.pawn
 
     def test_exact_ticket_counts_for_all_spreads(self):
-        expected = {0: (100,), 1: (65, 35), 2: (50, 35, 15),
-                    3: (45, 35, 15, 5), 4: (45, 35, 12, 5, 3),
-                    5: (45, 35, 10, 5, 3, 2)}
+        expected = {0: (100,), 1: (30, 70), 2: (10, 35, 55),
+                    3: (5, 20, 55, 20), 4: (5, 15, 50, 25, 5),
+                    5: (5, 10, 45, 30, 7, 3)}
         for spread, weights in expected.items():
             counts = Counter(self.mod.chosen_level(spread, ticket) for ticket in range(100))
             self.assertEqual(counts, {69 + offset: count for offset, count in enumerate(weights)})
@@ -335,7 +335,7 @@ class SpawnTests(unittest.TestCase):
         package.economy, package.enemy_levels = economy, self.mod
         main = ModuleType("pt3_level_test.main")
         main.__package__ = package.__name__
-        main.__version__, main.__version_info__ = "2.2.0", (2, 2, 0)
+        main.__version__, main.__version_info__ = "2.3.0", (2, 3, 0)
         self.modules["mods_base"].build_mod = lambda **kw: setattr(main, "registration", kw)
         self.modules[economy.__name__] = economy
         with patch.dict(sys.modules, self.modules):
@@ -344,6 +344,7 @@ class SpawnTests(unittest.TestCase):
         main.on_enable()
         self.assertEqual(main.GlobalGameStage.ValueResolverChain[0].ConstantValue, 69)
         self.assertEqual(main.registration["options"], [self.mod.spread, self.mod.spawn_trace])
+        self.assertEqual(main.registration["description"], self.mod.MOD_DESCRIPTION)
         self.assertEqual(main.registration["settings_file"].name, "PT3.json")
         original = self.original_data()
         self.mod.create_pawn(self.factory, self.args, None, self.native_spawn)
@@ -355,7 +356,7 @@ class SpawnTests(unittest.TestCase):
         main.on_disable()
         self.assertEqual(events, ["economy enabled", "economy disabled"])
 
-    def test_all_sourced_named_ids_spawn_at_69_for_every_spread_fresh_and_restored(self):
+    def test_all_sourced_named_ids_spawn_at_71_for_every_spread_fresh_and_restored(self):
         fixture = json.loads((ROOT / "tests/fixtures/bl1_named_enemies.json").read_text())
         self.mod.randrange = lambda *a: self.fail("Named spawns must not roll a random level")
         for kind in ("balances", "archetypes"):
@@ -372,8 +373,8 @@ class SpawnTests(unittest.TestCase):
                             self.calls.clear()
                             result = hook(self.factory, self.args, None, self.native_spawn)
                             self.assertEqual(result, (self.mod.Block, self.pawn))
-                            self.assertEqual((self.pawn.stage, self.pawn.level), (69, 69))
-                            self.assertEqual(self.pawn.health, 2 * 69 ** 3)
+                            self.assertEqual((self.pawn.stage, self.pawn.level), (71, 71))
+                            self.assertEqual(self.pawn.health, 2 * 71 ** 3)
                             self.assertEqual(len(self.calls), 1)
                             self.assertEqual(self.mod._named_definitions[self.definition.path], name)
 
@@ -404,7 +405,7 @@ class SpawnTests(unittest.TestCase):
         self.definition.path = "gd_VaultBoss_Main.population.Pawn_Balance_VaultBoss_Main"
         self.definition.AIPawnArchetype.Allegiance = None
         self.mod.create_pawn(self.factory, self.args, None, self.native_spawn)
-        self.assertEqual(self.pawn.level, 69)
+        self.assertEqual(self.pawn.level, 71)
 
     def test_named_enemy_restores_definition_and_pins_on_disable(self):
         self.definition.path = "gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Sledge"
@@ -420,10 +421,10 @@ class SpawnTests(unittest.TestCase):
         self.definition.path = "gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Sledge"
         self.mod.create_pawn(self.factory, self.args, None, self.native_spawn)
         result = self.mod.snapshot(self.pc)
-        self.assertEqual(result["assigned_counts"], {69: 1, 72: 1})
+        self.assertEqual(result["assigned_counts"], {71: 1, 72: 1})
         self.assertEqual(result["ordinary_assigned_counts"], {72: 1})
         self.assertEqual(result["named_enemy_counts"], {"Sledge": 1})
-        self.assertEqual(result["named_enemy_level"], 69)
+        self.assertEqual(result["named_enemy_level"], 71)
         self.assertEqual(result["tracked_enemies"][-1]["named_enemy"], "Sledge")
         self.definition.path = ordinary_path
         self.mod.on_enable()
@@ -431,7 +432,7 @@ class SpawnTests(unittest.TestCase):
         self.assertEqual(self.mod._named_definitions, {})
         self.assertEqual(self.mod._ordinary_counts, {})
 
-    def test_named_vehicle_archetypes_pass_native_stage_69_without_ai_data(self):
+    def test_named_vehicle_archetypes_pass_native_stage_71_without_ai_data(self):
         for path in ("gd_CheetahsPaw.VehicleArchetype.Mad_Mel", "gd_banditkromboss.Vehicle.Krom_Turret_Archetype"):
             vehicle = Object(path)
             vehicle.Allegiance = None
@@ -444,7 +445,7 @@ class SpawnTests(unittest.TestCase):
                 return self.pawn
             self.calls.clear()
             self.assertEqual(self.mod.create_vehicle(factory, self.args, None, native_vehicle), (self.mod.Block, self.pawn))
-            self.assertEqual(self.calls[0][4:], (69, 8))
+            self.assertEqual(self.calls[0][4:], (71, 8))
             self.assertEqual(len(self.calls), 1)
             self.assertEqual(self.original_data(), before)
 

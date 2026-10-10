@@ -4,7 +4,7 @@ Identifiers cross-checked against Dedicated Drops SDK (RedxYeti) and Boss Bars
 (-Ry, BL1/BL1E). See NAMED_ENEMIES.txt for pinned source URLs and scope.
 """
 
-NAMED_LEVEL = 69
+NAMED_LEVEL = 71
 SOURCES = ('https://raw.githubusercontent.com/RedxYeti/Yeti-BL1-SDK-Mods/315f9ea9d0b8b419bf45a0873721fc54c5bb0444/DedicatedDropsSDK/enemies.py',
  'https://raw.githubusercontent.com/Ry0511/my_bl1_sdk_mods/a70761d52b5586292a85d4c1b5edd253810fdd13/src/py/boss_bars/constants.py')
 
