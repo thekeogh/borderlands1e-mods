@@ -7,25 +7,16 @@ from mods_base.options import BaseOption, BoolOption#type: ignore
 from mods_base import SETTINGS_DIR, SliderOption#type: ignore
 from mods_base import build_mod#type: ignore
 from unrealsdk import logging, find_object#type: ignore
-from . import economy
+from . import economy, enemy_levels
 
 bPrepWorkDone = False
 
-GameStage: SliderOption = SliderOption("Playthrough 3 Base Level",
-            1.0,
-            -15.0,
-            15.0,
-            1.0,
-            False,
-            description="The base level for enemies and missions will be set to character level plus this number.",
-            on_change = lambda _, 
-            new_value: SetGlobalGameStage(_, new_value))
+GameStage = enemy_levels.spread
 
 
 
 GlobalsDef = None
 GlobalGameStage = None
-GlobalGameStageSetting = None
 ResetPlaythrough = False
 BadlandsLoaded = False
 WillowGFxLobbySinglePlayer = None
@@ -75,7 +66,6 @@ def PressStart(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunction)
 
     global GlobalsDef
     global GlobalGameStage
-    global GlobalGameStageSetting
 
     if bPrepWorkDone is False:
         bPrepWorkDone = True
@@ -132,7 +122,7 @@ def PressStart(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunction)
 
         GlobalGameStage = find_object("AttributeDefinition","gd_GameStages_PT3.Attribute.GlobalGameStage")
         GlobalGameStage.ObjectFlags |= 0x4000
-        GlobalGameStageSetting = GameStage.value
+        GlobalGameStage.ValueResolverChain[0].ConstantValue = enemy_levels.BASE_LEVEL
 
         EnemyHealth = find_object("AttributeInitializationDefinition","gd_Balance_HealthAndDamage.HealthMultipliers.Enemy_Health_ByPlaythrough")
         EnemyHealth.ConditionalInitialization.ConditionalExpressionList.append(EnemyHealth.ConditionalInitialization.ConditionalExpressionList[1])
@@ -258,15 +248,6 @@ def BuildResetMenu():
     Dlg.ApplyLayout()
     return
 
-def SetGlobalGameStage(_: SliderOption, new_value: float):
-    global GlobalGameStage, GlobalGameStageSetting
-    PC = get_pc()
-    if GlobalGameStage is not None and PC is not None and PC.Pawn:
-        PlayerLevel = PC.Pawn.GetExpLevel()
-        GlobalGameStage.ValueResolverChain[0].ConstantValue = PlayerLevel + new_value
-    GlobalGameStageSetting = new_value
-    return
-
 @hook(
     hook_func="WillowGame.WillowGFxLobbySinglePlayer:FinishLoadGame",
     hook_type=Type.PRE,
@@ -316,7 +297,7 @@ def FinishLoadGame(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunct
     hook_type=Type.POST,
 )
 def OnExpLevelChange(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunction):
-    global GlobalGameStage, GlobalGameStageSetting
+    global GlobalGameStage
     if obj.WorldInfo.NetMode == 3 or obj.Pawn is None or GlobalGameStage is None:
         return
     WPawn = None
@@ -325,19 +306,18 @@ def OnExpLevelChange(obj: UObject, args: WrappedStruct, ret: any, func: BoundFun
         WPawn = BodyInterface.GetAWillowPawn()
 
     if obj.GetCurrentPlaythrough() == 2 and WPawn:
-        GlobalGameStage.ValueResolverChain[0].ConstantValue = WPawn.GetExpLevel() + GlobalGameStageSetting
+        GlobalGameStage.ValueResolverChain[0].ConstantValue = enemy_levels.BASE_LEVEL
 
 @hook(
     hook_func="WillowGame.WillowGFxDialogBox:OnButtonClicked",
     hook_type=Type.POST,
 )
 def OnButtonClicked(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunction):
-    global WillowGFxLobbySinglePlayer, ResetPlaythrough, GlobalsDef, SkagsAtGate, GlobalGameStage, GlobalGameStageSetting
+    global WillowGFxLobbySinglePlayer, ResetPlaythrough, GlobalsDef, SkagsAtGate, GlobalGameStage
     
     if obj.DialogResult == 'Dif3':
         economy.set_mode(True, refresh=False)
-        PlayerLevel = get_pc().GetWillowGlobals().GetWillowSaveGameManager().GetCachedPlayerProfile(obj.GetControllerId()).ExpLevel
-        GlobalGameStage.ValueResolverChain[0].ConstantValue = PlayerLevel + GlobalGameStageSetting
+        GlobalGameStage.ValueResolverChain[0].ConstantValue = enemy_levels.BASE_LEVEL
         add_hook("WillowGame.WillowPlayerController:ClientSetProfileLoaded", Type.POST, "FirstLoad", FirstLoadPT3)
         GlobalsDef.FastTravelMission = SkagsAtGate
         WillowGFxLobbySinglePlayer.LaunchSaveGame(2)
@@ -345,13 +325,13 @@ def OnButtonClicked(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunc
     elif obj.DialogResult == 'ConfirmReset':
         economy.set_mode(True, refresh=False)
         ResetPlaythrough = True
-        PlayerLevel =  get_pc().GetWillowGlobals().GetWillowSaveGameManager().GetCachedPlayerProfile(obj.GetControllerId()).ExpLevel
-        GlobalGameStage.ValueResolverChain[0].ConstantValue = PlayerLevel + GlobalGameStageSetting
+        GlobalGameStage.ValueResolverChain[0].ConstantValue = enemy_levels.BASE_LEVEL
         add_hook("WillowGame.WillowPlayerController:TeleportPlayerToHoldingCell", Type.POST, "ResetLoad", ResetPT3)
         GlobalsDef.FastTravelMission = SkagsAtGate
         WillowGFxLobbySinglePlayer.LaunchSaveGame(2)
 
     elif obj.DialogResult == 'Dif1' or obj.DialogResult == 'Dif2':
+        enemy_levels.restore_definitions()
         economy.set_mode(False, refresh=False)
         unrealsdk.load_package('I1_Missions.Missions.M_Powerlines')
         GlobalsDef.FastTravelMission = unrealsdk.find_object('MissionDefinition','I1_Missions.Missions.M_Powerlines')
@@ -407,12 +387,24 @@ def FirstLoadPT3(
 __version__: str
 __version_info__: tuple[int, ...]
 
+def on_enable():
+    economy.on_enable()
+    if GlobalGameStage is not None:
+        GlobalGameStage.ValueResolverChain[0].ConstantValue = enemy_levels.BASE_LEVEL
+    enemy_levels.on_enable()
+
+
+def on_disable():
+    enemy_levels.on_disable()
+    economy.on_disable()
+
+
 build_mod(
-    hooks=[OnButtonClicked, FinishLoadGame, HandleInputKey, OnExpLevelChange, PressStart, *economy.HOOKS],
-    options=[GameStage],
+    hooks=[OnButtonClicked, FinishLoadGame, HandleInputKey, OnExpLevelChange, PressStart, *economy.HOOKS, *enemy_levels.HOOKS],
+    options=[GameStage, enemy_levels.spawn_trace],
     settings_file=Path(f"{SETTINGS_DIR}/PT3.json"),
-    on_enable=economy.on_enable,
-    on_disable=economy.on_disable,
+    on_enable=on_enable,
+    on_disable=on_disable,
 )
 
 logging.info(f"Playthrough 3 Loaded: {__version__}, {__version_info__}")

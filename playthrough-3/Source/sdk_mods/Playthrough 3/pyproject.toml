@@ -1,8 +1,8 @@
 [project]
 name = "Playthrough 3"
-version = "2.0.0"
+version = "2.2.0"
 authors = [{ name = "keogh" }]
-description = "Adds a third playthrough with level-1 cash prices and rewards. Includes BL1 Enhanced economy support."
+description = "Adds PT3 with named enemies/bosses fixed at 69, ordinary enemies 69 to 69 + spread, and level-1 cash prices and rewards. Default spread 3. Supports BL1 Enhanced."
 
 [tool.sdkmod]
 name = "Playthrough 3"

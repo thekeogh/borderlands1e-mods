@@ -32,12 +32,15 @@ SCHEMA_CLASSES = (
     "WillowInventoryManager", "WillowGlobals", "MissionDefinition",
     "WillowInventoryDefinition", "ItemDefinition", "InventoryAttributeDefinition",
     "AttributeDefinition", "AttributeInitializationDefinition", "GlobalsDefinition",
+    "WillowAIPawn", "WillowVehicle", "PopulationFactoryBalancedAIPawn",
+    "PopulationFactoryWillowVehicle", "AIPawnBalanceDefinition", "PawnAllegiance",
 )
 FUNCTION_TERMS = (
     "cash", "cost", "price", "currency", "monetary", "reward", "respec",
     "initialize", "createitem", "createweapon", "clone", "grade", "level",
     "givento", "usedby", "useitem", "buy", "sell", "purchase",
     "value", "evaluate", "resolve", "calculate", "mission",
+    "gamestage", "population", "restore", "enemy", "hostile",
 )
 SKIP_PROPERTIES = {"Class", "Outer", "Name", "ObjectFlags", "InternalIndex"}
 

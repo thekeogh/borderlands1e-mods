@@ -1,7 +1,7 @@
 [project]
 name = "PT3EconomyDiagnostics"
-version = "2.0.0"
-description = "Read-only pricing data export for investigating PT3 on BL1 Enhanced."
+version = "2.1.1"
+description = "Read-only pricing and enemy level export for investigating PT3 on BL1 Enhanced."
 authors = [{ name = "keogh" }]
 
 [tool.sdkmod]
