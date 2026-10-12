@@ -136,7 +136,7 @@ class SpawnTests(unittest.TestCase):
     def test_exact_ticket_counts_for_all_spreads(self):
         expected = {0: (100,), 1: (30, 70), 2: (10, 35, 55),
                     3: (5, 20, 55, 20), 4: (5, 15, 50, 25, 5),
-                    5: (5, 10, 45, 30, 7, 3)}
+                    5: (2, 10, 45, 33, 7, 3), 6: (2, 10, 40, 33, 8, 5, 2)}
         for spread, weights in expected.items():
             counts = Counter(self.mod.chosen_level(spread, ticket) for ticket in range(100))
             self.assertEqual(counts, {69 + offset: count for offset, count in enumerate(weights)})
@@ -144,7 +144,7 @@ class SpawnTests(unittest.TestCase):
     def test_default_and_setting_identifier_preserved(self):
         self.assertEqual(self.mod.spread.value, 3)
         self.assertEqual(self.mod.spread.identifier, "Enemy Level Spread")
-        self.assertEqual((self.mod.spread.min_value, self.mod.spread.max_value), (0, 5))
+        self.assertEqual((self.mod.spread.min_value, self.mod.spread.max_value), (0, 6))
 
     def test_spawn_has_matching_real_level_and_native_stats_without_setters(self):
         original = self.original_data()
@@ -217,6 +217,32 @@ class SpawnTests(unittest.TestCase):
         self.assertEqual((self.pawn.stage, self.pawn.level), (74, 74))
         self.mod.on_disable()
         self.assertEqual(self.original_data(), original)
+
+    def test_spread_six_initializes_fresh_and_restored_75_once_and_restores_grades(self):
+        original = self.original_data()
+        self.mod.spread.value = 6
+        for callback in (self.mod.create_pawn, self.mod.restore_pawn):
+            self.calls.clear()
+            self.assertEqual(callback(self.factory, self.args, None, self.native_spawn),
+                             (self.mod.Block, self.pawn))
+            self.assertEqual((self.pawn.stage, self.pawn.level, self.pawn.health),
+                             (75, 75, 2 * 75 ** 3))
+            self.assertEqual(len(self.calls), 1)
+            self.assertEqual(self.requirement.MaxGameStage, 69)
+        self.mod.on_disable()
+        self.assertEqual(self.original_data(), original)
+
+    def test_spread_six_diagnostics_and_descriptions_match_new_distribution(self):
+        self.mod.spread.value = 6
+        self.mod.create_pawn(self.factory, self.args, None, self.native_spawn)
+        result = self.mod.snapshot(self.pc)
+        self.assertEqual(result["maximum"], 75)
+        self.assertEqual(result["weights"], (2, 10, 40, 33, 8, 5, 2))
+        self.assertEqual(result["ordinary_assigned_counts"], {75: 1})
+        self.assertEqual(result["tracked_enemies"][0]["exp_level"], 75)
+        expected = "Spread 6: 69: 2%, 70: 10%, 71: 40%, 72: 33%, 73: 8%, 74: 5%, 75: 2%"
+        self.assertIn(expected, self.mod.spread.description)
+        self.assertIn(expected, self.mod.MOD_DESCRIPTION)
 
     def test_failure_restores_ranges_and_disable_restores_data_without_duplicate_spawn(self):
         original = self.original_data()
@@ -335,7 +361,7 @@ class SpawnTests(unittest.TestCase):
         package.economy, package.enemy_levels = economy, self.mod
         main = ModuleType("pt3_level_test.main")
         main.__package__ = package.__name__
-        main.__version__, main.__version_info__ = "2.3.0", (2, 3, 0)
+        main.__version__, main.__version_info__ = "2.4.0", (2, 4, 0)
         self.modules["mods_base"].build_mod = lambda **kw: setattr(main, "registration", kw)
         self.modules[economy.__name__] = economy
         with patch.dict(sys.modules, self.modules):
@@ -366,7 +392,7 @@ class SpawnTests(unittest.TestCase):
                     continue
                 self.definition.path = path.upper() if kind == "balances" else "gd_Balance_Enemies_Humans.Generic"
                 self.definition.AIPawnArchetype.path = path.upper() if kind == "archetypes" else "gd_GenericPawn.Character.Pawn"
-                for spread in range(6):
+                for spread in range(7):
                     self.mod.spread.value = spread
                     for hook in (self.mod.create_pawn, self.mod.restore_pawn):
                         with self.subTest(kind=kind, path=path, spread=spread, hook=hook.__name__):

@@ -1,6 +1,6 @@
 # Playthrough 3: weighted enemies and level-1 cash economy
 
-Version 2.3.0. Author: keogh. Private build, based on supplied PT3 v1.1.2
+Version 2.4.0. Author: keogh. Private build, based on supplied PT3 v1.1.2
 by RedxYeti and Miner Of Worlds.
 Pricing changes use the BL1 Enhanced definitions exported from your level-69
 character on 7 October 2026. Original custom UPK is unchanged.
@@ -13,7 +13,7 @@ character on 7 October 2026. Original custom UPK is unchanged.
    folder, move that original folder out of `sdk_mods` first. Keep one PT3 copy.
 3. Keep the original
    `WillowGame/CookedPC/Mods/PT3/gd_GameStages_PT3.upk` installed.
-   Alternatively, extract `dist/Playthrough3-Level1Economy-BL1E-2.3.0.zip` into
+   Alternatively, extract `dist/Playthrough3-Level1Economy-BL1E-2.4.0.zip` into
    the game root; it contains the replacement, updated diagnostics and unchanged UPK.
 4. Restart. Enable **Playthrough 3**, select PT3, and check **Enemy Level Spread**
    defaults to **3**. Ordinary new enemies should show levels 69–72; listed named enemies 71.
@@ -26,19 +26,28 @@ Existing inventory cash values are recomputed when your character loads.
 Vendor price/display/buy/sell callbacks also recompute the relevant item's cash
 value before the game reads it. Future native cash calculations confirm PT3.
 
-## Version 2.3.0: harder spread and named enemies at 71
+## Version 2.4.0: spread 6 and fewer level-69 enemies
 
-Default spread 3 now gives **69: 5%, 70: 20%, 71: 55%, 72: 20%**. All listed
-named enemies/bosses now use **71**, independent of spread, including spread 0.
-The approved odds for every spread are in the table below. Default remains 3;
-your saved spread setting remains in place. Economy and mission/region baseline
-remain unchanged, and the existing spawn hooks and initialization stay in place.
+Adds **spread 6**, reaching level **75**. Spreads **5 and 6** now give level 69
+a **2%** chance; the freed 3% goes to level 72. Spread 5 is
+**69/70/71/72/73/74: 2/10/45/33/7/3%**. Spread 6 is
+**69/70/71/72/73/74/75: 2/10/40/33/8/5/2%**.
+The full table is below. Default remains **3**, saved spread settings stay in
+place, and listed named enemies/bosses remain fixed at **71** at every spread.
+Economy, mission/region baseline and native spawn initialization are unchanged.
+Changes apply to new spawns/restores; existing enemies retain their levels.
 
-Open the mod's in-game **Description** (`[...]`) to see all six spreads as
+Open the mod's in-game **Description** (`[...]`) to see all seven spreads as
 `level: chance` pairs. The **Enemy Level Spread** option description also lists
 them. Both descriptions are generated from the live policy constants, so their
 numbers stay in sync with actual spawning. This is the configured distribution,
 not a guarantee that a small encounter will match the percentages exactly.
+
+## Version 2.3.0: harder spread and named enemies at 71
+
+Introduced default spread 3 at **69: 5%, 70: 20%, 71: 55%, 72: 20%** and fixed
+listed named enemies/bosses at **71**, independent of spread, including spread 0.
+Spreads 0–4 retain those odds in 2.4.0; spreads 5–6 use the updated table below.
 
 ## Named-enemy recognition (introduced in 2.2.0)
 
@@ -132,20 +141,21 @@ The previously working level-1 economy and custom UPK remain unchanged.
 
 ## Enemy level spread
 
-Replaces **Playthrough 3 Base Level** with **Enemy Level Spread**, range 0–5,
+Replaces **Playthrough 3 Base Level** with **Enemy Level Spread**, range 0–6,
 default **3**. Ordinary enemies have a minimum of **69**, maximum **69 + spread**, independent
 of character level. This is intended for your level-69 PT3 run. The old offset's
 saved setting has a different identifier and is ignored; upgrading starts at 3.
 Your enabled state and other PT3 settings stay in the same `PT3.json` file.
 
-| Spread | Level 69 | Level 70 | Level 71 | Level 72 | Level 73 | Level 74 |
-|---|---:|---:|---:|---:|---:|---:|
-| 0 | 100% | — | — | — | — | — |
-| 1 | 30% | 70% | — | — | — | — |
-| 2 | 10% | 35% | 55% | — | — | — |
-| **3 (default)** | **5%** | **20%** | **55%** | **20%** | — | — |
-| 4 | 5% | 15% | 50% | 25% | 5% | — |
-| 5 | 5% | 10% | 45% | 30% | 7% | 3% |
+| Spread | Level 69 | Level 70 | Level 71 | Level 72 | Level 73 | Level 74 | Level 75 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 0 | 100% | — | — | — | — | — | — |
+| 1 | 30% | 70% | — | — | — | — | — |
+| 2 | 10% | 35% | 55% | — | — | — | — |
+| **3 (default)** | **5%** | **20%** | **55%** | **20%** | — | — | — |
+| 4 | 5% | 15% | 50% | 25% | 5% | — | — |
+| 5 | 2% | 10% | 45% | 33% | 7% | 3% | — |
+| 6 | 2% | 10% | 40% | 33% | 8% | 5% | 2% |
 
 These are per-ordinary-enemy probabilities, not quotas per encounter. Each supported enemy
 spawn gets one choice, shared by its game stage and experience initialization. Native enemy types,
@@ -233,13 +243,13 @@ The original readme remains in `ORIGINAL_README.txt`.
 
 ## Validation and remaining game checks
 
-65 local tests pass: 32 economy/export tests plus 33 enemy-level regression tests.
-Named-enemy tests exercise sourced IDs at all six spreads on fresh/restored AI
+67 local tests pass: 32 economy/export tests plus 35 enemy-level regression tests.
+Named-enemy tests exercise sourced IDs at all seven spreads on fresh/restored AI
 spawns, case-insensitive exact matching, excluded generic/substrings/display
 labels, friendly/client exclusion, native vehicle stage forwarding, separate
 diagnostic counts, disable restoration and native failure without retries.
 Enemy tests check every probability ticket, native initialization inputs, fresh and
-restored signatures, nested data restoration, narrow grades at 74, preserved stat
+restored signatures, nested data restoration, narrow grades at 74/75, preserved stat
 bonuses, independent levels on shared definitions, PT1/disable and GC pin
 restoration, NPC/client exclusions, unsupported data fallback,
 read-only diagnostics, live-row export limits, optional phase logging and exception handling without duplicate

@@ -1,4 +1,4 @@
-Playthrough 3 2.3.0: named enemies fixed at level 71
+Playthrough 3 2.4.0: named enemies fixed at level 71
 Author: keogh
 
 71 named entities; exact balance/archetype IDs, case-insensitive.

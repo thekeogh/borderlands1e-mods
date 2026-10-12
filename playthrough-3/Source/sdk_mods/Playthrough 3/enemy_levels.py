@@ -21,8 +21,10 @@ BASE_LEVEL = 69
 WEIGHTS = {
     0: (100,), 1: (30, 70), 2: (10, 35, 55),
     3: (5, 20, 55, 20), 4: (5, 15, 50, 25, 5),
-    5: (5, 10, 45, 30, 7, 3),
+    5: (2, 10, 45, 33, 7, 3),
+    6: (2, 10, 40, 33, 8, 5, 2),
 }
+MAX_SPREAD = max(WEIGHTS)
 LEVEL_DESCRIPTION = (
     f"Listed named enemies/bosses: fixed at {NAMED_LEVEL}, at every spread.\n\n"
     "Ordinary enemies (level: chance):\n"
@@ -43,7 +45,7 @@ INPUT_FIELDS = ("BaseValueConstant", "BaseValueAttribute",
 KEEP_ALIVE = 0x4000
 EXACT_STAGE = "gd_Balance.EnemyLevel.EnemyLevel_GameStage_exact"
 spread = SliderOption(
-    "Enemy Level Spread", 3, 0, 5, 1, True,
+    "Enemy Level Spread", 3, 0, MAX_SPREAD, 1, True,
     description=LEVEL_DESCRIPTION,
 )
 spawn_trace = BoolOption(
@@ -65,7 +67,7 @@ _pins = {}
 
 
 def chosen_level(value, ticket=None):
-    weights = WEIGHTS[max(0, min(5, int(value)))]
+    weights = WEIGHTS[max(0, min(MAX_SPREAD, int(value)))]
     if ticket is None:
         ticket = randrange(100)
     if not 0 <= ticket < 100:
@@ -294,7 +296,7 @@ def snapshot(_pc):
     result = {"policy": "native_factory_data", "enabled": _enabled,
               "spread": int(spread.value), "minimum": 69,
               "maximum": 69 + int(spread.value),
-              "weights": WEIGHTS[max(0, min(5, int(spread.value)))],
+              "weights": WEIGHTS[max(0, min(MAX_SPREAD, int(spread.value)))],
               "assigned_counts": dict(_counts), "skipped_definitions": dict(_skipped),
               "ordinary_assigned_counts": dict(_ordinary_counts),
               "named_enemy_level": NAMED_LEVEL, "named_enemy_counts": dict(_named_counts),
