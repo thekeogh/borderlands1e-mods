@@ -1,19 +1,15 @@
-import unrealsdk#type: ignore
-from pathlib import Path#type: ignore
-from unrealsdk.hooks import Type, add_hook, remove_hook, Block#type: ignore
-from unrealsdk.unreal import UObject, WrappedStruct, BoundFunction#type: ignore
-from mods_base import hook, get_pc #type: ignore
-from mods_base.options import BaseOption, BoolOption#type: ignore
-from mods_base import SETTINGS_DIR, SliderOption#type: ignore
-from mods_base import build_mod#type: ignore
-from unrealsdk import logging, find_object#type: ignore
-from . import economy, enemy_levels
+import unrealsdk
+from pathlib import Path
+from typing import Any
+from unrealsdk.hooks import Type, add_hook, remove_hook, Block
+from unrealsdk.unreal import UObject, WrappedStruct, BoundFunction
+from mods_base import SETTINGS_DIR, build_mod, get_pc, hook
+from unrealsdk import logging, find_object
+from . import balance, economy, enemy_levels, grenades
+
+enemy_levels.max_level.on_change_while_enabled = grenades.change_max_level
 
 bPrepWorkDone = False
-
-GameStage = enemy_levels.spread
-
-
 
 GlobalsDef = None
 GlobalGameStage = None
@@ -55,13 +51,12 @@ def ResetPlaythrough3(PC:UObject):
     PC.EchoPlaythroughData[2].echolist.clear()
     unrealsdk.find_all("EchoTracker")[1].EchoCallList.clear()
 
-    print("Reset ran!")
 
 @hook(
     hook_func="WillowGame.WillowGFxMoviePressStart:extContinue",
     hook_type=Type.POST,
 )
-def PressStart(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunction):
+def PressStart(obj: UObject, args: WrappedStruct, ret: Any, func: BoundFunction):
     global bPrepWorkDone
 
     global GlobalsDef
@@ -252,7 +247,7 @@ def BuildResetMenu():
     hook_func="WillowGame.WillowGFxLobbySinglePlayer:FinishLoadGame",
     hook_type=Type.PRE,
 )
-def FinishLoadGame(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunction):
+def FinishLoadGame(obj: UObject, args: WrappedStruct, ret: Any, func: BoundFunction):
     global WillowGFxLobbySinglePlayer
     global ResetPlaythrough
     WillowGFxLobbySinglePlayer = obj
@@ -260,6 +255,7 @@ def FinishLoadGame(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunct
     Dlg = None
     ResetPlaythrough = False
     economy.set_mode(False, refresh=False)
+    grenades.reset_loading()
 
     Profile = get_pc().GetWillowGlobals().GetWillowSaveGameManager().GetCachedPlayerProfile(obj.GetControllerId())
 
@@ -296,7 +292,7 @@ def FinishLoadGame(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunct
     hook_func="WillowGame.WillowPlayerController:OnExpLevelChange",
     hook_type=Type.POST,
 )
-def OnExpLevelChange(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunction):
+def OnExpLevelChange(obj: UObject, args: WrappedStruct, ret: Any, func: BoundFunction):
     global GlobalGameStage
     if obj.WorldInfo.NetMode == 3 or obj.Pawn is None or GlobalGameStage is None:
         return
@@ -312,11 +308,12 @@ def OnExpLevelChange(obj: UObject, args: WrappedStruct, ret: any, func: BoundFun
     hook_func="WillowGame.WillowGFxDialogBox:OnButtonClicked",
     hook_type=Type.POST,
 )
-def OnButtonClicked(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunction):
+def OnButtonClicked(obj: UObject, args: WrappedStruct, ret: Any, func: BoundFunction):
     global WillowGFxLobbySinglePlayer, ResetPlaythrough, GlobalsDef, SkagsAtGate, GlobalGameStage
     
     if obj.DialogResult == 'Dif3':
         economy.set_mode(True, refresh=False)
+        grenades.set_mode(True, refresh=False)
         GlobalGameStage.ValueResolverChain[0].ConstantValue = enemy_levels.BASE_LEVEL
         add_hook("WillowGame.WillowPlayerController:ClientSetProfileLoaded", Type.POST, "FirstLoad", FirstLoadPT3)
         GlobalsDef.FastTravelMission = SkagsAtGate
@@ -324,6 +321,7 @@ def OnButtonClicked(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunc
 
     elif obj.DialogResult == 'ConfirmReset':
         economy.set_mode(True, refresh=False)
+        grenades.set_mode(True, refresh=False)
         ResetPlaythrough = True
         GlobalGameStage.ValueResolverChain[0].ConstantValue = enemy_levels.BASE_LEVEL
         add_hook("WillowGame.WillowPlayerController:TeleportPlayerToHoldingCell", Type.POST, "ResetLoad", ResetPT3)
@@ -333,6 +331,7 @@ def OnButtonClicked(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunc
     elif obj.DialogResult == 'Dif1' or obj.DialogResult == 'Dif2':
         enemy_levels.restore_definitions()
         economy.set_mode(False, refresh=False)
+        grenades.set_mode(False, refresh=False)
         unrealsdk.load_package('I1_Missions.Missions.M_Powerlines')
         GlobalsDef.FastTravelMission = unrealsdk.find_object('MissionDefinition','I1_Missions.Missions.M_Powerlines')
     return
@@ -341,7 +340,7 @@ def OnButtonClicked(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunc
     hook_func="WillowGame.WillowGFxDialogBox:HandleInputKey",
     hook_type=Type.PRE,
 )
-def HandleInputKey(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunction):
+def HandleInputKey(obj: UObject, args: WrappedStruct, ret: Any, func: BoundFunction):
     if args.ukey == "R" and obj.Buttons and obj.Buttons[0].Tag == 'Dif3':
         if obj.CurrentSelection == 0:
             BuildResetMenu()
@@ -350,7 +349,7 @@ def HandleInputKey(obj: UObject, args: WrappedStruct, ret: any, func: BoundFunct
 def ResetPT3(
     obj: UObject,
     __args: WrappedStruct,
-    __ret: any,
+    __ret: Any,
     __func: BoundFunction,
 ) -> None:
     global ResetPlaythrough, BadlandsLoaded
@@ -373,7 +372,7 @@ def ResetPT3(
 def FirstLoadPT3(
     obj: UObject,
     __args: WrappedStruct,
-    __ret: any,
+    __ret: Any,
     __func: BoundFunction,
 ) -> None:
     global ResetPlaythrough
@@ -392,17 +391,19 @@ def on_enable():
     if GlobalGameStage is not None:
         GlobalGameStage.ValueResolverChain[0].ConstantValue = enemy_levels.BASE_LEVEL
     enemy_levels.on_enable()
+    grenades.on_enable()
 
 
 def on_disable():
+    grenades.on_disable()
     enemy_levels.on_disable()
     economy.on_disable()
 
 
 build_mod(
-    description=enemy_levels.MOD_DESCRIPTION,
-    hooks=[OnButtonClicked, FinishLoadGame, HandleInputKey, OnExpLevelChange, PressStart, *economy.HOOKS, *enemy_levels.HOOKS],
-    options=[GameStage, enemy_levels.spawn_trace],
+    description=balance.DESCRIPTION,
+    hooks=[OnButtonClicked, FinishLoadGame, HandleInputKey, OnExpLevelChange, PressStart, *economy.HOOKS, *enemy_levels.HOOKS, *grenades.HOOKS],
+    options=[enemy_levels.max_level],
     settings_file=Path(f"{SETTINGS_DIR}/PT3.json"),
     on_enable=on_enable,
     on_disable=on_disable,

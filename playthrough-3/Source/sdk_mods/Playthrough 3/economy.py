@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from typing import Any
 
 import unrealsdk
-from unrealsdk import logging
 from mods_base import get_pc, hook
 from unrealsdk.hooks import Type
 
@@ -57,9 +56,8 @@ class InputPatch:
 
 
 class Economy:
-    def __init__(self, sdk: Any, reporter: Any) -> None:
+    def __init__(self, sdk: Any) -> None:
         self.sdk = sdk
-        self.reporter = reporter
         self.active = False
         self.patches: list[InputPatch] = []
         self.pinned: dict[int, tuple[Any, bool]] = {}
@@ -73,7 +71,6 @@ class Economy:
             self.reported.add(key)
             message = f"{key}: {exc!r}"
             self.problems.append(message)
-            self.reporter.error(f"[PT3 Economy] {message}")
 
     def pin(self, obj: Any) -> None:
         if obj is None:
@@ -147,10 +144,6 @@ class Economy:
             self.active = active
             self.events.append({"active": active, "reason": reason})
             self.events = self.events[-24:]
-            self.reporter.info(
-                "[PT3 Economy] " + ("Level-1 cash formulas active" if active else "Normal cash formulas restored")
-                + f" ({reason})."
-            )
         if refresh and self.patches:
             self.refresh_inventory()
         return True
@@ -223,7 +216,7 @@ class Economy:
         self.problems.clear()
 
 
-_economy = Economy(unrealsdk, logging)
+_economy = Economy(unrealsdk)
 
 
 def prepare() -> bool:
@@ -235,7 +228,6 @@ def set_mode(active: bool, *, refresh: bool = True) -> bool:
 
 
 def on_enable() -> None:
-    logging.info("[PT3 Economy] Enabled; runtime cash hooks installed.")
     pc = get_pc()
     if pc is not None and pc.Pawn is not None:
         _economy.set_mode(pc.GetCurrentPlaythrough() == 2, reason="enable")

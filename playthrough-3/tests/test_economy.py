@@ -126,9 +126,7 @@ class SDK:
 class PolicyTests(unittest.TestCase):
     def setUp(self):
         self.sdk = SDK()
-        self.messages = []
-        reporter = SimpleNamespace(info=self.messages.append, error=self.messages.append)
-        self.policy = economy.Economy(self.sdk, reporter)
+        self.policy = economy.Economy(self.sdk)
         self.shield = self.sdk.item(FIXTURE["inventory_cases"][0], modifier=38.4)
 
     def assert_original_inputs(self):
@@ -238,7 +236,7 @@ class PolicyTests(unittest.TestCase):
         self.assertIs(self.sdk.objects[economy.FORMULA_INPUTS[0][0]].ValueFormula.Power.BaseValueAttribute, first)
         self.assertEqual(self.policy.patches, [])
         self.assertFalse(self.policy.active)
-        self.assertTrue(self.messages)
+        self.assertTrue(self.policy.problems)
 
     def test_missing_definition_aborts_before_changing_any_inputs(self):
         del self.sdk.objects[economy.FORMULA_INPUTS[-1][0]]

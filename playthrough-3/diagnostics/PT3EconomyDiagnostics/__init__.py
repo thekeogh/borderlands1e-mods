@@ -31,6 +31,9 @@ def export_economy(_option=None) -> None:
         levels = sys.modules.get("Playthrough 3.enemy_levels")
         if levels is not None:
             snapshot["pt3_enemies"] = levels.snapshot(pc)
+        grenades = sys.modules.get("Playthrough 3.grenades")
+        if grenades is not None:
+            snapshot["pt3_grenades"] = grenades._policy.snapshot()
         path = write_snapshot(snapshot, SETTINGS_DIR / "PT3EconomyDiagnostics")
         logging.info(f"[PT3 Economy Diagnostics] Exported to {path}")
     except Exception as exc:

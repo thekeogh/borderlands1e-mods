@@ -11,47 +11,22 @@ from collections import Counter
 from contextlib import contextmanager, nullcontext
 from random import randrange
 
-from mods_base import BoolOption, SliderOption, get_pc, hook
-from unrealsdk import logging, find_object
+from mods_base import SliderOption, get_pc, hook
+from unrealsdk import find_object
 from unrealsdk.hooks import Block, prevent_hooking_direct_calls
 from unrealsdk.unreal import WeakPointer
-from .named_enemies import NAMED_LEVEL, named_enemy
+from .named_enemies import named_enemy
+from . import balance
 
-BASE_LEVEL = 69
-WEIGHTS = {
-    0: (100,), 1: (30, 70), 2: (10, 35, 55),
-    3: (5, 20, 55, 20), 4: (5, 15, 50, 25, 5),
-    5: (2, 10, 45, 33, 7, 3),
-    6: (2, 10, 40, 33, 8, 5, 2),
-}
-MAX_SPREAD = max(WEIGHTS)
-LEVEL_DESCRIPTION = (
-    f"Listed named enemies/bosses: fixed at {NAMED_LEVEL}, at every spread.\n\n"
-    "Ordinary enemies (level: chance):\n"
-    + "\n".join(
-        f"Spread {value}: " + ", ".join(
-            f"{BASE_LEVEL + offset}: {weight}%" for offset, weight in enumerate(weights)
-        ) for value, weights in WEIGHTS.items()
-    )
-    + "\n\nDefault spread: 3. Each spawn rolls independently."
-)
-MOD_DESCRIPTION = (
-    "Adds a third playthrough with level-1 cash prices and rewards.\n\n"
-    + LEVEL_DESCRIPTION
-    + "\n\nChanges apply to new supported spawns/restores in PT3. Supports BL1 Enhanced."
-)
+BASE_LEVEL = balance.BASE_LEVEL
+NAMED_LEVEL = balance.NAMED_LEVEL
 INPUT_FIELDS = ("BaseValueConstant", "BaseValueAttribute",
                 "InitializationDefinition", "BaseValueScaleConstant")
 KEEP_ALIVE = 0x4000
 EXACT_STAGE = "gd_Balance.EnemyLevel.EnemyLevel_GameStage_exact"
-spread = SliderOption(
-    "Enemy Level Spread", 3, 0, MAX_SPREAD, 1, True,
-    description=LEVEL_DESCRIPTION,
-)
-spawn_trace = BoolOption(
-    "Enemy Spawn Debug Logging", False,
-    description=("Log bounded spawn phases for crash troubleshooting. "
-                 "Errors and F10 diagnostics remain available when off."),
+max_level = SliderOption(
+    "Enemy Max Level", balance.DEFAULT_MAX, balance.MIN_MAX, balance.MAX_MAX, 1, True,
+    description=balance.DESCRIPTION,
 )
 _enabled = False
 _counts = Counter()
@@ -61,20 +36,19 @@ _named_definitions = {}
 _skipped = Counter()
 _targets = {}  # Weak references only; never pin spawned actors.
 _problems = []
-_traced = set()
 _definitions = {}
 _pins = {}
 
 
 def chosen_level(value, ticket=None):
-    weights = WEIGHTS[max(0, min(MAX_SPREAD, int(value)))]
+    weights = balance.WEIGHTS[balance.max_setting(value)]
     if ticket is None:
         ticket = randrange(100)
     if not 0 <= ticket < 100:
         raise ValueError("Level ticket must be between 0 and 99")
     for offset, weight in enumerate(weights):
         if ticket < weight:
-            return BASE_LEVEL + offset
+            return balance.MIN_ENEMY_LEVEL + offset
         ticket -= weight
     raise AssertionError("Weights must sum to 100")
 
@@ -83,7 +57,6 @@ def problem(exc):
     message = f"{type(exc).__name__}: {exc}"
     if message not in _problems and len(_problems) < 12:
         _problems.append(message)
-        logging.error(f"[PT3 Enemies] {message}")
 
 
 def host_player():
@@ -198,7 +171,6 @@ def native_level_data(definition, natural_stage, target):
 def spawn(obj, args, func, *, restore=False, vehicle=False):
     invoked = False
     pawn = None
-    trace = False
     try:
         if host_player() is None:
             return None
@@ -211,12 +183,7 @@ def spawn(obj, args, func, *, restore=False, vehicle=False):
         if not enemy_definition(obj, definition, archetype, name is not None):
             _skipped[path] += 1
             return None
-        target = NAMED_LEVEL if name is not None else chosen_level(spread.value)
-        key = (path, target, restore, vehicle)
-        if spawn_trace.value and key not in _traced and len(_traced) < 64:
-            _traced.add(key)
-            trace = True
-            logging.info(f"[PT3 Enemies] Preparing {path}; level {target}; restore={restore}.")
+        target = NAMED_LEVEL if name is not None else chosen_level(max_level.value)
         call_args = [args.Master, args.SpawnLocationContextObject,
                      args.SpawnLocation, args.SpawnRotation, target, args.AwesomeLevel]
         if restore:
@@ -226,15 +193,9 @@ def spawn(obj, args, func, *, restore=False, vehicle=False):
         level_data = (native_level_data(definition, args.GameStage, target)
                       if definition is not None else nullcontext())
         with level_data:
-            if trace:
-                logging.info(f"[PT3 Enemies] Calling native factory: {path}; level {target}.")
             with prevent_hooking_direct_calls():
                 invoked = True
                 pawn = func(*call_args)
-            if trace:
-                logging.info(f"[PT3 Enemies] Native factory returned; spawned={pawn is not None}.")
-        if trace:
-            logging.info("[PT3 Enemies] Grade ranges restored.")
         if pawn is not None:
             _counts[target] += 1
             if name is not None:
@@ -279,9 +240,6 @@ def on_enable():
     _skipped.clear()
     _targets.clear()
     _problems.clear()
-    _traced.clear()
-    logging.info(f"[PT3 Enemies] Native factory policy enabled; spread {int(spread.value)}.")
-    logging.info(f"[PT3 Enemies] Listed named enemies/bosses use level {NAMED_LEVEL}.")
 
 
 def on_disable():
@@ -293,10 +251,11 @@ def on_disable():
 
 def snapshot(_pc):
     """Inspect only completed, tracked spawns when the user requests F10."""
+    value = balance.max_setting(max_level.value)
     result = {"policy": "native_factory_data", "enabled": _enabled,
-              "spread": int(spread.value), "minimum": 69,
-              "maximum": 69 + int(spread.value),
-              "weights": WEIGHTS[max(0, min(MAX_SPREAD, int(spread.value)))],
+              "max_level": value, "minimum": balance.MIN_ENEMY_LEVEL,
+              "maximum": BASE_LEVEL + value,
+              "weights": balance.WEIGHTS[value],
               "assigned_counts": dict(_counts), "skipped_definitions": dict(_skipped),
               "ordinary_assigned_counts": dict(_ordinary_counts),
               "named_enemy_level": NAMED_LEVEL, "named_enemy_counts": dict(_named_counts),

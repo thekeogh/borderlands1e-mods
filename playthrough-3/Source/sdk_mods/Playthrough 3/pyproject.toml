@@ -1,8 +1,8 @@
 [project]
 name = "Playthrough 3"
-version = "2.4.0"
+version = "3.0.0"
 authors = [{ name = "keogh" }]
-description = "Adds PT3 with listed named enemies/bosses fixed at 71, spreads 0–6 for ordinary enemies 69 to 69 + spread, and level-1 cash prices and rewards. Default spread 3: 69/70/71/72 at 5/20/55/20%. Spread 6 reaches 75; spreads 5 and 6 give level 69 a 2% chance. Full spread odds available in the in-game description. Supports BL1 Enhanced."
+description = "A resettable third playthrough with level-1 cash prices, enemies 71–74 and named bosses at 71. Enemy Max Level: 3–5, default 5. Fixed grenade base damage: 700 / 775 / 800. Full preset table in the in-game description."
 
 [tool.sdkmod]
 name = "Playthrough 3"
