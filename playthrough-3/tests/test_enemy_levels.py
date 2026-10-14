@@ -240,7 +240,7 @@ class SpawnTests(unittest.TestCase):
         self.assertEqual(result["weights"], (20, 48, 30, 2))
         self.assertEqual(result["ordinary_assigned_counts"], {74: 1})
         self.assertEqual(result["tracked_enemies"][0]["exp_level"], 74)
-        expected = "5 | 71–74 | 20% | 48% | 30% | 2% | 71 | 800"
+        expected = "5 | 71–74 | 20% | 48% | 30% | 2% | 71"
         self.assertIn(expected, self.mod.max_level.description)
         self.assertIn(expected, self.mod.balance.DESCRIPTION)
 
@@ -349,22 +349,12 @@ class SpawnTests(unittest.TestCase):
         events = []
         economy.on_enable = lambda: events.append("economy enabled")
         economy.on_disable = lambda: events.append("economy disabled")
-        grenades = ModuleType("pt3_level_test.grenades")
-        grenades.HOOKS = []
-        grenade_events = []
-        grenades.on_enable = lambda: grenade_events.append("enabled")
-        grenades.on_disable = lambda: grenade_events.append("disabled")
-        grenades.set_mode = lambda active, **kw: grenade_events.append(active)
-        grenades.reset_loading = lambda: grenade_events.append("loading")
-        grenades.change_max_level = lambda *args: None
-        package.grenades = grenades
         package.economy, package.enemy_levels = economy, self.mod
         main = ModuleType("pt3_level_test.main")
         main.__package__ = package.__name__
-        main.__version__, main.__version_info__ = "3.0.0", (3, 0, 0)
+        main.__version__, main.__version_info__ = "3.0.1", (3, 0, 1)
         self.modules["mods_base"].build_mod = lambda **kw: setattr(main, "registration", kw)
         self.modules[economy.__name__] = economy
-        self.modules[grenades.__name__] = grenades
         with patch.dict(sys.modules, self.modules):
             exec(compile((SOURCE / "__init__.py").read_text(), "main.py", "exec"), main.__dict__)
         main.GlobalGameStage = NS(ValueResolverChain=[NS(ConstantValue=84)])
@@ -372,7 +362,6 @@ class SpawnTests(unittest.TestCase):
         self.assertEqual(main.GlobalGameStage.ValueResolverChain[0].ConstantValue, 69)
         self.assertEqual(main.registration["options"], [self.mod.max_level])
         self.assertEqual(main.registration["description"], self.mod.balance.DESCRIPTION)
-        self.assertIs(self.mod.max_level.on_change_while_enabled, grenades.change_max_level)
         self.assertEqual(main.registration["settings_file"].name, "PT3.json")
         original = self.original_data()
         self.mod.create_pawn(self.factory, self.args, None, self.native_spawn)
@@ -382,7 +371,6 @@ class SpawnTests(unittest.TestCase):
         main.OnButtonClicked(NS(DialogResult="Dif1"), None, None, None)
         self.assertEqual(self.original_data(), original)
         main.on_disable()
-        self.assertEqual(grenade_events, ["enabled", False, "disabled"])
         self.assertEqual(events, ["economy enabled", "economy disabled"])
 
     def test_all_sourced_named_ids_spawn_at_71_for_every_spread_fresh_and_restored(self):

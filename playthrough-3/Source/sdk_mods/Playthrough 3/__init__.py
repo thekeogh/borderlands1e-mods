@@ -5,9 +5,7 @@ from unrealsdk.hooks import Type, add_hook, remove_hook, Block
 from unrealsdk.unreal import UObject, WrappedStruct, BoundFunction
 from mods_base import SETTINGS_DIR, build_mod, get_pc, hook
 from unrealsdk import logging, find_object
-from . import balance, economy, enemy_levels, grenades
-
-enemy_levels.max_level.on_change_while_enabled = grenades.change_max_level
+from . import balance, economy, enemy_levels
 
 bPrepWorkDone = False
 
@@ -255,7 +253,6 @@ def FinishLoadGame(obj: UObject, args: WrappedStruct, ret: Any, func: BoundFunct
     Dlg = None
     ResetPlaythrough = False
     economy.set_mode(False, refresh=False)
-    grenades.reset_loading()
 
     Profile = get_pc().GetWillowGlobals().GetWillowSaveGameManager().GetCachedPlayerProfile(obj.GetControllerId())
 
@@ -313,7 +310,6 @@ def OnButtonClicked(obj: UObject, args: WrappedStruct, ret: Any, func: BoundFunc
     
     if obj.DialogResult == 'Dif3':
         economy.set_mode(True, refresh=False)
-        grenades.set_mode(True, refresh=False)
         GlobalGameStage.ValueResolverChain[0].ConstantValue = enemy_levels.BASE_LEVEL
         add_hook("WillowGame.WillowPlayerController:ClientSetProfileLoaded", Type.POST, "FirstLoad", FirstLoadPT3)
         GlobalsDef.FastTravelMission = SkagsAtGate
@@ -321,7 +317,6 @@ def OnButtonClicked(obj: UObject, args: WrappedStruct, ret: Any, func: BoundFunc
 
     elif obj.DialogResult == 'ConfirmReset':
         economy.set_mode(True, refresh=False)
-        grenades.set_mode(True, refresh=False)
         ResetPlaythrough = True
         GlobalGameStage.ValueResolverChain[0].ConstantValue = enemy_levels.BASE_LEVEL
         add_hook("WillowGame.WillowPlayerController:TeleportPlayerToHoldingCell", Type.POST, "ResetLoad", ResetPT3)
@@ -331,7 +326,6 @@ def OnButtonClicked(obj: UObject, args: WrappedStruct, ret: Any, func: BoundFunc
     elif obj.DialogResult == 'Dif1' or obj.DialogResult == 'Dif2':
         enemy_levels.restore_definitions()
         economy.set_mode(False, refresh=False)
-        grenades.set_mode(False, refresh=False)
         unrealsdk.load_package('I1_Missions.Missions.M_Powerlines')
         GlobalsDef.FastTravelMission = unrealsdk.find_object('MissionDefinition','I1_Missions.Missions.M_Powerlines')
     return
@@ -391,18 +385,16 @@ def on_enable():
     if GlobalGameStage is not None:
         GlobalGameStage.ValueResolverChain[0].ConstantValue = enemy_levels.BASE_LEVEL
     enemy_levels.on_enable()
-    grenades.on_enable()
 
 
 def on_disable():
-    grenades.on_disable()
     enemy_levels.on_disable()
     economy.on_disable()
 
 
 build_mod(
     description=balance.DESCRIPTION,
-    hooks=[OnButtonClicked, FinishLoadGame, HandleInputKey, OnExpLevelChange, PressStart, *economy.HOOKS, *enemy_levels.HOOKS, *grenades.HOOKS],
+    hooks=[OnButtonClicked, FinishLoadGame, HandleInputKey, OnExpLevelChange, PressStart, *economy.HOOKS, *enemy_levels.HOOKS],
     options=[enemy_levels.max_level],
     settings_file=Path(f"{SETTINGS_DIR}/PT3.json"),
     on_enable=on_enable,

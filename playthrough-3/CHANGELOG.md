@@ -2,6 +2,20 @@
 
 All release changes are recorded here. README.md describes installation and current play.
 
+## 3.0.1 — 2026-10-14
+
+- Removed all grenade damage adjustments, card overrides, hooks and callbacks.
+  Grenade damage and damage cards now use native game values at every setting.
+- Removed the grenade preset column from the in-game table and README, along
+  with the damage module, its tests and its diagnostic status export.
+- Optional diagnostics updated to 2.2.1; normal installation remains separate.
+- Enemy levels, probabilities, named/boss level 71, default max 5, level-1 economy
+  and the original PT3 assets and mission setup are unchanged.
+- Fully restart the game after replacing the SDK mod to clear previous runtime
+  damage changes. Existing settings and saves are retained.
+- Validation: 66 local tests passed; archive contents, unchanged enemy/economy
+  code, original UPK and 95 reference hashes verified. Windows gameplay pending.
+
 ## 3.0.0 — 2026-10-13
 
 - Replaced Enemy Level Spread with **Enemy Max Level**, range **3–5**, default **5**.

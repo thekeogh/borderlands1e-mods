@@ -1,8 +1,8 @@
 [project]
 name = "Playthrough 3"
-version = "3.0.0"
+version = "3.0.1"
 authors = [{ name = "keogh" }]
-description = "A resettable third playthrough with level-1 cash prices, enemies 71–74 and named bosses at 71. Enemy Max Level: 3–5, default 5. Fixed grenade base damage: 700 / 775 / 800. Full preset table in the in-game description."
+description = "A resettable third playthrough with level-1 cash prices, enemies 71–74 and named bosses at 71. Enemy Max Level: 3–5, default 5. Full preset table in the in-game description."
 
 [tool.sdkmod]
 name = "Playthrough 3"
