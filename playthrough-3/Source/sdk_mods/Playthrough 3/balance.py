@@ -23,6 +23,7 @@ TABLE = " | ".join(TABLE_HEADER) + "\n" + "\n".join(" | ".join(row) for row in t
 DESCRIPTION = (
     "A resettable third playthrough for your level-69 character, including DLCs.\n"
     f"Level-1 cash prices and rewards. Named enemies/bosses stay at {NAMED_LEVEL}.\n\n"
+    "Missing base-game mission regions scale to 69, including already accepted missions.\n\n"
     + TABLE
     + "\n\nEnemy Max Level: 3–5, default 5. Maximum is 69 + the setting; minimum is 71."
       " Each supported ordinary spawn rolls independently. Changes affect new spawns/restores."

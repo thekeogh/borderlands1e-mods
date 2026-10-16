@@ -43,7 +43,7 @@ lines.extend(f"{path} -> {name}" for path, name in sorted(named["ARCHETYPE_NAMES
 reference.write_text("\n".join(lines) + "\n")
 sdkmod = output / "Playthrough 3.sdkmod"
 with ZipFile(sdkmod, "w", ZIP_DEFLATED) as archive:
-    for name in ("__init__.py", "balance.py", "economy.py", "enemy_levels.py", "named_enemies.py", "pyproject.toml"):
+    for name in ("__init__.py", "balance.py", "economy.py", "enemy_levels.py", "missions.py", "named_enemies.py", "pyproject.toml"):
         archive.write(source / name, "Playthrough 3/" + name)
     for name in ("README.md", "CHANGELOG.md", "NAMED_ENEMIES.txt"):
         archive.write(root / name, "Playthrough 3/" + name)

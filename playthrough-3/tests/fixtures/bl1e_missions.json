@@ -1,0 +1,307 @@
+{
+  "source": "logs/pt3-economy-20261012-180742-465630.json",
+  "note": "Definition fields and native parameter names from BL1E export. Zero transient definition fields alone do not prove a mission is broken. Reported failure: What Hit The Fan and Scavenger: Combat Rifle at level 0 in PT3.",
+  "missions": {
+    "Z0_Missions.Missions.M_KillSledge2": {
+      "MissionName": "Sledge: Battle For The Badlands",
+      "GameStageRegion": {
+        "ref": "gd_GameStages.Arid.Arid_Mines",
+        "class": "WillowRegionDefinition"
+      },
+      "ExperienceRewardMultiplier": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 4.300000190734863,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        }
+      },
+      "ItemRewards": [
+        null,
+        {
+          "ref": "gd_customitems.Items.CustomItem_StarterGear_ComDeck_Roland",
+          "class": "InventoryBalanceDefinition"
+        },
+        {
+          "ref": "gd_customitems.Items.CustomItem_StarterGear_ComDeck_Mordecai",
+          "class": "InventoryBalanceDefinition"
+        },
+        {
+          "ref": "gd_customitems.Items.CustomItem_StarterGear_ComDeck_Lilith",
+          "class": "InventoryBalanceDefinition"
+        },
+        {
+          "ref": "gd_customitems.Items.CustomItem_StarterGear_ComDeck_Brick",
+          "class": "InventoryBalanceDefinition"
+        }
+      ],
+      "GameStage": 0,
+      "ExpLevel": 0
+    },
+    "Z0_Missions.Missions.M_Mothrak": {
+      "MissionName": "Like A Moth To Flame",
+      "GameStageRegion": {
+        "ref": "gd_GameStages.scrap.Scrap_NewHaven_B",
+        "class": "WillowRegionDefinition"
+      },
+      "ExperienceRewardMultiplier": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 3.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        }
+      },
+      "ItemRewards": [
+        {
+          "ref": "gd_customweapons.Retail_Weapons.CustomWeap_CombatShotgun_Blister",
+          "class": "InventoryBalanceDefinition"
+        },
+        null,
+        null,
+        null,
+        null
+      ],
+      "GameStage": 0,
+      "ExpLevel": 0
+    },
+    "Z0_Missions.Missions.M_OwedMoneyDebt": {
+      "MissionName": "Product Recall",
+      "GameStageRegion": {
+        "ref": "gd_GameStages.Arid.Arid__C",
+        "class": "WillowRegionDefinition"
+      },
+      "ExperienceRewardMultiplier": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 1.7000000476837158,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        }
+      },
+      "ItemRewards": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "GameStage": 0,
+      "ExpLevel": 0
+    },
+    "Z0_Missions.Missions.M_OwedMoneyInvestigate": {
+      "MissionName": "Find Bruce McClane",
+      "GameStageRegion": {
+        "ref": "gd_GameStages.Arid.Arid__C",
+        "class": "WillowRegionDefinition"
+      },
+      "ExperienceRewardMultiplier": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 1.5,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        }
+      },
+      "ItemRewards": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "GameStage": 0,
+      "ExpLevel": 0
+    },
+    "Z0_Missions.Missions.M_RakkDebris": {
+      "MissionName": "What Hit The Fan",
+      "GameStageRegion": {
+        "ref": "gd_GameStages.Arid.Arid__C",
+        "class": "WillowRegionDefinition"
+      },
+      "ExperienceRewardMultiplier": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 1.5,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        }
+      },
+      "ItemRewards": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "GameStage": 0,
+      "ExpLevel": 0
+    },
+    "Z0_Missions.Missions.M_Saboteur": {
+      "MissionName": "Schemin' That Sabotage",
+      "GameStageRegion": {
+        "ref": "gd_GameStages.Arid.Arid__C_Difficult",
+        "class": "WillowRegionDefinition"
+      },
+      "ExperienceRewardMultiplier": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        }
+      },
+      "ItemRewards": [
+        {
+          "ref": "gd_itemgrades.Gear.ItemGrade_Gear_GrenadeMODs",
+          "class": "InventoryBalanceDefinition"
+        },
+        null,
+        null,
+        null,
+        null
+      ],
+      "GameStage": 0,
+      "ExpLevel": 0
+    },
+    "Z0_Missions.Missions.M_Scavenger1": {
+      "MissionName": "Scavenger: Combat Rifle",
+      "GameStageRegion": {
+        "ref": "gd_GameStages.Arid.Arid__C",
+        "class": "WillowRegionDefinition"
+      },
+      "ExperienceRewardMultiplier": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 1.149999976158142,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        }
+      },
+      "ItemRewards": [
+        {
+          "ref": "gd_customweapons.Reward_Weapons.CustomWeap_reward_CombatRifle",
+          "class": "InventoryBalanceDefinition"
+        },
+        null,
+        null,
+        null,
+        null
+      ],
+      "GameStage": 0,
+      "ExpLevel": 0
+    },
+    "Z0_Missions.Missions.M_TheSkulls": {
+      "MissionName": "Insult To Injury",
+      "GameStageRegion": {
+        "ref": "gd_GameStages.Arid.Arid__C_Difficult",
+        "class": "WillowRegionDefinition"
+      },
+      "ExperienceRewardMultiplier": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        }
+      },
+      "ItemRewards": [
+        null,
+        {
+          "ref": "gd_customweapons.Reward_Weapons.CustomWeap_reward_AssaultShotgun",
+          "class": "InventoryBalanceDefinition"
+        },
+        {
+          "ref": "gd_customweapons.Reward_Weapons.CustomWeap_reward_SemiAutoSniperRifle",
+          "class": "InventoryBalanceDefinition"
+        },
+        {
+          "ref": "gd_customweapons.Reward_Weapons.CustomWeap_reward_PatrolSMG",
+          "class": "InventoryBalanceDefinition"
+        },
+        {
+          "ref": "gd_customweapons.Reward_Weapons.CustomWeap_reward_Launcher_Rocket",
+          "class": "InventoryBalanceDefinition"
+        }
+      ],
+      "GameStage": 0,
+      "ExpLevel": 0
+    },
+    "I1_Missions.Missions.M_BanditConvoy01": {
+      "MissionName": "Road Warriors: Hot Shots",
+      "GameStageRegion": {
+        "ref": "gd_GameStages.Headlands.Headlands__B",
+        "class": "WillowRegionDefinition"
+      },
+      "ExperienceRewardMultiplier": {
+        "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+        "fields": {
+          "BaseValueConstant": 1.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        }
+      },
+      "ItemRewards": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "GameStage": 0,
+      "ExpLevel": 0
+    }
+  },
+  "function_parameters": {
+    "WillowGame.MissionDefinition:GenerateRewardString": [
+      "InWPC"
+    ],
+    "WillowGame.MissionDefinition:GetItemRewardForPlayer": [
+      "InWPC"
+    ],
+    "WillowGame.MissionDefinition:GetItemRewardInventorySpaceRequirement": [
+      "InWPC"
+    ],
+    "WillowGame.MissionDefinition:GetExperienceReward": [
+      "InWPC"
+    ],
+    "WillowGame.MissionDefinition:GetCreditReward": [
+      "InWPC"
+    ],
+    "WillowGame.MissionDefinition:ComputeReward": [
+      "BaseValueFormula",
+      "MultiplierFormula",
+      "ContextSource"
+    ],
+    "WillowGame.MissionDefinition:SetExpLevel": [
+      "NewExpLevel"
+    ],
+    "WillowGame.MissionDefinition:SetAwesomeLevel": [
+      "NewAwesomeLevel"
+    ],
+    "WillowGame.MissionDefinition:SetGameStage": [
+      "NewGameStage"
+    ],
+    "WillowGame.MissionDefinition:RefreshRewardGameStage": [
+      "InWPC"
+    ],
+    "WillowGame.MissionDefinition:GetExpLevel": [],
+    "WillowGame.MissionDefinition:GetAwesomeLevel": [],
+    "WillowGame.MissionDefinition:GetGameStage": [],
+    "WillowGame.WillowPlayerController:OnExpLevelChange": [
+      "bNoSpecialEffects"
+    ],
+    "WillowGame.WillowPlayerController:GrantMissionRewards": [
+      "InMission"
+    ]
+  }
+}

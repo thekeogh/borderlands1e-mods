@@ -1,6 +1,6 @@
 # Playthrough 3
 
-**Version 3.0.1 · Author: keogh · Borderlands GOTY Enhanced**
+**Version 3.0.2 · Author: keogh · Borderlands GOTY Enhanced**
 
 A resettable third playthrough for a **level-69 character**: tougher enemies,
 all four DLCs, and level-1 cash prices and rewards.
@@ -10,7 +10,7 @@ all four DLCs, and level-1 cash prices and rewards.
 Requires the [BL1 PythonSDK mod manager](https://bl-sdk.github.io/willow1-mod-db/).
 
 1. Close the game.
-2. Extract `dist/Playthrough3-Level1Economy-BL1E-3.0.1.zip` into your game folder.
+2. Extract `dist/Playthrough3-Level1Economy-BL1E-3.0.2.zip` into your game folder.
    It installs `sdk_mods/Playthrough 3.sdkmod` and
    `WillowGame/CookedPC/Mods/PT3/gd_GameStages_PT3.upk`.
 3. Keep **one** PT3 SDK mod. Remove an older unpacked `Playthrough 3` folder from
@@ -46,6 +46,9 @@ Grenade damage and damage cards use the game's native values.
 
 - PT3 starts at **Skags At The Gate**. Its fast-travel unlock follows that mission.
 - DLCs use PT3 balance, including Knoxx from its first visit.
+- Missing base-game mission regions scale to **69**. Affected board offers and
+  accepted missions use level 69 for difficulty, XP and normal reward generation.
+  Quest progress is retained; already granted rewards are unchanged.
 - Cash prices, selling, drops and mission payouts use the level-1 economy.
   Your existing wallet balance is retained.
 - Existing **Enemy Max Level** settings are retained. No save reset is required.

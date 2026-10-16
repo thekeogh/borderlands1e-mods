@@ -2,6 +2,30 @@
 
 All release changes are recorded here. README.md describes installation and current play.
 
+## 3.0.2 — 2026-10-16
+
+- Fixed missing base-game regions in the original PT3 balance, including
+  `Arid__C`, `Arid__C_Difficult`, `Headlands__B` and `Scrap_NewHaven_B`.
+  Missing loaded regions are added to the matching PT3 balance at level 69.
+  Existing entries and their story overrides are preserved.
+- Corrected affected mission GameStage and ExpLevel before native UI, XP and
+  item-reward reads, and after native reward-stage refreshes. This covers offered
+  and accepted missions, including What Hit The Fan and Scavenger: Combat Rifle.
+- Retained quest progress, reward definitions, XP multipliers, enemy presets,
+  named-enemy levels, level-1 cash formulas and native grenade damage. No rewards
+  are reissued and already granted items are not changed.
+- Applied the fix through the SDK mod; the original UPK remains unchanged.
+  Fully restart after replacing the SDK mod. No quest or playthrough reset needed.
+- Restore added regional entries and edited transient mission fields on disable;
+  restore mission fields when leaving PT3. PT1/PT2 and clients are excluded.
+- Optional diagnostics 2.2.2 includes missing-region policy status and bounded
+  errors. Normal runtime logging remains limited to the loading/version line.
+- Validation: 85 local tests passed, including region omissions, accepted/offered
+  mission reads, native refresh overwrites, turn-in preparation, Continue/load,
+  restoration, client/PT1/PT2 exclusions and existing enemy/cash regressions.
+  Original UPK row layouts checked. Windows UI, XP and item rewards need gameplay
+  confirmation; local models do not execute the game's native reward code.
+
 ## 3.0.1 — 2026-10-14
 
 - Removed all grenade damage adjustments, card overrides, hooks and callbacks.

@@ -352,7 +352,7 @@ class SpawnTests(unittest.TestCase):
         package.economy, package.enemy_levels = economy, self.mod
         main = ModuleType("pt3_level_test.main")
         main.__package__ = package.__name__
-        main.__version__, main.__version_info__ = "3.0.1", (3, 0, 1)
+        main.__version__, main.__version_info__ = "3.0.2", (3, 0, 2)
         self.modules["mods_base"].build_mod = lambda **kw: setattr(main, "registration", kw)
         self.modules[economy.__name__] = economy
         with patch.dict(sys.modules, self.modules):
