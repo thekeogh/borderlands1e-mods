@@ -1,0 +1,13 @@
+[project]
+name = "One Playthrough"
+version = "4.0.4"
+authors = [{ name = "keogh" }]
+description = "Play from level 1 to 69 in one playthrough. Enemies and available missions scale with you across the main story and all four DLCs. Enable, start a New Game and play normally."
+
+[tool.sdkmod]
+name = "One Playthrough"
+mod_type = "Standard"
+supported_games = ["BL1E"]
+coop_support = "Unknown"
+auto_enable = true
+license = { name = "GPL3", url = "https://choosealicense.com/licenses/gpl-3.0/" }

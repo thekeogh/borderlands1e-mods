@@ -1,0 +1,1603 @@
+{
+  "source": "logs/pt3-economy-20261012-180742-465630.json",
+  "note": "Real BL1E regional definitions and function parameters. DLC fixtures and native calls in tests are explicit models, not game execution.",
+  "balances": {
+    "gd_GameStages.Balance.Balance_P1_Arid": [
+      {
+        "Region": {
+          "ref": "gd_GameStages.Arid.Arid_Firestone",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 3.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 0.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": [
+          {
+            "Mission": {
+              "ref": "Z0_Missions.Missions.M_KillBandits",
+              "class": "MissionDefinition"
+            },
+            "GameStage": {
+              "BaseValueConstant": 4.0,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            },
+            "AwesomeLevel": {
+              "BaseValueConstant": 0.0,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            }
+          },
+          {
+            "Mission": {
+              "ref": "Z0_Missions.Missions.M_MeetAl",
+              "class": "MissionDefinition"
+            },
+            "GameStage": {
+              "BaseValueConstant": 5.0,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            },
+            "AwesomeLevel": {
+              "BaseValueConstant": 0.0,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            }
+          },
+          {
+            "Mission": {
+              "ref": "Z0_Missions.Missions.M_KillSledge1",
+              "class": "MissionDefinition"
+            },
+            "GameStage": {
+              "BaseValueConstant": 12.0,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            },
+            "AwesomeLevel": {
+              "BaseValueConstant": 0.0,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Arid.Arid_Firestone_LocalEnemies",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 0.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": [
+          {
+            "Mission": {
+              "ref": "Z0_Missions.Missions.M_KillSledge1",
+              "class": "MissionDefinition"
+            },
+            "GameStage": {
+              "BaseValueConstant": 5.0,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            },
+            "AwesomeLevel": {
+              "BaseValueConstant": 0.0,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Arid.Arid_SkagGully",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 4.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 1.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": [
+          {
+            "Mission": {
+              "ref": "Z0_Missions.Missions.M_KillSledge1",
+              "class": "MissionDefinition"
+            },
+            "GameStage": {
+              "BaseValueConstant": 13.0,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            },
+            "AwesomeLevel": {
+              "BaseValueConstant": 1.5,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Arid.Arid_SkagProvingGrounds",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 7.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 1.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": [
+          {
+            "Mission": {
+              "ref": "Z0_Missions.Missions.M_KillSledge1",
+              "class": "MissionDefinition"
+            },
+            "GameStage": {
+              "BaseValueConstant": 14.0,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            },
+            "AwesomeLevel": {
+              "BaseValueConstant": 1.5,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Arid.Arid_SkagWarrens",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 9.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 1.5,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": [
+          {
+            "Mission": {
+              "ref": "Z0_Missions.Missions.M_KillSledge1",
+              "class": "MissionDefinition"
+            },
+            "GameStage": {
+              "BaseValueConstant": 15.0,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            },
+            "AwesomeLevel": {
+              "BaseValueConstant": 1.5,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Arid.Arid__A",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 10.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 1.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Arid.Arid__A_Difficult",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 12.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 1.5,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Arid.Arid__B",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 13.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 1.5,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Arid.Arid__B_Difficult",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 15.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Arid.Arid__C",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 16.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 1.5,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Arid.Arid__C_Difficult",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 18.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Arid.Arid_Bunker",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 14.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 1.5,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Arid.Arid_Cave",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 15.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 1.5,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Arid.Arid_Mines",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 17.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      }
+    ],
+    "gd_GameStages.Balance.Balance_P1_Headlands": [
+      {
+        "Region": {
+          "ref": "gd_GameStages.Headlands.Headlands__A",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 18.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Headlands.Headlands__A_Difficult",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 20.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Headlands.Headlands__B",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 19.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      }
+    ],
+    "gd_GameStages.Balance.Balance_P1_Scrap": [
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap_NewHaven",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 21.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 1.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": [
+          {
+            "Mission": {
+              "ref": "Z1_Missions.Missions.M_FinalArtifact",
+              "class": "MissionDefinition"
+            },
+            "GameStage": {
+              "BaseValueConstant": 24.0,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            },
+            "AwesomeLevel": {
+              "BaseValueConstant": 1.0,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap_NewHaven_LocalEnemies",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 20.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap__A",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 21.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap__A_Difficult",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 23.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap__B",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 24.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 2.5,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap__B_Difficult",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 26.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 2.5,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap__C",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 27.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 3.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap__C_Difficult",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 29.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 3.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap_TrashCave",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 21.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap_Scrapyard",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 22.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap_PirateBay",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 23.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": [
+          {
+            "Mission": {
+              "ref": "Z1_Missions.Missions.M_JaynisUnintendedConseq",
+              "class": "MissionDefinition"
+            },
+            "GameStage": {
+              "BaseValueConstant": 27.0,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            },
+            "AwesomeLevel": {
+              "BaseValueConstant": 2.0,
+              "BaseValueAttribute": null,
+              "InitializationDefinition": null,
+              "BaseValueScaleConstant": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap_Canyon",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 25.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 2.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap_Canyon_Narrows",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 26.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 2.5,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap_TrashCoast",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 27.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 3.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap_TrashCoast_Plateau",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 27.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 3.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap_TrashCoast_Vents",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 28.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 3.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.scrap_oldhaven",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 28.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 3.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.scrap.Scrap_NewHaven_B",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 23.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 1.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      }
+    ],
+    "gd_GameStages.Balance.Balance_P1_Thor": [
+      {
+        "Region": {
+          "ref": "gd_GameStages.Thor.Thor__A",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 29.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 3.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Thor.Thor__A_Difficult",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 30.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 3.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Thor.Thor_Crimson_Fastness",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 30.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 3.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Thor.Thor_Crimson_Enclave",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 31.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 3.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Thor.Thor_TheDescent",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 32.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 3.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Thor.Thor_Promontory",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 32.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 3.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      },
+      {
+        "Region": {
+          "ref": "gd_GameStages.Thor.Thor_TheVault",
+          "class": "WillowRegionDefinition"
+        },
+        "DefaultGameStage": {
+          "BaseValueConstant": 32.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "DefaultAwesomeLevel": {
+          "BaseValueConstant": 3.0,
+          "BaseValueAttribute": null,
+          "InitializationDefinition": null,
+          "BaseValueScaleConstant": 1.0
+        },
+        "MissionOverrides": []
+      }
+    ]
+  },
+  "functions": {
+    "WillowGame.WillowPlayerController:NotifyOakUpsellViewed": [],
+    "WillowGame.WillowPlayerController:ShouldAutoTriggerOakUpsell": [],
+    "WillowGame.WillowPlayerController:CanAcessOakUpsell": [],
+    "WillowGame.WillowPlayerController:ShowOakContentPurchaseUI": [
+      "ProductType"
+    ],
+    "WillowGame.WillowPlayerController:UpdateOakUpsellStatus": [],
+    "WillowGame.WillowPlayerController:OnOakUpsellCheckComplete": [
+      "bWasSuccessful",
+      "bOwns",
+      "bReleased"
+    ],
+    "WillowGame.WillowPlayerController:GetUpsellMenuString": [],
+    "WillowGame.WillowPlayerController:OnGearboxAccountSignInRewardDialogClose": [
+      "Dlg",
+      "ControllerId"
+    ],
+    "WillowGame.WillowPlayerController:ShowGearboxAccountSignInRewardDialog": [],
+    "WillowGame.WillowPlayerController:GetBankUpgradeSlots": [],
+    "WillowGame.WillowPlayerController:VerifySkillRespec_Clicked": [
+      "Dlg",
+      "UserId"
+    ],
+    "WillowGame.WillowPlayerController:VerifySkillRespec": [],
+    "WillowGame.WillowPlayerController:ClearLastMissionRewardItem": [],
+    "WillowGame.WillowPlayerController:OnLastMissionRewardItemChange": [],
+    "WillowGame.WillowPlayerController:ClientCloneItemForMissionRewardsPage": [
+      "DefinitionData",
+      "Quantity"
+    ],
+    "WillowGame.WillowPlayerController:ClientCloneWeaponForMissionRewardsPage": [
+      "DefinitionData"
+    ],
+    "WillowGame.WillowPlayerController:CloneMissionReward": [
+      "Inv"
+    ],
+    "WillowGame.WillowPlayerController:ClientFinishAwaitingMissionReward": [],
+    "WillowGame.WillowPlayerController:UpdateHUDCachedXPValue": [
+      "ExpPoints"
+    ],
+    "WillowGame.WillowPlayerController:GetMissionDescriptionForUI": [
+      "MissionDef",
+      "bShowTurnInDescriptionWhenReadyToTurnIn"
+    ],
+    "WillowGame.WillowPlayerController:CanSetResourcePoolValues": [
+      "ResourcePoolClass"
+    ],
+    "WillowGame.WillowPlayerController:ClientNotifyKilledEnemy": [
+      "EnemyName",
+      "ExpLevel",
+      "ExpPointsEarned"
+    ],
+    "WillowGame.WillowPlayerController:NotifyKilledEnemy": [
+      "EnemyName"
+    ],
+    "WillowGame.WillowPlayerController:DeveloperFreeLevels": [
+      "NumLevels"
+    ],
+    "WillowGame.WillowPlayerController:AddMissionPlaythrough": [
+      "Playthrough"
+    ],
+    "WillowGame.WillowPlayerController:UnregisterSkillGradeChangedDelegate": [],
+    "WillowGame.WillowPlayerController:RegisterSkillGradeChangedDelegate": [
+      "GradeChangedDelegate"
+    ],
+    "WillowGame.WillowPlayerController:InitializeEcho": [],
+    "WillowGame.WillowPlayerController:PlayCoopMissionEchoCall": [
+      "InMission",
+      "MissionTaker",
+      "Message"
+    ],
+    "WillowGame.WillowPlayerController:FindActiveOutpostsForLevel": [
+      "LevelName",
+      "ActiveOutpostNames"
+    ],
+    "WillowGame.WillowPlayerController:InitializeGFxUIManager": [],
+    "WillowGame.WillowPlayerController:IsCurrentLevelInTheGame": [],
+    "WillowGame.WillowPlayerController:GetNumCompletedMissions": [
+      "Playthrough"
+    ],
+    "WillowGame.WillowPlayerController:ResetProfileSettingValueFloat": [
+      "sPropertyName"
+    ],
+    "WillowGame.WillowPlayerController:ResetProfileSettingValueInt": [
+      "sPropertyName"
+    ],
+    "WillowGame.WillowPlayerController:GetDefaultProfileSettingValueInt": [
+      "sPropertyName"
+    ],
+    "WillowGame.WillowPlayerController:GetDefaultProfileSettingValueFloat": [
+      "sPropertyName"
+    ],
+    "WillowGame.WillowPlayerController:GetProfileSettingValueInt": [
+      "sPropertyName"
+    ],
+    "WillowGame.WillowPlayerController:GetProfileSettingValueFloat": [
+      "sPropertyName"
+    ],
+    "WillowGame.WillowPlayerController:SetProfileSettingValueInt": [
+      "nValue",
+      "sPropertyName"
+    ],
+    "WillowGame.WillowPlayerController:SetProfileSettingValueFloat": [
+      "fValue",
+      "sPropertyName"
+    ],
+    "WillowGame.WillowPlayerController:UpdateRadarOnLevelStreaming": [],
+    "WillowGame.WillowPlayerController:GetProjectileExpLevelFromPlayerLevel": [],
+    "WillowGame.WillowPlayerController:GetProjectileExpLevelFromEquipmentLevel": [
+      "EquipmentLocation"
+    ],
+    "WillowGame.WillowPlayerController:DisplayLevelTransitionState": [
+      "HUD",
+      "out_YL",
+      "out_YPos"
+    ],
+    "WillowGame.WillowPlayerController:ApplyProfilesBeforeLevelTransition": [],
+    "WillowGame.WillowPlayerController:ClientUpdateLevelStreamingStatus": [
+      "PackageName",
+      "bNewShouldBeLoaded",
+      "bNewShouldBeVisible",
+      "bNewShouldBlockOnLoad"
+    ],
+    "WillowGame.WillowPlayerController:CloneAndGiveToCoopPawns": [
+      "Pickup",
+      "bReady"
+    ],
+    "WillowGame.WillowPlayerController:GetMaxExpLevel": [],
+    "WillowGame.WillowPlayerController:GetExpPointsRequiredForLevel": [
+      "Level"
+    ],
+    "WillowGame.WillowPlayerController:GetExpPercentToNextLevel": [
+      "CurrXp",
+      "PointsTowardLevel",
+      "PointsRequiredTolevel"
+    ],
+    "WillowGame.WillowPlayerController:ClientOnExpLevelChange": [],
+    "WillowGame.WillowPlayerController:OnExpLevelChange": [
+      "bNoSpecialEffects"
+    ],
+    "WillowGame.WillowPlayerController:ExpLevelUp": [],
+    "WillowGame.WillowPlayerController:AddExperienceLevelGainToSkillGrade": [],
+    "WillowGame.WillowPlayerController:ResetSkillsUpgradedByExpLevel": [],
+    "WillowGame.WillowPlayerController:ResetAndChangeExpLevel": [
+      "NewExpLevel"
+    ],
+    "WillowGame.WillowPlayerController:InstinctSkillChangedLevel": [
+      "NewLevel"
+    ],
+    "WillowGame.WillowPlayerController:GetSkillGrade": [
+      "Definition"
+    ],
+    "WillowGame.WillowPlayerController:DoesSkillPassMinGradeTest": [
+      "SkillIndex"
+    ],
+    "WillowGame.WillowPlayerController:ClientSetSkillGrade": [
+      "NewSkillPoints",
+      "SkillIndex",
+      "Grade",
+      "GradePoints"
+    ],
+    "WillowGame.WillowPlayerController:ReleaseSetSkillGradeDelegate": [],
+    "WillowGame.WillowPlayerController:AcquireSetSkillGradeDelegate": [
+      "SetSkillGrade"
+    ],
+    "WillowGame.WillowPlayerController:OnSetSkillGrade": [
+      "SkillIndex",
+      "Grade"
+    ],
+    "WillowGame.WillowPlayerController:AreUpgradeRequirementsMet": [
+      "SkillIndex",
+      "SkillPointsNeeded"
+    ],
+    "WillowGame.WillowPlayerController:SkillUpgradePointsAvailableTest": [
+      "SkillIndex",
+      "PointsNeeded"
+    ],
+    "WillowGame.WillowPlayerController:SkillUpgradePlayerLevelTest": [
+      "SkillIndex",
+      "MinLevelReq"
+    ],
+    "WillowGame.WillowPlayerController:ServerUpgradeSkill": [
+      "SkillIndex"
+    ],
+    "WillowGame.WillowPlayerController:ServerPurchaseSkillTreeReset": [],
+    "WillowGame.WillowPlayerController:GetSkillTreeResetCost": [],
+    "WillowGame.WillowPlayerController:Behavior_UpgradeSkill": [
+      "SkillToUpgrade",
+      "NumberOfLevelsToRaise",
+      "MaximumLevelToRaiseSkill"
+    ],
+    "WillowGame.WillowPlayerController:InitializeAugmentations": [],
+    "WillowGame.WillowPlayerController:ApplyCharacterClassStartingValues": [],
+    "WillowGame.WillowPlayerController:FindPlotCriticalMission": [],
+    "WillowGame.WillowPlayerController:FindPlotCriticalMissionStatus": [],
+    "WillowGame.WillowPlayerController:ApplyMissionProfileData": [
+      "Profile"
+    ],
+    "WillowGame.WillowPlayerController:RecalculateAttributeInitializedState": [],
+    "WillowGame.WillowPlayerController:SaveMissionProfileData": [
+      "Profile"
+    ],
+    "WillowGame.WillowPlayerController:GetActivePlotCriticalMissionNumber": [
+      "ForPlaythrough"
+    ],
+    "WillowGame.WillowPlayerController:GiveCash": [
+      "cash"
+    ],
+    "WillowGame.WillowPlayerController:PlayerBuyBackInventory": [
+      "Price",
+      "Quantity"
+    ],
+    "WillowGame.WillowPlayerController:DealtDamageToEnemy": [
+      "Damage",
+      "InstigatedBy",
+      "HitLocation",
+      "Momentum",
+      "DamageType",
+      "DamageTypeDefinition",
+      "ImpactDefinition",
+      "HitInfo"
+    ],
+    "WillowGame.WillowPlayerController:IsMissionInStatus": [
+      "InMission",
+      "Status"
+    ],
+    "WillowGame.WillowPlayerController:GetMissionEligibility": [
+      "InMission"
+    ],
+    "WillowGame.WillowPlayerController:ForceMissionStatus": [
+      "InMission",
+      "InStatus"
+    ],
+    "WillowGame.WillowPlayerController:PopulateMissionDataFromStatus": [
+      "MStatus"
+    ],
+    "WillowGame.WillowPlayerController:UpdateLCDMissionStatus": [],
+    "WillowGame.WillowPlayerController:UpdateMissionStatus": [
+      "InMission",
+      "ObjectiveIndex",
+      "bCompleteObjective"
+    ],
+    "WillowGame.WillowPlayerController:IncrementMissionStatCounter": [
+      "MapName"
+    ],
+    "WillowGame.WillowPlayerController:CheckAllDLCMissionsCompleteAchievement": [
+      "inDlcPackageId"
+    ],
+    "WillowGame.WillowPlayerController:ClientCompleteMission": [
+      "InMission",
+      "MissionCompleter"
+    ],
+    "WillowGame.WillowPlayerController:GrantMissionRewards": [
+      "InMission"
+    ],
+    "WillowGame.WillowPlayerController:ConditionalGrantRewardsAndCompleteMission": [
+      "InMission",
+      "MissionCompleter"
+    ],
+    "WillowGame.WillowPlayerController:CompleteMission": [
+      "InMission"
+    ],
+    "WillowGame.WillowPlayerController:RemoveMissionFromClient": [
+      "InMission"
+    ],
+    "WillowGame.WillowPlayerController:BroadcastMissionToClients": [
+      "InMission",
+      "MissionTaker"
+    ],
+    "WillowGame.WillowPlayerController:IsMissionAvailableToTrack": [
+      "InMission"
+    ],
+    "WillowGame.WillowPlayerController:PlayerSetMissionToTrack": [
+      "InMission"
+    ],
+    "WillowGame.WillowPlayerController:AddMissionToTrack": [
+      "InMission"
+    ],
+    "WillowGame.WillowPlayerController:SetActiveMission": [
+      "InMission"
+    ],
+    "WillowGame.WillowPlayerController:ClientAddMission": [
+      "InMission",
+      "MissionTaker"
+    ],
+    "WillowGame.WillowPlayerController:PushEchoMission": [
+      "CallDef"
+    ],
+    "WillowGame.WillowPlayerController:AcceptTrackedMissions": [],
+    "WillowGame.WillowPlayerController:IsMissionReplicated": [
+      "InMission"
+    ],
+    "WillowGame.WillowPlayerController:AddNewMissionsToMissionList": [],
+    "WillowGame.WillowPlayerController:GetPlayerActiveMissionIndex": [
+      "MissionsInProgress",
+      "ActiveMissionIndex"
+    ],
+    "WillowGame.WillowPlayerController:GetPlayerAllMissions": [
+      "MissionsInProgress",
+      "ActiveMissionIndex"
+    ],
+    "WillowGame.WillowPlayerController:ValidateActiveMission": [],
+    "WillowGame.WillowPlayerController:GetMissionIndexForMission": [
+      "InMission"
+    ],
+    "WillowGame.WillowPlayerController:PlayerHasMission": [
+      "InMission",
+      "Index"
+    ],
+    "WillowGame.WillowPlayerController:ClientDoMissionStatusFanfare": [
+      "FanFareType",
+      "bNotReplicated",
+      "MissionDef",
+      "ObjectiveIndex"
+    ],
+    "WillowGame.WillowPlayerController:ServerDoMissionStatusFanfare": [
+      "FanFareType",
+      "MissionDef",
+      "ObjectiveIndex"
+    ],
+    "WillowGame.WillowPlayerController:SetMissionStatus": [
+      "MissionListIndex",
+      "NewMissionStatus"
+    ],
+    "WillowGame.WillowPlayerController:ClearEnemyTargetQueues": [
+      "DeadPawn"
+    ],
+    "WillowGame.WillowPlayerController:OnCurrencyChanged": [
+      "NewCurrencyAmount"
+    ],
+    "WillowGame.WillowPlayerController:GetOutermostLevelName": [],
+    "WillowGame.WillowPlayerController:SetDataStoreStringValue": [
+      "MarkupString",
+      "NewValue"
+    ],
+    "WillowGame.WillowPlayerController:GetDataStoreStringValue": [
+      "MarkupString"
+    ],
+    "WillowGame.WillowPlayerController:OnSkillGradeChanged": [
+      "NewSkillPoints",
+      "SkillIndex",
+      "Grade"
+    ],
+    "Engine.PlayerController:AllDestinationLevelsAreVisible": [
+      "DestLoc"
+    ],
+    "Engine.PlayerController:ClientSetForceMipLevelsToBeResident": [
+      "Material",
+      "ForceDuration"
+    ],
+    "Engine.PlayerController:ClientFlushLevelStreaming": [],
+    "Engine.PlayerController:UpdateRadarOnLevelStreaming": [],
+    "Engine.PlayerController:ServerUpdateLevelVisibility": [
+      "PackageName",
+      "bIsVisible"
+    ],
+    "Engine.PlayerController:ClientUpdateLevelStreamingStatus": [
+      "PackageName",
+      "bNewShouldBeLoaded",
+      "bNewShouldBeVisible",
+      "bNewShouldBlockOnLoad"
+    ],
+    "Engine.PlayerController:LevelStreamingStatusChanged": [
+      "LevelObject",
+      "bNewShouldBeLoaded",
+      "bNewShouldBeVisible",
+      "bNewShouldBlockOnLoad"
+    ],
+    "Engine.PlayerController:SwitchLevel": [
+      "URL"
+    ],
+    "Engine.PlayerController:RestartLevel": [],
+    "Engine.PlayerController:ClientInitializeDataStores": [],
+    "Engine.Controller:ApplyCharacterClassStartingValues": [],
+    "Engine.Controller:RecalculateAttributeInitializedState": [],
+    "Engine.Controller:CurrentLevelUnloaded": [],
+    "Engine.Controller:EnemyNotVisible": [],
+    "Engine.Controller:DealtDamageToEnemy": [
+      "Damage",
+      "InstigatedBy",
+      "HitLocation",
+      "Momentum",
+      "DamageType",
+      "DamageTypeDefinition",
+      "ImpactDefinition",
+      "HitInfo"
+    ],
+    "Engine.Controller:EnemyJustTeleported": [],
+    "Engine.Actor:GetResourcePoolCurrentValueOrDefault": [
+      "PoolReference",
+      "DefaultValue"
+    ],
+    "Engine.Actor:IsInPersistentLevel": [],
+    "Engine.Actor:UsedBy": [
+      "User"
+    ],
+    "Core.Object:GetAttributeValueByName": [
+      "AttributeName"
+    ],
+    "Core.Object:FlagSetValue": [
+      "theFlag",
+      "bNewValue",
+      "bForceTimeStamp"
+    ],
+    "Core.Object:SmartVectValue": [
+      "theSV"
+    ],
+    "Core.Object:GetMappedRangeValue": [
+      "InputRange",
+      "OutputRange",
+      "Value"
+    ],
+    "Core.Object:GetRangePctByValue": [
+      "Range",
+      "Value"
+    ],
+    "Core.Object:GetRangeValueByPct": [
+      "Range",
+      "Pct"
+    ],
+    "WillowGame.MissionDefinition:GenerateRewardString": [
+      "InWPC"
+    ],
+    "WillowGame.MissionDefinition:GetItemRewardForPlayer": [
+      "InWPC"
+    ],
+    "WillowGame.MissionDefinition:GetItemRewardInventorySpaceRequirement": [
+      "InWPC"
+    ],
+    "WillowGame.MissionDefinition:GetExperienceReward": [
+      "InWPC"
+    ],
+    "WillowGame.MissionDefinition:GetCreditReward": [
+      "InWPC"
+    ],
+    "WillowGame.MissionDefinition:ComputeReward": [
+      "BaseValueFormula",
+      "MultiplierFormula",
+      "ContextSource"
+    ],
+    "WillowGame.MissionDefinition:SetExpLevel": [
+      "NewExpLevel"
+    ],
+    "WillowGame.MissionDefinition:SetAwesomeLevel": [
+      "NewAwesomeLevel"
+    ],
+    "WillowGame.MissionDefinition:SetGameStage": [
+      "NewGameStage"
+    ],
+    "WillowGame.MissionDefinition:RefreshRewardGameStage": [
+      "InWPC"
+    ],
+    "WillowGame.MissionDefinition:GetExpLevel": [],
+    "WillowGame.MissionDefinition:GetAwesomeLevel": [],
+    "WillowGame.MissionDefinition:GetGameStage": [],
+    "WillowGame.PopulationFactoryBalancedAIPawn:GetSpawnProbabilityAtThisGameStage": [
+      "GameStage",
+      "AwesomeLevel"
+    ],
+    "WillowGame.PopulationFactoryBalancedAIPawn:RestorePopulatedAIPawn": [
+      "Master",
+      "SpawnLocationContextObject",
+      "SpawnLocation",
+      "SpawnRotation",
+      "GameStage",
+      "AwesomeLevel",
+      "AIPawnMemento"
+    ],
+    "WillowGame.PopulationFactoryBalancedAIPawn:CreatePopulationActor": [
+      "Master",
+      "SpawnLocationContextObject",
+      "SpawnLocation",
+      "SpawnRotation",
+      "GameStage",
+      "AwesomeLevel"
+    ],
+    "WillowGame.PopulationFactoryBalancedAIPawn:SetupBalancedPopulationActor": [
+      "Master",
+      "BalancedInstigator",
+      "SpawnedPawn",
+      "SpawnLocationContextObject",
+      "GameStage",
+      "AwesomeLevel",
+      "GradeIndex",
+      "bUseMemento",
+      "AIPawnMemento"
+    ],
+    "WillowGame.PopulationFactoryBalancedAIPawn:GetActorSpawnCost": [
+      "GameStage",
+      "AwesomeLevel",
+      "bCanSpawnTest"
+    ],
+    "WillowGame.PopulationFactoryWillowAIPawn:RestorePopulatedAIPawn": [
+      "Master",
+      "SpawnLocationContextObject",
+      "SpawnLocation",
+      "SpawnRotation",
+      "GameStage",
+      "AwesomeLevel",
+      "AIPawnMemento"
+    ],
+    "WillowGame.PopulationFactoryWillowAIPawn:ShouldSavePopulationActor": [
+      "Master",
+      "ActorToSave"
+    ],
+    "WillowGame.PopulationFactoryWillowAIPawn:DestroyPopulationActor": [
+      "Master",
+      "nOpportunityIdx",
+      "ActorToDestroy",
+      "FactoryPath",
+      "CreationFlags",
+      "bDontSaveActor"
+    ],
+    "WillowGame.PopulationFactoryWillowAIPawn:CreatePopulationActor": [
+      "Master",
+      "SpawnLocationContextObject",
+      "SpawnLocation",
+      "SpawnRotation",
+      "GameStage",
+      "AwesomeLevel"
+    ],
+    "WillowGame.PopulationFactoryWillowAIPawn:SetupPopulationActor": [
+      "Master",
+      "SpawnedPawn",
+      "SpawnLocationContextObject",
+      "GameStage",
+      "AwesomeLevel",
+      "bUseMemento",
+      "AIPawnMemento"
+    ],
+    "WillowGame.PopulationFactoryWillowAIPawn:ApplyPopulationDefinition": [
+      "Master",
+      "AIPawn"
+    ],
+    "WillowGame.PopulationFactoryWillowAIPawn:GetAContextSourceForThePopulationActor": [
+      "Master"
+    ],
+    "WillowGame.PopulationFactoryWillowAIPawn:GetActorSpawnCost": [
+      "GameStage",
+      "AwesomeLevel",
+      "bCanSpawnTest"
+    ],
+    "GearboxFramework.PopulationFactory:ShouldSavePopulationActor": [
+      "Master",
+      "ActorToSave"
+    ],
+    "GearboxFramework.PopulationFactory:DestroyPopulationActor": [
+      "Master",
+      "nOpportunityIdx",
+      "ActorToDestroy",
+      "FactoryPath",
+      "CreationFlags",
+      "bDontSaveActor"
+    ],
+    "GearboxFramework.PopulationFactory:CreatePopulationActor": [
+      "Master",
+      "SpawnLocationContextObject",
+      "SpawnLocation",
+      "SpawnRotation",
+      "GameStage",
+      "AwesomeLevel"
+    ],
+    "GearboxFramework.PopulationFactory:GetActorSpawnCost": [
+      "GameStage",
+      "AwesomeLevel",
+      "bCanSpawnTest"
+    ],
+    "GearboxFramework.PopulationFactory:GetSpawnProbabilityAtThisGameStage": [
+      "GameStage",
+      "AwesomeLevel"
+    ],
+    "WillowGame.PopulationFactoryWillowVehicle:DestroyPopulationActor": [
+      "Master",
+      "nOpportunityIdx",
+      "ActorToDestroy",
+      "FactoryPath",
+      "CreationFlags",
+      "bDontSaveActor"
+    ],
+    "WillowGame.PopulationFactoryWillowVehicle:CreatePopulationActor": [
+      "Master",
+      "SpawnLocationContextObject",
+      "SpawnLocation",
+      "SpawnRotation",
+      "GameStage",
+      "AwesomeLevel"
+    ],
+    "WillowGame.PopulationFactoryWillowVehicle:InitializeClone": [
+      "Clone"
+    ],
+    "WillowGame.PopulationFactoryWillowVehicle:GetAContextSourceForThePopulationActor": [
+      "Master"
+    ],
+    "WillowGame.PopulationFactoryWillowVehicle:GetActorSpawnCost": [
+      "GameStage",
+      "AwesomeLevel",
+      "bCanSpawnTest"
+    ],
+    "WillowGame.AIPawnBalanceDefinition:GetPawnArchetypeForGrade": [
+      "GradeIndex"
+    ],
+    "WillowGame.AIPawnBalanceDefinition:GetPawnArchetypeForGameStage": [
+      "GameStage",
+      "AwesomeLevel"
+    ],
+    "Engine.BaseBalanceDefinition:ApplyGradeCustomizations": [
+      "BalanceDefSpawnedActor",
+      "GradeIndex"
+    ],
+    "Engine.BaseBalanceDefinition:GetDisplayNameAtGrade": [
+      "GradeIndex"
+    ],
+    "Engine.BaseBalanceDefinition:IsGameStageSupported": [
+      "GameStage",
+      "AwesomeLevel"
+    ],
+    "Engine.BaseBalanceDefinition:SelectGradeIndex": [
+      "GameStage",
+      "AwesomeLevel"
+    ]
+  }
+}
