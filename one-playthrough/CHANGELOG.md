@@ -4,6 +4,9 @@ All release changes are recorded here. README.md is the player guide.
 
 ## 4.0.4 — 2026-10-19
 
+- Prepared mod-database submission metadata: a valid internal project identifier
+  (`OnePlaythrough`), direct SDK download URL, source/changelog links and a separate
+  listing draft. The displayed name remains One Playthrough; gameplay is unchanged.
 - Shortened the in-game description to under half its previous length.
 - Fixed enabled-state persistence on installations where the OnePlaythrough
   settings directory does not yet exist. The SDK writes mod.json directly after

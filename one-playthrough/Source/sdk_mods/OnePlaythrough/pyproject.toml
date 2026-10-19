@@ -1,8 +1,12 @@
 [project]
-name = "One Playthrough"
+name = "OnePlaythrough"
 version = "4.0.4"
 authors = [{ name = "keogh" }]
 description = "Play from level 1 to 69 in one playthrough. Enemies and available missions scale with you across the main story and all four DLCs. Enable, start a New Game and play normally."
+
+[project.urls]
+Source = "https://github.com/thekeogh/borderlands1e-mods/tree/main/one-playthrough"
+Changelog = "https://github.com/thekeogh/borderlands1e-mods/blob/main/one-playthrough/CHANGELOG.md"
 
 [tool.sdkmod]
 name = "One Playthrough"
@@ -10,4 +14,5 @@ mod_type = "Standard"
 supported_games = ["BL1E"]
 coop_support = "Unknown"
 auto_enable = true
+download = "https://raw.githubusercontent.com/thekeogh/borderlands1e-mods/main/one-playthrough/dist/OnePlaythrough.sdkmod"
 license = { name = "GPL3", url = "https://choosealicense.com/licenses/gpl-3.0/" }
