@@ -2,6 +2,29 @@
 
 All release changes are recorded here. README.md is the player guide.
 
+## 4.2.0 — 2026-10-20
+
+- Make equipment rewards use the mission level locked at acceptance, rather than
+  native fixed/offset item grades or the character level at turn-in. Preview and
+  grant paths share the same rule, including rewards without a regional input.
+- Temporarily set each reward balance's manufacturer grade ExpLevel to the locked
+  mission level during native reward calls, then restore the original data.
+  Extend only end grade bands when necessary; preserve parts, probabilities,
+  manufacturer/class selection and original balance identities for item saving.
+- Preserve SDU upgrade behaviour, world loot, vendors, money/XP formulas and
+  the existing ordinary/named enemy rules. Existing items are not rewritten.
+- Add regression models for low/high turn-in levels, offers and acceptance,
+  class-specific and regionless rewards, shared nested balances, SDUs, cleanup
+  after failures/disabling, and end-band extension. These model captured native
+  data conventions; Windows reward-generation confirmation remains pending.
+
+## 4.1.1 — 2026-10-20
+
+- Increase ordinary hostile enemy rolls to 85% native, 8% at least area-base +1,
+  6% at least area-base +2 and 1% at least area-base +3. Naturally higher levels
+  remain higher; bonuses never stack onto them.
+- Named enemies and bosses keep their existing rules and never receive this roll.
+
 ## 4.1.0 — 2026-10-20
 
 - Areas retain their original first-playthrough level floors and scale upward

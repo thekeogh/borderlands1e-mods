@@ -73,5 +73,6 @@ class Runtime:
                 "enemy_policy": self.spawns.snapshot(),
                 "regions": self.regions.snapshot(), "character": self.missions.key,
                 "mission_levels": dict(self.missions.levels),
-                "reward_scopes": len(self.missions.scopes), "settings_error": self.store.error,
+                "reward_scopes": len(self.missions.scopes),
+                "item_reward_level": "accepted mission level (equipment only; native SDUs)", "settings_error": self.store.error,
                 "problems": list(self.problems)}

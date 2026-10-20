@@ -167,31 +167,31 @@ class Rare(unittest.TestCase):
                                self.args.SpawnRotation, self.args.GameStage, self.args.AwesomeLevel)
         return result[1]
 
-    def test_all_100_tickets_produce_exact_95_4_1_distribution(self):
+    def test_all_100_tickets_produce_exact_85_8_6_1_distribution(self):
         levels = [self.spawn(ticket).level for ticket in range(100)]
-        self.assertEqual({level: levels.count(level) for level in set(levels)}, {19: 95, 21: 4, 22: 1})
+        self.assertEqual({level: levels.count(level) for level in set(levels)}, {19: 85, 21: 8, 22: 6, 23: 1})
 
     def test_high_native_area_is_floor_for_normal_and_rare_enemies(self):
         self.h.enable(8)
         self.args.GameStage = 30
-        self.assertEqual([self.spawn(t).level for t in (0, 95, 99)], [29, 31, 32])
+        self.assertEqual([self.spawn(t).level for t in (0, 85, 93, 99)], [29, 31, 32, 33])
 
     def test_naturally_higher_enemy_never_gets_bonus_stacked(self):
         self.definition.DefaultExpLevel.BaseValueAttribute = Object("gd_Balance.EnemyLevel.EnemyLevel_GameStage_plus3")
-        self.assertEqual([self.spawn(t).level for t in (0, 95, 99)], [23, 23, 23])
+        self.assertEqual([self.spawn(t).level for t in (0, 85, 93, 99)], [23, 23, 23, 23])
 
     def test_naturally_higher_grade_is_retained_without_stacking_bonus(self):
         self.definition.Grades[0].GradeModifiers.ExpLevel = 23
-        self.assertEqual([self.spawn(t).level for t in (0, 95, 99)], [23, 23, 23])
+        self.assertEqual([self.spawn(t).level for t in (0, 85, 93, 99)], [23, 23, 23, 23])
 
     def test_tutorial_fixed_level_does_not_override_rare_upgrade(self):
         self.definition.Grades[0].GradeModifiers.ExpLevel = 3
-        self.assertEqual([self.spawn(t).level for t in (0, 95, 99)], [3, 21, 22])
+        self.assertEqual([self.spawn(t).level for t in (0, 85, 93, 99)], [3, 21, 22, 23])
 
     def test_natural_high_default_does_not_raise_fixed_tutorial_grade_extra_levels(self):
         self.definition.DefaultExpLevel.BaseValueAttribute = Object("gd_Balance.EnemyLevel.EnemyLevel_GameStage_plus3")
         self.definition.Grades[0].GradeModifiers.ExpLevel = 3
-        self.assertEqual([self.spawn(t).level for t in (0, 95, 99)], [3, 21, 22])
+        self.assertEqual([self.spawn(t).level for t in (0, 85, 93, 99)], [3, 21, 22, 23])
 
     def test_named_low_fixed_grade_floors_to_player_while_native_higher_grades_survive(self):
         self.definition.path = "gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Bonehead"
@@ -203,19 +203,19 @@ class Rare(unittest.TestCase):
 
     def test_private_high_grade_levels_remain_absolute_when_reused_later(self):
         self.definition.Grades[0].GradeModifiers.ExpLevel = 23
-        first = self.spawn(95)
+        first = self.spawn(85)
         self.h.enable(40)
-        second = self.spawn(95)
+        second = self.spawn(85)
         self.assertEqual((first.level, second.level), (23, 41))
         self.assertEqual(first.definition.Grades[0].GradeModifiers.ExpLevel, 23)
         self.assertEqual(second.definition.Grades[0].GradeModifiers.ExpLevel, 0)
 
     def test_shared_definition_and_old_pawn_unchanged_by_later_spawns(self):
         before = vars(self.definition.DefaultExpLevel).copy()
-        first = self.spawn(95)
+        first = self.spawn(85)
         self.h.enable(40)
         second = self.spawn(99)
-        self.assertEqual((first.level, second.level), (21, 42))
+        self.assertEqual((first.level, second.level), (21, 43))
         self.assertEqual(vars(self.definition.DefaultExpLevel), before)
         self.assertIs(self.factory.PawnBalanceDefinition, self.definition)
         self.assertEqual(first.definition.DefaultExpLevel.BaseValueAttribute, self.exact)
@@ -280,9 +280,9 @@ class Rare(unittest.TestCase):
         self.assertTrue(self.h.runtime.problems)
 
     def test_clones_reused_with_actor_local_stage_not_shared_mutable_level(self):
-        first = self.spawn(95)
+        first = self.spawn(85)
         self.h.enable(40)
-        second = self.spawn(95)
+        second = self.spawn(85)
         self.assertIs(first.definition, second.definition)
         self.assertEqual((first.level, second.level), (21, 41))
         self.assertEqual(first.definition.DefaultExpLevel.BaseValueConstant, 0)

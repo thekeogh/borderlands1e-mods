@@ -1,6 +1,7 @@
 """Mission offers follow the player; accepted missions retain their level."""
 
 from .patches import Patches
+from .rewards import prepare_items
 from .scaling import character_key
 from unrealsdk.hooks import prevent_hooking_direct_calls
 
@@ -145,15 +146,17 @@ class Missions:
 
     def enter_reward(self, mission, pc):
         level = self.apply(mission, pc)
-        if level is None or mission.GameStageRegion is None:
+        if level is None:
             return None
-        name = mission.GameStageRegion._path_name().lower()
+        name = mission.GameStageRegion._path_name().lower() if mission.GameStageRegion is not None else None
         token = object()
-        self.scopes.append((token, name, level))
+        items = prepare_items(mission, level)
+        self.scopes.append((token, name, level, items))
         # Native C++ reward calls can bypass Python function hooks. Override the
-        # mission's existing regional input for this synchronous call as well.
+        # mission's regional input and item grades for this synchronous call.
         try:
-            self.runtime.regions.override(name, level)
+            if name is not None:
+                self.runtime.regions.override(name, level)
         except Exception:
             self.exit_reward(token)
             raise
@@ -165,13 +168,17 @@ class Missions:
         found = next((i for i, row in enumerate(self.scopes) if row[0] is token), None)
         if found is None:
             return
-        _, name, _ = self.scopes.pop(found)
+        _, name, _, items = self.scopes.pop(found)
+        for error in items.restore():
+            self.runtime.problem("restore reward items", error)
         level = next((row[2] for row in reversed(self.scopes) if row[1] == name), None)
         # Reapply the latest player level, not the old one: a reward can level up.
-        self.runtime.regions.override(name, level)
+        if name is not None:
+            self.runtime.regions.override(name, level)
 
     def restore(self):
-        self.scopes.clear()
+        while self.scopes:
+            self.exit_reward(self.scopes[-1][0])
         self.pending.clear()
         self.floors.clear()
         return self.patches.restore()

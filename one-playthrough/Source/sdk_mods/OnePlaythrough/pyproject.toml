@@ -1,6 +1,6 @@
 [project]
 name = "OnePlaythrough"
-version = "4.1.0"
+version = "4.2.0"
 authors = [{ name = "keogh" }]
 description = "One journey, levels 1–69. Enemies and mission offers scale across Pandora and all DLCs, keeping vanilla minimums. Rare tougher mobs; native loot and economy."
 

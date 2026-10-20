@@ -135,7 +135,7 @@ class Harness:
         spec = importlib.util.spec_from_file_location(name, SOURCE / "__init__.py",
                                                     submodule_search_locations=[str(SOURCE)])
         module = importlib.util.module_from_spec(spec)
-        module.__version__, module.__version_info__ = "4.1.0", (4, 1, 0)
+        module.__version__, module.__version_info__ = "4.2.0", (4, 2, 0)
         self.modules[name] = module
         with patch.dict(sys.modules, self.modules):
             spec.loader.exec_module(module)

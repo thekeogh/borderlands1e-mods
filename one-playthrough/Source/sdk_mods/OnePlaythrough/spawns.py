@@ -12,8 +12,8 @@ NAMES = count()
 
 
 def bonus(ticket):
-    """One hundred equally likely tickets: 95 native, four +1, one +2."""
-    return 2 if ticket == 99 else 1 if ticket >= 95 else 0
+    """One hundred equally likely tickets: 85 native, eight +1, six +2, one +3."""
+    return 3 if ticket == 99 else 2 if ticket >= 93 else 1 if ticket >= 85 else 0
 
 
 def native_level(data, stage):
@@ -136,5 +136,5 @@ class Spawns:
         return self.pins.restore()
 
     def snapshot(self):
-        return {"ordinary_tickets": {"native": 95, "+1": 4, "+2": 1},
+        return {"ordinary_tickets": {"native": 85, "+1": 8, "+2": 6, "+3": 1},
                 "named_bonus": False, "private_definitions": len(self.clones)}

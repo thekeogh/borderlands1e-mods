@@ -1,0 +1,18 @@
+[project]
+name = "FullMoneyIndicatorWhite"
+version = "3.0.1"
+authors = [{ name = "keogh" }]
+description = "Displays your full wallet using the game's own HUD styling and positioning, so it feels like part of the game. Includes an adjustable Y offset."
+
+[project.urls]
+Source = "https://github.com/thekeogh/borderlands1e-mods/tree/main/FullMoneyIndicatorWhite"
+"Original mod" = "https://eeriegoesd.com/gaming/mods/"
+
+[tool.sdkmod]
+name = "Full Money Indicator White"
+mod_type = "Standard"
+supported_games = ["BL1", "BL1E"]
+coop_support = "Unknown"
+auto_enable = true
+download = "https://raw.githubusercontent.com/thekeogh/borderlands1e-mods/main/FullMoneyIndicatorWhite/FullMoneyIndicatorWhite.sdkmod"
+license = {name = "GPL-3.0-or-later", url = "https://www.gnu.org/licenses/gpl-3.0.en.html" }

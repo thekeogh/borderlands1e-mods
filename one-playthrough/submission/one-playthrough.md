@@ -11,9 +11,10 @@ without restarting the story in another playthrough.
 Enemy levels and available missions follow your character while keeping their
 vanilla minimums: dangerous areas stay dangerous until you catch up. Leave
 missions for later and their levels and rewards keep pace until you accept them.
-Ordinary enemies have a 4% roll for one extra level and 1% for two, without
-stacking onto naturally higher levels. Named enemies and bosses use native
-scaling without that roll. Loot and economy follow the game's normal rules.
+Equipment rewards match the accepted mission level, regardless of your level at turn-in.
+Ordinary enemies use 85% native scaling, with rolls of 8% for at least +1 level,
+6% for at least +2 and 1% for at least +3, without stacking onto naturally higher levels. Named enemies and bosses use native
+scaling without that roll. World loot and economy follow the game's normal rules.
 
 Scaling covers the main story and all four DLCs: The Zombie Island of Dr. Ned,
 Mad Moxxi's Underdome Riot, The Secret Armory of General Knoxx and Claptrap's
