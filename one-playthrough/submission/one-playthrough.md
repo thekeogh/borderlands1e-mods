@@ -8,14 +8,17 @@ mod_categories: gameplay enemy overhaul
 Play Borderlands GOTY Enhanced from level 1 to 69 in one continuous journey,
 without restarting the story in another playthrough.
 
-Enemy levels and available missions follow your character as you level up.
-Leave missions for later and their levels and rewards keep pace with you until
-you accept them. Enemy variety and level differences use the game's native
-rules, with its normal loot and economy.
+Enemy levels and available missions follow your character while keeping their
+vanilla minimums: dangerous areas stay dangerous until you catch up. Leave
+missions for later and their levels and rewards keep pace until you accept them.
+Ordinary enemies have a 4% roll for one extra level and 1% for two, without
+stacking onto naturally higher levels. Named enemies and bosses use native
+scaling without that roll. Loot and economy follow the game's normal rules.
 
 Scaling covers the main story and all four DLCs: The Zombie Island of Dr. Ned,
 Mad Moxxi's Underdome Riot, The Secret Armory of General Knoxx and Claptrap's
-New Robot Revolution. Reaching level 69 depends on how much XP you earn.
+New Robot Revolution, without first completing any DLC to enable scaling.
+Reaching level 69 depends on how much XP you earn.
 
 ## Getting started
 

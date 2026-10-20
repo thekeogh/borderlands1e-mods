@@ -1,8 +1,8 @@
 [project]
 name = "OnePlaythrough"
-version = "4.0.4"
+version = "4.1.0"
 authors = [{ name = "keogh" }]
-description = "Play from level 1 to 69 in one playthrough. Enemies and available missions scale with you across the main story and all four DLCs. Enable, start a New Game and play normally."
+description = "One journey, levels 1–69. Enemies and mission offers scale across Pandora and all DLCs, keeping vanilla minimums. Rare tougher mobs; native loot and economy."
 
 [project.urls]
 Source = "https://github.com/thekeogh/borderlands1e-mods/tree/main/one-playthrough"

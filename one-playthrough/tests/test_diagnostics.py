@@ -51,6 +51,24 @@ class DiagnosticTests(unittest.TestCase):
     def files(self):
         return list((Path(self.tmp.name) / "OnePlaythrough/diagnostics").glob("*.json"))
 
+    def test_regional_report_includes_original_and_current_floors(self):
+        path = self.h.mod.export_diagnostics()
+        report = json.loads(path.read_text())
+        rows = report["regions"]["region_levels"]
+        row = next(r for r in rows if r["region"] == self.h.mission.GameStageRegion.path.lower())
+        self.assertEqual(row["native_default"]["BaseValueConstant"], 16)
+        self.assertEqual(row["current_default"], 20)
+        self.assertEqual(report["enemy_policy"]["ordinary_tickets"], {"native": 95, "+1": 4, "+2": 1})
+
+    def test_unreadable_region_does_not_prevent_basic_and_mission_report(self):
+        self.h.runtime.regions.levels_snapshot = lambda: (_ for _ in ()).throw(RuntimeError("bad region"))
+        path = self.h.mod.export_diagnostics()
+        report = json.loads(path.read_text())
+        self.assertTrue(report["export_complete"])
+        self.assertTrue(report["partial"])
+        self.assertEqual(report["regions"]["region_levels"], [])
+        self.assertTrue(report["missions"])
+
     def test_registered_f10_callback_creates_versioned_export_and_reports_path(self):
         bind = self.h.registration["keybinds"][0]
         self.assertEqual(bind.key, "F10")
@@ -60,7 +78,7 @@ class DiagnosticTests(unittest.TestCase):
         self.assertEqual(len(paths), 1)
         self.assertTrue(paths[0].name.startswith("one-playthrough-"))
         report = json.loads(paths[0].read_text())
-        self.assertEqual(report["version"], "4.0.4")
+        self.assertEqual(report["version"], "4.1.0")
         self.assertTrue(report["export_complete"])
         self.assertFalse(report["partial"])
         self.assertIn("Export requested", self.h.messages[-2])

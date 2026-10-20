@@ -43,6 +43,11 @@ class Patches:
                             ("InitializationDefinition", None), ("BaseValueScaleConstant", 1.0)):
             self.set(root, (*path, name), value)
 
+    def original(self, root, path):
+        """Read the pre-mod value even after repeated level changes."""
+        field = self.fields.get((root._get_address(), tuple(path)))
+        return field[2] if field is not None else resolve(root, path)
+
     def restore(self):
         errors = []
         for root, path, original, ours in reversed(list(self.fields.values())):

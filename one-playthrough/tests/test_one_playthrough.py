@@ -61,6 +61,15 @@ class Harness:
         self.mission.ExperienceRewardMultiplier = aid(1.15)
         self.mission.CreditRewardMultiplier = aid(1.0)
         self.missions = [self.mission]
+        def refresh(pc):
+            row = self.row()
+            stage = row.DefaultGameStage.BaseValueConstant
+            progress = {r.MissionDef.path.lower(): r.Status for r in pc.MissionPlaythroughData[0].MissionList}
+            for override in row.MissionOverrides:
+                if progress.get(override.Mission.path.lower()) == 4:
+                    stage = override.GameStage.BaseValueConstant
+            self.mission.GameStage = self.mission.ExpLevel = int(stage)
+        self.mission.RefreshRewardGameStage = refresh
         self.sdk = ModuleType("unrealsdk")
         self.messages = []
         self.sdk.logging = NS(info=self.messages.append, error=self.messages.append)
@@ -126,12 +135,13 @@ class Harness:
         spec = importlib.util.spec_from_file_location(name, SOURCE / "__init__.py",
                                                     submodule_search_locations=[str(SOURCE)])
         module = importlib.util.module_from_spec(spec)
-        module.__version__, module.__version_info__ = "4.0.4", (4, 0, 4)
+        module.__version__, module.__version_info__ = "4.1.0", (4, 1, 0)
         self.modules[name] = module
         with patch.dict(sys.modules, self.modules):
             spec.loader.exec_module(module)
         self.mod = module
         self.runtime = module.runtime
+        self.runtime.spawns.roll = lambda: 0
 
     def unused_balance(self):
         definition = Object("Native.PT2.Balance")
@@ -190,14 +200,17 @@ class Tests(unittest.TestCase):
 
     def test_real_native_regions_and_all_dlc_scale_from_one_to_69(self):
         h = self.h
+        native_defaults = [r.DefaultGameStage.BaseValueConstant for r in h.rows()]
+        native_overrides = [o.GameStage.BaseValueConstant for r in h.rows() for o in r.MissionOverrides]
         for level in (1, 10, 30, 50, 69):
+            defaults, overrides = native_defaults[:], native_overrides[:]
             h.enable(level)
             self.assertEqual(len(h.runtime.regions.counts), 5)
             self.assertEqual(h.runtime.regions.snapshot()["missing_globals"], [])
             for row in h.rows():
-                self.assertEqual(row.DefaultGameStage.BaseValueConstant, level)
+                self.assertEqual(row.DefaultGameStage.BaseValueConstant, max(level, defaults.pop(0)))
                 for override in row.MissionOverrides:
-                    self.assertEqual(override.GameStage.BaseValueConstant, level)
+                    self.assertEqual(override.GameStage.BaseValueConstant, max(level, overrides.pop(0)))
 
     def test_native_loot_quality_story_dependencies_and_pt2_tables_preserved(self):
         h = self.h
@@ -325,7 +338,7 @@ class Tests(unittest.TestCase):
         h.pc.SaveGameFileId = h.pc.LastLoadedProfile.SaveGameId = 5
         h.pc.level = 5
         h.runtime.sync(h.pc)
-        self.assertEqual(h.mission.ExpLevel, 1)
+        self.assertEqual(h.mission.ExpLevel, 16)
         self.assertIsNotNone(h.runtime.missions.key)
         self.assertTrue(h.runtime.store.path.exists())
 
@@ -426,8 +439,8 @@ class Tests(unittest.TestCase):
         original = Object("Native.OriginalStageResolver")
         row.DefaultGameStage.BaseValueAttribute = original
         h.enable(30)
-        self.assertIsNone(row.DefaultGameStage.BaseValueAttribute)
-        self.assertNotEqual(original.ObjectFlags, 0)
+        self.assertIs(row.DefaultGameStage.BaseValueAttribute, original)
+        self.assertTrue(h.runtime.regions.problems)  # Never silently flatten unknown formulas.
         h.mod.on_disable()
         self.assertIs(row.DefaultGameStage.BaseValueAttribute, original)
         self.assertEqual(original.ObjectFlags, 0)
@@ -487,7 +500,7 @@ class SpawnTests(unittest.TestCase):
         self.h.definitions.append(self.definition)
         self.factory = NS(PawnBalanceDefinition=self.definition)
         self.args = NS(Master=object(), SpawnLocationContextObject=object(), SpawnLocation=object(),
-                       SpawnRotation=object(), GameStage=35, AwesomeLevel=8, AIPawnMemento=object())
+                       SpawnRotation=object(), GameStage=1, AwesomeLevel=8, AIPawnMemento=object())
         self.calls = []
         self.pawn = Object("World.SpawnedPawn")
 
@@ -523,7 +536,11 @@ class SpawnTests(unittest.TestCase):
     def test_level_one_and_69_use_native_initialization_and_keep_offsets(self):
         for level in (1, 69):
             self.h.pc.level = level
-            self.h.mod.create_pawn(self.factory, self.args, None, self.native)
+            result = self.h.mod.create_pawn(self.factory, self.args, None, self.native)
+            if result is None:
+                self.native(self.args.Master, self.args.SpawnLocationContextObject,
+                            self.args.SpawnLocation, self.args.SpawnRotation,
+                            self.args.GameStage, self.args.AwesomeLevel)
             self.assertEqual(self.pawn.level, level + 3)
 
     def test_matching_native_stage_is_not_reinvoked(self):

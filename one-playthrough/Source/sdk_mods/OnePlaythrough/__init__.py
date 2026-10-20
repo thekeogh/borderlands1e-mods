@@ -139,23 +139,31 @@ def reward_hooks(path, controller_arg=None):
 
 
 def native_spawn(obj, args, func, restore=False, vehicle=False):
+    if runtime.spawns.active:
+        return None
     invoked = False
     pawn = None
+    original_definition = None
+    swapped = False
+    field = "VehicleBalanceDefinition" if vehicle else "PawnBalanceDefinition"
     try:
         level = runtime.ensure(get_pc())
         if level is None:
             return None
-        definition = getattr(obj, "VehicleBalanceDefinition", None) if vehicle else obj.PawnBalanceDefinition
-        if definition is not None and hasattr(definition, "Grades"):
-            runtime.grades.prepare(definition)
-        if args.GameStage == level:
+        level, definition = runtime.spawns.plan(obj, level, args.GameStage, vehicle)
+        if args.GameStage == level and definition is None:
             return None
+        if definition is not None:
+            original_definition = getattr(obj, field)
+            setattr(obj, field, definition)
+            swapped = True
         values = [args.Master, args.SpawnLocationContextObject, args.SpawnLocation,
                   args.SpawnRotation, level, args.AwesomeLevel]
         if restore:
             values.append(args.AIPawnMemento)
-        # Retain DefaultExpLevel and every native GradeModifiers field. The
-        # native factory initializes the pawn once, including its own offsets.
+        # The original factory initializes attributes once. A private definition
+        # supplies rare exact levels without changing shared native definitions.
+        runtime.spawns.active = True
         with prevent_hooking_direct_calls():
             invoked = True
             pawn = func(*values)
@@ -164,6 +172,13 @@ def native_spawn(obj, args, func, restore=False, vehicle=False):
         runtime.problem("native population", exc)
         # Never retry after invocation: that can duplicate enemies/quest events.
         return (Block, pawn) if invoked else None
+    finally:
+        runtime.spawns.active = False
+        if swapped:
+            try:
+                setattr(obj, field, original_definition)
+            except Exception as exc:
+                runtime.problem("restore native factory", exc)
 
 
 @hook("WillowGame.PopulationFactoryBalancedAIPawn:CreatePopulationActor")

@@ -2,6 +2,7 @@
 
 from .missions import Missions
 from .scaling import Grades, Regions, player_level
+from .spawns import Spawns
 
 
 class Runtime:
@@ -12,6 +13,7 @@ class Runtime:
         self.regions = Regions(sdk)
         self.grades = Grades()
         self.missions = Missions(self, store)
+        self.spawns = Spawns(self)
         self.problems = []
         self.syncing = False
 
@@ -58,7 +60,7 @@ class Runtime:
         return level
 
     def restore(self):
-        for error in self.missions.restore() + self.grades.restore():
+        for error in self.missions.restore() + self.grades.restore() + self.spawns.restore():
             self.problem("restore", error)
         self.regions.restore()
 
@@ -68,6 +70,7 @@ class Runtime:
 
     def snapshot(self):
         return {"enabled": self.enabled, "world_base_level": self.regions.level,
+                "enemy_policy": self.spawns.snapshot(),
                 "regions": self.regions.snapshot(), "character": self.missions.key,
                 "mission_levels": dict(self.missions.levels),
                 "reward_scopes": len(self.missions.scopes), "settings_error": self.store.error,

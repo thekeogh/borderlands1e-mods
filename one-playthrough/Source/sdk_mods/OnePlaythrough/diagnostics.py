@@ -63,6 +63,7 @@ def export(runtime, pc, directory, version="unknown"):
                 snapshot["export_errors"].append({"context": label, "error": repr(exc)})
             return default
 
+    snapshot["regions"]["region_levels"] = read("native regional floors", runtime.regions.levels_snapshot, [])
     for mission in read("find missions", lambda: list(runtime.sdk.find_all("MissionDefinition", exact=False)), []):
         if len(snapshot["missions"]) >= 600:
             break

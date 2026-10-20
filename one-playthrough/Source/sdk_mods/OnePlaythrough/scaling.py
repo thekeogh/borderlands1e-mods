@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from .patches import Patches
+from contextlib import contextmanager
+import math
+
+from .patches import Patches, resolve
+
+INPUT_FIELDS = ("BaseValueConstant", "BaseValueAttribute", "InitializationDefinition",
+                "BaseValueScaleConstant")
 
 PACKAGES = ("gd_globals", "gd_GameStages", "dlc1_PackageDefinition",
             "dlc2_packagedefinition", "dlc3_PackageDefinition", "dlc4_PackageDefinition")
@@ -103,13 +109,49 @@ class Regions:
     def apply(self, name):
         if self.level is None:
             return
-        level = self.overrides.get(name, self.level)
         for definition, i in self.rows.get(name, []):
             row = definition.BalanceByRegion[i]
-            self.patches.stage(definition, ("BalanceByRegion", i, "DefaultGameStage"), level)
+            self.floor(definition, ("BalanceByRegion", i, "DefaultGameStage"), name)
             for j, _override in enumerate(row.MissionOverrides):
-                self.patches.stage(definition,
-                                   ("BalanceByRegion", i, "MissionOverrides", j, "GameStage"), level)
+                self.floor(definition, ("BalanceByRegion", i, "MissionOverrides", j, "GameStage"), name)
+
+    def floor(self, definition, path, name):
+        # Scope rewards to their acceptance level, including below an area floor.
+        if name in self.overrides:
+            self.patches.stage(definition, path, self.overrides[name])
+            return
+        values = {field: self.patches.original(definition, (*path, field)) for field in INPUT_FIELDS}
+        if values["BaseValueAttribute"] is not None or values["InitializationDefinition"] is not None:
+            # Never flatten an unfamiliar dynamic formula to its constant term.
+            # The factory still floors its resolved native GameStage at spawn.
+            self.problem(name, ValueError("Dynamic regional stage retained for native evaluation"))
+            for field, value in values.items():
+                self.patches.set(definition, (*path, field), value)
+            return
+        native = float(values["BaseValueConstant"]) * float(values["BaseValueScaleConstant"])
+        if not math.isfinite(native):
+            raise ValueError(f"Non-finite native regional stage: {name}")
+        self.patches.stage(definition, path, max(self.level, native))
+
+    @contextmanager
+    def native(self, name):
+        """Let native mission code select its own original story-dependent floor."""
+        saved = []
+        try:
+            for definition, i in self.rows.get(name, []):
+                row = definition.BalanceByRegion[i]
+                paths = [("BalanceByRegion", i, "DefaultGameStage")]
+                paths.extend(("BalanceByRegion", i, "MissionOverrides", j, "GameStage")
+                             for j in range(len(row.MissionOverrides)))
+                for path in paths:
+                    data = resolve(definition, path)
+                    for field in INPUT_FIELDS:
+                        saved.append((data, field, getattr(data, field)))
+                        setattr(data, field, self.patches.original(definition, (*path, field)))
+            yield
+        finally:
+            for data, field, value in reversed(saved):
+                setattr(data, field, value)
 
     def override(self, name, level=None):
         if level is None:
@@ -129,7 +171,26 @@ class Regions:
     def snapshot(self):
         return {"region_counts": dict(self.counts),
                 "missing_globals": [name for name in GLOBALS if not self.counts.get(name)],
+                "level_rule": "max(player, native regional stage); story overrides remain separate",
                 "problems": list(self.problems)}
+
+    def levels_snapshot(self):
+        """Optional manual reflection, after the basic diagnostic report exists."""
+        return [
+                    {"region": name, "source": definition._path_name(),
+                     "native_default": {field: self.patches.original(
+                         definition, ("BalanceByRegion", i, "DefaultGameStage", field))
+                         for field in INPUT_FIELDS},
+                     "current_default": row.DefaultGameStage.BaseValueConstant,
+                     "mission_overrides": [
+                         {"mission": override.Mission,
+                          "native_stage": {field: self.patches.original(
+                              definition, ("BalanceByRegion", i, "MissionOverrides", j, "GameStage", field))
+                              for field in INPUT_FIELDS},
+                          "current_stage": override.GameStage.BaseValueConstant}
+                         for j, override in enumerate(row.MissionOverrides)]}
+                    for name, definitions in self.rows.items() for definition, i in definitions
+                    for row in (definition.BalanceByRegion[i],)]
 
 
 class Grades:

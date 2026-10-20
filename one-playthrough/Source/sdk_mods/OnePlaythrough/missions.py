@@ -2,6 +2,7 @@
 
 from .patches import Patches
 from .scaling import character_key
+from unrealsdk.hooks import prevent_hooking_direct_calls
 
 INTRO = "z0_missions.missions.m_introstatesaver"
 
@@ -25,6 +26,36 @@ class Missions:
         self.levels = {}
         self.scopes = []
         self.pending = {}
+        self.reading_native = False
+        self.floors = {}
+
+    def native_level(self, mission, pc, progress):
+        """Refresh against ORIGINAL regions, not our already-scaled mission cache."""
+        signature = (self.token, self.key, self.runtime.level(pc),
+                     tuple(sorted((name, status) for name, (_, status) in progress.items())))
+        name = mission._path_name().lower()
+        cached = self.floors.get(name)
+        if cached is not None and cached[0] == signature:
+            return cached[1]
+        saved = {field: getattr(mission, field) for field in ("GameStage", "ExpLevel")}
+        self.reading_native = True
+        try:
+            for field in saved:
+                setattr(mission, field, self.patches.original(mission, (field,)))
+            # GameStage is a runtime reward cache. It may already have been
+            # filled for a different character before this mod was enabled.
+            mission.GameStage = 0
+            region = mission.GameStageRegion
+            with self.runtime.regions.native(region._path_name().lower() if region is not None else ""):
+                with prevent_hooking_direct_calls():
+                    mission.RefreshRewardGameStage(pc)
+            level = max(1, int(mission.GameStage) or int(mission.ExpLevel))
+            self.floors[name] = (signature, level)
+            return level
+        finally:
+            for field, value in saved.items():
+                setattr(mission, field, value)
+            self.reading_native = False
 
     def select(self, pc, level, loading=False):
         profile = getattr(pc, "LastLoadedProfile", None)
@@ -58,11 +89,16 @@ class Missions:
 
     def apply(self, mission, pc, progress=None):
         level = self.runtime.level(pc)
-        if level is None or mission is None:
+        if level is None or mission is None or self.reading_native:
             return None
         self.select(pc, level)
         name = mission._path_name().lower()
-        state = (states(pc) if progress is None else progress).get(name, (None, 0))[1]
+        progress = states(pc) if progress is None else progress
+        state = progress.get(name, (None, 0))[1]
+        # Existing acceptance locks survive upgrades unchanged. Only new offers
+        # and previously untracked active missions need their vanilla floor read.
+        if state == 0 or name not in self.levels:
+            level = max(level, self.native_level(mission, pc, progress))
         if state in (1, 2, 3):
             self.remember(name, level)
             level = self.levels[name]
@@ -87,8 +123,8 @@ class Missions:
         self.select(pc, level)
         name = mission._path_name().lower()
         state = states(pc).get(name, (None, 0))[1]
-        self.pending.setdefault((pc._get_address(), name), []).append((state, level))
-        self.apply(mission, pc)
+        offered = self.apply(mission, pc)
+        self.pending.setdefault((pc._get_address(), name), []).append((state, offered))
 
     def after_accept(self, pc, mission):
         if mission is None:
@@ -137,4 +173,5 @@ class Missions:
     def restore(self):
         self.scopes.clear()
         self.pending.clear()
+        self.floors.clear()
         return self.patches.restore()

@@ -2,6 +2,47 @@
 
 All release changes are recorded here. README.md is the player guide.
 
+## 4.1.0 — 2026-10-20
+
+- Areas retain their original first-playthrough level floors and scale upward
+  when the player outlevels them. Keep each native story-dependent regional
+  override separate, so an early area does not inherit its end-of-story floor.
+- Apply the same rule to all four DLCs, including Knoxx before its finale.
+  No DLC completion flags or playthrough transitions are required or changed.
+- Mission offers use the higher of player level and their native mission level.
+  Read that native level through the game's reward-stage refresh against the
+  original regional data, preserving native story-override selection. Newly
+  accepted missions lock to the offered level, including offers above the player.
+  Existing acceptance levels and their rewards remain unchanged after upgrading.
+- Ordinary hostile enemies use 95% native scaling, a 4% roll for area-base +1,
+  and a 1% roll for area-base +2. Area base is the higher of player level and
+  the resolved native regional stage. Naturally higher enemy/grade levels are
+  retained rather than receiving another additive bonus.
+- Named enemies and bosses are excluded from that roll. Keep native level
+  inputs and apply a player-level floor where needed; no fixed boss level.
+  Exact-ID exclusions cover the base game and all DLCs, with conservative
+  exclusions for additional definitions identified as named/bosses. Identifier
+  sources: RedxYeti's Dedicated Drops SDK and -Ry's Boss Bars (pinned URLs in
+  `named_enemies.py`). Friendly, neutral and unknown-allegiance actors do not roll.
+- Rare spawns use private, cached balance definitions and the native exact-stage
+  attribute. Preserve grade selection/combat modifiers, restore the factory's
+  original definition after each synchronous call, and never retry a native
+  spawn after invocation. Existing pawns keep actor-local stages; shared native
+  definitions are not rewritten to a rare spawn's level. Positive grade levels
+  remain absolute overrides, rather than being mistaken for additive offsets.
+  Unrecognized dynamic
+  level formulas retain native evaluation rather than guessing their values;
+  diagnostic reports record these cases.
+- Keep native loot, money, XP formulas and quest progress. Update the README,
+  short in-game description and local mod-database listing draft. Manual F10
+  reports now include original/current regional floors and the enemy policy.
+- Validation: 95 local regression tests, including captured base-game regional
+  data, modeled DLC pre-completion floors/offers, story override selection,
+  offer/acceptance/reward locks, exhaustive 95/4/1 tickets, named exclusions,
+  private-definition reuse, failure cleanup, settings and diagnostics. These
+  tests model native calls; BL1E gameplay, DLCs and the new rare-spawn path still
+  require Windows testing.
+
 ## 4.0.4 — 2026-10-19
 
 - Prepared mod-database submission metadata: a valid internal project identifier
