@@ -6,13 +6,15 @@ from functools import wraps
 from pathlib import Path
 
 import unrealsdk
-from mods_base import SETTINGS_DIR, ButtonOption, build_mod, get_pc, hook, keybind
+from mods_base import SETTINGS_DIR, BoolOption, ButtonOption, SpinnerOption, build_mod, get_pc, hook, keybind
 from unrealsdk import logging
 from unrealsdk.hooks import Block, Type, prevent_hooking_direct_calls
 
 from .runtime import Runtime
 from .storage import MissionLevels
 from .diagnostics import export as export_snapshot
+from .reward_encoding import initializer_specs, prepare_definition_data
+from .loot import pool_specs
 
 SETTINGS = SETTINGS_DIR / "OnePlaythrough"
 # The SDK writes mod.json directly when enabling, including from the main menu.
@@ -22,6 +24,22 @@ runtime = Runtime(unrealsdk, MissionLevels(
     SETTINGS / "mission-levels.json",
     legacy_path=SETTINGS_DIR / "Playthrough3" / "mission-levels.json",
 ))
+
+
+enemy_difficulty = SpinnerOption(
+    "Enemy difficulty", value="Normal", choices=["Easy", "Normal", "Hard"], wrap_enabled=True,
+    description="Ordinary enemies only. Base is always the higher of your level and the vanilla area level. "
+                "Native levels floor at your level; extra rolls stop at +3. New spawns only; bosses unchanged.",
+)
+# Read the saved/live option at spawn time; changing it never edits existing pawns.
+runtime.spawns.difficulty = lambda: enemy_difficulty.value
+
+loot_floor = BoolOption(
+    "Loot level floor", value=True,
+    description="New enemy death loot and chest equipment: at most 3 levels below you. "
+                "Rarity chances stay vanilla. Existing gear, vendors and mission rewards are unchanged.",
+)
+runtime.loot.selected = lambda: loot_floor.value
 
 
 def safe(callback):
@@ -138,6 +156,77 @@ def reward_hooks(path, controller_arg=None):
     return [before, after]
 
 
+def reward_initializer_hook(path, parameters, inputs, has_return):
+    @hook(path)
+    def before(_obj, args, _ret, func):
+        invoked, result = False, None
+        try:
+            changes = {}
+            for parameter in parameters:
+                data = prepare_definition_data(runtime, args, parameter)
+                if data is None:
+                    data = runtime.loot.prepare(getattr(args, parameter))
+                if data is not None:
+                    changes[parameter] = data
+            if not changes:
+                return None
+            values = {name: getattr(args, name) for name in inputs}
+            values.update(changes)
+            # SDK hook args are copies. Explicitly invoke native initialization
+            # with the encoded struct, then block the original call.
+            with prevent_hooking_direct_calls():
+                invoked = True
+                result = func(**values)
+            return (Block, result) if has_return else Block
+        except Exception as exc:
+            runtime.problem("reward item initialization", exc)
+            # Retrying an initializer after invocation risks duplicate effects.
+            if invoked:
+                return (Block, result) if has_return else Block
+            return None
+    return before
+
+
+def loot_pool_hooks(path, context):
+    stack = []
+
+    @hook(path)
+    @safe
+    def before(_obj, args, _ret, _func):
+        stack.append(None)
+        source = getattr(args, context) if context is not None else None
+        stack[-1] = runtime.loot.enter(source, get_pc())
+
+    @hook(path, Type.POST_UNCONDITIONAL)
+    @safe
+    def after(_obj, _args, _ret, _func):
+        token = stack.pop() if stack else None
+        if token is not None:
+            runtime.loot.exit(token)
+
+    return [before, after]
+
+
+def loot_death_hooks(path):
+    stack = []
+
+    @hook(path)
+    @safe
+    def before(obj, _args, _ret, _func):
+        stack.append(None)
+        if runtime.enabled and runtime.loot.selected():
+            stack[-1] = runtime.loot.dying(obj)
+
+    @hook(path, Type.POST_UNCONDITIONAL)
+    @safe
+    def after(_obj, _args, _ret, _func):
+        token = stack.pop() if stack else None
+        if token is not None:
+            runtime.loot.end_death(token)
+
+    return [before, after]
+
+
 def native_spawn(obj, args, func, restore=False, vehicle=False):
     if runtime.spawns.active:
         return None
@@ -232,6 +321,29 @@ def export_key():
 HOOKS = [applying_profile, applied_profile, player_ready, world_ready, accepting, accepted,
          eligibility, mission_level, refreshed_mission, create_pawn, restore_pawn,
          create_vehicle, grade_boundary]
+try:
+    specs = initializer_specs(unrealsdk)
+    runtime.missions.item_encoding["initializer_hooks"] = [spec[0] for spec in specs]
+    HOOKS.extend(reward_initializer_hook(*spec) for spec in specs)
+    if not specs:
+        runtime.problem("reward item encoding", ValueError("No compatible native item initializer found"))
+except Exception as exc:
+    runtime.problem("reward initializer discovery", exc)
+
+try:
+    specs = pool_specs(unrealsdk)
+    runtime.loot.hooks = [{"path": path, "context": context, "parameters": inputs}
+                          for path, context, inputs in specs]
+    for path, context, _inputs in specs:
+        if context is not None:
+            HOOKS.extend(loot_pool_hooks(path, context))
+    if not specs or any(context is None for _, context, _ in specs):
+        runtime.problem("loot pool discovery", ValueError("No compatible context for one or more native loot pool functions"))
+except Exception as exc:
+    runtime.problem("loot pool discovery", exc)
+for name in ("WillowPawn", "WillowVehicle"):
+    HOOKS.extend(loot_death_hooks(f"WillowGame.{name}:Died"))
+
 for name in ("GetExperienceReward", "GetCreditReward", "GetItemRewardForPlayer", "GenerateRewardString"):
     HOOKS.extend(reward_hooks("WillowGame.MissionDefinition:" + name))
 HOOKS.extend(reward_hooks("WillowGame.WillowPlayerController:GrantMissionRewards", "InMission"))
@@ -241,7 +353,8 @@ HOOKS.extend(reward_hooks("WillowGame.WillowPlayerController:PopulateMissionData
 __version__: str
 __version_info__: tuple[int, ...]
 
-build_mod(hooks=HOOKS, options=[ButtonOption("Export diagnostics", on_press=export_diagnostics)],
+build_mod(hooks=HOOKS, options=[enemy_difficulty, loot_floor,
+                              ButtonOption("Export diagnostics", on_press=export_diagnostics)],
           keybinds=[export_key], on_enable=on_enable,
           on_disable=on_disable, settings_file=Path(SETTINGS / "mod.json"))
 logging.info(f"One Playthrough Loaded: {__version__}, {__version_info__}; enabled={runtime.enabled}")

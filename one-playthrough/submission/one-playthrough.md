@@ -12,9 +12,15 @@ Enemy levels and available missions follow your character while keeping their
 vanilla minimums: dangerous areas stay dangerous until you catch up. Leave
 missions for later and their levels and rewards keep pace until you accept them.
 Equipment rewards match the accepted mission level, regardless of your level at turn-in.
-Ordinary enemies use 85% native scaling, with rolls of 8% for at least +1 level,
-6% for at least +2 and 1% for at least +3, without stacking onto naturally higher levels. Named enemies and bosses use native
-scaling without that roll. World loot and economy follow the game's normal rules.
+Choose Easy, Normal (default) or Hard for ordinary enemies. Each keeps native
+variety and the higher of your level and the vanilla area level, with different
+chances of tougher spawns. Ordinary enemies cannot spawn below your level;
+extra rolls stop at +3, retaining naturally higher levels. The choice is saved
+and affects new spawns only.
+Named enemies and bosses keep their existing scaling and receive no extra roll.
+Optional loot level floor keeps newly generated chest equipment and enemy death
+loot within three levels below you, with vanilla rarity and legendary chances.
+Existing equipment and vendors stay native; economy follows the game's normal rules.
 
 Scaling covers the main story and all four DLCs: The Zombie Island of Dr. Ned,
 Mad Moxxi's Underdome Riot, The Secret Armory of General Knoxx and Claptrap's

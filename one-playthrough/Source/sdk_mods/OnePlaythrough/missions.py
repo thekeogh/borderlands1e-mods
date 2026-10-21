@@ -29,6 +29,7 @@ class Missions:
         self.pending = {}
         self.reading_native = False
         self.floors = {}
+        self.item_encoding = {"initializer_hooks": [], "encoded": 0, "recent": []}
 
     def native_level(self, mission, pc, progress):
         """Refresh against ORIGINAL regions, not our already-scaled mission cache."""
@@ -161,6 +162,14 @@ class Missions:
             self.exit_reward(token)
             raise
         return token
+
+    def item_reward_level(self, balance):
+        name = balance._path_name().lower()
+        for _, _, _, items in reversed(self.scopes):
+            level = items.reward_levels.get(name)
+            if level is not None:
+                return level
+        return None
 
     def exit_reward(self, token):
         if token is None:

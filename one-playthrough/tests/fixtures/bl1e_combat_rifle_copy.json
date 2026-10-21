@@ -1,0 +1,173 @@
+{
+  "source": "logs/one-playthrough-20261021-141436-761782.json",
+  "note": "Captured data only. Initializer callback signatures and save/load execution are explicitly modeled in tests.",
+  "mission": {
+    "path": "Z0_Missions.Missions.M_Scavenger1",
+    "level": 20,
+    "stage": 20,
+    "minimum": 0,
+    "region": "gd_GameStages.Arid.Arid__C",
+    "item_rewards": [
+      {
+        "balance": "gd_customweapons.Reward_Weapons.CustomWeap_reward_CombatRifle",
+        "chain": [
+          "gd_customweapons.Reward_Weapons.CustomWeap_reward_CombatRifle",
+          "gd_itemgrades.Weapons.ItemGrade_Weapon_CombatRifle"
+        ],
+        "manufacturer_source": "gd_itemgrades.Weapons.ItemGrade_Weapon_CombatRifle",
+        "inventory_definition": "gd_weap_combat_rifle.A_Weapon.WeaponType_combat_rifle",
+        "mission_level": 20,
+        "target_internal_level": 22,
+        "manufacturer_grades": [
+          {
+            "manufacturer_index": 0,
+            "grade_index": 0,
+            "native_internal_level": 6,
+            "min_stage": 7,
+            "max_stage": 12
+          },
+          {
+            "manufacturer_index": 0,
+            "grade_index": 1,
+            "native_internal_level": 15,
+            "min_stage": 13,
+            "max_stage": 21
+          },
+          {
+            "manufacturer_index": 0,
+            "grade_index": 2,
+            "native_internal_level": 24,
+            "min_stage": 22,
+            "max_stage": 30
+          },
+          {
+            "manufacturer_index": 0,
+            "grade_index": 3,
+            "native_internal_level": 33,
+            "min_stage": 31,
+            "max_stage": 39
+          },
+          {
+            "manufacturer_index": 0,
+            "grade_index": 4,
+            "native_internal_level": 42,
+            "min_stage": 40,
+            "max_stage": 48
+          },
+          {
+            "manufacturer_index": 0,
+            "grade_index": 5,
+            "native_internal_level": 50,
+            "min_stage": 50,
+            "max_stage": 100
+          },
+          {
+            "manufacturer_index": 1,
+            "grade_index": 0,
+            "native_internal_level": 9,
+            "min_stage": 7,
+            "max_stage": 15
+          },
+          {
+            "manufacturer_index": 1,
+            "grade_index": 1,
+            "native_internal_level": 18,
+            "min_stage": 16,
+            "max_stage": 24
+          },
+          {
+            "manufacturer_index": 1,
+            "grade_index": 2,
+            "native_internal_level": 27,
+            "min_stage": 25,
+            "max_stage": 33
+          },
+          {
+            "manufacturer_index": 1,
+            "grade_index": 3,
+            "native_internal_level": 36,
+            "min_stage": 34,
+            "max_stage": 42
+          },
+          {
+            "manufacturer_index": 1,
+            "grade_index": 4,
+            "native_internal_level": 45,
+            "min_stage": 43,
+            "max_stage": 49
+          },
+          {
+            "manufacturer_index": 1,
+            "grade_index": 5,
+            "native_internal_level": 50,
+            "min_stage": 50,
+            "max_stage": 100
+          },
+          {
+            "manufacturer_index": 2,
+            "grade_index": 0,
+            "native_internal_level": 8,
+            "min_stage": 9,
+            "max_stage": 9
+          },
+          {
+            "manufacturer_index": 2,
+            "grade_index": 1,
+            "native_internal_level": 17,
+            "min_stage": 15,
+            "max_stage": 18
+          },
+          {
+            "manufacturer_index": 2,
+            "grade_index": 2,
+            "native_internal_level": 26,
+            "min_stage": 24,
+            "max_stage": 27
+          },
+          {
+            "manufacturer_index": 2,
+            "grade_index": 3,
+            "native_internal_level": 35,
+            "min_stage": 33,
+            "max_stage": 36
+          },
+          {
+            "manufacturer_index": 2,
+            "grade_index": 4,
+            "native_internal_level": 44,
+            "min_stage": 42,
+            "max_stage": 45
+          },
+          {
+            "manufacturer_index": 2,
+            "grade_index": 5,
+            "native_internal_level": 50,
+            "min_stage": 50,
+            "max_stage": 100
+          }
+        ]
+      }
+    ]
+  },
+  "owned_internal": 18,
+  "owned_required": 16,
+  "preview_internal": 22,
+  "same_definition_data": true,
+  "definition_data": {
+    "WeaponTypeDefinition": "gd_weap_combat_rifle.A_Weapon.WeaponType_combat_rifle",
+    "BalanceDefinition": "gd_customweapons.Reward_Weapons.CustomWeap_reward_CombatRifle",
+    "ManufacturerDefinition": "gd_manufacturers.Manufacturers.Dahl",
+    "ManufacturerGradeIndex": 1,
+    "BodyPartDefinition": "gd_weap_combat_rifle.Body.body1",
+    "GripPartDefinition": "gd_weap_combat_rifle.Grip.grip4",
+    "MagazinePartDefinition": "gd_weap_combat_rifle.mag.mag1",
+    "BarrelPartDefinition": "gd_weap_combat_rifle.Barrel.barrel5",
+    "SightPartDefinition": "gd_weap_combat_rifle.Sight.sight1",
+    "StockPartDefinition": "gd_weap_combat_rifle.Stock.stock4",
+    "ActionPartDefinition": null,
+    "AccessoryPartDefinition": "gd_weap_combat_rifle.acc.acc3_Corrosive",
+    "MaterialPartDefinition": "gd_weap_shared_materialparts.ManufacturerMaterials.Material_Dahl_2",
+    "PrefixPartDefinition": "gd_weap_names_shared.Prefix_Tech.Prefix_DTCorrosive2_Caustic",
+    "TitlePartDefinition": "gd_weap_combat_rifle.Title.Title_Accuracy1_Cobra"
+  }
+}

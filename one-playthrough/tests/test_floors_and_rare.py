@@ -167,31 +167,134 @@ class Rare(unittest.TestCase):
                                self.args.SpawnRotation, self.args.GameStage, self.args.AwesomeLevel)
         return result[1]
 
-    def test_all_100_tickets_produce_exact_85_8_6_1_distribution(self):
+    def test_all_100_tickets_produce_exact_50_20_25_5_distribution(self):
         levels = [self.spawn(ticket).level for ticket in range(100)]
-        self.assertEqual({level: levels.count(level) for level in set(levels)}, {19: 85, 21: 8, 22: 6, 23: 1})
+        self.assertEqual({level: levels.count(level) for level in set(levels)}, {20: 50, 21: 20, 22: 25, 23: 5})
+
+    def test_all_presets_produce_exact_weighted_levels(self):
+        expected = {
+            "Easy": {20: 70, 21: 20, 22: 9, 23: 1},
+            "Normal": {20: 50, 21: 20, 22: 25, 23: 5},
+            "Hard": {20: 30, 21: 10, 22: 45, 23: 15},
+        }
+        for difficulty, counts in expected.items():
+            with self.subTest(difficulty=difficulty):
+                self.h.mod.enemy_difficulty.value = difficulty
+                levels = [self.spawn(ticket).level for ticket in range(100)]
+                self.assertEqual({level: levels.count(level) for level in set(levels)}, counts)
+                report = self.h.runtime.spawns.snapshot()
+                self.assertEqual(report["difficulty"], difficulty)
+                self.assertEqual(sum(report["ordinary_tickets"].values()), 100)
+
+    def test_every_preset_keeps_max_player_vanilla_area_as_spawn_base(self):
+        policies = {"Easy": (70, 20, 9, 1), "Normal": (50, 20, 25, 5),
+                    "Hard": (30, 10, 45, 15)}
+        for difficulty, weights in policies.items():
+            self.h.mod.enemy_difficulty.value = difficulty
+            for player, area in ((8, 30), (40, 12)):
+                self.h.enable(player)
+                self.args.GameStage = area
+                ticket = 0
+                for extra, count in enumerate(weights):
+                    for _ in range(count):
+                        spawned = self.spawn(ticket)
+                        expected = max(player, max(player, area) + (extra if extra else -1))
+                        self.assertEqual(spawned.level, expected, (difficulty, player, area, ticket))
+                        self.assertEqual(self.calls[-1][4], max(player, area) + extra)
+                        ticket += 1
+
+    def test_difficulty_change_affects_new_spawns_without_mutating_old_ones(self):
+        self.h.mod.enemy_difficulty.value = "Easy"
+        first = self.spawn(85)
+        self.h.mod.enemy_difficulty.value = "Hard"
+        second = self.spawn(95)
+        self.assertEqual((first.level, second.level), (21, 23))
+        self.assertEqual(first.definition.DefaultExpLevel.BaseValueConstant, 0)
+        self.assertIs(first.definition.DefaultExpLevel.BaseValueAttribute, self.exact)
+        self.assertIs(self.factory.PawnBalanceDefinition, self.definition)
+
+    def test_all_presets_keep_naturally_higher_levels_without_stacking(self):
+        self.definition.DefaultExpLevel.BaseValueAttribute = Object("gd_Balance.EnemyLevel.EnemyLevel_GameStage_plus5")
+        for difficulty in ("Easy", "Normal", "Hard"):
+            self.h.mod.enemy_difficulty.value = difficulty
+            self.assertTrue(all(self.spawn(t).level == 25 for t in range(100)))
+
+    def test_invalid_difficulty_falls_back_to_normal(self):
+        self.h.mod.enemy_difficulty.value = "Invalid saved value"
+        self.assertEqual(self.h.runtime.spawns.snapshot()["difficulty"], "Normal")
+        self.assertEqual(self.spawn(90).level, 22)
+
+    def test_native_floor_preserves_area_stage_and_native_grade_selection_bands(self):
+        self.h.enable(20)
+        self.args.GameStage = 30
+        grade = self.definition.Grades[0]
+        grade.GradeModifiers.ExpLevel = 3
+        grade.GameStageRequirement.MinGameStage = 25
+        grade.GameStageRequirement.MaxGameStage = 40
+        lower, upper = deepcopy(grade), deepcopy(grade)
+        lower.GameStageRequirement.MinGameStage, lower.GameStageRequirement.MaxGameStage = 1, 24
+        upper.GameStageRequirement.MinGameStage, upper.GameStageRequirement.MaxGameStage = 41, 100
+        self.definition.Grades.extend((lower, upper))
+        before = deepcopy(self.definition.Grades)
+        first = self.spawn(0)
+        self.assertEqual(first.level, 20)
+        self.assertEqual(self.calls[-1][4], 30)
+        self.assertIsNone(first.definition.DefaultExpLevel.BaseValueAttribute)
+        self.assertEqual(first.definition.DefaultExpLevel.BaseValueConstant, 29)
+        self.assertEqual(first.definition.Grades[0].GradeModifiers.ExpLevel, 20)
+        self.assertEqual((first.definition.Grades[0].GameStageRequirement.MinGameStage,
+                          first.definition.Grades[0].GameStageRequirement.MaxGameStage), (25, 40))
+        self.assertEqual(self.definition.Grades[0].GradeModifiers.ExpLevel, before[0].GradeModifiers.ExpLevel)
+        self.assertEqual(first.health_multiplier, 3)
+
+    def test_floor_cache_keeps_distinct_native_defaults_at_different_area_stages(self):
+        self.definition.Grades[0].GradeModifiers.ExpLevel = 3
+        self.args.GameStage = 30
+        first = self.spawn(0)
+        self.args.GameStage = 40
+        second = self.spawn(0)
+        self.assertEqual((first.level, second.level), (20, 20))
+        self.assertIsNot(first.definition, second.definition)
+        self.assertEqual(first.definition.DefaultExpLevel.BaseValueConstant, 29)
+        self.assertEqual(second.definition.DefaultExpLevel.BaseValueConstant, 39)
+
+    def test_player_floor_never_mutates_previously_spawned_pawns(self):
+        first = self.spawn(0)
+        self.h.enable(30)
+        second = self.spawn(0)
+        self.assertEqual((first.level, second.level), (20, 30))
+        self.assertEqual(first.definition.DefaultExpLevel.BaseValueConstant, 20)
+        self.assertIs(self.factory.PawnBalanceDefinition, self.definition)
+
+    def test_no_grade_default_gets_floor_without_changing_area_stage(self):
+        self.definition.Grades = []
+        self.definition.DefaultExpLevel = aid(3)
+        stage, clone = self.h.runtime.spawns.plan(self.factory, 20, 30)
+        self.assertEqual(stage, 30)
+        self.assertEqual(clone.DefaultExpLevel.BaseValueConstant, 20)
+        self.assertIsNone(clone.DefaultExpLevel.BaseValueAttribute)
 
     def test_high_native_area_is_floor_for_normal_and_rare_enemies(self):
         self.h.enable(8)
         self.args.GameStage = 30
-        self.assertEqual([self.spawn(t).level for t in (0, 85, 93, 99)], [29, 31, 32, 33])
+        self.assertEqual([self.spawn(t).level for t in (0, 50, 70, 95, 99)], [29, 31, 32, 33, 33])
 
     def test_naturally_higher_enemy_never_gets_bonus_stacked(self):
         self.definition.DefaultExpLevel.BaseValueAttribute = Object("gd_Balance.EnemyLevel.EnemyLevel_GameStage_plus3")
-        self.assertEqual([self.spawn(t).level for t in (0, 85, 93, 99)], [23, 23, 23, 23])
+        self.assertEqual([self.spawn(t).level for t in (0, 50, 70, 95, 99)], [23, 23, 23, 23, 23])
 
     def test_naturally_higher_grade_is_retained_without_stacking_bonus(self):
         self.definition.Grades[0].GradeModifiers.ExpLevel = 23
-        self.assertEqual([self.spawn(t).level for t in (0, 85, 93, 99)], [23, 23, 23, 23])
+        self.assertEqual([self.spawn(t).level for t in (0, 50, 70, 95, 99)], [23, 23, 23, 23, 23])
 
     def test_tutorial_fixed_level_does_not_override_rare_upgrade(self):
         self.definition.Grades[0].GradeModifiers.ExpLevel = 3
-        self.assertEqual([self.spawn(t).level for t in (0, 85, 93, 99)], [3, 21, 22, 23])
+        self.assertEqual([self.spawn(t).level for t in (0, 50, 70, 95, 99)], [20, 21, 22, 23, 23])
 
     def test_natural_high_default_does_not_raise_fixed_tutorial_grade_extra_levels(self):
         self.definition.DefaultExpLevel.BaseValueAttribute = Object("gd_Balance.EnemyLevel.EnemyLevel_GameStage_plus3")
         self.definition.Grades[0].GradeModifiers.ExpLevel = 3
-        self.assertEqual([self.spawn(t).level for t in (0, 85, 93, 99)], [3, 21, 22, 23])
+        self.assertEqual([self.spawn(t).level for t in (0, 50, 70, 95, 99)], [20, 21, 22, 23, 23])
 
     def test_named_low_fixed_grade_floors_to_player_while_native_higher_grades_survive(self):
         self.definition.path = "gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Bonehead"
@@ -203,16 +306,16 @@ class Rare(unittest.TestCase):
 
     def test_private_high_grade_levels_remain_absolute_when_reused_later(self):
         self.definition.Grades[0].GradeModifiers.ExpLevel = 23
-        first = self.spawn(85)
+        first = self.spawn(50)
         self.h.enable(40)
-        second = self.spawn(85)
+        second = self.spawn(50)
         self.assertEqual((first.level, second.level), (23, 41))
         self.assertEqual(first.definition.Grades[0].GradeModifiers.ExpLevel, 23)
         self.assertEqual(second.definition.Grades[0].GradeModifiers.ExpLevel, 0)
 
     def test_shared_definition_and_old_pawn_unchanged_by_later_spawns(self):
         before = vars(self.definition.DefaultExpLevel).copy()
-        first = self.spawn(85)
+        first = self.spawn(50)
         self.h.enable(40)
         second = self.spawn(99)
         self.assertEqual((first.level, second.level), (21, 43))
@@ -227,12 +330,14 @@ class Rare(unittest.TestCase):
 
     def test_named_base_game_and_every_dlc_are_excluded_from_roll(self):
         names = self.h.runtime.spawns.plan.__globals__["named_enemy"].__globals__["BALANCE_NAMES"]
-        for path in names:
-            self.definition.path = path
-            self.h.runtime.spawns.roll = lambda: self.fail("Named enemy used ordinary roll")
-            stage, clone = self.h.runtime.spawns.plan(self.factory, 20, 30)
-            self.assertEqual(stage, 30)
-            self.assertIsNone(clone)
+        for difficulty in ("Easy", "Normal", "Hard"):
+            self.h.mod.enemy_difficulty.value = difficulty
+            for path in names:
+                self.definition.path = path
+                self.h.runtime.spawns.roll = lambda: self.fail("Named enemy used ordinary roll")
+                stage, clone = self.h.runtime.spawns.plan(self.factory, 20, 30)
+                self.assertEqual(stage, 30)
+                self.assertIsNone(clone)
 
     def test_low_native_named_enemy_gets_player_floor_not_fixed_level(self):
         self.definition.path = "gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Bonehead"
@@ -280,9 +385,9 @@ class Rare(unittest.TestCase):
         self.assertTrue(self.h.runtime.problems)
 
     def test_clones_reused_with_actor_local_stage_not_shared_mutable_level(self):
-        first = self.spawn(85)
+        first = self.spawn(50)
         self.h.enable(40)
-        second = self.spawn(85)
+        second = self.spawn(50)
         self.assertIs(first.definition, second.definition)
         self.assertEqual((first.level, second.level), (21, 41))
         self.assertEqual(first.definition.DefaultExpLevel.BaseValueConstant, 0)

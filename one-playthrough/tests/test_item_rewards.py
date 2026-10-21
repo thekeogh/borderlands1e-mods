@@ -186,4 +186,128 @@ class ItemRewardsTests(unittest.TestCase):
                          [(15, 20), (21, 30)])
 
 
+
+
+class InheritedRewardTests(unittest.TestCase):
+    def setUp(self):
+        import json
+        from pathlib import Path
+        self.data = json.loads((Path(__file__).parent / "fixtures/bl1e_scavenger_sniper.json").read_text())
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.h = Harness(self.tmp.name)
+        defs = self.data["definitions"]
+        self.child = balance("gd_customweapons.Reward_Weapons.CustomWeap_reward_SniperRifle")
+        self.parent = balance("gd_itemgrades.Weapons.ItemGrade_Weapon_SniperRifle")
+        self.child.Manufacturers = []
+        self.child.BaseDefinition = self.parent
+        self.child.PartListCollection = defs[self.child.path]["PartListCollection"]
+        self.inventory = Object("gd_weap_sniper_rifle.A_Weapon.WeaponType_sniper_rifle")
+        self.inventory.bUsesPlayerLevelRequirement = True
+        bonus = defs[self.inventory.path]["PlayerUseLevelBonus"]
+        self.inventory.PlayerUseLevelBonus = NS(**bonus)
+        self.inventory.PlayerUseLevelBonus.BaseValueAttribute = Object(bonus["BaseValueAttribute"])
+        self.parent.InventoryDefinition = self.inventory
+        # Explicit model of the depth-limited rows; these are NOT captured data.
+        self.parent.Manufacturers[0].Grades = [grade(7)]
+        self.parent.Manufacturers[0].Grades[0].GradeModifiers.CustomInventoryDefinition = None
+        self.h.mission.path = self.data["mission"]["path"]
+        self.h.mission.ItemRewards = [self.child]
+        def native_level(pc):
+            self.h.mission.GameStage = self.h.mission.ExpLevel = 17
+        self.h.mission.RefreshRewardGameStage = native_level
+        self.h.enable(17)
+        self.h.accept()
+        self.h.pc.level = 20
+        self.h.runtime.sync(self.h.pc)
+
+    def test_real_sniper_shape_requires_inheritance_and_native_two_level_offset(self):
+        self.assertEqual(self.data["observed_reward"]["internal_level"], 7)
+        self.assertEqual(self.data["observed_reward"]["required_level"], 5)
+        self.assertEqual(self.h.mission.ExpLevel, 17)
+        created = []
+        def native_generate():
+            raw = self.child.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel
+            # This ordinary use-bonus conversion is observed in the export.
+            created.append(NS(internal=raw, required=raw - 2, saved_balance=self.child.path))
+            self.assertEqual(self.parent.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel, 7)
+        self.h.reward(native=native_generate)
+        self.assertEqual((created[0].internal, created[0].required), (19, 17))
+        self.assertEqual(created[0].saved_balance, self.child.path)
+        self.assertEqual(self.child.Manufacturers, [])
+        self.assertEqual(self.parent.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel, 7)
+        self.assertEqual(self.child.ObjectFlags, 0)
+
+    def test_parent_world_loot_and_reward_parts_stay_unchanged(self):
+        parent_table = self.parent.Manufacturers
+        part_collection = self.child.PartListCollection
+        def native_generate():
+            self.assertIs(self.parent.Manufacturers, parent_table)
+            self.assertIsNot(self.child.Manufacturers, parent_table)
+            self.assertIsNot(self.child.Manufacturers[0].Grades[0], parent_table[0].Grades[0])
+            self.assertEqual(self.child.PartListCollection, part_collection)
+        self.h.reward(native=native_generate)
+        self.assertIs(self.parent.Manufacturers, parent_table)
+        self.assertEqual(self.child.Manufacturers, [])
+
+    def test_nested_same_inherited_child_restores_then_removes_shadow_table(self):
+        scopes = self.h.runtime.missions
+        outer = scopes.enter_reward(self.h.mission, self.h.pc)
+        shadow = self.child.Manufacturers
+        inner = scopes.enter_reward(self.h.mission, self.h.pc)
+        scopes.exit_reward(inner)
+        self.assertIs(self.child.Manufacturers, shadow)
+        self.assertEqual(shadow[0].Grades[0].GradeModifiers.ExpLevel, 19)
+        scopes.exit_reward(outer)
+        self.assertEqual(self.child.Manufacturers, [])
+
+    def test_exception_restores_empty_child_and_keeps_parent(self):
+        def failure():
+            self.assertTrue(self.child.Manufacturers)
+            raise RuntimeError("reward failed")
+        with self.assertRaises(RuntimeError): self.h.reward(native=failure)
+        self.assertEqual(self.child.Manufacturers, [])
+        self.assertEqual(self.parent.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel, 7)
+
+    def test_custom_inventory_override_uses_its_own_bonus_not_universal_two(self):
+        definition = Object("gd_weap_repeater_pistol.A_Weapon.WeaponType_repeater_pistol")
+        definition.bUsesPlayerLevelRequirement = True
+        definition.PlayerUseLevelBonus = NS(BaseValueConstant=1.0, BaseValueScaleConstant=1.0,
+                                           BaseValueAttribute=None, InitializationDefinition=None)
+        self.parent.Manufacturers[0].Grades[0].GradeModifiers.CustomInventoryDefinition = definition
+        def native_generate():
+            self.assertEqual(self.child.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel, 18)
+        self.h.reward(native=native_generate)
+        self.assertEqual(self.child.Manufacturers, [])
+
+    def test_cyclic_inheritance_and_unknown_bonus_fail_without_leftover_edits(self):
+        self.parent.BaseDefinition = self.child
+        with self.assertRaises(ValueError):
+            self.h.runtime.missions.enter_reward(self.h.mission, self.h.pc)
+        self.assertEqual(self.child.Manufacturers, [])
+        self.parent.BaseDefinition = None
+        self.inventory.PlayerUseLevelBonus.InitializationDefinition = Object("Custom.UnknownFormula")
+        with self.assertRaises(ValueError):
+            self.h.runtime.missions.enter_reward(self.h.mission, self.h.pc)
+        self.assertEqual(self.child.Manufacturers, [])
+        self.assertEqual(self.child.ObjectFlags, 0)
+
+    def test_backpack_level_69_can_use_internal_level_above_69(self):
+        self.h.runtime.missions.remember(self.h.mission.path.lower(), 69, replace=True)
+        self.h.reward(native=lambda: self.assertEqual(
+            self.child.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel, 71))
+        self.assertEqual(self.child.Manufacturers, [])
+
+    def test_manual_diagnostics_include_inheritance_without_depth_limited_grades(self):
+        import json
+        report = json.loads(self.h.mod.export_diagnostics().read_text())
+        mission = next(m for m in report["missions"] if m["path"] == self.h.mission.path)
+        reward = mission["item_rewards"][0]
+        self.assertEqual(reward["chain"], [self.child.path, self.parent.path])
+        self.assertEqual(reward["mission_level"], 17)
+        self.assertEqual(reward["target_internal_level"], 19)
+        self.assertEqual(reward["manufacturer_grades"][0]["native_internal_level"], 7)
+        self.assertEqual(self.child.Manufacturers, [])
+
+
 if __name__ == "__main__": unittest.main()

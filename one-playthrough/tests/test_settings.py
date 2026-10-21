@@ -17,10 +17,11 @@ from test_one_playthrough import Harness, SOURCE
 
 class SDKSettingsMod:
     """The relevant SDK state/load/write behavior, with actual mod callbacks."""
-    def __init__(self, *, settings_file, on_enable, on_disable, keybinds, **_kwargs):
+    def __init__(self, *, settings_file, on_enable, on_disable, keybinds, options, **_kwargs):
         self.settings_file = settings_file
         self.on_enable, self.on_disable = on_enable, on_disable
         self.keybinds = keybinds
+        self.options = options
         self.is_enabled = False
         metadata = (SOURCE / "pyproject.toml").read_text()
         self.auto_enable = re.search(r"^auto_enable = (true|false)$", metadata, re.M).group(1) == "true"
@@ -28,6 +29,7 @@ class SDKSettingsMod:
 
     def save_settings(self):
         data = {"keybinds": {bind.identifier: bind.key for bind in self.keybinds}}
+        data["options"] = {o.identifier: o.value for o in self.options if hasattr(o, "value")}
         if self.auto_enable:
             data["enabled"] = self.is_enabled
         # Deliberately match the SDK: parent creation is the mod's responsibility.
@@ -39,6 +41,9 @@ class SDKSettingsMod:
             data = json.loads(self.settings_file.read_text())
         except (FileNotFoundError, json.JSONDecodeError):
             return
+        for option in self.options:
+            if option.identifier in data.get("options", {}):
+                option.value = data["options"][option.identifier]
         for bind in self.keybinds:
             if bind.identifier in data.get("keybinds", {}):
                 bind.key = data["keybinds"][bind.identifier]
@@ -89,6 +94,19 @@ class SettingsTests(unittest.TestCase):
         second = self.boot()
         self.assertFalse(second.registered_mod.is_enabled)
         self.assertFalse(second.runtime.enabled)
+
+    def test_saved_difficulty_survives_menu_restart_and_upgrade_defaults_to_normal(self):
+        self.settings.parent.mkdir(parents=True)
+        self.settings.write_text(json.dumps({"enabled": True}))
+        first = self.boot()
+        self.assertEqual(first.mod.enemy_difficulty.value, "Normal")
+        self.assertEqual(first.mod.enemy_difficulty.choices, ["Easy", "Normal", "Hard"])
+        first.mod.enemy_difficulty.value = "Hard"
+        first.registered_mod.save_settings()
+        second = self.boot()
+        self.assertEqual(second.mod.enemy_difficulty.value, "Hard")
+        self.assertEqual(second.runtime.spawns.snapshot()["difficulty"], "Hard")
+        self.assertTrue(second.registered_mod.is_enabled)
 
     def test_saved_keybind_and_mission_levels_survive_enable_and_restart(self):
         self.settings.parent.mkdir(parents=True)

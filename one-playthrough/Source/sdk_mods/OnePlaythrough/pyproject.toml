@@ -1,8 +1,8 @@
 [project]
 name = "OnePlaythrough"
-version = "4.2.0"
+version = "4.5.0"
 authors = [{ name = "keogh" }]
-description = "One journey, levels 1–69. Enemies and mission offers scale across Pandora and all DLCs, keeping vanilla minimums. Rare tougher mobs; native loot and economy."
+description = "One journey, levels 1–69. Enemies and missions scale across all DLCs, keeping vanilla minimums. Optional loot level floor; vanilla rarities and economy."
 
 [project.urls]
 Source = "https://github.com/thekeogh/borderlands1e-mods/tree/main/one-playthrough"

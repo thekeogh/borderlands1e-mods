@@ -21,6 +21,8 @@ class Object:
         self.path = path
         self.ObjectFlags = 0
 
+    def __deepcopy__(self, memo): return self  # UObject fields remain references in copied structs.
+
     def _path_name(self): return self.path
     def _get_address(self): return id(self)
 
@@ -108,6 +110,35 @@ class Harness:
                     "WillowVendingMachine": self.vendors, "WillowInventory": self.inventory,
                     **self.economy_definitions}.get(cls, [])
         self.sdk.find_all = find_all
+        self.classes = {}
+        for label in ("WillowWeapon", "WillowItem"):
+            cls = Object("WillowGame." + label)
+            data_struct = NS(_properties=lambda: [NS(Name="BalanceDefinition"), NS(Name="ManufacturerGradeIndex")])
+            param = NS(Name="NewDefinitionData", Class=NS(Name="StructProperty"),
+                       PropertyFlags=0x80, Struct=data_struct)
+            function = NS(Name="InitializeFromDefinitionData", Class=NS(Name="Function"),
+                          Outer=cls, _properties=lambda param=param: [param])
+            cls._fields = lambda function=function: [function]
+            self.classes[label] = cls
+        self.classes["WillowInventory"] = NS(_fields=lambda: [])
+        for label in ("WillowAIPawn", "WillowVehicle", "WillowInteractiveObject"):
+            cls = Object("WillowGame." + label)
+            cls.Name = label
+            self.classes[label] = cls
+        pool = Object("WillowGame.ItemPool")
+        properties = [NS(Name=name, Class=NS(Name=kind), PropertyFlags=flags) for name, kind, flags in (
+            ("Definition", "ObjectProperty", 0x80), ("GameStage", "IntProperty", 0x80),
+            ("AwesomeLevel", "IntProperty", 0x80), ("ContextSource", "ObjectProperty", 0x80),
+            ("SpawnedInventory", "ArrayProperty", 0x180))]
+        # Modeled metadata: the real signatures are exported in F10 for Windows verification.
+        function = NS(Name="SpawnBalancedInventoryFromPool", Class=NS(Name="Function"),
+                      Outer=pool, _properties=lambda: properties)
+        pool._fields = lambda: [function]
+        self.classes["ItemPool"] = pool
+        def find_class(name):
+            if name not in self.classes: raise ValueError(name)
+            return self.classes[name]
+        self.sdk.find_class = find_class
         self.callbacks = {}
         hooks = ModuleType("unrealsdk.hooks")
         hooks.Type = NS(POST="POST", POST_UNCONDITIONAL="POST_UNCONDITIONAL")
@@ -122,6 +153,8 @@ class Harness:
         base_mod.hook = hook
         base_mod.keybind = lambda identifier, key: lambda fn: NS(identifier=identifier, key=key, callback=fn)
         base_mod.ButtonOption = lambda identifier, **kw: NS(identifier=identifier, **kw)
+        base_mod.BoolOption = lambda identifier, **kw: NS(identifier=identifier, **kw)
+        base_mod.SpinnerOption = lambda identifier, **kw: NS(identifier=identifier, **kw)
         base_mod.get_pc = lambda: None if in_menu else self.pc
         base_mod.SETTINGS_DIR = Path(directory)
         def build_mod(**kwargs):
@@ -135,7 +168,7 @@ class Harness:
         spec = importlib.util.spec_from_file_location(name, SOURCE / "__init__.py",
                                                     submodule_search_locations=[str(SOURCE)])
         module = importlib.util.module_from_spec(spec)
-        module.__version__, module.__version_info__ = "4.2.0", (4, 2, 0)
+        module.__version__, module.__version_info__ = "4.5.0", (4, 5, 0)
         self.modules[name] = module
         with patch.dict(sys.modules, self.modules):
             spec.loader.exec_module(module)
@@ -191,7 +224,7 @@ class Tests(unittest.TestCase):
     def test_new_game_has_no_menu_intro_story_reset_or_save_edit_hooks(self):
         h = self.h
         h.enable()
-        self.assertEqual([o.identifier for o in h.registration["options"]], ["Export diagnostics"])
+        self.assertEqual([o.identifier for o in h.registration["options"]], ["Enemy difficulty", "Loot level floor", "Export diagnostics"])
         self.assertTrue(all(not any(x in path for x in ("GFxLobby", "PressStart", "LaunchNewGame"))
                             for path, _ in h.callbacks))
         self.assertEqual(h.pc.pt, 0)

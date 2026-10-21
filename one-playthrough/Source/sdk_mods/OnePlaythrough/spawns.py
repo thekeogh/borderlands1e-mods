@@ -11,9 +11,20 @@ EXACT_STAGE = "gd_Balance.EnemyLevel.EnemyLevel_GameStage_exact"
 NAMES = count()
 
 
-def bonus(ticket):
-    """One hundred equally likely tickets: 85 native, eight +1, six +2, one +3."""
-    return 3 if ticket == 99 else 2 if ticket >= 93 else 1 if ticket >= 85 else 0
+DIFFICULTIES = {
+    "Easy": (70, 20, 9, 1),
+    "Normal": (50, 20, 25, 5),
+    "Hard": (30, 10, 45, 15),
+}
+
+
+def bonus(ticket, difficulty="Normal"):
+    """Map one of 100 equally likely tickets to the selected ordinary bonus."""
+    for extra, weight in enumerate(DIFFICULTIES.get(difficulty, DIFFICULTIES["Normal"])):
+        if ticket < weight:
+            return extra
+        ticket -= weight
+    raise ValueError("Enemy difficulty ticket must be between 0 and 99")
 
 
 def native_level(data, stage):
@@ -53,11 +64,12 @@ class Spawns:
     def __init__(self, runtime):
         self.runtime = runtime
         self.roll = lambda: randrange(100)
+        self.difficulty = lambda: "Normal"
         self.clones = {}
         self.pins = Patches()
         self.active = False
 
-    def exact_definition(self, definition, base, target):
+    def exact_definition(self, definition, base, target, preserve_stage=False):
         """Private persistent data; later spawns never change an existing pawn.
 
         Keep the original grade-selection bands and combat modifiers. Only the
@@ -72,8 +84,11 @@ class Spawns:
         # that the engine would interpret as a low-level override.
         levels = tuple(max(target, grade_level(native, g.GradeModifiers.ExpLevel))
                        for g in definition.Grades)
-        overrides = tuple(level if level > target else 0 for level in levels)
-        key = (definition._get_address(), overrides)
+        overrides = tuple(level if preserve_stage or level > target else 0 for level in levels)
+        # A native floor must keep the original area GameStage for grade/type
+        # selection. Use absolute level inputs, not a reduced factory stage.
+        default = max(target, native) if preserve_stage else None
+        key = (definition._get_address(), overrides, default)
         if key in self.clones:
             return self.clones[key]
         sdk = self.runtime.sdk
@@ -89,8 +104,8 @@ class Spawns:
         self.pins.pin(clone)
         self.pins.pin(exact)
         data = clone.DefaultExpLevel
-        data.BaseValueConstant = 0.0
-        data.BaseValueAttribute = exact
+        data.BaseValueConstant = float(default) if preserve_stage else 0.0
+        data.BaseValueAttribute = None if preserve_stage else exact
         data.InitializationDefinition = None
         data.BaseValueScaleConstant = 1.0
         for grade, fixed in zip(clone.Grades, overrides):
@@ -120,13 +135,17 @@ class Spawns:
                     grade_level(natural, g.GradeModifiers.ExpLevel) < player for g in eligible)):
                 return player, self.exact_definition(definition, base, player)
             return base, None
-        extra = bonus(self.roll())
-        if not extra:
-            return base, None
+        extra = bonus(self.roll(), self.selected_difficulty())
         if natural is None:
-            self.runtime.problem("rare enemy", ValueError(f"Native formula retained: {paths}"))
+            self.runtime.problem("enemy level", ValueError(f"Native formula retained: {paths}"))
             return base, None
-        # max, never additive: a naturally +3 enemy stays +3, not +4/+5.
+        if not extra:
+            eligible = [g for g in definition.Grades
+                        if g.GameStageRequirement.MinGameStage <= base <= g.GameStageRequirement.MaxGameStage]
+            if natural < player or any(grade_level(natural, g.GradeModifiers.ExpLevel) < player for g in eligible):
+                return base, self.exact_definition(definition, base, player, preserve_stage=True)
+            return base, None
+        # Use the higher of the natural level and bonus target; never add them.
         return base + extra, self.exact_definition(definition, base, base + extra)
 
     def restore(self):
@@ -135,6 +154,13 @@ class Spawns:
         # Native references keep those objects alive after our keep-alive ends.
         return self.pins.restore()
 
+    def selected_difficulty(self):
+        value = self.difficulty()
+        return value if value in DIFFICULTIES else "Normal"
+
     def snapshot(self):
-        return {"ordinary_tickets": {"native": 85, "+1": 8, "+2": 6, "+3": 1},
+        difficulty = self.selected_difficulty()
+        return {"difficulty": difficulty,
+                "ordinary_tickets": dict(zip(("native", "+1", "+2", "+3"), DIFFICULTIES[difficulty])),
+                "native_floor": "max(player level, native spawn level)",
                 "named_bonus": False, "private_definitions": len(self.clones)}

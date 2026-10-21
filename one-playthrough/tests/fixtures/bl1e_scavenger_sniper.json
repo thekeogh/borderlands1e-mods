@@ -1,0 +1,73 @@
+{
+  "source": "logs/one-playthrough-20261021-132352-752871.json",
+  "note": "Captured BL1E fields. Parent grade arrays were depth-limited; tests explicitly model those missing rows.",
+  "mission": {
+    "path": "Z0_Missions.Missions.M_Scavenger2",
+    "level": 17,
+    "stage": 17,
+    "minimum": 0,
+    "region": "gd_GameStages.Arid.Arid__A_Difficult"
+  },
+  "locked_level": 17,
+  "definitions": {
+    "gd_customweapons.Reward_Weapons.CustomWeap_reward_SniperRifle": {
+      "InventoryDefinition": null,
+      "BaseDefinition": "gd_itemgrades.Weapons.ItemGrade_Weapon_SniperRifle",
+      "PartListCollection": "gd_customweapons.Reward_PartCollections.PartCollection_reward_SniperRifle",
+      "Manufacturers": []
+    },
+    "gd_itemgrades.Weapons.ItemGrade_Weapon_SniperRifle": {
+      "InventoryDefinition": "gd_weap_sniper_rifle.A_Weapon.WeaponType_sniper_rifle",
+      "BaseDefinition": null,
+      "PartListCollection": null,
+      "Manufacturers": [
+        {
+          "Manufacturer": "gd_manufacturers.Manufacturers.Vladof",
+          "Grades": "depth limit"
+        },
+        {
+          "Manufacturer": "gd_manufacturers.Manufacturers.Maliwan",
+          "Grades": "depth limit"
+        },
+        {
+          "Manufacturer": "gd_manufacturers.Manufacturers.Jakobs",
+          "Grades": "depth limit"
+        },
+        {
+          "Manufacturer": "gd_manufacturers.Manufacturers.Atlas",
+          "Grades": "depth limit"
+        }
+      ]
+    },
+    "gd_weap_sniper_rifle.A_Weapon.WeaponType_sniper_rifle": {
+      "bUsesPlayerLevelRequirement": true,
+      "PlayerUseLevelBonus": {
+        "BaseValueConstant": 2.0,
+        "BaseValueAttribute": "gd_Balance.LevelLimits.Proficiency_Sniper_LevelBonus",
+        "InitializationDefinition": null,
+        "BaseValueScaleConstant": 1.0
+      }
+    }
+  },
+  "observed_reward": {
+    "internal_level": 7,
+    "required_level": 5,
+    "definition": {
+      "WeaponTypeDefinition": "gd_weap_sniper_rifle.A_Weapon.WeaponType_sniper_rifle",
+      "BalanceDefinition": "gd_customweapons.Reward_Weapons.CustomWeap_reward_SniperRifle",
+      "ManufacturerDefinition": "gd_manufacturers.Manufacturers.Vladof",
+      "ManufacturerGradeIndex": 0,
+      "BodyPartDefinition": "gd_weap_sniper_rifle.Body.body1",
+      "GripPartDefinition": "gd_weap_sniper_rifle.Grip.grip1a",
+      "MagazinePartDefinition": "gd_weap_sniper_rifle.mag.mag4",
+      "BarrelPartDefinition": "gd_weap_sniper_rifle.Barrel.barrel2",
+      "SightPartDefinition": "gd_weap_sniper_rifle.Sight.sight1",
+      "StockPartDefinition": "gd_weap_sniper_rifle.Stock.stock1",
+      "ActionPartDefinition": null,
+      "AccessoryPartDefinition": "gd_weap_sniper_rifle.acc.accnone",
+      "MaterialPartDefinition": "gd_weap_shared_materialparts.ManufacturerMaterials.Material_Vladof_2",
+      "PrefixPartDefinition": "gd_weap_sniper_rifle.Prefix.Prefix_Quality2_Hard",
+      "TitlePartDefinition": "gd_weap_sniper_rifle.Title.Title_LowAccuracy1_Gamble"
+    }
+  }
+}

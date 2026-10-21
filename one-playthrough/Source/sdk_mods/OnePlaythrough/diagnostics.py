@@ -5,6 +5,7 @@ import json
 import math
 
 from .economy_diagnostics import collect as collect_economy
+from .rewards import describe as describe_rewards
 
 
 def serialize(value, depth=0, on_reference=None):
@@ -74,6 +75,9 @@ def export(runtime, pc, directory, version="unknown"):
         for field, attr in (("level", "ExpLevel"), ("stage", "GameStage"), ("minimum", "MinimumLevel")):
             record[field] = read(f"{name}.{attr}", lambda attr=attr: getattr(mission, attr))
         record["region"] = read(f"{name}.GameStageRegion", lambda: serialize(mission.GameStageRegion))
+        if str(name).lower() in runtime.missions.levels:
+            record["item_rewards"] = read(f"{name} item reward inheritance",
+                lambda: describe_rewards(mission, runtime.missions.levels[str(name).lower()]), [])
         snapshot["missions"].append(record)
     for definition in read("find enemy definitions", lambda: list(runtime.sdk.find_all("AIPawnBalanceDefinition", exact=False)), []):
         if len(snapshot["enemy_definitions"]) >= 600:
