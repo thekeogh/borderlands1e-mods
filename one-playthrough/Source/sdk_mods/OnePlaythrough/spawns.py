@@ -14,7 +14,7 @@ NAMES = count()
 DIFFICULTIES = {
     "Easy": (70, 20, 9, 1),
     "Normal": (50, 20, 25, 5),
-    "Hard": (30, 10, 45, 15),
+    "Hard": (20, 5, 55, 20),
 }
 
 

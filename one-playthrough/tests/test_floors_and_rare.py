@@ -175,7 +175,7 @@ class Rare(unittest.TestCase):
         expected = {
             "Easy": {20: 70, 21: 20, 22: 9, 23: 1},
             "Normal": {20: 50, 21: 20, 22: 25, 23: 5},
-            "Hard": {20: 30, 21: 10, 22: 45, 23: 15},
+            "Hard": {20: 20, 21: 5, 22: 55, 23: 20},
         }
         for difficulty, counts in expected.items():
             with self.subTest(difficulty=difficulty):
@@ -188,7 +188,7 @@ class Rare(unittest.TestCase):
 
     def test_every_preset_keeps_max_player_vanilla_area_as_spawn_base(self):
         policies = {"Easy": (70, 20, 9, 1), "Normal": (50, 20, 25, 5),
-                    "Hard": (30, 10, 45, 15)}
+                    "Hard": (20, 5, 55, 20)}
         for difficulty, weights in policies.items():
             self.h.mod.enemy_difficulty.value = difficulty
             for player, area in ((8, 30), (40, 12)):

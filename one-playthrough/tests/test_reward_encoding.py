@@ -152,7 +152,7 @@ class RewardEncodingTests(unittest.TestCase):
 
     def test_native_recall_preserves_other_arguments_and_return_value(self):
         callback = self.h.mod.reward_initializer_hook("Test:Initialize", ("Data",),
-                                                     ("Data", "Owner", "Flag"), True)
+                                                     ("Data", "Owner", "Flag"), True)[0]
         owner = Object("Native.Owner")
         calls, results = [], []
         def native(**values):

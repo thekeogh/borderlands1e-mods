@@ -18,9 +18,9 @@ chances of tougher spawns. Ordinary enemies cannot spawn below your level;
 extra rolls stop at +3, retaining naturally higher levels. The choice is saved
 and affects new spawns only.
 Named enemies and bosses keep their existing scaling and receive no extra roll.
-Optional loot level floor keeps newly generated chest equipment and enemy death
-loot within three levels below you, with vanilla rarity and legendary chances.
-Existing equipment and vendors stay native; economy follows the game's normal rules.
+The optional loot level floor targets new world drops, containers and vendor
+stock at no more than two levels below you for all equipment (minimum level 1). Rarity and legendary chances stay vanilla. Existing equipment stays unchanged; mission
+rewards follow the accepted mission level. Economy follows the game's normal rules.
 
 Scaling covers the main story and all four DLCs: The Zombie Island of Dr. Ned,
 Mad Moxxi's Underdome Riot, The Secret Armory of General Knoxx and Claptrap's

@@ -1,0 +1,102 @@
+{
+  "source": "logs/one-playthrough-20261022-093814-769738.json",
+  "note": "User picked up and dropped the chest weapon before export. Identity does not establish the original chest-generation call. This fixture demonstrates missing coverage, not a fixed native path.",
+  "player_level": 10,
+  "loot_level_floor": {
+    "enabled": true,
+    "minimum": "max(1, player level - 3)",
+    "pool_hooks": [
+      {
+        "path": "WillowGame.ItemPool:SpawnBalancedInventoryFromInventoryBalanceDefinition",
+        "context": "ContextSource",
+        "parameters": [
+          "InvBalanceDefinition",
+          "Quantity",
+          "GameStage",
+          "AwesomeLevel",
+          "ContextSource",
+          "SpawnedInventory"
+        ]
+      },
+      {
+        "path": "WillowGame.ItemPool:SpawnBalancedInventoryFromPool",
+        "context": "ContextSource",
+        "parameters": [
+          "Definition",
+          "GameStage",
+          "AwesomeLevel",
+          "ContextSource",
+          "SpawnedInventory",
+          "OuterPoolChance"
+        ]
+      }
+    ],
+    "active_scopes": 0,
+    "death_scopes": 0,
+    "equipment_seen": 0,
+    "raised": 0,
+    "contexts": {
+      "WillowAIPawn": 21,
+      "enemy": 173
+    },
+    "skipped": {},
+    "recent": []
+  },
+  "ground_item": {
+    "path": "Loader.TheWorld:PersistentLevel.WillowWeapon_52",
+    "class": "WillowWeapon",
+    "fields": {
+      "LastFiringModeDefinitionUsed": null,
+      "OwnerStatsID": 0,
+      "ExternalAttributeModifiers": [],
+      "WeaponAttributeModifiers": [],
+      "ZoomExternalAttributeModifiers": [],
+      "ZoomWeaponAttributeModifiers": [],
+      "DefinitionData": {
+        "WeaponTypeDefinition": "gd_weap_combat_shotgun.A_Weapon.WeaponType_combat_shotgun",
+        "BalanceDefinition": "gd_itemgrades.Weapons.ItemGrade_Weapon_CombatShotgun",
+        "ManufacturerDefinition": "gd_manufacturers.Manufacturers.tediore",
+        "ManufacturerGradeIndex": 0,
+        "BodyPartDefinition": "gd_weap_combat_shotgun.Body.body2",
+        "GripPartDefinition": "gd_weap_combat_shotgun.Grip.grip1",
+        "MagazinePartDefinition": "gd_weap_combat_shotgun.mag.mag1",
+        "BarrelPartDefinition": "gd_weap_combat_shotgun.Barrel.barrel1",
+        "SightPartDefinition": "gd_weap_combat_shotgun.Sight.sightnone",
+        "StockPartDefinition": "gd_weap_combat_shotgun.Stock.stock1",
+        "ActionPartDefinition": null,
+        "AccessoryPartDefinition": "gd_weap_combat_shotgun.acc.accnone",
+        "MaterialPartDefinition": "gd_weap_shared_materialparts.ManufacturerMaterials.Material_Tediore_1",
+        "PrefixPartDefinition": "gd_weap_combat_shotgun.Prefix.Prefix_Damage1_Terrible",
+        "TitlePartDefinition": "gd_weap_combat_shotgun.Title.Title_HighSpread1_Scattergun"
+      },
+      "InstantHitDamageTypeDefinitions": [
+        null
+      ],
+      "InstantHitImpactDefinitions": [
+        "gd_impacts.Bullets.Bullet_SmallCaliber"
+      ],
+      "CashValue": 68,
+      "Quantity": 1,
+      "bShopsHaveInfiniteQuantity": false,
+      "CashValueModifierTotal": 44.0,
+      "TechLevel": 0,
+      "RarityLevel": 2,
+      "MinRarityLevel": -1,
+      "MaxRarityLevel": 999,
+      "ExpLevel": 3,
+      "AwesomeLevel": 0,
+      "PickupMessageWithLevel": "You got %s (Level %d)",
+      "SourceDefinitionName": "None",
+      "bReceiveOwnerEvents": false,
+      "Owner": null,
+      "bOnlyOwnerSee": false,
+      "bOnlyRelevantToOwner": false,
+      "bDemoOwner": false,
+      "bKillDuringLevelTransition": false,
+      "bNetOwner": false
+    },
+    "inventory_definition": "gd_weap_combat_shotgun.A_Weapon.WeaponType_combat_shotgun",
+    "native_required_level": 1
+  },
+  "problems": []
+}

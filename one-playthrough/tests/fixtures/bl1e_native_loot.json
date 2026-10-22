@@ -1,0 +1,390 @@
+{
+  "sources": [
+    "logs/one-playthrough-20261022-100601-170282.json",
+    "logs/one-playthrough-20261022-100834-208523.json",
+    "logs/one-playthrough-20261022-100927-055658.json",
+    "logs/one-playthrough-20261022-101107-778759.json",
+    "logs/one-playthrough-20261022-101426-482503.json"
+  ],
+  "note": "Native item data and signatures captured on BL1E. Tests model engine execution; they do not execute the Windows native initializer.",
+  "player_level": 12,
+  "native_signature": {
+    "path": "Engine.WillowInventory:InitializeInventory",
+    "inputs": [
+      "InBalanceDef",
+      "InManufacturer",
+      "InGradeIndex",
+      "InAdditionalQueryInterfaceSource"
+    ]
+  },
+  "vendor_item": {
+    "path": "Loader.TheWorld:PersistentLevel.WillowWeapon_15",
+    "class": "WillowWeapon",
+    "fields": {
+      "LastFiringModeDefinitionUsed": null,
+      "OwnerStatsID": 0,
+      "ExternalAttributeModifiers": [],
+      "WeaponAttributeModifiers": [],
+      "ZoomExternalAttributeModifiers": [],
+      "ZoomWeaponAttributeModifiers": [],
+      "DefinitionData": {
+        "WeaponTypeDefinition": "gd_weap_sniper_rifle.A_Weapon.WeaponType_sniper_rifle",
+        "BalanceDefinition": "gd_itemgrades.Weapons.ItemGrade_Weapon_SniperRifle",
+        "ManufacturerDefinition": "gd_manufacturers.Manufacturers.Vladof",
+        "ManufacturerGradeIndex": 0,
+        "BodyPartDefinition": "gd_weap_sniper_rifle.Body.body1",
+        "GripPartDefinition": "gd_weap_sniper_rifle.Grip.grip1a",
+        "MagazinePartDefinition": "gd_weap_sniper_rifle.mag.mag1",
+        "BarrelPartDefinition": "gd_weap_sniper_rifle.Barrel.barrel2",
+        "SightPartDefinition": "gd_weap_sniper_rifle.Sight.sight1",
+        "StockPartDefinition": "gd_weap_sniper_rifle.Stock.stock1",
+        "ActionPartDefinition": null,
+        "AccessoryPartDefinition": "gd_weap_sniper_rifle.acc.accnone",
+        "MaterialPartDefinition": "gd_weap_shared_materialparts.ManufacturerMaterials.Material_Vladof_1",
+        "PrefixPartDefinition": "gd_weap_names_shared.Prefix.Prefix_QualityLow_Vladof_Rusty",
+        "TitlePartDefinition": "gd_weap_sniper_rifle.Title.Title__SniperRifle"
+      },
+      "InstantHitDamageTypeDefinitions": [
+        null
+      ],
+      "InstantHitImpactDefinitions": [
+        "gd_impacts.Bullets.Bullet_LargeCaliber"
+      ],
+      "CashValue": 87,
+      "Quantity": 1,
+      "bShopsHaveInfiniteQuantity": false,
+      "CashValueModifierTotal": 30.9375,
+      "TechLevel": 0,
+      "RarityLevel": 0,
+      "MinRarityLevel": -1,
+      "MaxRarityLevel": 999,
+      "ExpLevel": 7,
+      "AwesomeLevel": 0,
+      "PickupMessageWithLevel": "You got %s (Level %d)",
+      "SourceDefinitionName": "None",
+      "bReceiveOwnerEvents": false,
+      "Owner": "Loader.TheWorld:PersistentLevel.WillowVendingMachine_1",
+      "bOnlyOwnerSee": false,
+      "bOnlyRelevantToOwner": false,
+      "bDemoOwner": false,
+      "bKillDuringLevelTransition": false,
+      "bNetOwner": false
+    },
+    "inventory_definition": "gd_weap_sniper_rifle.A_Weapon.WeaponType_sniper_rifle",
+    "native_required_level": 5
+  },
+  "enemy_drop": {
+    "path": "Loader.TheWorld:PersistentLevel.WillowEquipAbleItem_14",
+    "class": "WillowEquipAbleItem",
+    "fields": {
+      "VfTable_IIAttributeSlotEffectProvider": {
+        "Dummy": 1793456920
+      },
+      "DefinitionData": {
+        "ItemDefinition": "gd_tunercuffs.A_Item.Item_GrenadeModulator",
+        "BalanceDefinition": "gd_itemgrades.Gear.ItemGrade_Gear_GrenadeMODs",
+        "ManufacturerDefinition": "gd_manufacturers.Manufacturers.Pangolin",
+        "ManufacturerGradeIndex": 0,
+        "BodyItemPartDefinition": "gd_tunercuffs.Body.body1_explosive",
+        "LeftSideItemPartDefinition": "gd_tunercuffs.LeftSide.leftsidenone",
+        "RightSideItemPartDefinition": "gd_tunercuffs.RightSide.rightsidenone",
+        "MaterialItemPartDefinition": "gd_tunercuffs.ManufacturerMaterials.Material_Pangolin_1",
+        "PrefixItemNamePartDefinition": "gd_tunercuffs.Prefix.Prefix_Explosive",
+        "TitleItemNamePartDefinition": "gd_tunercuffs.Title.Title_Rubberized"
+      },
+      "ExternalAttributeModifiers": [],
+      "PartExternalAttributeModifiers": [],
+      "ItemAttributeModifiers": [],
+      "AttributeSlots": [
+        {
+          "SlotName": "GrenadeDamage",
+          "bActivated": true,
+          "bIncludeAlliesAsTarget": false,
+          "bIncludeInModifierText": false,
+          "TargetInstanceDataName": "None",
+          "EffectGrade": 1,
+          "AttributeToModify": null,
+          "ConstraintAttribute": null,
+          "ModifierType": 1,
+          "BaseModifierValue": {
+            "BaseValueConstant": 0.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": "gd_Balance_HealthAndDamage.HealthAndDamage.ProjectileDamageFormula",
+            "BaseValueScaleConstant": 1.0
+          },
+          "PerGradeUpgrade": {
+            "BaseValueConstant": 0.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": null,
+            "BaseValueScaleConstant": 1.0
+          },
+          "ComputedModifierValue": 21.11890983581543
+        },
+        {
+          "SlotName": "None",
+          "bActivated": false,
+          "bIncludeAlliesAsTarget": false,
+          "bIncludeInModifierText": false,
+          "TargetInstanceDataName": "None",
+          "EffectGrade": 0,
+          "AttributeToModify": null,
+          "ConstraintAttribute": null,
+          "ModifierType": 0,
+          "BaseModifierValue": {
+            "BaseValueConstant": 0.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": null,
+            "BaseValueScaleConstant": 1.0
+          },
+          "PerGradeUpgrade": {
+            "BaseValueConstant": 0.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": null,
+            "BaseValueScaleConstant": 1.0
+          },
+          "ComputedModifierValue": 0.0
+        },
+        {
+          "SlotName": "None",
+          "bActivated": false,
+          "bIncludeAlliesAsTarget": false,
+          "bIncludeInModifierText": false,
+          "TargetInstanceDataName": "None",
+          "EffectGrade": 0,
+          "AttributeToModify": null,
+          "ConstraintAttribute": null,
+          "ModifierType": 0,
+          "BaseModifierValue": {
+            "BaseValueConstant": 0.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": null,
+            "BaseValueScaleConstant": 1.0
+          },
+          "PerGradeUpgrade": {
+            "BaseValueConstant": 0.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": null,
+            "BaseValueScaleConstant": 1.0
+          },
+          "ComputedModifierValue": 0.0
+        },
+        {
+          "SlotName": "None",
+          "bActivated": false,
+          "bIncludeAlliesAsTarget": false,
+          "bIncludeInModifierText": false,
+          "TargetInstanceDataName": "None",
+          "EffectGrade": 0,
+          "AttributeToModify": null,
+          "ConstraintAttribute": null,
+          "ModifierType": 0,
+          "BaseModifierValue": {
+            "BaseValueConstant": 0.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": null,
+            "BaseValueScaleConstant": 1.0
+          },
+          "PerGradeUpgrade": {
+            "BaseValueConstant": 0.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": null,
+            "BaseValueScaleConstant": 1.0
+          },
+          "ComputedModifierValue": 0.0
+        },
+        {
+          "SlotName": "None",
+          "bActivated": false,
+          "bIncludeAlliesAsTarget": false,
+          "bIncludeInModifierText": false,
+          "TargetInstanceDataName": "None",
+          "EffectGrade": 0,
+          "AttributeToModify": null,
+          "ConstraintAttribute": null,
+          "ModifierType": 0,
+          "BaseModifierValue": {
+            "BaseValueConstant": 0.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": null,
+            "BaseValueScaleConstant": 1.0
+          },
+          "PerGradeUpgrade": {
+            "BaseValueConstant": 0.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": null,
+            "BaseValueScaleConstant": 1.0
+          },
+          "ComputedModifierValue": 0.0
+        },
+        {
+          "SlotName": "None",
+          "bActivated": false,
+          "bIncludeAlliesAsTarget": false,
+          "bIncludeInModifierText": false,
+          "TargetInstanceDataName": "None",
+          "EffectGrade": 0,
+          "AttributeToModify": null,
+          "ConstraintAttribute": null,
+          "ModifierType": 0,
+          "BaseModifierValue": {
+            "BaseValueConstant": 0.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": null,
+            "BaseValueScaleConstant": 1.0
+          },
+          "PerGradeUpgrade": {
+            "BaseValueConstant": 0.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": null,
+            "BaseValueScaleConstant": 1.0
+          },
+          "ComputedModifierValue": 0.0
+        }
+      ],
+      "ReplicatedAttributeSlotModifierValues": [
+        21.11890983581543,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "RuntimeAttributeSlotSkill": null,
+      "CashValue": 290,
+      "Quantity": 1,
+      "bShopsHaveInfiniteQuantity": false,
+      "CashValueModifierTotal": 76.32000732421875,
+      "TechLevel": 0,
+      "RarityLevel": 10,
+      "MinRarityLevel": -1,
+      "MaxRarityLevel": 999,
+      "ExpLevel": 9,
+      "AwesomeLevel": 0,
+      "PickupMessageWithLevel": "You got %s (Level %d)",
+      "SourceDefinitionName": "None",
+      "bReceiveOwnerEvents": false,
+      "Owner": null,
+      "bOnlyOwnerSee": false,
+      "bOnlyRelevantToOwner": false,
+      "bDemoOwner": false,
+      "bKillDuringLevelTransition": false,
+      "bNetOwner": false
+    },
+    "inventory_definition": "gd_tunercuffs.A_Item.Item_GrenadeModulator",
+    "native_required_level": 7
+  },
+  "chest_items": [
+    {
+      "path": "Loader.TheWorld:PersistentLevel.WillowWeapon_22",
+      "class": "WillowWeapon",
+      "fields": {
+        "LastFiringModeDefinitionUsed": null,
+        "OwnerStatsID": 0,
+        "ExternalAttributeModifiers": [],
+        "WeaponAttributeModifiers": [],
+        "ZoomExternalAttributeModifiers": [],
+        "ZoomWeaponAttributeModifiers": [],
+        "DefinitionData": {
+          "WeaponTypeDefinition": "gd_weap_combat_rifle.A_Weapon.WeaponType_combat_rifle",
+          "BalanceDefinition": "gd_itemgrades.Weapons.ItemGrade_Weapon_CombatRifle",
+          "ManufacturerDefinition": "gd_manufacturers.Manufacturers.tediore",
+          "ManufacturerGradeIndex": 1,
+          "BodyPartDefinition": "gd_weap_combat_rifle.Body.body3",
+          "GripPartDefinition": "gd_weap_combat_rifle.Grip.grip1",
+          "MagazinePartDefinition": "gd_weap_combat_rifle.mag.mag1",
+          "BarrelPartDefinition": "gd_weap_combat_rifle.Barrel.barrel1",
+          "SightPartDefinition": "gd_weap_combat_rifle.Sight.sight1",
+          "StockPartDefinition": "gd_weap_combat_rifle.Stock.stock4",
+          "ActionPartDefinition": null,
+          "AccessoryPartDefinition": "gd_weap_combat_rifle.acc.acc_none",
+          "MaterialPartDefinition": "gd_weap_shared_materialparts.ManufacturerMaterials.Material_Tediore_1",
+          "PrefixPartDefinition": "gd_weap_names_shared.Prefix.Prefix__Combat",
+          "TitlePartDefinition": "gd_weap_combat_rifle.Title.Title__Rifle"
+        },
+        "InstantHitDamageTypeDefinitions": [
+          null
+        ],
+        "InstantHitImpactDefinitions": [
+          "gd_impacts.Bullets.Bullet_LargeCaliber"
+        ],
+        "CashValue": 529,
+        "Quantity": 1,
+        "bShopsHaveInfiniteQuantity": false,
+        "CashValueModifierTotal": 57.20000076293945,
+        "TechLevel": 0,
+        "RarityLevel": 4,
+        "MinRarityLevel": -1,
+        "MaxRarityLevel": 999,
+        "ExpLevel": 15,
+        "AwesomeLevel": 5,
+        "PickupMessageWithLevel": "You got %s (Level %d)",
+        "SourceDefinitionName": "None",
+        "bReceiveOwnerEvents": false,
+        "Owner": null,
+        "bOnlyOwnerSee": false,
+        "bOnlyRelevantToOwner": false,
+        "bDemoOwner": false,
+        "bKillDuringLevelTransition": false,
+        "bNetOwner": false
+      },
+      "inventory_definition": "gd_weap_combat_rifle.A_Weapon.WeaponType_combat_rifle",
+      "native_required_level": 13
+    },
+    {
+      "path": "Loader.TheWorld:PersistentLevel.WillowWeapon_21",
+      "class": "WillowWeapon",
+      "fields": {
+        "LastFiringModeDefinitionUsed": null,
+        "OwnerStatsID": 0,
+        "ExternalAttributeModifiers": [],
+        "WeaponAttributeModifiers": [],
+        "ZoomExternalAttributeModifiers": [],
+        "ZoomWeaponAttributeModifiers": [],
+        "DefinitionData": {
+          "WeaponTypeDefinition": "gd_weap_assault_shotgun.A_Weapon.WeaponType_assault_shotgun",
+          "BalanceDefinition": "gd_itemgrades.Weapons.ItemGrade_Weapon_AssaultShotgun",
+          "ManufacturerDefinition": "gd_manufacturers.Manufacturers.Vladof",
+          "ManufacturerGradeIndex": 0,
+          "BodyPartDefinition": "gd_weap_combat_shotgun.Body.body1",
+          "GripPartDefinition": "gd_weap_combat_shotgun.Grip.grip3a",
+          "MagazinePartDefinition": "gd_weap_assault_shotgun.mag.mag3",
+          "BarrelPartDefinition": "gd_weap_combat_shotgun.Barrel.barrel1",
+          "SightPartDefinition": "gd_weap_combat_shotgun.Sight.sight1_",
+          "StockPartDefinition": "gd_weap_combat_shotgun.Stock.stock_none",
+          "ActionPartDefinition": null,
+          "AccessoryPartDefinition": "gd_weap_assault_shotgun.acc.acc4_Painful",
+          "MaterialPartDefinition": "gd_weap_shared_materialparts.ManufacturerMaterials.Material_Vladof_1",
+          "PrefixPartDefinition": "gd_weap_assault_shotgun.Prefix.Prefix_Acc4_Painful",
+          "TitlePartDefinition": "gd_weap_assault_shotgun.Title.Title_HighSpread1_Sweeper"
+        },
+        "InstantHitDamageTypeDefinitions": [
+          null
+        ],
+        "InstantHitImpactDefinitions": [
+          "gd_impacts.Bullets.Bullet_SmallCaliber"
+        ],
+        "CashValue": 485,
+        "Quantity": 1,
+        "bShopsHaveInfiniteQuantity": false,
+        "CashValueModifierTotal": 81.79600524902344,
+        "TechLevel": 0,
+        "RarityLevel": 5,
+        "MinRarityLevel": -1,
+        "MaxRarityLevel": 999,
+        "ExpLevel": 12,
+        "AwesomeLevel": 5,
+        "PickupMessageWithLevel": "You got %s (Level %d)",
+        "SourceDefinitionName": "None",
+        "bReceiveOwnerEvents": false,
+        "Owner": null,
+        "bOnlyOwnerSee": false,
+        "bOnlyRelevantToOwner": false,
+        "bDemoOwner": false,
+        "bKillDuringLevelTransition": false,
+        "bNetOwner": false
+      },
+      "inventory_definition": "gd_weap_assault_shotgun.A_Weapon.WeaponType_assault_shotgun",
+      "native_required_level": 10
+    }
+  ]
+}

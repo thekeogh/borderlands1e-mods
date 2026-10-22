@@ -78,7 +78,7 @@ class DiagnosticTests(unittest.TestCase):
         self.assertEqual(len(paths), 1)
         self.assertTrue(paths[0].name.startswith("one-playthrough-"))
         report = json.loads(paths[0].read_text())
-        self.assertEqual(report["version"], "4.5.0")
+        self.assertEqual(report["version"], "4.5.4")
         self.assertTrue(report["export_complete"])
         self.assertFalse(report["partial"])
         self.assertIn("Export requested", self.h.messages[-2])

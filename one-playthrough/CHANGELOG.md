@@ -2,6 +2,73 @@
 
 All release changes are recorded here. README.md is the player guide.
 
+## 4.5.4 — 2026-10-22
+
+- Apply max(1, player level - 2) uniformly to all supported equipment, including
+  weapons, shields, grenade mods and class mods, from new drops, containers and
+  vending stock. Remove 4.5.3's separate minus-three allowance for other gear.
+- Update the README, in-game option description and F10 floor description.
+  Keep difficulty weights, native rarities, mission rewards and existing gear unchanged.
+- Verify equipment types share the same minimum through player levels 1–6 and
+  retain the native-generation/copy/persistence regressions.
+
+## 4.5.3 — 2026-10-22
+
+- Tune Hard ordinary-enemy rolls to native 20%, +1 5%, +2 55%, +3 20%.
+  Easy/Normal, named/boss rules, regional floors and the +3 bonus limit stay unchanged.
+- Raise the minimum for newly generated weapon drops/container loot/vendor stock
+  to max(1, player level - 2). Other equipment retains max(1, player level - 3).
+  Apply both rules through the native initializer and recognized pool scopes.
+- Preserve higher gear levels, native rarity/legendary chances, accepted mission
+  reward levels and existing inventory. Record the two floors separately in F10.
+- Update the permanent README difficulty table and in-game loot option description.
+  Verify all 100 tickets for each difficulty and separate weapon/gear low-level
+  clamps, along with the existing native-generation/persistence regression models.
+
+## 4.5.2 — 2026-10-22
+
+- Apply the level floor at the captured Engine.WillowInventory:InitializeInventory
+  boundary. Fresh native equipment bypasses InitializeFromDefinitionData, explaining
+  4.5.0/4.5.1's zero checked equipment despite actual drops and vendor stock.
+- Include newly generated world drops, all loot containers (including skag piles)
+  and vending stock, without requiring a recognized chest name or ItemPool context.
+  Minimum use requirement remains max(1, player level - 3), based on the player.
+- Forward one native initialization with an explicit packed internal level; persist
+  the same grade in detached definition data before stats are built. Preserve low
+  grade bits, balance/manufacturer identities, parts and every other native input.
+  Do not reroll equipment, edit pools or change rarity/legendary probabilities.
+- Guard definition-data reconstruction with paired PRE/unconditional POST scopes:
+  saved gear, pickups and player-drop copies retain their existing levels. Keep
+  accepted mission reward levels independent; never upgrade live NPC equipment.
+  An additional player attribute-query source alone is not player ownership.
+- Avoid new health or other actor-method calls on potentially uninitialized NPCs.
+  NPC query sources require a confirmed death/loot scope; preserve carried gear
+  created earlier. Unknown/dynamic/interpolated grade formats remain native.
+- Remove broad temporary trace-hook registration. Keep bounded F10 counters,
+  initializer signature, skips and recent raised native items for Windows checking.
+- Add captured vendor/drop/chest fixtures and model native stat initialization,
+  persistence through reconstruction, ownership exclusions, low-level clamps,
+  argument/return forwarding and detached rollback after partial assignment failure.
+  Windows playtest of the new native boundary remains required.
+
+## 4.5.1 — 2026-10-22
+
+- Diagnostic update for a confirmed 4.5.0 coverage failure. The captured level-10
+  session recognized enemy pool contexts but checked/upgraded zero equipment and
+  recorded no chest contexts. A dropped shotgun retained internal level 3 and
+  requirement 1. This does not establish its original chest-generation call.
+- Add bounded, read-only observations of loaded chest/loot/inventory functions,
+  discovered from native metadata. Exclude generic inherited actor functions and
+  functions already instrumented. Record scalar/path arguments and chest identities.
+- Count all compatible initializer calls, including equipment outside recognized
+  loot scopes; export their actual signatures and the latest equipment samples.
+  Keep at most 80 additional hooks, 64 event groups and 16 equipment samples.
+- Add known chest definitions to manual F10 snapshots. No gameplay functions are
+  invoked by tracing; no calls are blocked/replayed and no automatic logs are added.
+- Preserve 4.5.0's floor logic, rarity, rewards and generation behavior. This build
+  diagnoses missing coverage; it does not claim to fix the chest floor yet.
+- Add the captured failure fixture and read-only/bounded/failure-isolation tests.
+
 ## 4.5.0 — 2026-10-21
 
 - Add a saved Loot level floor option, enabled by default. Supported equipment

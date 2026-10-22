@@ -120,7 +120,14 @@ class Harness:
                           Outer=cls, _properties=lambda param=param: [param])
             cls._fields = lambda function=function: [function]
             self.classes[label] = cls
-        self.classes["WillowInventory"] = NS(_fields=lambda: [])
+        inventory = Object("Engine.WillowInventory")
+        inventory_properties = [NS(Name=name, Class=NS(Name=kind), PropertyFlags=0x80) for name, kind in (
+            ("InBalanceDef", "ObjectProperty"), ("InManufacturer", "ObjectProperty"),
+            ("InGradeIndex", "IntProperty"), ("InAdditionalQueryInterfaceSource", "ObjectProperty"))]
+        inventory_fn = NS(Name="InitializeInventory", Class=NS(Name="Function"), Outer=inventory,
+                          _properties=lambda: inventory_properties)
+        inventory._fields = lambda: [inventory_fn]
+        self.classes["WillowInventory"] = inventory
         for label in ("WillowAIPawn", "WillowVehicle", "WillowInteractiveObject"):
             cls = Object("WillowGame." + label)
             cls.Name = label
@@ -168,7 +175,7 @@ class Harness:
         spec = importlib.util.spec_from_file_location(name, SOURCE / "__init__.py",
                                                     submodule_search_locations=[str(SOURCE)])
         module = importlib.util.module_from_spec(spec)
-        module.__version__, module.__version_info__ = "4.5.0", (4, 5, 0)
+        module.__version__, module.__version_info__ = "4.5.4", (4, 5, 4)
         self.modules[name] = module
         with patch.dict(sys.modules, self.modules):
             spec.loader.exec_module(module)

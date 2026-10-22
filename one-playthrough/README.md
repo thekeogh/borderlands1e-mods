@@ -1,6 +1,6 @@
 # One Playthrough
 
-**4.5.0 · keogh · Borderlands GOTY Enhanced**
+**4.5.4 · keogh · Borderlands GOTY Enhanced**
 
 Play from level **1 to 69** in one continuous journey through Pandora. Enemies
 and mission offers scale with you across the main story and all four DLCs,
@@ -17,10 +17,10 @@ the setting is saved and applies to new spawns.
 
 | Ordinary-enemy roll | Easy | Normal | Hard |
 | --- | ---: | ---: | ---: |
-| Native, floored to your level | 70% | 50% | 30% |
-| At least +1 | 20% | 20% | 10% |
-| At least +2 | 9% | 25% | 45% |
-| At least +3 | 1% | 5% | 15% |
+| Native, floored to your level | 70% | 50% | 20% |
+| At least +1 | 20% | 20% | 5% |
+| At least +2 | 9% | 25% | 55% |
+| At least +3 | 1% | 5% | 20% |
 
 The base remains **max(your level, vanilla area level)** in every difficulty.
 New ordinary spawns also floor native level variation at your level. The mod's
@@ -30,12 +30,17 @@ Naturally stronger enemies keep their strength; bonuses do not stack. Named
 enemies and bosses retain native scaling, with a player-level floor and no rare
 bonus.
 
-**Loot level floor** is enabled by default: equipment newly generated from
-red/white/Knoxx chests and enemy death loot cannot roll more than three levels
-below you. Rarity and legendary chances stay vanilla. Higher-level drops stay
-higher. Toggle it off in the mod options for native loot levels.
-Existing gear, enemy-carried weapons generated earlier, vendors, mission rewards
-and unsupported native loot formats are not rewritten. Money stays native.
+**Loot level floor** is enabled by default. New equipment from world drops,
+containers (including chests and skag piles) and vending-machine stock targets
+at least **your level minus two for all equipment**,
+never below level 1. Higher-level equipment stays higher; rarity and legendary
+chances stay vanilla. Toggle it off in the
+mod options for native loot levels.
+
+The floor applies when equipment is generated. Existing inventory, player-drop
+copies and enemy-carried gear created earlier are not upgraded. Mission rewards
+keep their accepted mission level. Existing vendor stock needs to refresh before
+the floor can affect it; money and pricing formulas stay native.
 
 Designed for solo play; reaching level 69 depends on how much you play.
 

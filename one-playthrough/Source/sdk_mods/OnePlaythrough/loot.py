@@ -11,6 +11,8 @@ from copy import deepcopy
 from .rewards import inherited, internal_level
 from .reward_encoding import pack_level
 from .spawns import hostile
+from .loot_trace import LootTrace
+from .native_loot import NativeLoot
 
 POOL_FUNCTIONS = {"SpawnBalancedInventoryFromPool", "SpawnBalancedInventoryFromInventoryBalanceDefinition"}
 CONTEXT_NAMES = {"contextsource", "contextsourceobject", "contextobject", "incontextsource", "context"}
@@ -35,6 +37,10 @@ def pool_specs(sdk):
 
 
 class Loot:
+    @staticmethod
+    def minimum(player, _data=None):
+        return max(1, player - 2)
+
     def __init__(self, runtime):
         self.runtime = runtime
         self.selected = lambda: True
@@ -46,6 +52,8 @@ class Loot:
         self.skipped = {}
         self.contexts = {}
         self.recent = []
+        self.trace = LootTrace(runtime)
+        self.native = NativeLoot(runtime, self)
 
     def count(self, table, key):
         if key in table or len(table) < 24:
@@ -102,7 +110,8 @@ class Loot:
                 if kind is not None:
                     player = self.runtime.level(pc)
                     if player is not None:
-                        scope = {"kind": kind, "source": source._path_name(), "floor": max(1, player - 3)}
+                        scope = {"kind": kind, "source": source._path_name(), "floor": max(1, player - 2),
+                                 "player_level": player}
         except Exception as exc:
             self.runtime.problem("loot context", exc)
         # Even a vendor/unknown nested call shadows an outer loot scope.
@@ -123,6 +132,10 @@ class Loot:
         scope = self.scopes[-1][1]
         if scope is None:
             return None
+        return self.prepare_data(data, {**scope, "floor": self.minimum(scope["player_level"], data)})
+
+    def prepare_data(self, data, scope):
+        """Select only a higher explicit level; caller supplies a verified scope."""
         balance = getattr(data, "BalanceDefinition", None)
         definition = getattr(data, "WeaponTypeDefinition", None) or getattr(data, "ItemDefinition", None)
         if (balance is None or definition is None
@@ -165,8 +178,10 @@ class Loot:
         self.deaths.clear()
 
     def snapshot(self):
-        return {"enabled": self.selected(), "minimum": "max(1, player level - 3)",
+        return {"enabled": self.selected(), "minimum": "max(1, player level - 2) for all equipment",
                 "pool_hooks": self.hooks, "active_scopes": len(self.scopes),
                 "death_scopes": len(self.deaths), "equipment_seen": self.seen,
                 "raised": self.raised, "contexts": dict(self.contexts),
-                "skipped": dict(self.skipped), "recent": list(self.recent)}
+                "skipped": dict(self.skipped), "recent": list(self.recent),
+                "native_initializer": self.native.snapshot(),
+                "trace": self.trace.snapshot()}
