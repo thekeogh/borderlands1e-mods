@@ -31,7 +31,7 @@ runtime = Runtime(unrealsdk, MissionLevels(
 enemy_difficulty = SpinnerOption(
     "Enemy difficulty", value="Normal", choices=["Easy", "Normal", "Hard"], wrap_enabled=True,
     description="Ordinary enemies only. Base is always the higher of your level and the vanilla area level. "
-                "Native levels floor at your level; extra rolls stop at +3. New spawns only; bosses unchanged.",
+                "Ordinary native levels floor at your level +1; extra rolls stop at +3. New spawns only; bosses unchanged.",
 )
 # Read the saved/live option at spawn time; changing it never edits existing pawns.
 runtime.spawns.difficulty = lambda: enemy_difficulty.value
@@ -268,16 +268,41 @@ def loot_death_hooks(path):
     def before(obj, _args, _ret, _func):
         stack.append(None)
         if runtime.enabled and runtime.loot.selected():
+            runtime.loot.native.boss_trace.death(obj, "before")
             stack[-1] = runtime.loot.dying(obj)
 
     @hook(path, Type.POST_UNCONDITIONAL)
     @safe
     def after(_obj, _args, _ret, _func):
+        runtime.loot.native.boss_trace.death(_obj, "after")
         token = stack.pop() if stack else None
         if token is not None:
-            runtime.loot.end_death(token)
+            try:
+                runtime.loot.carried.commit(token)
+            finally:
+                runtime.loot.end_death(token)
 
     return [before, after]
+
+
+def carried_drop_hooks(path):
+    stack = []
+
+    @hook(path)
+    @safe
+    def before(obj, args, _ret, _func):
+        stack.append(None)
+        runtime.loot.native.boss_trace.drop(obj, "before")
+        stack[-1] = runtime.loot.carried.prepare(obj, args, get_pc())
+
+    @hook(path, Type.POST_UNCONDITIONAL)
+    @safe
+    def after(obj, _args, _ret, _func):
+        runtime.loot.native.boss_trace.drop(obj, "after")
+        plan = stack.pop() if stack else None
+        runtime.loot.carried.finish_drop(obj, plan, get_pc())
+
+    return before, after
 
 
 def native_spawn(obj, args, func, restore=False, vehicle=False):
@@ -380,6 +405,7 @@ try:
         {"path": path, "data": parameters, "inputs": inputs, "returns_value": has_return}
         for path, parameters, inputs, has_return in specs]
     runtime.missions.item_encoding["initializer_hooks"] = [spec[0] for spec in specs]
+    runtime.loot.carried.configure(specs)
     HOOKS.extend(callback for spec in specs for callback in reward_initializer_hook(*spec))
     if not specs:
         runtime.problem("reward item encoding", ValueError("No compatible native item initializer found"))
@@ -399,6 +425,8 @@ except Exception as exc:
     runtime.problem("loot pool discovery", exc)
 for name in ("WillowPawn", "WillowVehicle"):
     HOOKS.extend(loot_death_hooks(f"WillowGame.{name}:Died"))
+for name in ("WillowWeapon", "WillowItem"):
+    HOOKS.extend(carried_drop_hooks(f"WillowGame.{name}:DropFrom"))
 
 try:
     spec = native_loot_spec(unrealsdk)

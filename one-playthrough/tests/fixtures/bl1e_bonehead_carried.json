@@ -1,0 +1,131 @@
+{
+  "source": "logs/one-playthrough-20261023-102519-642275.json",
+  "note": "Captured BL1E carried Bone Shredder and ownership transition. Native spawn, initialization, pickup and destroy execution are modeled in tests.",
+  "player_level": 12,
+  "native_decision": {
+    "decision": "live/neutral enemy",
+    "item": {
+      "object": "Loader.TheWorld:PersistentLevel.WillowWeapon_17",
+      "owner_chain": {},
+      "internal_level": 5,
+      "definition_data": {
+        "WeaponTypeDefinition": "gd_weap_patrol_smg.A_Weapon.WeaponType_patrol_smg",
+        "BalanceDefinition": "gd_customweapons.Weapons.CustomWeap_SMG_BoneShredder",
+        "ManufacturerDefinition": "gd_manufacturers.Manufacturers.tediore",
+        "ManufacturerGradeIndex": 0,
+        "BodyPartDefinition": null,
+        "GripPartDefinition": null,
+        "MagazinePartDefinition": null,
+        "BarrelPartDefinition": null,
+        "SightPartDefinition": null,
+        "StockPartDefinition": null,
+        "ActionPartDefinition": null,
+        "AccessoryPartDefinition": null,
+        "MaterialPartDefinition": null,
+        "PrefixPartDefinition": null,
+        "TitlePartDefinition": null
+      }
+    },
+    "balance": "gd_customweapons.Weapons.CustomWeap_SMG_BoneShredder",
+    "grade": 0,
+    "query": "Loader.TheWorld:PersistentLevel.WillowAIPawn_15",
+    "query_balance": null,
+    "definition_scopes": 0,
+    "reward_scopes": 0,
+    "player_level": 12
+  },
+  "drop_before": {
+    "object": "Loader.TheWorld:PersistentLevel.WillowWeapon_17",
+    "owner_chain": {
+      "0": {
+        "path": "Loader.TheWorld:PersistentLevel.WillowAIPawn_15",
+        "balance": "gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Bonehead"
+      },
+      "1": {
+        "path": "Loader.TheWorld:PersistentLevel.WillowMind_19",
+        "balance": null
+      }
+    },
+    "internal_level": 5,
+    "definition_data": {
+      "WeaponTypeDefinition": "gd_weap_patrol_smg.A_Weapon.WeaponType_patrol_smg",
+      "BalanceDefinition": "gd_customweapons.Weapons.CustomWeap_SMG_BoneShredder",
+      "ManufacturerDefinition": "gd_manufacturers.Manufacturers.tediore",
+      "ManufacturerGradeIndex": 0,
+      "BodyPartDefinition": "gd_weap_patrol_smg.Body.body1",
+      "GripPartDefinition": "gd_weap_patrol_smg.Grip.grip1",
+      "MagazinePartDefinition": "gd_weap_patrol_smg.UniqueParts.BoneShredder_mag5",
+      "BarrelPartDefinition": "gd_weap_patrol_smg.Barrel.barrel3",
+      "SightPartDefinition": "gd_weap_patrol_smg.Sight.sight2",
+      "StockPartDefinition": "gd_weap_patrol_smg.Stock.stock_none",
+      "ActionPartDefinition": null,
+      "AccessoryPartDefinition": "gd_weap_patrol_smg.acc.acc4_Double",
+      "MaterialPartDefinition": "gd_weap_patrol_smg.Title.TitleU_Bonehead_BoneShredder",
+      "PrefixPartDefinition": "gd_weap_names_shared.Prefix.PrefixU_blank",
+      "TitlePartDefinition": "gd_weap_patrol_smg.Title.TitleU_Bonehead_BoneShredder"
+    }
+  },
+  "drop_after": {
+    "object": "Loader.TheWorld:PersistentLevel.WillowWeapon_17",
+    "owner_chain": {},
+    "internal_level": 5,
+    "definition_data": {
+      "WeaponTypeDefinition": "gd_weap_patrol_smg.A_Weapon.WeaponType_patrol_smg",
+      "BalanceDefinition": "gd_customweapons.Weapons.CustomWeap_SMG_BoneShredder",
+      "ManufacturerDefinition": "gd_manufacturers.Manufacturers.tediore",
+      "ManufacturerGradeIndex": 0,
+      "BodyPartDefinition": "gd_weap_patrol_smg.Body.body1",
+      "GripPartDefinition": "gd_weap_patrol_smg.Grip.grip1",
+      "MagazinePartDefinition": "gd_weap_patrol_smg.UniqueParts.BoneShredder_mag5",
+      "BarrelPartDefinition": "gd_weap_patrol_smg.Barrel.barrel3",
+      "SightPartDefinition": "gd_weap_patrol_smg.Sight.sight2",
+      "StockPartDefinition": "gd_weap_patrol_smg.Stock.stock_none",
+      "ActionPartDefinition": null,
+      "AccessoryPartDefinition": "gd_weap_patrol_smg.acc.acc4_Double",
+      "MaterialPartDefinition": "gd_weap_patrol_smg.Title.TitleU_Bonehead_BoneShredder",
+      "PrefixPartDefinition": "gd_weap_names_shared.Prefix.PrefixU_blank",
+      "TitlePartDefinition": "gd_weap_patrol_smg.Title.TitleU_Bonehead_BoneShredder"
+    }
+  },
+  "death_before": {
+    "phase": "before",
+    "actor": "Loader.TheWorld:PersistentLevel.WillowAIPawn_15",
+    "balance": "gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Bonehead",
+    "player_level": 12,
+    "weapon": "Loader.TheWorld:PersistentLevel.WillowWeapon_17",
+    "inventory_manager": "Loader.TheWorld:PersistentLevel.WillowInventoryManager_20",
+    "bone_shredders": {
+      "0": {
+        "object": "Loader.TheWorld:PersistentLevel.WillowWeapon_17",
+        "owner_chain": {
+          "0": {
+            "path": "Loader.TheWorld:PersistentLevel.WillowAIPawn_15",
+            "balance": "gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Bonehead"
+          },
+          "1": {
+            "path": "Loader.TheWorld:PersistentLevel.WillowMind_19",
+            "balance": null
+          }
+        },
+        "internal_level": 5,
+        "definition_data": {
+          "WeaponTypeDefinition": "gd_weap_patrol_smg.A_Weapon.WeaponType_patrol_smg",
+          "BalanceDefinition": "gd_customweapons.Weapons.CustomWeap_SMG_BoneShredder",
+          "ManufacturerDefinition": "gd_manufacturers.Manufacturers.tediore",
+          "ManufacturerGradeIndex": 0,
+          "BodyPartDefinition": "gd_weap_patrol_smg.Body.body1",
+          "GripPartDefinition": "gd_weap_patrol_smg.Grip.grip1",
+          "MagazinePartDefinition": "gd_weap_patrol_smg.UniqueParts.BoneShredder_mag5",
+          "BarrelPartDefinition": "gd_weap_patrol_smg.Barrel.barrel3",
+          "SightPartDefinition": "gd_weap_patrol_smg.Sight.sight2",
+          "StockPartDefinition": "gd_weap_patrol_smg.Stock.stock_none",
+          "ActionPartDefinition": null,
+          "AccessoryPartDefinition": "gd_weap_patrol_smg.acc.acc4_Double",
+          "MaterialPartDefinition": "gd_weap_patrol_smg.Title.TitleU_Bonehead_BoneShredder",
+          "PrefixPartDefinition": "gd_weap_names_shared.Prefix.PrefixU_blank",
+          "TitlePartDefinition": "gd_weap_patrol_smg.Title.TitleU_Bonehead_BoneShredder"
+        }
+      }
+    }
+  }
+}

@@ -13,6 +13,7 @@ from .reward_encoding import pack_level
 from .spawns import hostile
 from .loot_trace import LootTrace
 from .native_loot import NativeLoot
+from .carried_loot import CarriedLoot
 
 POOL_FUNCTIONS = {"SpawnBalancedInventoryFromPool", "SpawnBalancedInventoryFromInventoryBalanceDefinition"}
 CONTEXT_NAMES = {"contextsource", "contextsourceobject", "contextobject", "incontextsource", "context"}
@@ -54,6 +55,7 @@ class Loot:
         self.recent = []
         self.trace = LootTrace(runtime)
         self.native = NativeLoot(runtime, self)
+        self.carried = CarriedLoot(runtime, self)
 
     def count(self, table, key):
         if key in table or len(table) < 24:
@@ -184,4 +186,5 @@ class Loot:
                 "raised": self.raised, "contexts": dict(self.contexts),
                 "skipped": dict(self.skipped), "recent": list(self.recent),
                 "native_initializer": self.native.snapshot(),
+                "carried_death_loot": self.carried.snapshot(),
                 "trace": self.trace.snapshot()}

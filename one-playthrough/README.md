@@ -1,6 +1,6 @@
 # One Playthrough
 
-**4.5.4 · keogh · Borderlands GOTY Enhanced**
+**4.5.9 · keogh · Borderlands GOTY Enhanced**
 
 Play from level **1 to 69** in one continuous journey through Pandora. Enemies
 and mission offers scale with you across the main story and all four DLCs,
@@ -17,15 +17,18 @@ the setting is saved and applies to new spawns.
 
 | Ordinary-enemy roll | Easy | Normal | Hard |
 | --- | ---: | ---: | ---: |
-| Native, floored to your level | 70% | 50% | 20% |
+| Native, minimum your level +1 | 70% | 50% | 20% |
 | At least +1 | 20% | 20% | 5% |
 | At least +2 | 9% | 25% | 55% |
 | At least +3 | 1% | 5% | 20% |
 
 The base remains **max(your level, vanilla area level)** in every difficulty.
-New ordinary spawns also floor native level variation at your level. The mod's
+New ordinary spawns also floor native level variation at **your level +1**. The mod's
 extra boosts stop at +3; naturally higher enemies and higher-level areas can
 still exceed that. Existing spawned enemies keep their levels.
+Native and +1 rolls now share a +1 minimum. Around your level, their combined
+chances are Easy **90%**, Normal **70%**, Hard **25%**; naturally higher enemies
+and areas retain their higher levels.
 Naturally stronger enemies keep their strength; bonuses do not stack. Named
 enemies and bosses retain native scaling, with a player-level floor and no rare
 bonus.
@@ -37,9 +40,9 @@ never below level 1. Higher-level equipment stays higher; rarity and legendary
 chances stay vanilla. Toggle it off in the
 mod options for native loot levels.
 
-The floor applies when equipment is generated. Existing inventory, player-drop
-copies and enemy-carried gear created earlier are not upgraded. Mission rewards
-keep their accepted mission level. Existing vendor stock needs to refresh before
+The floor applies when equipment is generated, and when carried enemy equipment
+drops on death. Existing player inventory and player-drop copies keep their levels.
+Mission rewards keep their accepted mission level. Existing vendor stock needs to refresh before
 the floor can affect it; money and pricing formulas stay native.
 
 Designed for solo play; reaching level 69 depends on how much you play.

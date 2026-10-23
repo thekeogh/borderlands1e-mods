@@ -1,0 +1,77 @@
+{
+  "sources": [
+    "logs/one-playthrough-20261023-105352-944574.json",
+    "logs/one-playthrough-20261023-105928-300187.json"
+  ],
+  "note": "Captured BL1E cleanup failure. Bone Head naturally carried a high-level native-grade gun; its level is not evidence of a successful carried-floor replacement. Native expiry is modeled in tests.",
+  "cases": [
+    {
+      "source": "logs/one-playthrough-20261023-105352-944574.json",
+      "player_level": 13,
+      "errors": [
+        "carried loot commit: RuntimeError('Original pickup could not be retired')",
+        "carried loot cleanup: RuntimeError('Replacement pickup could not be removed')",
+        "carried loot cleanup: RuntimeError('Replacement inventory could not be removed')"
+      ],
+      "carried": {
+        "initializers": {
+          "item": [
+            "NewDefinitionData",
+            "InAdditionalQueryInterfaceSource",
+            "bForceSelectNameParts"
+          ],
+          "weapon": [
+            "NewDefinitionData",
+            "InAdditionalQueryInterfaceSource",
+            "bForceSelectNameParts"
+          ]
+        },
+        "prepared": 1,
+        "changed": 0,
+        "pending": 0,
+        "skipped": {},
+        "recent": []
+      },
+      "bone_item": {
+        "path": "Loader.TheWorld:PersistentLevel.WillowWeapon_20",
+        "required": 15,
+        "internal_level": 17,
+        "grade": 1
+      }
+    },
+    {
+      "source": "logs/one-playthrough-20261023-105928-300187.json",
+      "player_level": 13,
+      "errors": [
+        "carried loot commit: RuntimeError('Original pickup could not be retired')",
+        "carried loot cleanup: RuntimeError('Replacement pickup could not be removed')",
+        "carried loot cleanup: RuntimeError('Replacement inventory could not be removed')"
+      ],
+      "carried": {
+        "initializers": {
+          "item": [
+            "NewDefinitionData",
+            "InAdditionalQueryInterfaceSource",
+            "bForceSelectNameParts"
+          ],
+          "weapon": [
+            "NewDefinitionData",
+            "InAdditionalQueryInterfaceSource",
+            "bForceSelectNameParts"
+          ]
+        },
+        "prepared": 2,
+        "changed": 0,
+        "pending": 0,
+        "skipped": {},
+        "recent": []
+      },
+      "bone_item": {
+        "path": "Loader.TheWorld:PersistentLevel.WillowWeapon_20",
+        "required": 15,
+        "internal_level": 17,
+        "grade": 1
+      }
+    }
+  ]
+}

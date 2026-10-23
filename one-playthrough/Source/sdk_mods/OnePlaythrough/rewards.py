@@ -6,9 +6,9 @@ never change the parent, saved balance identity, or global use-level formulas.
 """
 
 from copy import deepcopy
-import math
 
 from .patches import Patches
+from .requirements import internal_level
 
 
 def inherited(balance):
@@ -21,29 +21,6 @@ def inherited(balance):
         chain.append(balance)
         balance = getattr(balance, "BaseDefinition", None)
     return chain
-
-
-def internal_level(definition, mission_level):
-    """Convert the ordinary backpack requirement to the native internal level.
-
-    Captured BL1E sniper data: internal 7, requirement 5, fallback use bonus 2.
-    The captured repeater uses 1 instead; do not hardcode a universal +2.
-    Equipped proficiency display differences remain native behavior.
-    """
-    bonus = getattr(definition, "PlayerUseLevelBonus", None)
-    if bonus is None:
-        return int(mission_level)
-    if bonus.InitializationDefinition is not None:
-        raise ValueError("Unsupported dynamic reward use-level bonus")
-    attribute = bonus.BaseValueAttribute
-    if attribute is not None:
-        name = str(getattr(attribute, "Name", "")) or attribute._path_name().rsplit(".", 1)[-1]
-        if not (name.startswith("Proficiency_") and name.endswith("_LevelBonus")):
-            raise ValueError("Unsupported reward use-level attribute")
-    offset = float(bonus.BaseValueConstant) * float(bonus.BaseValueScaleConstant)
-    if not math.isfinite(offset) or not offset.is_integer():
-        raise ValueError("Unsupported fractional reward use-level bonus")
-    return max(1, int(mission_level) + int(offset))
 
 
 class RewardPatches(Patches):

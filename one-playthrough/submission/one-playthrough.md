@@ -14,13 +14,13 @@ missions for later and their levels and rewards keep pace until you accept them.
 Equipment rewards match the accepted mission level, regardless of your level at turn-in.
 Choose Easy, Normal (default) or Hard for ordinary enemies. Each keeps native
 variety and the higher of your level and the vanilla area level, with different
-chances of tougher spawns. Ordinary enemies cannot spawn below your level;
+chances of tougher spawns. New ordinary enemies spawn at least one level above you;
 extra rolls stop at +3, retaining naturally higher levels. The choice is saved
 and affects new spawns only.
 Named enemies and bosses keep their existing scaling and receive no extra roll.
 The optional loot level floor targets new world drops, containers and vendor
-stock at no more than two levels below you for all equipment (minimum level 1). Rarity and legendary chances stay vanilla. Existing equipment stays unchanged; mission
-rewards follow the accepted mission level. Economy follows the game's normal rules.
+stock at no more than two levels below you for all equipment (minimum level 1). Rarity and legendary chances stay vanilla. Carried enemy equipment receives the floor when dropped on death. Existing player
+equipment stays unchanged; mission rewards follow the accepted mission level. Economy follows the game's normal rules.
 
 Scaling covers the main story and all four DLCs: The Zombie Island of Dr. Ned,
 Mad Moxxi's Underdome Riot, The Secret Armory of General Knoxx and Claptrap's

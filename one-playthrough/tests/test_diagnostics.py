@@ -78,7 +78,7 @@ class DiagnosticTests(unittest.TestCase):
         self.assertEqual(len(paths), 1)
         self.assertTrue(paths[0].name.startswith("one-playthrough-"))
         report = json.loads(paths[0].read_text())
-        self.assertEqual(report["version"], "4.5.4")
+        self.assertEqual(report["version"], "4.5.9")
         self.assertTrue(report["export_complete"])
         self.assertFalse(report["partial"])
         self.assertIn("Export requested", self.h.messages[-2])
@@ -193,7 +193,7 @@ class DiagnosticTests(unittest.TestCase):
         self.assertEqual(report["unaccepted_mission_data"][0]["GameStage"], 20)
 
     def test_vendor_stock_and_native_item_requirement_are_exported_without_generation(self):
-        shield_def = ReflectedObject("gd_shields.A_Item.Shield", "ShieldDefinition", PlayerUseLevelBonus=0)
+        shield_def = ReflectedObject("gd_shields.A_Item.Shield", "ShieldDefinition", PlayerUseLevelBonus=aid(0))
         shield = ReflectedObject("World.Shield", "WillowShield", CashValue=94, ExpLevel=4,
                                  Owner=self.h.pc, DefinitionData=WrappedStruct(ItemDefinition=shield_def))
         calls = []

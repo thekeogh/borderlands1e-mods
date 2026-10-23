@@ -1,0 +1,249 @@
+{
+  "source": "logs/one-playthrough-20261023-133627-531401.json",
+  "note": "Captured requirement 3 at internal 5 after a floor-4 event. Native evaluator execution/resolver output are modeled until verified in game; the captured resolver detail was truncated.",
+  "player_level": 6,
+  "item": {
+    "path": "Loader.TheWorld:PersistentLevel.WillowWeapon_115",
+    "class": "WillowWeapon",
+    "fields": {
+      "LastFiringModeDefinitionUsed": null,
+      "OwnerStatsID": 0,
+      "ExternalAttributeModifiers": [],
+      "WeaponAttributeModifiers": [],
+      "ZoomExternalAttributeModifiers": [],
+      "ZoomWeaponAttributeModifiers": [],
+      "DefinitionData": {
+        "WeaponTypeDefinition": "gd_weap_repeater_pistol.A_Weapon.WeaponType_repeater_pistol",
+        "BalanceDefinition": "gd_customweapons.Weapons.CustomWeap_Repeater_LadiesFinger",
+        "ManufacturerDefinition": "gd_manufacturers.Manufacturers.Hyperion",
+        "ManufacturerGradeIndex": 327680,
+        "BodyPartDefinition": "gd_weap_repeater_pistol.Body.body3",
+        "GripPartDefinition": "gd_weap_repeater_pistol.Grip.grip5",
+        "MagazinePartDefinition": "gd_weap_repeater_pistol.mag.mag1",
+        "BarrelPartDefinition": "gd_weap_repeater_pistol.UniqueParts.LadyFinger_barrel1",
+        "SightPartDefinition": "gd_weap_repeater_pistol.Sight.sight2",
+        "StockPartDefinition": null,
+        "ActionPartDefinition": "gd_weap_repeater_pistol.Action.action2",
+        "AccessoryPartDefinition": "gd_weap_repeater_pistol.acc.acc3_LaserSight",
+        "MaterialPartDefinition": "gd_weap_repeater_pistol.UniqueParts.LadyFinger_Material",
+        "PrefixPartDefinition": "gd_weap_names_shared.Prefix.PrefixU_blank",
+        "TitlePartDefinition": "gd_weap_repeater_pistol.Title.TitleU_LadyFinger"
+      },
+      "InstantHitDamageTypeDefinitions": [
+        null
+      ],
+      "InstantHitImpactDefinitions": [
+        "gd_impacts.Bullets.Bullet_SmallCaliber"
+      ],
+      "CashValue": 128,
+      "Quantity": 1,
+      "bShopsHaveInfiniteQuantity": false,
+      "CashValueModifierTotal": 70.78499603271484,
+      "TechLevel": 0,
+      "RarityLevel": 10,
+      "MinRarityLevel": -1,
+      "MaxRarityLevel": 999,
+      "ExpLevel": 5,
+      "AwesomeLevel": 1,
+      "PickupMessageWithLevel": "You got %s (Level %d)",
+      "SourceDefinitionName": "None",
+      "bReceiveOwnerEvents": false,
+      "Owner": null,
+      "bOnlyOwnerSee": false,
+      "bOnlyRelevantToOwner": false,
+      "bDemoOwner": false,
+      "bKillDuringLevelTransition": false,
+      "bNetOwner": false
+    },
+    "inventory_definition": "gd_weap_repeater_pistol.A_Weapon.WeaponType_repeater_pistol",
+    "native_required_level": 3
+  },
+  "bonus": {
+    "BaseValueConstant": 1.0,
+    "BaseValueAttribute": "gd_Balance.LevelLimits.Proficiency_Pistol_LevelBonus",
+    "InitializationDefinition": null,
+    "BaseValueScaleConstant": 1.0
+  },
+  "attribute": {
+    "class": "AttributeDefinition",
+    "fields": {
+      "Attribute": "None",
+      "AttributeContextClass": null,
+      "ContextResolverChain": [
+        "gd_Balance.LevelLimits.Proficiency_Pistol_LevelBonus:NoContextNeededAttributeContextResolver_21"
+      ],
+      "bIsSimpleAttribute": true,
+      "ValueResolverChain": [
+        "gd_Balance.LevelLimits.Proficiency_Pistol_LevelBonus:SimpleMathValueResolver_0"
+      ],
+      "AttributeDataType": 0,
+      "VfTableObject": {
+        "Dummy": 440340944
+      },
+      "HashNext": {
+        "Dummy": 0
+      },
+      "HashOuterNext": {
+        "Dummy": 530811504
+      },
+      "StateFrame": {
+        "Dummy": 0
+      },
+      "Linker": null,
+      "LinkerIndex": {
+        "Dummy": -1
+      },
+      "ObjectInternalInteger": 92649,
+      "NetIndex": 13,
+      "ObjectArchetype": "Engine.Default__AttributeDefinition"
+    }
+  },
+  "floor_event": {
+    "kind": "container",
+    "source": "Loader.TheWorld:PersistentLevel.WillowWeapon_115",
+    "floor": 4,
+    "owner": null,
+    "query": "Loader.TheWorld:PersistentLevel.WillowInteractiveObject_380",
+    "balance": "gd_customweapons.Weapons.CustomWeap_Repeater_LadiesFinger",
+    "old_grade": 0,
+    "packed_grade": 327680
+  },
+  "other_bonus_attributes": {
+    "gd_Balance.LevelLimits.Proficiency_Sniper_LevelBonus": {
+      "class": "AttributeDefinition",
+      "fields": {
+        "Attribute": "None",
+        "AttributeContextClass": null,
+        "ContextResolverChain": [
+          "gd_Balance.LevelLimits.Proficiency_Sniper_LevelBonus:NoContextNeededAttributeContextResolver_21"
+        ],
+        "bIsSimpleAttribute": true,
+        "ValueResolverChain": [
+          "gd_Balance.LevelLimits.Proficiency_Sniper_LevelBonus:SimpleMathValueResolver_0"
+        ],
+        "AttributeDataType": 0,
+        "VfTableObject": {
+          "Dummy": 440340944
+        },
+        "HashNext": {
+          "Dummy": 0
+        },
+        "HashOuterNext": {
+          "Dummy": 534478064
+        },
+        "StateFrame": {
+          "Dummy": 0
+        },
+        "Linker": null,
+        "LinkerIndex": {
+          "Dummy": -1
+        },
+        "ObjectInternalInteger": 92661,
+        "NetIndex": 17,
+        "ObjectArchetype": "Engine.Default__AttributeDefinition"
+      }
+    },
+    "gd_Balance.LevelLimits.Proficiency_Gear_LevelBonus": {
+      "class": "AttributeDefinition",
+      "fields": {
+        "Attribute": "None",
+        "AttributeContextClass": null,
+        "ContextResolverChain": [
+          "gd_Balance.LevelLimits.Proficiency_Gear_LevelBonus:NoContextNeededAttributeContextResolver_21"
+        ],
+        "bIsSimpleAttribute": true,
+        "ValueResolverChain": [
+          "gd_Balance.LevelLimits.Proficiency_Gear_LevelBonus:ConstantAttributeValueResolver_0"
+        ],
+        "AttributeDataType": 0,
+        "VfTableObject": {
+          "Dummy": 440340944
+        },
+        "HashNext": {
+          "Dummy": 0
+        },
+        "HashOuterNext": {
+          "Dummy": 529053072
+        },
+        "StateFrame": {
+          "Dummy": 0
+        },
+        "Linker": null,
+        "LinkerIndex": {
+          "Dummy": -1
+        },
+        "ObjectInternalInteger": 92646,
+        "NetIndex": 12,
+        "ObjectArchetype": "Engine.Default__AttributeDefinition"
+      }
+    },
+    "gd_Balance.LevelLimits.Proficiency_SMG_LevelBonus": {
+      "class": "AttributeDefinition",
+      "fields": {
+        "Attribute": "None",
+        "AttributeContextClass": null,
+        "ContextResolverChain": [
+          "gd_Balance.LevelLimits.Proficiency_SMG_LevelBonus:NoContextNeededAttributeContextResolver_21"
+        ],
+        "bIsSimpleAttribute": true,
+        "ValueResolverChain": [
+          "gd_Balance.LevelLimits.Proficiency_SMG_LevelBonus:SimpleMathValueResolver_0"
+        ],
+        "AttributeDataType": 0,
+        "VfTableObject": {
+          "Dummy": 440340944
+        },
+        "HashNext": {
+          "Dummy": 0
+        },
+        "HashOuterNext": {
+          "Dummy": 0
+        },
+        "StateFrame": {
+          "Dummy": 0
+        },
+        "Linker": null,
+        "LinkerIndex": {
+          "Dummy": -1
+        },
+        "ObjectInternalInteger": 92658,
+        "NetIndex": 16,
+        "ObjectArchetype": "Engine.Default__AttributeDefinition"
+      }
+    },
+    "gd_Balance.LevelLimits.Proficiency_CombatRifle_LevelBonus": {
+      "class": "AttributeDefinition",
+      "fields": {
+        "Attribute": "None",
+        "AttributeContextClass": null,
+        "ContextResolverChain": [
+          "gd_Balance.LevelLimits.Proficiency_CombatRifle_LevelBonus:NoContextNeededAttributeContextResolver_21"
+        ],
+        "bIsSimpleAttribute": true,
+        "ValueResolverChain": [
+          "gd_Balance.LevelLimits.Proficiency_CombatRifle_LevelBonus:SimpleMathValueResolver_0"
+        ],
+        "AttributeDataType": 0,
+        "VfTableObject": {
+          "Dummy": 440340944
+        },
+        "HashNext": {
+          "Dummy": 76911344
+        },
+        "HashOuterNext": {
+          "Dummy": 525904224
+        },
+        "StateFrame": {
+          "Dummy": 0
+        },
+        "Linker": null,
+        "LinkerIndex": {
+          "Dummy": -1
+        },
+        "ObjectInternalInteger": 92640,
+        "NetIndex": 10,
+        "ObjectArchetype": "Engine.Default__AttributeDefinition"
+      }
+    }
+  }
+}

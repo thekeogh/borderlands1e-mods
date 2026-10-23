@@ -139,11 +139,12 @@ class Spawns:
         if natural is None:
             self.runtime.problem("enemy level", ValueError(f"Native formula retained: {paths}"))
             return base, None
+        minimum = player + 1
         if not extra:
             eligible = [g for g in definition.Grades
                         if g.GameStageRequirement.MinGameStage <= base <= g.GameStageRequirement.MaxGameStage]
-            if natural < player or any(grade_level(natural, g.GradeModifiers.ExpLevel) < player for g in eligible):
-                return base, self.exact_definition(definition, base, player, preserve_stage=True)
+            if natural < minimum or any(grade_level(natural, g.GradeModifiers.ExpLevel) < minimum for g in eligible):
+                return base, self.exact_definition(definition, base, minimum, preserve_stage=True)
             return base, None
         # Use the higher of the natural level and bonus target; never add them.
         return base + extra, self.exact_definition(definition, base, base + extra)
@@ -162,5 +163,5 @@ class Spawns:
         difficulty = self.selected_difficulty()
         return {"difficulty": difficulty,
                 "ordinary_tickets": dict(zip(("native", "+1", "+2", "+3"), DIFFICULTIES[difficulty])),
-                "native_floor": "max(player level, native spawn level)",
+                "native_floor": "max(player level + 1, native spawn level)",
                 "named_bonus": False, "private_definitions": len(self.clones)}

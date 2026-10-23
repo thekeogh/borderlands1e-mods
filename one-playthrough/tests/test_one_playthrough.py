@@ -146,6 +146,14 @@ class Harness:
             if name not in self.classes: raise ValueError(name)
             return self.classes[name]
         self.sdk.find_class = find_class
+        self.attribute_evaluations = []
+        def evaluate_initialization(data, context):
+            self.attribute_evaluations.append((data, context))
+            attribute = data.BaseValueAttribute
+            base = attribute.native_value if attribute is not None else data.BaseValueConstant
+            return base * data.BaseValueScaleConstant
+        self.classes["AttributeInitializationDefinition"] = NS(ClassDefaultObject=NS(
+            EvaluateInitializationData=evaluate_initialization))
         self.callbacks = {}
         hooks = ModuleType("unrealsdk.hooks")
         hooks.Type = NS(POST="POST", POST_UNCONDITIONAL="POST_UNCONDITIONAL")
@@ -175,7 +183,7 @@ class Harness:
         spec = importlib.util.spec_from_file_location(name, SOURCE / "__init__.py",
                                                     submodule_search_locations=[str(SOURCE)])
         module = importlib.util.module_from_spec(spec)
-        module.__version__, module.__version_info__ = "4.5.4", (4, 5, 4)
+        module.__version__, module.__version_info__ = "4.5.9", (4, 5, 9)
         self.modules[name] = module
         with patch.dict(sys.modules, self.modules):
             spec.loader.exec_module(module)

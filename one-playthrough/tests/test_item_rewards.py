@@ -207,6 +207,13 @@ class InheritedRewardTests(unittest.TestCase):
         bonus = defs[self.inventory.path]["PlayerUseLevelBonus"]
         self.inventory.PlayerUseLevelBonus = NS(**bonus)
         self.inventory.PlayerUseLevelBonus.BaseValueAttribute = Object(bonus["BaseValueAttribute"])
+        attr = self.inventory.PlayerUseLevelBonus.BaseValueAttribute
+        # Modeled native constant resolver metadata; captured requirement offset is 2.
+        attr.AttributeContextClass = None
+        attr.bIsSimpleAttribute = True
+        attr.ContextResolverChain = [NS(Class=NS(Name="NoContextNeededAttributeContextResolver"))]
+        attr.ValueResolverChain = [NS(Class=NS(Name="SimpleMathValueResolver"))]
+        attr.native_value = 2
         self.parent.InventoryDefinition = self.inventory
         # Explicit model of the depth-limited rows; these are NOT captured data.
         self.parent.Manufacturers[0].Grades = [grade(7)]

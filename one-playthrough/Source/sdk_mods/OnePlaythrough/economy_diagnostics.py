@@ -1,6 +1,7 @@
 """Bounded manual stock/pricing inspection; never generates or changes items."""
 
 from collections import deque
+from .requirements import describe as describe_use_bonus
 
 
 MAX_DEFINITIONS = 600
@@ -15,7 +16,8 @@ PLAYER_TERMS = ("exp", "level", "currency", "savegame")
 
 
 def collect(sdk, pc, serialize, read):
-    result = {"vendors": [], "inventory": [], "definitions": {}, "player": {}, "truncations": []}
+    result = {"vendors": [], "inventory": [], "definitions": {}, "player": {}, "truncations": [],
+              "use_level_bonuses": {}}
     pending = deque()
     queued = set()
 
@@ -85,7 +87,15 @@ def collect(sdk, pc, serialize, read):
         # diagnostics/card mod. No item initialization or reward functions run.
         query = getattr(item, "GetInventoryDefinition", None)
         if callable(query):
-            record["inventory_definition"] = read(f"{path} definition", lambda: value(query()))
+            def inventory_definition():
+                definition = query()
+                if definition is not None:
+                    name = definition._path_name()
+                    if name not in result["use_level_bonuses"] and len(result["use_level_bonuses"]) < 40:
+                        result["use_level_bonuses"][name] = read(f"{name} use bonus",
+                            lambda: describe_use_bonus(definition))
+                return value(definition)
+            record["inventory_definition"] = read(f"{path} definition", inventory_definition)
         query = getattr(item, "GetControllerPlayerExpLevelRequiredToUse", None)
         if pc is not None and callable(query):
             record["native_required_level"] = read(f"{path} required level", lambda: query(pc))
