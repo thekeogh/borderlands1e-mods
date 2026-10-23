@@ -1,0 +1,45 @@
+{
+  "name": "borderlens-workshop",
+  "version": "0.3.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "dev": "tsx src/server/main.ts",
+    "build": "tsc --noEmit && vite build",
+    "start": "tsx src/server/main.ts --production",
+    "test": "tsx --test --test-concurrency=1 tests/*.test.ts",
+    "check": "tsc --noEmit",
+    "format": "prettier --write src tests api vite.config.ts README.md",
+    "test:browser": "tsx tests/browser-smoke.ts",
+    "test:chrome": "tsx tests/chrome-extension-browser.ts"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "cheerio": "^1.1.2",
+    "express": "^5.1.0",
+    "lucide-react": "^0.548.0",
+    "multer": "^2.0.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "robots-parser": "^3.0.1",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@types/adm-zip": "^0.5.7",
+    "@types/express": "^5.0.3",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^22.18.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.4",
+    "prettier": "^3.9.10",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12"
+  },
+  "packageManager": "pnpm@12.3.4"
+}

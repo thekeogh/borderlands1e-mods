@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Borderlens Page Capture",
+  "version": "1.0.0",
+  "description": "Send the wiki or Lootlemon article you are viewing to your local Borderlens workshop.",
+  "author": "keogh",
+  "minimum_chrome_version": "120",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Send article to Borderlens"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://127.0.0.1/*", "http://localhost/*"],
+      "js": ["bridge.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

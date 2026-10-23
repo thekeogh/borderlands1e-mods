@@ -1,0 +1,351 @@
+{
+  "format_version": 1,
+  "description": "Data roots only. Missing candidates are reported; no map packages are loaded. This is not a full package inventory.",
+  "packages": [
+    {
+      "name": "gd_globals",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_GameStages",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_Balance",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_Balance_Inventory",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_Balance_Shopping",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_Balance_Treasure",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_Balance_HealthAndDamage",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_itemgrades",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_itempools",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_manufacturers",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_customitems",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_customweapons",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_shields",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_StorageDeckUpgrade",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_CommandDecks",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_currency",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_HealthDrops",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_ammodrops",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_population_shopping",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_weap_combat_rifle",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_weap_patrol_smg",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_weap_repeater_pistol",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_weap_sniper_rifle",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_weap_stock_weapons",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_weap_support_machinegun",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_weap_names_shared",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_weap_shared_materialparts",
+      "group": "base",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "gd_weap_combat_shotgun",
+      "group": "base",
+      "evidence": "candidate data namespace; presence must be confirmed at runtime"
+    },
+    {
+      "name": "gd_weap_assault_shotgun",
+      "group": "base",
+      "evidence": "candidate data namespace; presence must be confirmed at runtime"
+    },
+    {
+      "name": "gd_weap_revolver_pistol",
+      "group": "base",
+      "evidence": "candidate data namespace; presence must be confirmed at runtime"
+    },
+    {
+      "name": "gd_weap_machine_pistol",
+      "group": "base",
+      "evidence": "candidate data namespace; presence must be confirmed at runtime"
+    },
+    {
+      "name": "gd_weap_rocket_launcher",
+      "group": "base",
+      "evidence": "candidate data namespace; presence must be confirmed at runtime"
+    },
+    {
+      "name": "gd_weap_sniper_rifle_semiauto",
+      "group": "base",
+      "evidence": "candidate data namespace; presence must be confirmed at runtime"
+    },
+    {
+      "name": "dlc1_PackageDefinition",
+      "group": "dlc1",
+      "evidence": "package definition referenced by original Playthrough 3"
+    },
+    {
+      "name": "dlc2_PackageDefinition",
+      "group": "dlc2",
+      "evidence": "package definition referenced by original Playthrough 3"
+    },
+    {
+      "name": "dlc3_PackageDefinition",
+      "group": "dlc3",
+      "evidence": "package definition referenced by original Playthrough 3"
+    },
+    {
+      "name": "dlc4_PackageDefinition",
+      "group": "dlc4",
+      "evidence": "package definition referenced by original Playthrough 3"
+    },
+    {
+      "name": "dlc1_gd_itemgrades",
+      "group": "dlc1",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "dlc3_gd_customitems",
+      "group": "dlc3",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "dlc3_gd_CommandDecks",
+      "group": "dlc3",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "dlc3_gd_itemgrades",
+      "group": "dlc3",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "dlc3_gd_itempools",
+      "group": "dlc3",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "dlc3_gd_weap_UniqueParts",
+      "group": "dlc3",
+      "evidence": "namespace observed in existing BL1E diagnostics or reference mods"
+    },
+    {
+      "name": "Z0_Missions",
+      "group": "missions",
+      "evidence": "namespace referenced by original Playthrough 3"
+    },
+    {
+      "name": "Z0_MissionData",
+      "group": "missions",
+      "evidence": "namespace referenced by original Playthrough 3"
+    },
+    {
+      "name": "gd_tunercuffs",
+      "group": "base",
+      "evidence": "grenade-mod namespace observed in existing BL1E diagnostics"
+    },
+    {
+      "name": "gd_weap_alien_rifle",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "gd_weap_grenade_launcher",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "gd_weap_scorpio",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "gd_grenades",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "gd_ElementalUpgrade",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "gd_Explosive",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "gd_Incendiary",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "gd_Corrosive",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "gd_Shock",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "gd_Healing",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "gd_AttributePresentation",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "gd_itempools_custom",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "gd_itempools_Shop",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "gd_population_Treasure",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "gd_population_enemies",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "gd_population_objects",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "gd_Balance_Enemies_Humans",
+      "group": "base",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "dlc2_gd_items",
+      "group": "dlc2",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "dlc3_gd_customweapons",
+      "group": "dlc3",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "dlc3_gd_item_UniqueParts",
+      "group": "dlc3",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "dlc3_gd_weap_stock",
+      "group": "dlc3",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "dlc3_gd_attributes",
+      "group": "dlc3",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "dlc4_gd_items",
+      "group": "dlc4",
+      "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    }
+  ]
+}

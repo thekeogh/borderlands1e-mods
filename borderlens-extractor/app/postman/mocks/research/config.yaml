@@ -1,0 +1,9 @@
+version: 1
+slug: borderlens-research
+protocol: http
+name: borderlens-research
+interceptRequests: true
+scenarios:
+  - name: default
+    path: ./default.js
+    default: true

@@ -1,0 +1,1614 @@
+import { SourceViewer } from "./source-viewer";
+import { useChromeHelper, ChromeHelperSetup } from "./chrome-helper";
+import { CATALOGUE_SCHEMA_VERSION } from "../shared/versions";
+import {
+  catalogueGroup,
+  classificationNote,
+  weaponTypes,
+} from "../shared/taxonomy";
+import React, { useEffect, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
+import {
+  Search,
+  Upload,
+  Play,
+  Pause,
+  ArrowUpRight,
+  ChevronDown,
+  ChevronRight,
+  Check,
+  FileJson,
+  BookOpen,
+  Database,
+  Settings2,
+  Download,
+  RefreshCw,
+  RotateCcw,
+  ArrowRight,
+  Target,
+  TriangleAlert,
+  Layers,
+  Chrome,
+  Plus,
+  CheckCircle2,
+  Clock,
+  Activity,
+  X,
+  Link2,
+} from "lucide-react";
+import {
+  researchProviders,
+  providerForUrl,
+  type ResearchReport,
+} from "../shared/research";
+import type {
+  Project,
+  Family,
+  Packet,
+  Source,
+  PublicEntry,
+  Draft,
+} from "../shared/models";
+import "./style.css";
+type Detail = {
+  websiteOutput: import("../shared/website").WebsiteEntry | null;
+  parts: import("../shared/models").PartDefinition[];
+  research: ResearchReport | null;
+  family: Family;
+  packet: Packet | null;
+  sources: Source[];
+  output: PublicEntry | null;
+  draft: Draft | null;
+  provenance: any;
+  matches: any;
+};
+async function request<T = any>(
+  url: string,
+  body?: unknown,
+  method = "POST",
+): Promise<T> {
+  const r = await fetch(
+    url,
+    body === undefined
+      ? {}
+      : {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+  );
+  const value = await r.json();
+  if (!r.ok) throw new Error(value.error || "Request failed");
+  return value;
+}
+const stepLabels = {
+  evidence: "Read game data",
+  sources: "Research sources",
+  draft: "Write the entry",
+  validate: "Validate & save",
+  complete: "Ready to export",
+};
+const statusLabel = {
+  queued: "Queued",
+  running: "Processing",
+  blocked: "Needs attention",
+  done: "Ready",
+  excluded: "Excluded",
+};
+function App() {
+  const [state, setState] = useState<Project | null>(null),
+    [selected, setSelected] = useState(
+      localStorage.getItem("borderlens.selection") || "",
+    ),
+    [detail, setDetail] = useState<Detail | null>(null),
+    [tab, setTab] = useState("preview"),
+    [view, setView] = useState("catalogue"),
+    [query, setQuery] = useState(""),
+    [filter, setFilter] = useState("all"),
+    [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
+      try {
+        return JSON.parse(localStorage.getItem("borderlens.groups") || "{}");
+      } catch {
+        return {};
+      }
+    }),
+    [error, setError] = useState(""),
+    [notice, setNotice] = useState(""),
+    [working, setWorking] = useState(false),
+    [connected, setConnected] = useState(true),
+    [settingsOpen, setSettingsOpen] = useState(false),
+    [viewedSource, setViewedSource] = useState<Source | null>(null),
+    [codex, setCodex] = useState<any>(null),
+    [correction, setCorrection] = useState(""),
+    [source, setSource] = useState(""),
+    [html, setHtml] = useState(""),
+    [gameOnly, setGameOnly] = useState(false),
+    [edit, setEdit] = useState(""),
+    [resetScope, setResetScope] = useState(""),
+    [resetConfirm, setResetConfirm] = useState("");
+  const previousGroup = useRef({ id: "", group: "" });
+  useEffect(() => {
+    const family = state?.families.find((f) => f.id === selected);
+    if (!family) return;
+    const group = catalogueGroup(family);
+    if (
+      previousGroup.current.id === selected &&
+      previousGroup.current.group !== group
+    )
+      setCollapsed((current) => ({ ...current, [group]: false }));
+    previousGroup.current = { id: selected, group };
+  }, [selected, state?.revision]);
+  const editDirty = useRef(false);
+  const formId = useRef("");
+  const editRevision = useRef(-1);
+  const input = useRef<HTMLInputElement>(null);
+  const refresh = async () => {
+    try {
+      setState(await request("/api/state"));
+      setConnected(true);
+    } catch {
+      setConnected(false);
+    }
+  };
+  const chromeHelper = useChromeHelper({
+    saved: (message) => {
+      setNotice(message);
+      void refresh();
+    },
+    error: (message) => setError(message),
+  });
+  useEffect(() => {
+    void refresh();
+    let timer: ReturnType<typeof setTimeout>;
+    const es = new EventSource("/api/events");
+    es.onmessage = () => {
+      clearTimeout(timer);
+      timer = setTimeout(refresh, 80);
+    };
+    es.onerror = () => setConnected(false);
+    const t = setInterval(refresh, 10000);
+    void request("/api/codex").then(setCodex);
+    return () => {
+      es.close();
+      clearInterval(t);
+      clearTimeout(timer);
+    };
+  }, []);
+  useEffect(() => {
+    if (state && !selected && state.families.length)
+      setSelected(
+        state.families.find((f) => /hellfire/i.test(f.name))?.id ||
+          state.families[0].id,
+      );
+  }, [state, selected]);
+  useEffect(() => {
+    localStorage.setItem("borderlens.selection", selected);
+    if (!selected) {
+      setDetail(null);
+      return;
+    }
+    const c = new AbortController();
+    fetch("/api/items/" + encodeURIComponent(selected), { signal: c.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d) setDetail(d);
+      })
+      .catch(() => {});
+    return () => c.abort();
+  }, [selected, state?.revision]);
+  useEffect(() => {
+    if (detail && detail.family.id === selected) {
+      const changed = formId.current !== selected;
+      if (changed) {
+        formId.current = selected;
+        editDirty.current = false;
+        setCorrection(detail.family.notes);
+        setGameOnly(detail.family.gameOnly);
+        setSource(detail.family.sourceUrls[0] || "");
+      }
+      if (
+        changed ||
+        (!editDirty.current && editRevision.current !== detail.family.revision)
+      ) {
+        editRevision.current = detail.family.revision;
+        setEdit(
+          JSON.stringify(
+            detail.websiteOutput || detail.output || detail.draft?.entry || {},
+            null,
+            2,
+          ),
+        );
+      }
+    }
+  }, [selected, detail?.family.id, detail?.family.revision]);
+  useEffect(() => {
+    localStorage.setItem("borderlens.groups", JSON.stringify(collapsed));
+  }, [collapsed]);
+  const act = async (fn: () => Promise<unknown>, message?: string) => {
+    setError("");
+    setNotice("");
+    setWorking(true);
+    try {
+      await fn();
+      if (message) setNotice(message);
+      await refresh();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setWorking(false);
+    }
+  };
+  const itemAction = (action: string, body: Record<string, unknown> = {}) =>
+    act(() =>
+      request("/api/items/" + selected + "/action", { action, ...body }),
+    );
+  const select = (id: string) => {
+    setSelected(id);
+    setView("catalogue");
+    setHtml("");
+    setNotice("");
+  };
+  const upload = async (file: File) => {
+    await act(async () => {
+      const body = new FormData();
+      body.append("file", file);
+      const r = await fetch("/api/import", { method: "POST", body });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error);
+    }, "Capture imported. Family candidates are ready to inspect.");
+  };
+  if (!state)
+    return (
+      <div className="loading">
+        <div className="brand-mark">
+          b<span>.</span>
+        </div>
+        <h2>Opening your workshop</h2>
+        <p>
+          {connected
+            ? "Reading saved progress…"
+            : "Waiting for the local service. Run pnpm dev in the app folder."}
+        </p>
+      </div>
+    );
+  const run = state.run,
+    busy = ["running", "pausing"].includes(run.status),
+    current = state.families.find((f) => f.id === run.currentId),
+    done = state.families.filter((f) => f.status === "done").length,
+    blocked = state.families.filter((f) => f.status === "blocked").length,
+    percent = run.queue.length
+      ? Math.round((run.index / run.queue.length) * 100)
+      : 0;
+  const groups: Record<string, Family[]> = {};
+  for (const f of state.families) {
+    if (
+      query &&
+      !`${f.name} ${f.subtype}`.toLowerCase().includes(query.toLowerCase())
+    )
+      continue;
+    if (filter !== "all" && f.status !== filter) continue;
+    (groups[catalogueGroup(f)] ||= []).push(f);
+  }
+  const f = detail?.family.id === selected ? detail.family : null,
+    output = f ? detail?.output : null;
+  const setSetting = (patch: Record<string, unknown>) =>
+    act(() => request("/api/settings", patch, "PATCH"), "Settings saved.");
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div className="brand">
+          <span className="brand-mark">
+            b<span>.</span>
+          </span>
+          <div>
+            <strong>borderlens</strong>
+            <small>CATALOGUE WORKSHOP</small>
+          </div>
+          <span className="local-badge">LOCAL</span>
+        </div>
+        <div className="project-label">
+          <span className="project-dot" /> BORDERLANDS · GOTY ENHANCED
+        </div>
+        <nav className="main-nav">
+          <button
+            className={view === "catalogue" ? "active" : ""}
+            onClick={() => setView("catalogue")}
+          >
+            <Layers size={17} /> Catalogue <span>{state.families.length}</span>
+          </button>
+          <button
+            className={view === "coverage" ? "active" : ""}
+            onClick={() => setView("coverage")}
+          >
+            <Target size={17} /> Coverage{" "}
+            <span>{state.coverage.entries.length || "—"}</span>
+          </button>
+          <button
+            className={view === "activity" ? "active" : ""}
+            onClick={() => setView("activity")}
+          >
+            <Activity size={17} /> Activity
+          </button>
+        </nav>
+        <div className="sidebar-heading">
+          <span>ITEM FAMILIES</span>
+          <button
+            title="Import extractor ZIP"
+            onClick={() => input.current?.click()}
+          >
+            <Plus size={17} />
+          </button>
+        </div>
+        <div className="search">
+          <Search size={15} />
+          <input
+            aria-label="Find an item"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Find an item…"
+          />
+          <kbd>⌕</kbd>
+        </div>
+        <div className="filter-row">
+          <button
+            className={filter === "all" ? "selected" : ""}
+            onClick={() => setFilter("all")}
+          >
+            All
+          </button>
+          <button
+            className={filter === "done" ? "selected" : ""}
+            onClick={() => setFilter("done")}
+          >
+            Ready
+          </button>
+          <button
+            className={filter === "blocked" ? "selected" : ""}
+            onClick={() => setFilter("blocked")}
+          >
+            Needs attention{blocked > 0 && ` ${blocked}`}
+          </button>
+        </div>
+        <div className="item-tree">
+          {Object.entries(groups).map(([group, items]) => (
+            <div key={group} className="tree-group">
+              <button
+                className="group-toggle"
+                onClick={() =>
+                  setCollapsed({ ...collapsed, [group]: !collapsed[group] })
+                }
+              >
+                {collapsed[group] ? (
+                  <ChevronRight size={13} />
+                ) : (
+                  <ChevronDown size={13} />
+                )}
+                <span>{group}</span>
+                <small>{items.length}</small>
+              </button>
+              {!collapsed[group] &&
+                items.map((item) => (
+                  <button
+                    key={item.id}
+                    className={`item-row ${selected === item.id ? "selected" : ""}`}
+                    onClick={() => select(item.id)}
+                    title={`${item.name} · ${statusLabel[item.status]}`}
+                  >
+                    <span className={`status-dot ${item.status}`} />
+                    <span>{item.name}</span>
+                    {item.status === "running" ? (
+                      <span className="tiny-spinner" />
+                    ) : item.status === "done" ? (
+                      <Check size={13} />
+                    ) : item.status === "blocked" ? (
+                      <TriangleAlert size={13} />
+                    ) : null}
+                  </button>
+                ))}
+            </div>
+          ))}
+          {!Object.keys(groups).length && (
+            <p className="sidebar-empty">
+              {state.families.length
+                ? "No matching items."
+                : "Your item families will appear here after import."}
+            </p>
+          )}
+        </div>
+        <div className="sidebar-bottom">
+          <span
+            className={connected ? "connection-dot" : "connection-dot offline"}
+          />
+          <span>{connected ? "Saved locally" : "Reconnecting…"}</span>
+          <button title="Settings" onClick={() => setSettingsOpen(true)}>
+            <Settings2 size={17} />
+          </button>
+        </div>
+      </aside>
+      <section className="workspace">
+        <header className="topbar">
+          <div className="breadcrumb">
+            Workshop <ChevronRight size={13} />{" "}
+            <strong>
+              {view === "catalogue"
+                ? "Catalogue"
+                : view === "coverage"
+                  ? "Coverage"
+                  : "Activity"}
+            </strong>
+          </div>
+          <div className="toolbar">
+            <button
+              className="button quiet chrome-helper-button"
+              title={
+                chromeHelper.connected
+                  ? "Chrome helper connected"
+                  : "Set up Chrome helper"
+              }
+              onClick={chromeHelper.showSetup}
+            >
+              <span
+                className={
+                  chromeHelper.connected
+                    ? "connection-dot"
+                    : "connection-dot offline"
+                }
+              />
+              <Chrome size={15} /> Chrome helper
+            </button>
+            <button
+              className="button quiet"
+              disabled={working || busy}
+              onClick={() => input.current?.click()}
+            >
+              <Upload size={15} /> Import ZIP
+            </button>
+            <a className="button quiet" href="/api/export">
+              <Download size={15} /> Export ({done})
+            </a>
+            <span className="toolbar-divider" />
+            <button
+              className="icon-button"
+              title="Settings"
+              onClick={() => setSettingsOpen(true)}
+            >
+              <Settings2 size={17} />
+            </button>
+          </div>
+        </header>
+        <div className={`runbar ${busy ? "is-running" : ""}`}>
+          <div className="run-icon">
+            {busy ? (
+              <span className="spinner" />
+            ) : run.status === "blocked" ? (
+              <TriangleAlert size={21} />
+            ) : run.status === "complete" ? (
+              <CheckCircle2 size={21} />
+            ) : (
+              <Play size={20} />
+            )}
+          </div>
+          <div className="run-content">
+            <div className="run-title">
+              <strong>
+                {busy
+                  ? "Building your catalogue"
+                  : run.status === "blocked"
+                    ? "A little input needed"
+                    : run.status === "complete"
+                      ? "This run is complete"
+                      : run.status === "paused"
+                        ? "Ready when you are"
+                        : "Your catalogue, one item at a time"}
+              </strong>
+              <span>
+                {run.queue.length
+                  ? `${Math.min(run.index + (busy ? 1 : 0), run.queue.length)} / ${run.queue.length}`
+                  : `${done} / ${state.families.length} ready`}
+              </span>
+            </div>
+            <p>{run.message}</p>
+            <div className="progress-track">
+              <div style={{ width: `${percent}%` }} />
+            </div>
+          </div>
+          {current && (
+            <button
+              className="jump"
+              onClick={() => select(current.id)}
+              title="Jump to current item"
+            >
+              <Target size={15} />
+              <span>Current item</span>
+            </button>
+          )}
+          <button
+            className={`button ${busy ? "pause-button" : "primary"}`}
+            disabled={
+              working || !state.families.length || run.status === "pausing"
+            }
+            onClick={() =>
+              act(() =>
+                request("/api/run", {
+                  action: busy
+                    ? "pause"
+                    : run.status === "paused" || run.status === "blocked"
+                      ? "resume"
+                      : "start",
+                }),
+              )
+            }
+          >
+            {busy ? (
+              <Pause size={16} />
+            ) : (
+              <Play size={16} fill="currentColor" />
+            )}
+            {run.status === "pausing"
+              ? "Pausing…"
+              : busy
+                ? "Pause"
+                : run.status === "paused" || run.status === "blocked"
+                  ? "Resume"
+                  : "Start"}
+          </button>
+        </div>
+        {(error || notice) && (
+          <div
+            role={error ? "alert" : "status"}
+            className={`banner ${error ? "error" : "success"}`}
+          >
+            <span>{error || notice}</span>
+            <button
+              onClick={() => {
+                setError("");
+                setNotice("");
+              }}
+            >
+              <X size={15} />
+            </button>
+          </div>
+        )}
+        <main>
+          {!state.families.length ? (
+            <div className="empty-workshop">
+              <div className="eyebrow">FROM GAME DATA TO PLAYER KNOWLEDGE</div>
+              <h1>
+                Build a clearer
+                <br />
+                picture of every item<span>.</span>
+              </h1>
+              <p>
+                Bring in your extractor ZIP. Borderlens connects the evidence,
+                <br className="desktop" /> researches the details and builds
+                your catalogue, one family at a time.
+              </p>
+              <button
+                className="button primary large"
+                onClick={() => input.current?.click()}
+              >
+                <Upload size={17} /> Import your first capture{" "}
+                <ArrowRight size={17} />
+              </button>
+              <div className="empty-steps">
+                <div>
+                  <span>01</span>
+                  <strong>Import</strong>
+                  <p>
+                    Verified game data,
+                    <br />
+                    kept exactly as captured.
+                  </p>
+                </div>
+                <div>
+                  <span>02</span>
+                  <strong>Research</strong>
+                  <p>
+                    Sources and corrections,
+                    <br />
+                    remembered for next time.
+                  </p>
+                </div>
+                <div>
+                  <span>03</span>
+                  <strong>Build</strong>
+                  <p>
+                    Readable, evidenced entries.
+                    <br />
+                    Ready for your website.
+                  </p>
+                </div>
+              </div>
+              <div className="local-note">
+                <Database size={14} /> Your captures and progress stay on this
+                machine.
+              </div>
+            </div>
+          ) : view === "coverage" ? (
+            <>
+              <div className="page-title">
+                <div>
+                  <div className="eyebrow">LEAVE NO FAMILY BEHIND</div>
+                  <h1>Catalogue coverage</h1>
+                  <p>
+                    Compare known listings with your game data. A match is a
+                    lead, not proof of completeness.
+                  </p>
+                </div>
+                <button
+                  className="button secondary"
+                  disabled={working || state.coverage.status === "running"}
+                  onClick={() => act(() => request("/api/coverage", {}))}
+                >
+                  <RefreshCw
+                    size={15}
+                    className={
+                      state.coverage.status === "running" ? "spin" : ""
+                    }
+                  />{" "}
+                  Compare catalogues
+                </button>
+              </div>
+              <div className="metric-grid">
+                {[
+                  ["Extracted candidates", state.families.length],
+                  ["External candidates", state.coverage.entries.length],
+                  [
+                    "Name matches",
+                    state.coverage.entries.filter((e) => e.status === "matched")
+                      .length,
+                  ],
+                  [
+                    "Need investigation",
+                    state.coverage.entries.filter(
+                      (e) => e.status !== "matched" && e.status !== "excluded",
+                    ).length,
+                  ],
+                ].map(([label, value]) => (
+                  <div className="metric" key={label}>
+                    <span>{label}</span>
+                    <strong>{value}</strong>
+                  </div>
+                ))}
+              </div>
+              <p className="muted">{state.coverage.message}</p>
+              {state.coverage.errors.map((m, i) => (
+                <div className="coverage-error" key={i}>
+                  {m}
+                </div>
+              ))}
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Candidate</th>
+                      <th>Source</th>
+                      <th>Comparison</th>
+                      <th>Evidence / correction</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {state.coverage.entries.map((e) => (
+                      <tr key={e.key}>
+                        <td>{e.name}</td>
+                        <td>{e.source}</td>
+                        <td>
+                          <span className="tag">
+                            {e.status.replaceAll("_", " ")}
+                          </span>
+                        </td>
+                        <td>
+                          <a href={e.url} target="_blank" rel="noreferrer">
+                            Open page <ArrowUpRight size={12} />
+                          </a>
+                          {e.familyIds[0] && (
+                            <button
+                              className="text-button"
+                              onClick={() => select(e.familyIds[0])}
+                            >
+                              {" "}
+                              View item
+                            </button>
+                          )}
+                          <div className="coverage-actions">
+                            <select
+                              aria-label={"Link " + e.name + " to a family"}
+                              disabled={
+                                busy || state.coverage.status === "running"
+                              }
+                              value=""
+                              onChange={(event) => {
+                                if (event.target.value)
+                                  void act(() =>
+                                    request(
+                                      "/api/coverage/" +
+                                        encodeURIComponent(e.key),
+                                      {
+                                        action: "link",
+                                        familyId: event.target.value,
+                                      },
+                                    ),
+                                  );
+                              }}
+                            >
+                              <option value="">
+                                Link to extracted family…
+                              </option>
+                              {state.families.map((f) => (
+                                <option key={f.id} value={f.id}>
+                                  {f.name} · {f.subtype}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              className="text-button"
+                              disabled={
+                                busy || state.coverage.status === "running"
+                              }
+                              onClick={() =>
+                                act(() =>
+                                  request(
+                                    "/api/coverage/" +
+                                      encodeURIComponent(e.key),
+                                    { action: "exclude" },
+                                  ),
+                                )
+                              }
+                            >
+                              Exclude
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {!state.coverage.entries.length && (
+                  <div className="panel-empty">
+                    Run a comparison to discover missing pages and possible
+                    families.
+                  </div>
+                )}
+              </div>
+            </>
+          ) : view === "activity" ? (
+            <>
+              <div className="page-title">
+                <div>
+                  <div className="eyebrow">EVERY STEP, REMEMBERED</div>
+                  <h1>Workshop activity</h1>
+                  <p>
+                    Capture imports and project events. Individual processing
+                    history lives on each item.
+                  </p>
+                </div>
+              </div>
+              <div className="history-list">
+                {[...state.activity].reverse().map((h, i) => (
+                  <div key={i}>
+                    <span className="history-dot" />
+                    <div>
+                      <strong>{h.message}</strong>
+                      <p>
+                        {new Date(h.at).toLocaleString()} · {h.stage}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : f ? (
+            <>
+              <div className="item-heading">
+                <div>
+                  <div className="eyebrow">
+                    {f.category.toUpperCase()} <span>/</span>{" "}
+                    {catalogueGroup(f).toUpperCase()}
+                  </div>
+                  <h1>
+                    {f.name}
+                    <span className={`pill ${f.status}`}>
+                      {statusLabel[f.status]}
+                    </span>
+                  </h1>
+                  <p>
+                    {output?.summary ||
+                      "A family from your game capture. Its player-facing entry is waiting to be built."}
+                  </p>
+                </div>
+                <div className="item-actions">
+                  <button
+                    className="button secondary"
+                    disabled={working}
+                    onClick={() => itemAction("rebuild")}
+                  >
+                    <RotateCcw size={15} /> Rebuild this item
+                  </button>
+                  <button
+                    className="button quiet"
+                    disabled={working}
+                    onClick={() => itemAction("from")}
+                  >
+                    Start from here <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+              {classificationNote(f) && (
+                <div className="classification-note">
+                  <TriangleAlert size={17} />
+                  <p>{classificationNote(f)}</p>
+                </div>
+              )}
+              <div className="stage-strip">
+                {Object.entries(stepLabels).map(([key, label], i) => (
+                  <div
+                    key={key}
+                    className={`${f.stage === key ? "current" : ""} ${Object.keys(stepLabels).indexOf(f.stage) > i ? "finished" : ""}`}
+                  >
+                    <span>
+                      {Object.keys(stepLabels).indexOf(f.stage) > i ? (
+                        <Check size={12} />
+                      ) : (
+                        i + 1
+                      )}
+                    </span>
+                    {label}
+                  </div>
+                ))}
+              </div>
+              <div className="tabs">
+                {[
+                  ["preview", "Preview", BookOpen],
+                  ["sources", "Sources & evidence", Database],
+                  ["history", "History", Clock],
+                  ["json", "Final JSON", FileJson],
+                ].map(([key, label, Icon]: any) => (
+                  <button
+                    key={key}
+                    className={tab === key ? "active" : ""}
+                    onClick={() => setTab(key)}
+                  >
+                    <Icon size={15} />
+                    {label}
+                    {key === "sources" && (
+                      <small>{detail?.sources.length || 0}</small>
+                    )}
+                  </button>
+                ))}
+              </div>
+              {f.issue && (
+                <div className="issue-card">
+                  <TriangleAlert size={20} />
+                  <div>
+                    <strong>This item needs attention</strong>
+                    <p>{f.issue}</p>
+                    <button
+                      className="text-button"
+                      onClick={() => setTab("sources")}
+                    >
+                      Review sources & corrections <ArrowRight size={13} />
+                    </button>
+                  </div>
+                </div>
+              )}
+              {tab === "preview" ? (
+                <div className="preview-grid">
+                  <section className="item-preview">
+                    <div className="section-label">
+                      PLAYER PREVIEW{" "}
+                      <span>
+                        {output ? "LAST VALIDATED REVISION" : "NOT BUILT YET"}
+                      </span>
+                    </div>
+                    {output ? (
+                      <>
+                        <div className="preview-tags">
+                          {[
+                            ...output.manufacturers,
+                            ...output.rarities,
+                            ...output.elements,
+                          ].map((t) => (
+                            <span key={t} className="tag">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                        {output.redText && (
+                          <blockquote>“{output.redText}”</blockquote>
+                        )}
+                        {output.description?.map((paragraph, i) => (
+                          <p className="description-paragraph" key={i}>
+                            {paragraph}
+                          </p>
+                        ))}
+                        <h2>What makes it different</h2>
+                        {output.specialEffects.length ? (
+                          <ul className="effect-list">
+                            {output.specialEffects.map((e, i) => (
+                              <li key={i}>{e}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="muted">
+                            No special effect has been established for this
+                            family.
+                          </p>
+                        )}
+                        <h2>Stats & variations</h2>
+                        {output.stats.length ? (
+                          <div className="stats-list">
+                            {output.stats.map((s, i) => (
+                              <div key={i}>
+                                <strong>{s.name}</strong>
+                                <span>
+                                  {s.minimum ?? "—"}
+                                  {s.maximum !== s.minimum && s.maximum !== null
+                                    ? `–${s.maximum}`
+                                    : ""}{" "}
+                                  {s.unit}
+                                </span>
+                                <p>{s.notes}</p>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="muted">
+                            No verified final stat ranges yet. Shared type
+                            defaults are kept in the evidence.
+                          </p>
+                        )}
+                        {output.variants?.length > 0 && (
+                          <>
+                            <h2>Meaningful variants</h2>
+                            {output.variants.map((v, i) => (
+                              <div key={i}>
+                                <h3>{v.name}</h3>
+                                <p>{v.description}</p>
+                                <ul>
+                                  {v.differences.map((d, j) => (
+                                    <li key={j}>{d}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                        {output.parts?.length > 0 && (
+                          <>
+                            <h2>Weapon parts</h2>
+                            {output.parts.map((ref) => {
+                              const part = detail?.parts?.find(
+                                (part) => part.id === ref.partId,
+                              );
+                              return (
+                                <div className="part-preview" key={ref.partId}>
+                                  <strong>{part?.name || ref.partId}</strong>
+                                  <small>
+                                    {" "}
+                                    · {part?.slot} · {ref.relationship}
+                                  </small>
+                                  <p>{ref.notes}</p>
+                                  {part?.effects.map((effect, i) => (
+                                    <p key={i}>{effect}</p>
+                                  ))}
+                                </div>
+                              );
+                            })}
+                          </>
+                        )}
+                        <h2>Where to find it</h2>
+                        {output.sources.length ? (
+                          output.sources.map((s, i) => (
+                            <p key={i}>
+                              <strong>{s.label}</strong>
+                              <br />
+                              {s.notes}
+                              {(s.location || s.dlc) && (
+                                <small className="source-context">
+                                  {[s.location, s.dlc]
+                                    .filter(Boolean)
+                                    .join(" · ")}
+                                </small>
+                              )}
+                              {s.conditions?.map((condition, j) => (
+                                <small className="source-context" key={j}>
+                                  {condition}
+                                </small>
+                              ))}
+                              {s.dropChance && (
+                                <small className="source-context">
+                                  {s.dropChance.percent}% ·{" "}
+                                  {s.dropChance.conditions}
+                                </small>
+                              )}
+                              {s.url && (
+                                <a
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  href={s.url}
+                                >
+                                  {" "}
+                                  Source <ArrowUpRight size={12} />
+                                </a>
+                              )}
+                            </p>
+                          ))
+                        ) : (
+                          <p className="muted">
+                            No verified source established yet.
+                          </p>
+                        )}
+                        {output.notes.length > 0 && (
+                          <>
+                            <h2>Good to know</h2>
+                            {output.notes.map((n, i) => (
+                              <p key={i}>{n}</p>
+                            ))}
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <div className="preview-placeholder">
+                        <BookOpen size={28} />
+                        <h2>A good entry starts with evidence.</h2>
+                        <p>
+                          Rebuild this item on its own, or start the queue.
+                          <br />
+                          You can keep browsing while Borderlens works.
+                        </p>
+                        <button
+                          className="button secondary"
+                          onClick={() => itemAction("rebuild")}
+                          disabled={working}
+                        >
+                          <Play size={14} /> Build {f.name}
+                        </button>
+                      </div>
+                    )}
+                  </section>
+                  <aside className="inspector">
+                    <div className="section-label">AT A GLANCE</div>
+                    <dl>
+                      <dt>Item family</dt>
+                      <dd>{f.name}</dd>
+                      <dt>Category</dt>
+                      <dd>{catalogueGroup(f)}</dd>
+                      <dt>Game</dt>
+                      <dd>Borderlands GOTY Enhanced</dd>
+                      <dt>Game evidence</dt>
+                      <dd>
+                        {detail?.packet?.evidence.filter(
+                          (e) => e.kind === "game",
+                        ).length || f.roots.length}{" "}
+                        linked records
+                      </dd>
+                      <dt>Research</dt>
+                      <dd>
+                        {f.gameOnly
+                          ? "Game evidence only"
+                          : `${detail?.sources.length || 0} saved pages`}
+                      </dd>
+                      <dt>Saved revision</dt>
+                      <dd>{f.revision || "Not built yet"}</dd>
+                    </dl>
+                    <div className="inspector-note">
+                      <Database size={16} />
+                      <p>
+                        Every completed step is saved locally. Browsing never
+                        interrupts the queue.
+                      </p>
+                    </div>
+                    {detail?.draft?.uncertainties?.length ? (
+                      <div className="unknowns">
+                        <strong>Still to establish</strong>
+                        {detail.draft.uncertainties.map((u, i) => (
+                          <p key={i}>{u}</p>
+                        ))}
+                      </div>
+                    ) : null}
+                  </aside>
+                </div>
+              ) : tab === "sources" ? (
+                <div className="sources-grid">
+                  <section>
+                    <div className="section-label">
+                      SAVED RESEARCH{" "}
+                      <button
+                        className="text-button"
+                        disabled={working || busy}
+                        onClick={() => itemAction("refresh")}
+                      >
+                        <RefreshCw size={13} /> Refresh sources
+                      </button>
+                    </div>
+                    <div className="research-status">
+                      {researchProviders.map((provider) => {
+                        const count =
+                          detail?.sources.filter(
+                            (s) => providerForUrl(s.url) === provider,
+                          ).length || 0;
+                        const row = detail?.research?.providers.find(
+                          (row) => row.provider === provider,
+                        );
+                        const targets = [
+                          ...new Set([
+                            ...(row?.urls || []),
+                            ...f.sourceUrls.filter(
+                              (url) => providerForUrl(url) === provider,
+                            ),
+                          ]),
+                        ];
+                        return (
+                          <div
+                            key={provider}
+                            className={count ? "saved" : "missing"}
+                          >
+                            <strong>
+                              {provider} ·{" "}
+                              {count
+                                ? `${count} saved`
+                                : row?.status === "unavailable"
+                                  ? "Unavailable"
+                                  : "Not saved"}
+                            </strong>
+                            <p>
+                              {count
+                                ? "Cached evidence ready for the writer."
+                                : row?.message ||
+                                  "Rebuild this item to seek this source. If blocked, import saved page HTML with its original URL."}
+                            </p>
+                            <div className="browser-import-buttons">
+                              {targets.slice(0, 3).map((url, index) => (
+                                <button
+                                  key={url}
+                                  className="button secondary"
+                                  disabled={chromeHelper.opening}
+                                  onClick={() =>
+                                    chromeHelper.openPage(f.id, url)
+                                  }
+                                >
+                                  <Chrome size={13} />
+                                  {index === 0
+                                    ? `Open ${provider === "Wiki" ? "wiki" : "Lootlemon"} in Chrome`
+                                    : "Open additional article"}
+                                </button>
+                              ))}
+                              {!targets.length && (
+                                <button
+                                  className="text-button"
+                                  onClick={() => chromeHelper.showSetup()}
+                                >
+                                  Set up browser capture
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {detail?.sources.length ? (
+                      detail.sources.map((s) => (
+                        <article className="source-card" key={s.id}>
+                          <div>
+                            <BookOpen size={18} />
+                            <strong>{s.title}</strong>
+                            <a target="_blank" rel="noreferrer" href={s.url}>
+                              <ArrowUpRight size={15} />
+                            </a>
+                          </div>
+                          <small>
+                            {new Date(s.fetchedAt).toLocaleString()} ·{" "}
+                            {s.captureMethod === "chrome"
+                              ? "Captured in Chrome"
+                              : s.imported
+                                ? "Imported HTML"
+                                : "Fetched & cached"}
+                          </small>
+                          <p>
+                            {s.text.slice(0, 550)}
+                            {s.text.length > 550 ? "…" : ""}
+                          </p>
+                          <button
+                            className="text-button source-show-more"
+                            aria-label={"Show more: " + s.title}
+                            onClick={() => setViewedSource(s)}
+                          >
+                            Show more <ArrowUpRight size={12} />
+                          </button>
+                        </article>
+                      ))
+                    ) : (
+                      <div className="panel-empty">
+                        No pages saved yet. Research runs automatically when
+                        this item reaches that step.
+                      </div>
+                    )}
+                    <details className="evidence-details">
+                      <summary>
+                        Captured game evidence (
+                        {detail?.packet?.evidence.filter(
+                          (e) => e.kind === "game",
+                        ).length || 0}
+                        )
+                      </summary>
+                      <pre>
+                        {JSON.stringify(
+                          detail?.packet || { roots: f.roots },
+                          null,
+                          2,
+                        )}
+                      </pre>
+                    </details>
+                  </section>
+                  <aside className="correction-card">
+                    <h2>Help it move forward</h2>
+                    <p>
+                      A correction is remembered for future runs. Add a source
+                      or explain what needs changing.
+                    </p>
+                    {f.category === "Weapons" && (
+                      <div className="manual-classification">
+                        <label>
+                          Weapon classification
+                          <select
+                            aria-label="Weapon classification"
+                            disabled={working || busy}
+                            value={
+                              f.classification?.origin === "manual"
+                                ? f.classification.weaponType
+                                : ""
+                            }
+                            onChange={(event) =>
+                              itemAction("classification", {
+                                weaponType: event.target.value || null,
+                                notes: correction || undefined,
+                              })
+                            }
+                          >
+                            <option value="">
+                              Use researched / raw classification
+                            </option>
+                            {weaponTypes.map((type) => (
+                              <option key={type} value={type}>
+                                {type}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <p className="muted small">
+                          Current: {catalogueGroup(f)} ·{" "}
+                          {f.classification?.origin || "raw data"}. Manual
+                          choices take priority and are saved in the overrides
+                          file.
+                        </p>
+                      </div>
+                    )}
+                    <label>
+                      Source page URL
+                      <input
+                        value={source}
+                        onChange={(e) => setSource(e.target.value)}
+                        placeholder="https://…"
+                      />
+                    </label>
+                    {source && (
+                      <button
+                        className="text-button"
+                        disabled={chromeHelper.opening}
+                        onClick={() => chromeHelper.openPage(f.id, source)}
+                      >
+                        <Chrome size={13} /> Open this URL for browser import
+                      </button>
+                    )}
+                    <label>
+                      Your correction
+                      <textarea
+                        value={correction}
+                        onChange={(e) => setCorrection(e.target.value)}
+                        placeholder="Use this page, keep this detail…"
+                        rows={4}
+                      />
+                    </label>
+                    <details>
+                      <summary>Import saved HTML</summary>
+                      <textarea
+                        value={html}
+                        onChange={(e) => setHtml(e.target.value)}
+                        placeholder="Paste the original page HTML"
+                        rows={5}
+                      />
+                      <small>
+                        Include its original wiki/Lootlemon URL above.
+                      </small>
+                    </details>
+                    <label className="check-label">
+                      <input
+                        type="checkbox"
+                        checked={gameOnly}
+                        onChange={(e) => setGameOnly(e.target.checked)}
+                      />{" "}
+                      Use game evidence only for this item
+                    </label>
+                    <button
+                      className="button primary"
+                      disabled={working || busy}
+                      onClick={() =>
+                        itemAction("resolve", {
+                          url: source || undefined,
+                          html: html || undefined,
+                          notes: correction,
+                          gameOnly,
+                        })
+                      }
+                    >
+                      Save correction <Check size={15} />
+                    </button>
+                    {f.issue && (
+                      <button
+                        className="button secondary"
+                        disabled={working || busy}
+                        onClick={() => itemAction("retry")}
+                      >
+                        Retry this step
+                      </button>
+                    )}
+                    <button
+                      className="text-button danger"
+                      disabled={working || busy}
+                      onClick={() =>
+                        itemAction("exclude", {
+                          notes:
+                            correction ||
+                            "Deliberately excluded from this catalogue.",
+                        })
+                      }
+                    >
+                      Exclude this candidate
+                    </button>
+                  </aside>
+                </div>
+              ) : tab === "history" ? (
+                <div className="history-list">
+                  {[...f.history].reverse().map((h, i) => (
+                    <div key={i}>
+                      <span className="history-dot" />
+                      <div>
+                        <strong>{h.message}</strong>
+                        <p>
+                          {new Date(h.at).toLocaleString()} ·{" "}
+                          {stepLabels[h.stage as keyof typeof stepLabels] ||
+                            h.stage}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {!f.history.length && (
+                    <div className="panel-empty">
+                      This item has not entered processing yet.
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="json-panel">
+                  <div className="section-label">
+                    WEBSITE-READY JSON{" "}
+                    <span>
+                      {output ? `REVISION ${f.revision}` : "DRAFT / NOT BUILT"}
+                    </span>
+                  </div>
+                  {output &&
+                    output.schemaVersion !== CATALOGUE_SCHEMA_VERSION && (
+                      <div className="classification-note">
+                        Previous-schema output is retained below. Rebuild this
+                        item for the new description, variants, sources and
+                        parts fields.
+                      </div>
+                    )}
+                  <p className="muted">
+                    You can edit a completed entry here. Saved manual edits
+                    survive rebuilds.
+                  </p>
+                  <textarea
+                    spellCheck={false}
+                    aria-label="Edit final item JSON"
+                    value={edit}
+                    onChange={(e) => {
+                      editDirty.current = true;
+                      setEdit(e.target.value);
+                    }}
+                  />
+                  <button
+                    className="button secondary"
+                    disabled={working || busy}
+                    onClick={() =>
+                      act(async () => {
+                        let parsed;
+                        try {
+                          parsed = JSON.parse(edit);
+                        } catch {
+                          throw new Error("The edited JSON is not valid.");
+                        }
+                        await request("/api/items/" + selected + "/action", {
+                          action: "save-output",
+                          output: parsed,
+                        });
+                      }, "Manual entry validated and saved.")
+                    }
+                  >
+                    <Check size={15} /> Validate & save manual entry
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="panel-empty">Select an item to inspect it.</div>
+          )}
+        </main>
+        <footer>
+          <span>ONE FAMILY. EVERY DETAIL.</span>
+          <span>Borderlens workshop · 0.3.1</span>
+        </footer>
+      </section>
+      <input
+        ref={input}
+        type="file"
+        accept=".zip"
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void upload(file);
+          e.target.value = "";
+        }}
+      />
+      {viewedSource && (
+        <SourceViewer
+          key={viewedSource.id}
+          source={viewedSource}
+          onClose={() => setViewedSource(null)}
+        />
+      )}
+      <ChromeHelperSetup helper={chromeHelper} />
+      {settingsOpen && (
+        <div className="modal-backdrop" onClick={() => setSettingsOpen(false)}>
+          <section
+            className="settings-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Workshop settings"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="close-modal"
+              onClick={() => setSettingsOpen(false)}
+            >
+              <X size={20} />
+            </button>
+            <div className="eyebrow">YOUR WORKSHOP</div>
+            <h2>Settings</h2>
+            <div className="codex-status">
+              <span
+                className={
+                  codex?.chatgpt ? "connection-dot" : "connection-dot offline"
+                }
+              />
+              <div>
+                <strong>{codex?.message || "Checking Codex…"}</strong>
+                <small>
+                  {codex?.version ||
+                    "Run codex login on this machine to connect."}
+                </small>
+              </div>
+              <button
+                className="icon-button"
+                onClick={() => request("/api/codex").then(setCodex)}
+              >
+                <RefreshCw size={15} />
+              </button>
+            </div>
+            <p className="muted small">
+              Uses your ChatGPT Codex allowance. No paid API-key fallback. Model
+              processing happens online.
+            </p>
+            <label>
+              Model
+              <input
+                defaultValue={state.settings.model}
+                key={state.settings.model}
+                placeholder="Codex default"
+                onBlur={(e) => {
+                  if (e.target.value !== state.settings.model)
+                    void setSetting({ model: e.target.value });
+                }}
+                disabled={busy}
+              />
+            </label>
+            <label>
+              Writing preference
+              <textarea
+                defaultValue={state.settings.writingStyle}
+                key={state.settings.writingStyle}
+                rows={3}
+                disabled={busy}
+                onBlur={(e) => {
+                  if (e.target.value !== state.settings.writingStyle)
+                    void setSetting({ writingStyle: e.target.value });
+                }}
+              />
+            </label>
+            <label className="check-label">
+              <input
+                type="checkbox"
+                checked={state.settings.research}
+                disabled={busy}
+                onChange={(e) => setSetting({ research: e.target.checked })}
+              />{" "}
+              Research wiki/Lootlemon pages automatically
+            </label>
+            <label>
+              Maximum items per run
+              <input
+                type="number"
+                min={1}
+                max={10000}
+                defaultValue={state.settings.maxItems}
+                disabled={busy}
+                onBlur={(e) => {
+                  const n = Number(e.target.value);
+                  if (n !== state.settings.maxItems)
+                    void setSetting({ maxItems: n });
+                }}
+              />
+            </label>
+            <div className="settings-divider" />
+            <h3>Reset project</h3>
+            <p className="muted small">
+              Restart generated work while retaining research/corrections, or
+              clear the whole project.
+            </p>
+            <select
+              value={resetScope}
+              onChange={(e) => setResetScope(e.target.value)}
+            >
+              <option value="">Choose reset scope…</option>
+              <option value="generated">
+                Restart generated work · keep research & corrections
+              </option>
+              <option value="all">Clear the entire project</option>
+            </select>
+            {resetScope && (
+              <>
+                <label>
+                  Type RESET to confirm
+                  <input
+                    value={resetConfirm}
+                    onChange={(e) => setResetConfirm(e.target.value)}
+                  />
+                </label>
+                <button
+                  className="button danger-button"
+                  disabled={busy || working || resetConfirm !== "RESET"}
+                  onClick={() =>
+                    act(async () => {
+                      await request("/api/reset", {
+                        scope: resetScope,
+                        confirmation: resetConfirm,
+                      });
+                      setResetScope("");
+                      setResetConfirm("");
+                      setSelected("");
+                      setDetail(null);
+                    }, "Project reset completed.")
+                  }
+                >
+                  Reset selected scope
+                </button>
+              </>
+            )}
+          </section>
+        </div>
+      )}
+    </div>
+  );
+}
+
+createRoot(document.getElementById("root")!).render(<App />);

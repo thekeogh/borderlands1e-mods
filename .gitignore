@@ -4,4 +4,14 @@ reference/
 logs/
 .DS_Store
 Thumbs.db
-borderlens-extractor
+borderlens-extractor/__pycache__/
+borderlens-extractor/*.py[cod]
+borderlens-extractor/.DS_Store
+borderlens-extractor/temp/*
+!borderlens-extractor/temp/README.md
+!borderlens-extractor/temp/imports/
+borderlens-extractor/temp/imports/*
+!borderlens-extractor/temp/imports/.gitkeep
+!borderlens-extractor/temp/tests/
+borderlens-extractor/temp/tests/*
+!borderlens-extractor/temp/tests/.gitkeep

@@ -1,0 +1,311 @@
+openapi: 3.0.3
+info:
+  title: Borderlens local workshop
+  version: 0.3.1
+  description: Local-only catalogue processing. Disk-backed checkpoints; no hosted accounts or API-key billing.
+servers:
+  - url: http://127.0.0.1:4317
+paths:
+  /api/chrome-helper:
+    get:
+      operationId: chromeHelperSetup
+      responses:
+        "200":
+          {
+            description: Local helper version and unpacked extension folder path.,
+          }
+  /api/chrome-helper/open-extensions:
+    post:
+      operationId: openChromeExtensions
+      responses:
+        "200":
+          {
+            description: Opens the fixed Chrome extensions management page locally.,
+          }
+        "500":
+          {
+            description: Chrome could not be opened; UI provides copyable setup URL.,
+          }
+  /api/chrome-helper/extension.zip:
+    get:
+      operationId: downloadChromeHelper
+      responses:
+        "200":
+          {
+            description: Helper extension source ZIP; separate from website catalogue export.,
+          }
+  /api/chrome-helper/jobs:
+    post:
+      operationId: prepareChromeCapture
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [familyId, url]
+              properties:
+                familyId: { type: string }
+                url: { type: string }
+      responses:
+        "200":
+          {
+            description: Short-lived ticket bound to one item and expected article URL.,
+          }
+        "400": { description: Invalid source URL. }
+        "404": { description: Family missing. }
+  /api/chrome-helper/capture:
+    post:
+      operationId: receiveChromeCapture
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jobId, token, url, html]
+              properties:
+                jobId: { type: string }
+                token: { type: string }
+                url: { type: string }
+                html: { type: string }
+      responses:
+        "200":
+          {
+            description: Saved or queued for the next safe worker checkpoint; replay is idempotent.,
+          }
+        "400":
+          { description: Invalid HTML or source URL does not match the ticket. }
+        "403": { description: Missing/invalid/expired capture ticket. }
+  /api/sources/{id}/html:
+    get:
+      operationId: readStoredSourceHtml
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Exact cached HTML as inert text; no source-site fetch or rewriting.
+          content:
+            text/plain:
+              schema: { type: string }
+        "404": { description: Source or its cached HTML file no longer exists. }
+  /api/state:
+    get:
+      operationId: getState
+      responses:
+        "200":
+          {
+            description: "Queue, families, settings, captures and recent activity. No raw capture blobs.",
+          }
+  /api/events:
+    get:
+      operationId: watchState
+      responses:
+        "200":
+          {
+            description: "Server-sent revision events; reconnect by fetching state.",
+          }
+  /api/import:
+    post:
+      operationId: importCapture
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "200":
+          {
+            description: "Verified capture import; identical archive is idempotent.",
+          }
+        "400":
+          {
+            description: "Invalid format, checksum, path or archive. Existing data retained.",
+          }
+        "409": { description: "Pause the worker before changing evidence." }
+  /api/items/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    get:
+      operationId: getItem
+      responses:
+        "200":
+          {
+            description: "Family with effective classification override, facts/evidence, per-provider research status/errors, sources, stage history and last valid output. Does not change the queue.",
+          }
+        "404": { description: "Family not found." }
+  /api/items/{id}/action:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: itemAction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  {
+                    type: string,
+                    enum:
+                      [
+                        rebuild,
+                        from,
+                        refresh,
+                        retry,
+                        exclude,
+                        resolve,
+                        classification,
+                        save-output,
+                      ],
+                  }
+                url: { type: string }
+                html: { type: string }
+                notes: { type: string }
+                gameOnly: { type: boolean }
+                output: { type: object }
+                weaponType:
+                  type: string
+                  nullable: true
+                  enum:
+                    [
+                      Combat rifles,
+                      Eridian weapons,
+                      Repeater pistols,
+                      Revolvers,
+                      Rocket launchers,
+                      Shotguns,
+                      SMGs,
+                      Sniper rifles,
+                      null,
+                    ]
+      responses:
+        "200":
+          {
+            description: "Action checkpointed. Rebuilds queue behind active work; selection never triggers action.",
+          }
+        "400":
+          {
+            description: "Invalid action or invalid output; last successful output retained.",
+          }
+        "404": { description: "Family not found." }
+        "409": { description: "Action requires a paused worker." }
+  /api/run:
+    post:
+      operationId: controlRun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action: { type: string, enum: [start, pause, resume] }
+      responses:
+        "200":
+          {
+            description: "Run state saved; pause settles the in-flight stage before stopping.",
+          }
+        "400": { description: "No eligible work or invalid request." }
+  /api/coverage:
+    post:
+      operationId: scanCoverage
+      responses:
+        "200":
+          {
+            description: "Start an asynchronous cached inventory comparison; failures remain visible.",
+          }
+        "409": { description: "Another coverage scan is running." }
+  /api/coverage/{key}:
+    parameters:
+      - { name: key, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: correctCoverage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action: { type: string, enum: [link, exclude] }
+                familyId: { type: string }
+      responses:
+        "200":
+          { description: Identity correction saved for future comparisons. }
+        "400": { description: Invalid correction or missing family. }
+        "404": { description: Coverage candidate or family missing. }
+        "409": { description: Pause processing and wait for coverage first. }
+  /api/settings:
+    patch:
+      operationId: updateSettings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model: { type: string }
+                writingStyle: { type: string }
+                research: { type: boolean }
+                maxItems: { type: integer, minimum: 1, maximum: 10000 }
+      responses:
+        "200":
+          {
+            description: "Saved settings. Changed writing settings invalidate dependent completed work.",
+          }
+        "409": { description: "Pause first." }
+  /api/codex:
+    get:
+      operationId: codexStatus
+      responses:
+        "200":
+          {
+            description: "Installed CLI/version and supported login status; no tokens exposed.",
+          }
+  /api/export:
+    get:
+      operationId: exportCatalogue
+      responses:
+        "200":
+          {
+            description: "Item-only website ZIP: type-folder/slug.json, inline parts, no sidecars or manifests.",
+          }
+        "409":
+          {
+            description: "No completed current-schema items, or missing part data.",
+          }
+  /api/reset:
+    post:
+      operationId: resetProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scope, confirmation]
+              properties:
+                scope: { type: string, enum: [generated, all] }
+                confirmation: { type: string, enum: [RESET] }
+      responses:
+        "200":
+          {
+            description: "Reset completed. Generated reset retains captures, sources, corrections and manual output.",
+          }
+        "409": { description: "Pause the worker and coverage scan first." }
+
+# Catalogue payload: schema v2 is defined by src/shared/models.ts (Zod).
+# Entries carry compilerVersion, <=200-character summary, paragraph description,
+# variants, detailed acquisition sources and references to shared part definitions.
+# Older outputs remain inspectable but are excluded from current-schema exports.

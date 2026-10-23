@@ -1,0 +1,50 @@
+{
+  "description": "Object paths/classes reported missing by real BL1E 0.1.0 capture. No generated stats or inferred game values.",
+  "capture": "borderlens-20261023-150958-597989",
+  "nested_objects": [
+    {
+      "path": "gd_customweapons.BSG_Weapons.TitleU_BSG_HiveMind:AttributePresentationDefinition_10",
+      "class": "WillowGame.AttributePresentationDefinition"
+    },
+    {
+      "path": "dlc3_gd_weap_UniqueParts.EridanRifle.Projectiles.Proj_Rifle_Flaregun:Behavior_Explode_0",
+      "class": "WillowGame.Behavior_Explode"
+    },
+    {
+      "path": "dlc3_gd_weap_UniqueParts.EridanRifle.Projectiles.Proj_Rifle_Firebomb:Behavior_Explode_0",
+      "class": "WillowGame.Behavior_Explode"
+    },
+    {
+      "path": "dlc3_gd_weap_UniqueParts.EridanRifle.Projectiles.Proj_Rifle_Fireball:Behavior_Explode_0",
+      "class": "WillowGame.Behavior_Explode"
+    },
+    {
+      "path": "gd_weap_alien_rifle.EridanRockets.PlasmaSphere_MegaCannon:Behavior_Explode_0",
+      "class": "WillowGame.Behavior_Explode"
+    },
+    {
+      "path": "dlc3_gd_weap_UniqueParts.EridanRifle.Projectiles.Projectile_Glob:Behavior_Explode_2",
+      "class": "WillowGame.Behavior_Explode"
+    },
+    {
+      "path": "dlc3_gd_weap_UniqueParts.EridanRifle.Projectiles.Projectile_Spatter_ParentLongChain:Behavior_Explode_2",
+      "class": "WillowGame.Behavior_Explode"
+    },
+    {
+      "path": "dlc3_gd_weap_UniqueParts.EridanRifle.Projectiles.Projectile_Spatter_ParentShortChain:Behavior_Explode_2",
+      "class": "WillowGame.Behavior_Explode"
+    },
+    {
+      "path": "dlc3_gd_weap_UniqueParts.EridanRifle.Projectiles.Projectile_Splat_Parent:Behavior_Explode_2",
+      "class": "WillowGame.Behavior_Explode"
+    }
+  ],
+  "unfollowed_classes": [
+    "Engine.ExpressionTree",
+    "GearboxFramework.AttributeExpressionEvaluator",
+    "WillowGame.PopulationFactoryBalancedAIPawn",
+    "WillowGame.PopulationFactoryInteractiveObject",
+    "WillowGame.PopulationFactoryVendingMachine",
+    "WillowGame.PopulationFactoryWillowVehicle"
+  ]
+}

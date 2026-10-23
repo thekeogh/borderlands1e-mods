@@ -1,0 +1,309 @@
+import { chromeRoutes } from "./chrome-http.ts";
+import { websiteZip, websiteEntry } from "./website-export.ts";
+import { weaponTypes } from "../shared/taxonomy.ts";
+import express from "express";
+import multer from "multer";
+import { z } from "zod";
+import { Store, HttpError } from "./store.ts";
+import { Worker } from "./worker.ts";
+import { compareCoverage } from "./research.ts";
+import { importZip } from "./importer.ts";
+import { PublicEntry, PartDefinition, now } from "../shared/models.ts";
+import { mkdirSync, rmSync, readFileSync } from "node:fs";
+import path from "node:path";
+export function api(store: Store, worker: Worker) {
+  const app = express();
+  app.disable("x-powered-by");
+  app.use((req, res, next) => {
+    const host = req.headers.host || "";
+    if (!/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host))
+      return res.status(403).json({ error: "Local access only." });
+    const origin = req.headers.origin;
+    if (origin && origin !== `http://${host}`)
+      return res
+        .status(403)
+        .json({ error: "Cross-origin requests are not allowed." });
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    next();
+  });
+  app.use(express.json({ limit: "6mb" }));
+  chromeRoutes(app, worker);
+  app.get("/api/state", (_req, res) => {
+    store.syncClassifications();
+    res.json(store.state);
+  });
+  app.get("/api/sources/:id/html", (req, res) => {
+    const source = store.source(req.params.id);
+    if (!source) throw new HttpError(404, "Saved source not found.");
+    const root = path.resolve(store.dir, "sources"),
+      filename = path.resolve(root, source.filename);
+    if (path.dirname(filename) !== root)
+      throw new HttpError(400, "Invalid cached source filename.");
+    let html: Buffer;
+    try {
+      html = readFileSync(filename);
+    } catch (error: any) {
+      if (error.code === "ENOENT")
+        throw new HttpError(
+          404,
+          "Cached HTML file is missing. The saved text is still available.",
+        );
+      throw error;
+    }
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Content-Security-Policy", "default-src 'none'; sandbox");
+    res.type("text/plain; charset=utf-8").send(html);
+  });
+  app.get("/api/events", (req, res) => {
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    });
+    res.write(`data: ${store.state.revision}\n\n`);
+    const listener = (n: number) => res.write(`data: ${n}\n\n`);
+    store.on("change", listener);
+    const t = setInterval(() => res.write(": alive\n\n"), 20000);
+    req.on("close", () => {
+      clearInterval(t);
+      store.off("change", listener);
+    });
+  });
+  app.post(
+    "/api/import",
+    multer({
+      storage: multer.memoryStorage(),
+      limits: { fileSize: 70 * 1024 * 1024, files: 1 },
+    }).single("file"),
+    (req, res) => {
+      if (!req.file) throw new HttpError(400, "Choose an extractor ZIP.");
+      const result = importZip(store, req.file.buffer, req.file.originalname);
+      worker.refreshImported();
+      res.json(result);
+    },
+  );
+  app.get("/api/items/:id", (req, res) => {
+    store.syncClassifications();
+    const f = store.family(req.params.id);
+    res.json({
+      family: f,
+      packet: store.get(f.id, "packet"),
+      draft: store.get(f.id, "draft"),
+      output: store.get(f.id, "output"),
+      websiteOutput: websiteEntry(store, f),
+      provenance: store.get(f.id, "provenance"),
+      matches: store.get(f.id, "matches"),
+      research: store.get(f.id, "research"),
+      sources: store.sources(f.id),
+      parts: store.get(f.id, "parts") || [],
+      researchAudit: store.get(f.id, "researchAudit"),
+      classification: store.classifications.data.entries[f.id] || null,
+    });
+  });
+  app.post("/api/items/:id/action", async (req, res) => {
+    const body = z
+      .object({
+        action: z.enum([
+          "rebuild",
+          "from",
+          "refresh",
+          "retry",
+          "exclude",
+          "resolve",
+          "classification",
+          "save-output",
+        ]),
+        url: z.string().max(4000).optional(),
+        html: z.string().max(5000000).optional(),
+        notes: z.string().max(10000).optional(),
+        gameOnly: z.boolean().optional(),
+        output: z.unknown().optional(),
+        weaponType: z.enum(weaponTypes).nullable().optional(),
+      })
+      .strict()
+      .parse(req.body);
+    await worker.action(req.params.id, body.action, body);
+    res.json({ ok: true });
+  });
+  app.post("/api/run", (req, res) => {
+    const { action } = z
+      .object({ action: z.enum(["start", "pause", "resume"]) })
+      .parse(req.body);
+    if (action === "pause") worker.pause();
+    else if (action === "resume") worker.resume();
+    else worker.start();
+    res.json(store.state.run);
+  });
+  app.post("/api/coverage", (_req, res) => {
+    if (worker.coverageBusy)
+      throw new HttpError(409, "Coverage scan already running.");
+    void worker.coverage();
+    res.json({ ok: true });
+  });
+  app.post("/api/coverage/:key", (req, res) => {
+    if (worker.coverageBusy || worker.busy)
+      throw new HttpError(
+        409,
+        "Pause processing and wait for coverage to finish first.",
+      );
+    const body = z
+      .object({
+        action: z.enum(["link", "exclude"]),
+        familyId: z.string().optional(),
+      })
+      .parse(req.body);
+    const entry = store.state.coverage.entries.find(
+      (e) => e.key === req.params.key,
+    );
+    if (!entry) throw new HttpError(404, "Coverage candidate not found.");
+    const corrections =
+      store.get<Record<string, { action: string; familyId?: string }>>(
+        "_project",
+        "coverageCorrections",
+      ) || {};
+    if (body.action === "link") {
+      if (!body.familyId)
+        throw new HttpError(400, "Choose an extracted family.");
+      const f = store.family(body.familyId);
+      if (!f.aliases.includes(entry.name)) f.aliases.push(entry.name);
+    }
+    corrections[entry.key] = body;
+    store.put("_project", "coverageCorrections", corrections);
+    worker.reconcileCoverage();
+    store.save();
+    res.json({ ok: true });
+  });
+  app.patch("/api/settings", (req, res) => {
+    if (worker.busy)
+      throw new HttpError(409, "Pause processing before changing settings.");
+    const body = z
+      .object({
+        model: z.string().max(100).optional(),
+        writingStyle: z.string().max(4000).optional(),
+        research: z.boolean().optional(),
+        maxItems: z.number().int().min(1).max(10000).optional(),
+      })
+      .strict()
+      .parse(req.body);
+    const prev = store.state.settings;
+    const invalidate =
+      (body.model !== undefined && body.model !== prev.model) ||
+      (body.writingStyle !== undefined &&
+        body.writingStyle !== prev.writingStyle) ||
+      (body.research !== undefined && body.research !== prev.research);
+    Object.assign(prev, body);
+    if (invalidate)
+      for (const f of store.state.families)
+        if (f.status !== "excluded" && !f.manualOutput)
+          worker.invalidate(
+            f,
+            body.research !== undefined ? "sources" : "draft",
+          );
+    store.save();
+    res.json(prev);
+  });
+  app.get("/api/codex", async (_req, res) =>
+    res.json(await worker.ai.status()),
+  );
+  app.get("/api/export", (_req, res) => {
+    store.syncClassifications();
+    const zip = websiteZip(store);
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="borderlens-catalogue.zip"',
+    );
+    res.send(zip);
+  });
+  app.post("/api/reset", (req, res) => {
+    if (worker.busy || worker.coverageBusy)
+      throw new HttpError(
+        409,
+        "Pause processing and wait for coverage to finish first.",
+      );
+    const body = z
+      .object({
+        scope: z.enum(["generated", "all"]),
+        confirmation: z.literal("RESET"),
+      })
+      .strict()
+      .parse(req.body);
+    if (body.scope === "all") {
+      store.db.exec(
+        "DELETE FROM raw; DELETE FROM artifacts; DELETE FROM sources;",
+      );
+      store.classifications.clear();
+      store.state = initial();
+      store.reloadRecords();
+      for (const dir of ["captures", "sources", "ai", "exports"]) {
+        rmSync(path.join(store.dir, dir), { recursive: true, force: true });
+        mkdirSync(path.join(store.dir, dir), { recursive: true });
+      }
+      worker.research.robots.clear();
+    } else {
+      for (const f of store.state.families) {
+        if (f.manualOutput) continue;
+        store.forget(f.id, [
+          "packet",
+          "draft",
+          "matches",
+          "output",
+          "validatedPacket",
+          "provenance",
+        ]);
+        f.stage = "evidence";
+        if (f.status !== "excluded") f.status = "queued";
+        f.issue = null;
+      }
+      store.state.run = {
+        status: "idle",
+        queue: [],
+        index: 0,
+        currentId: null,
+        message: "Processing reset; research and corrections retained.",
+        startedAt: null,
+        deferred: [],
+        pendingFrom: null,
+        pauseRequested: false,
+      };
+    }
+    store.save();
+    res.json({
+      ok: true,
+      note:
+        body.scope === "all"
+          ? "Project and cached files cleared."
+          : "Generated entries reset; research and corrections retained.",
+    });
+  });
+  app.use("/api", (_req, res) =>
+    res.status(404).json({ error: "Unknown API operation." }),
+  );
+  app.use(
+    (
+      error: any,
+      _req: express.Request,
+      res: express.Response,
+      _next: express.NextFunction,
+    ) => {
+      const status =
+        error.status === 413
+          ? 413
+          : error instanceof HttpError
+            ? error.status
+            : error instanceof z.ZodError || error instanceof multer.MulterError
+              ? 400
+              : 500;
+      res.status(status).json({
+        error:
+          error instanceof z.ZodError
+            ? error.issues
+                .map((i) => i.path.join(".") + ": " + i.message)
+                .join("; ")
+            : String(error.message || error),
+      });
+    },
+  );
+  return app;
+}
+import { initial } from "../shared/models.ts";

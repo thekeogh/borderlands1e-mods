@@ -1,0 +1,12 @@
+[project]
+name = "BorderlensExtractor"
+version = "0.2.1"
+authors = [{ name = "keogh" }]
+description = "Raw item-data exporter for Borderlens. Load a solo character, close menus and press F9. F9 pauses/resumes. Progress and ZIP exports: sdk_mods/settings/BorderlensExtractor/."
+
+[tool.sdkmod]
+name = "Borderlens Extractor"
+mod_type = "Standard"
+supported_games = ["BL1E"]
+coop_support = "Incompatible"
+auto_enable = true

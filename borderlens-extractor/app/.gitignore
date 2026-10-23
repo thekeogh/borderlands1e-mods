@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.data/
+.test-data/
+playwright-report/
+test-results/
+.env
+*.log
+postman/*.ndjson
+postman/*.err

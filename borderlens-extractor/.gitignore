@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+/temp/*
+!/temp/README.md
+!/temp/imports/
+/temp/imports/*
+!/temp/imports/.gitkeep
+!/temp/tests/
+/temp/tests/*
+!/temp/tests/.gitkeep

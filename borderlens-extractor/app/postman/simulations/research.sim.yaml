@@ -1,0 +1,5 @@
+simulation: borderlens-research
+routing: path
+mocks:
+  - routeKey: research
+    path: ../mocks/research/config.yaml
