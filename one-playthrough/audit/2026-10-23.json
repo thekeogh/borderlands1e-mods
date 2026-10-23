@@ -1,0 +1,1055 @@
+{
+  "date": "2026-10-23",
+  "captures": [
+    {
+      "file": "borderlens-20261023-150958-597989.zip",
+      "sha256": "06294f3a056027d69443dbf5f8aeaa8ae2bd71a983cae92cb47b8b279bffc5f3",
+      "extractor_version": "0.1.0"
+    },
+    {
+      "file": "borderlens-20261023-153827-931444.zip",
+      "sha256": "e81efe3c5f8045fb7373eda5be545bdefe617fbaaf65b01b658d45edff5387bf",
+      "extractor_version": "0.2.0"
+    }
+  ],
+  "scope": "Union of loaded/candidate-package definitions from two captures, not a complete set of all maps, scripts or DLC actors.",
+  "mission_definitions": 218,
+  "unique_reward_balances": 74,
+  "reward_classes": {
+    "native progression SDU": 4,
+    "native non-levelled reward": 2,
+    "equipment": 68
+  },
+  "rewards": [
+    {
+      "balance": "dlc1_gd_itemgrades.StorageDeckUpgrades.dlc1_ItemGrade_SDU_InventorySlots",
+      "chain": [
+        "dlc1_gd_itemgrades.StorageDeckUpgrades.dlc1_ItemGrade_SDU_InventorySlots"
+      ],
+      "inventory_definition": "gd_tunercuffs.A_Item.Item_GrenadeModulator",
+      "manufacturer_source": "dlc1_gd_itemgrades.StorageDeckUpgrades.dlc1_ItemGrade_SDU_InventorySlots",
+      "classification": "native progression SDU"
+    },
+    {
+      "balance": "dlc2_gd_items.ItemGrades_SkillPoints.ItemGrade_SkillPointIncrease",
+      "chain": [
+        "dlc2_gd_items.ItemGrades_SkillPoints.ItemGrade_SkillPointIncrease"
+      ],
+      "inventory_definition": "dlc2_gd_items.INV_SkillPoints.Item_SkillPointReward",
+      "manufacturer_source": "dlc2_gd_items.ItemGrades_SkillPoints.ItemGrade_SkillPointIncrease",
+      "classification": "native non-levelled reward"
+    },
+    {
+      "balance": "dlc3_gd_customitems.Items.CustomItem_ClassMod_Marine",
+      "chain": [
+        "dlc3_gd_customitems.Items.CustomItem_ClassMod_Marine",
+        "gd_itemgrades.Gear.ItemGrade_Gear_ComDeck_Roland"
+      ],
+      "inventory_definition": "gd_CommandDecks.A_Item.Item_CommandDeck_Roland",
+      "manufacturer_source": "dlc3_gd_customitems.Items.CustomItem_ClassMod_Marine",
+      "classification": "equipment"
+    },
+    {
+      "balance": "dlc3_gd_customitems.Items.CustomItem_ClassMod_Ogre",
+      "chain": [
+        "dlc3_gd_customitems.Items.CustomItem_ClassMod_Ogre",
+        "gd_itemgrades.Gear.ItemGrade_Gear_ComDeck_Brick"
+      ],
+      "inventory_definition": "gd_CommandDecks.A_Item.Item_CommandDeck_Brick",
+      "manufacturer_source": "dlc3_gd_customitems.Items.CustomItem_ClassMod_Ogre",
+      "classification": "equipment"
+    },
+    {
+      "balance": "dlc3_gd_customitems.Items.CustomItem_ClassMod_Specter",
+      "chain": [
+        "dlc3_gd_customitems.Items.CustomItem_ClassMod_Specter",
+        "gd_itemgrades.Gear.ItemGrade_Gear_ComDeck_Lilith"
+      ],
+      "inventory_definition": "gd_CommandDecks.A_Item.Item_CommandDeck_Lilith",
+      "manufacturer_source": "dlc3_gd_customitems.Items.CustomItem_ClassMod_Specter",
+      "classification": "equipment"
+    },
+    {
+      "balance": "dlc3_gd_customitems.Items.CustomItem_ClassMod_Truxican",
+      "chain": [
+        "dlc3_gd_customitems.Items.CustomItem_ClassMod_Truxican",
+        "gd_itemgrades.Gear.ItemGrade_Gear_ComDeck_Mordecai"
+      ],
+      "inventory_definition": "gd_CommandDecks.A_Item.Item_CommandDeck_Mordecai",
+      "manufacturer_source": "dlc3_gd_customitems.Items.CustomItem_ClassMod_Truxican",
+      "classification": "equipment"
+    },
+    {
+      "balance": "dlc3_gd_customweapons.Eridan_Weapons.CustomWeap_Eridan_RifleGun",
+      "chain": [
+        "dlc3_gd_customweapons.Eridan_Weapons.CustomWeap_Eridan_RifleGun",
+        "gd_itemgrades.Weapons_Eridan.ItemGrade_Eridan_Sniper_Railgun"
+      ],
+      "inventory_definition": "dlc3_gd_weap_UniqueParts.EridanRifle.WeaponType_Eridan_Elementalgun",
+      "manufacturer_source": "dlc3_gd_customweapons.Eridan_Weapons.CustomWeap_Eridan_RifleGun",
+      "classification": "equipment"
+    },
+    {
+      "balance": "dlc3_gd_customweapons.Unique_Weapons.CustomWeap_Repeater_AthenasWisdom",
+      "chain": [
+        "dlc3_gd_customweapons.Unique_Weapons.CustomWeap_Repeater_AthenasWisdom",
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_RepeaterPistol"
+      ],
+      "inventory_definition": "gd_weap_repeater_pistol.A_Weapon.WeaponType_repeater_pistol",
+      "manufacturer_source": "dlc3_gd_customweapons.Unique_Weapons.CustomWeap_Repeater_AthenasWisdom",
+      "classification": "equipment"
+    },
+    {
+      "balance": "dlc3_gd_customweapons.Unique_Weapons.CustomWeap_Repeater_ChiquitoAmigo",
+      "chain": [
+        "dlc3_gd_customweapons.Unique_Weapons.CustomWeap_Repeater_ChiquitoAmigo",
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_RepeaterPistol"
+      ],
+      "inventory_definition": "gd_weap_repeater_pistol.A_Weapon.WeaponType_repeater_pistol",
+      "manufacturer_source": "dlc3_gd_customweapons.Unique_Weapons.CustomWeap_Repeater_ChiquitoAmigo",
+      "classification": "equipment"
+    },
+    {
+      "balance": "dlc4_gd_items.ItemGrades_SkillPoints.ItemGrade_SkillPointIncrease",
+      "chain": [
+        "dlc4_gd_items.ItemGrades_SkillPoints.ItemGrade_SkillPointIncrease"
+      ],
+      "inventory_definition": "dlc4_gd_items.INV_SkillPoints.Item_SkillPointReward",
+      "manufacturer_source": "dlc4_gd_items.ItemGrades_SkillPoints.ItemGrade_SkillPointIncrease",
+      "classification": "native non-levelled reward"
+    },
+    {
+      "balance": "DLC4_Itemgrades.StorageDeckUpgrades.ItemGrade_SDU_InventorySlots",
+      "chain": [
+        "DLC4_Itemgrades.StorageDeckUpgrades.ItemGrade_SDU_InventorySlots"
+      ],
+      "inventory_definition": "gd_StorageDeckUpgrade.INV_InventorySpace.INV_InventorySpace",
+      "manufacturer_source": "DLC4_Itemgrades.StorageDeckUpgrades.ItemGrade_SDU_InventorySlots",
+      "classification": "native progression SDU"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_Elemental_Brick_Corrosive",
+      "chain": [
+        "gd_customitems.Items.CustomItem_Elemental_Brick_Corrosive",
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Brick"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Brick",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Brick",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_Elemental_Brick_Explosive",
+      "chain": [
+        "gd_customitems.Items.CustomItem_Elemental_Brick_Explosive",
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Brick"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Brick",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Brick",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_Elemental_Brick_Incendiary",
+      "chain": [
+        "gd_customitems.Items.CustomItem_Elemental_Brick_Incendiary",
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Brick"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Brick",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Brick",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_Elemental_Brick_Shock",
+      "chain": [
+        "gd_customitems.Items.CustomItem_Elemental_Brick_Shock",
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Brick"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Brick",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Brick",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_Elemental_Lilith_Corrosive",
+      "chain": [
+        "gd_customitems.Items.CustomItem_Elemental_Lilith_Corrosive",
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Lilith"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Lilith",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Lilith",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_Elemental_Lilith_Explosive",
+      "chain": [
+        "gd_customitems.Items.CustomItem_Elemental_Lilith_Explosive",
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Lilith"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Lilith",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Lilith",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_Elemental_Lilith_Incendiary",
+      "chain": [
+        "gd_customitems.Items.CustomItem_Elemental_Lilith_Incendiary",
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Lilith"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Lilith",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Lilith",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_Elemental_Lilith_Shock",
+      "chain": [
+        "gd_customitems.Items.CustomItem_Elemental_Lilith_Shock",
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Lilith"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Lilith",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Lilith",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_Elemental_Mordecai_Corrosive",
+      "chain": [
+        "gd_customitems.Items.CustomItem_Elemental_Mordecai_Corrosive",
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Mordecai"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Mordecai",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Mordecai",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_Elemental_Mordecai_Explosive",
+      "chain": [
+        "gd_customitems.Items.CustomItem_Elemental_Mordecai_Explosive",
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Mordecai"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Mordecai",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Mordecai",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_Elemental_Mordecai_Incendiary",
+      "chain": [
+        "gd_customitems.Items.CustomItem_Elemental_Mordecai_Incendiary",
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Mordecai"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Mordecai",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Mordecai",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_Elemental_Mordecai_Shock",
+      "chain": [
+        "gd_customitems.Items.CustomItem_Elemental_Mordecai_Shock",
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Mordecai"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Mordecai",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Mordecai",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_Elemental_Roland_Corrosive",
+      "chain": [
+        "gd_customitems.Items.CustomItem_Elemental_Roland_Corrosive",
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Roland"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Roland",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Roland",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_Elemental_Roland_Explosive",
+      "chain": [
+        "gd_customitems.Items.CustomItem_Elemental_Roland_Explosive",
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Roland"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Roland",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Roland",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_Elemental_Roland_Incendiary",
+      "chain": [
+        "gd_customitems.Items.CustomItem_Elemental_Roland_Incendiary",
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Roland"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Roland",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Roland",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_Elemental_Roland_Shock",
+      "chain": [
+        "gd_customitems.Items.CustomItem_Elemental_Roland_Shock",
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Roland"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Roland",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Roland",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_reward_shield",
+      "chain": [
+        "gd_customitems.Items.CustomItem_reward_shield",
+        "gd_itemgrades.Gear.ItemGrade_Gear_Shield"
+      ],
+      "inventory_definition": "gd_shields.A_Item.Item_Shield",
+      "manufacturer_source": "gd_itemgrades.Gear.ItemGrade_Gear_Shield",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_StarterGear_ComDeck_Brick",
+      "chain": [
+        "gd_customitems.Items.CustomItem_StarterGear_ComDeck_Brick"
+      ],
+      "inventory_definition": "gd_CommandDecks.A_Item.Item_CommandDeck_Brick",
+      "manufacturer_source": "gd_customitems.Items.CustomItem_StarterGear_ComDeck_Brick",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_StarterGear_ComDeck_Lilith",
+      "chain": [
+        "gd_customitems.Items.CustomItem_StarterGear_ComDeck_Lilith"
+      ],
+      "inventory_definition": "gd_CommandDecks.A_Item.Item_CommandDeck_Lilith",
+      "manufacturer_source": "gd_customitems.Items.CustomItem_StarterGear_ComDeck_Lilith",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_StarterGear_ComDeck_Mordecai",
+      "chain": [
+        "gd_customitems.Items.CustomItem_StarterGear_ComDeck_Mordecai"
+      ],
+      "inventory_definition": "gd_CommandDecks.A_Item.Item_CommandDeck_Mordecai",
+      "manufacturer_source": "gd_customitems.Items.CustomItem_StarterGear_ComDeck_Mordecai",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_StarterGear_ComDeck_Roland",
+      "chain": [
+        "gd_customitems.Items.CustomItem_StarterGear_ComDeck_Roland"
+      ],
+      "inventory_definition": "gd_CommandDecks.A_Item.Item_CommandDeck_Roland",
+      "manufacturer_source": "gd_customitems.Items.CustomItem_StarterGear_ComDeck_Roland",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customitems.Items.CustomItem_StarterGear_GrenadeMOD_MIRV",
+      "chain": [
+        "gd_customitems.Items.CustomItem_StarterGear_GrenadeMOD_MIRV"
+      ],
+      "inventory_definition": "gd_tunercuffs.A_Item.Item_GrenadeModulator",
+      "manufacturer_source": "gd_customitems.Items.CustomItem_StarterGear_GrenadeMOD_MIRV",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.GBX_Weapons.CustomWeap_Gearbox_Launcher_Rocket",
+      "chain": [
+        "gd_customweapons.GBX_Weapons.CustomWeap_Gearbox_Launcher_Rocket"
+      ],
+      "inventory_definition": "gd_weap_rocket_launcher.A_Weapon.WeaponType_rocket_launcher",
+      "manufacturer_source": "gd_customweapons.GBX_Weapons.CustomWeap_Gearbox_Launcher_Rocket",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.GBX_Weapons.CustomWeap_Gearbox_MachinePistol",
+      "chain": [
+        "gd_customweapons.GBX_Weapons.CustomWeap_Gearbox_MachinePistol"
+      ],
+      "inventory_definition": "gd_weap_machine_pistol.A_Weapon.WeaponType_machine_pistol",
+      "manufacturer_source": "gd_customweapons.GBX_Weapons.CustomWeap_Gearbox_MachinePistol",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.GBX_Weapons.CustomWeap_Gearbox_SMG",
+      "chain": [
+        "gd_customweapons.GBX_Weapons.CustomWeap_Gearbox_SMG"
+      ],
+      "inventory_definition": "gd_weap_patrol_smg.A_Weapon.WeaponType_patrol_smg",
+      "manufacturer_source": "gd_customweapons.GBX_Weapons.CustomWeap_Gearbox_SMG",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.GBX_Weapons.CustomWeap_Gearbox_SniperRifle",
+      "chain": [
+        "gd_customweapons.GBX_Weapons.CustomWeap_Gearbox_SniperRifle"
+      ],
+      "inventory_definition": "gd_weap_sniper_rifle.A_Weapon.WeaponType_sniper_rifle",
+      "manufacturer_source": "gd_customweapons.GBX_Weapons.CustomWeap_Gearbox_SniperRifle",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.GBX_Weapons.CustomWeap_Gearbox_SupportMachineGun",
+      "chain": [
+        "gd_customweapons.GBX_Weapons.CustomWeap_Gearbox_SupportMachineGun"
+      ],
+      "inventory_definition": "gd_weap_support_machinegun.A_Weapon.WeaponType_support_machinegun",
+      "manufacturer_source": "gd_customweapons.GBX_Weapons.CustomWeap_Gearbox_SupportMachineGun",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Retail_Weapons.CustomWeap_CombatRifle_Sentinel",
+      "chain": [
+        "gd_customweapons.Retail_Weapons.CustomWeap_CombatRifle_Sentinel"
+      ],
+      "inventory_definition": "gd_weap_combat_rifle.A_Weapon.WeaponType_combat_rifle",
+      "manufacturer_source": "gd_customweapons.Retail_Weapons.CustomWeap_CombatRifle_Sentinel",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Retail_Weapons.CustomWeap_CombatShotgun_Blister",
+      "chain": [
+        "gd_customweapons.Retail_Weapons.CustomWeap_CombatShotgun_Blister"
+      ],
+      "inventory_definition": "gd_weap_combat_shotgun.A_Weapon.WeaponType_combat_shotgun",
+      "manufacturer_source": "gd_customweapons.Retail_Weapons.CustomWeap_CombatShotgun_Blister",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Retail_Weapons.CustomWeap_repeater_TheDove",
+      "chain": [
+        "gd_customweapons.Retail_Weapons.CustomWeap_repeater_TheDove"
+      ],
+      "inventory_definition": "gd_weap_repeater_pistol.A_Weapon.WeaponType_repeater_pistol",
+      "manufacturer_source": "gd_customweapons.Retail_Weapons.CustomWeap_repeater_TheDove",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Retail_Weapons.CustomWeap_Revolver_Patton",
+      "chain": [
+        "gd_customweapons.Retail_Weapons.CustomWeap_Revolver_Patton"
+      ],
+      "inventory_definition": "gd_weap_revolver_pistol.A_Weapon.WeaponType_revolver_pistol",
+      "manufacturer_source": "gd_customweapons.Retail_Weapons.CustomWeap_Revolver_Patton",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Retail_Weapons.CustomWeap_RocketLauncher_Leviathan",
+      "chain": [
+        "gd_customweapons.Retail_Weapons.CustomWeap_RocketLauncher_Leviathan"
+      ],
+      "inventory_definition": "gd_weap_rocket_launcher.A_Weapon.WeaponType_rocket_launcher",
+      "manufacturer_source": "gd_customweapons.Retail_Weapons.CustomWeap_RocketLauncher_Leviathan",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Retail_Weapons.CustomWeap_SMG_TheSpy",
+      "chain": [
+        "gd_customweapons.Retail_Weapons.CustomWeap_SMG_TheSpy"
+      ],
+      "inventory_definition": "gd_weap_patrol_smg.A_Weapon.WeaponType_patrol_smg",
+      "manufacturer_source": "gd_customweapons.Retail_Weapons.CustomWeap_SMG_TheSpy",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Retail_Weapons.CustomWeap_Sniper_Nailer",
+      "chain": [
+        "gd_customweapons.Retail_Weapons.CustomWeap_Sniper_Nailer"
+      ],
+      "inventory_definition": "gd_weap_sniper_rifle_semiauto.A_Weapon.WeaponType_sniper_rifle_semiauto",
+      "manufacturer_source": "gd_customweapons.Retail_Weapons.CustomWeap_Sniper_Nailer",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Reward_Weapons.CustomWeap_reward_AssaultShotgun",
+      "chain": [
+        "gd_customweapons.Reward_Weapons.CustomWeap_reward_AssaultShotgun",
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_AssaultShotgun"
+      ],
+      "inventory_definition": "gd_weap_assault_shotgun.A_Weapon.WeaponType_assault_shotgun",
+      "manufacturer_source": "gd_itemgrades.Weapons.ItemGrade_Weapon_AssaultShotgun",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Reward_Weapons.CustomWeap_reward_CombatRifle",
+      "chain": [
+        "gd_customweapons.Reward_Weapons.CustomWeap_reward_CombatRifle",
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_CombatRifle"
+      ],
+      "inventory_definition": "gd_weap_combat_rifle.A_Weapon.WeaponType_combat_rifle",
+      "manufacturer_source": "gd_itemgrades.Weapons.ItemGrade_Weapon_CombatRifle",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Reward_Weapons.CustomWeap_reward_CombatShotgun",
+      "chain": [
+        "gd_customweapons.Reward_Weapons.CustomWeap_reward_CombatShotgun",
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_CombatShotgun"
+      ],
+      "inventory_definition": "gd_weap_combat_shotgun.A_Weapon.WeaponType_combat_shotgun",
+      "manufacturer_source": "gd_itemgrades.Weapons.ItemGrade_Weapon_CombatShotgun",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Reward_Weapons.CustomWeap_reward_Launcher_Rocket",
+      "chain": [
+        "gd_customweapons.Reward_Weapons.CustomWeap_reward_Launcher_Rocket",
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_Launcher_Rocket"
+      ],
+      "inventory_definition": "gd_weap_rocket_launcher.A_Weapon.WeaponType_rocket_launcher",
+      "manufacturer_source": "gd_itemgrades.Weapons.ItemGrade_Weapon_Launcher_Rocket",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Reward_Weapons.CustomWeap_reward_MachinePistol",
+      "chain": [
+        "gd_customweapons.Reward_Weapons.CustomWeap_reward_MachinePistol",
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_MachinePistol"
+      ],
+      "inventory_definition": "gd_weap_machine_pistol.A_Weapon.WeaponType_machine_pistol",
+      "manufacturer_source": "gd_itemgrades.Weapons.ItemGrade_Weapon_MachinePistol",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Reward_Weapons.CustomWeap_reward_PatrolSMG",
+      "chain": [
+        "gd_customweapons.Reward_Weapons.CustomWeap_reward_PatrolSMG",
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_PatrolSMG"
+      ],
+      "inventory_definition": "gd_weap_patrol_smg.A_Weapon.WeaponType_patrol_smg",
+      "manufacturer_source": "gd_itemgrades.Weapons.ItemGrade_Weapon_PatrolSMG",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Reward_Weapons.CustomWeap_reward_RepeaterPistol",
+      "chain": [
+        "gd_customweapons.Reward_Weapons.CustomWeap_reward_RepeaterPistol",
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_RepeaterPistol"
+      ],
+      "inventory_definition": "gd_weap_repeater_pistol.A_Weapon.WeaponType_repeater_pistol",
+      "manufacturer_source": "gd_itemgrades.Weapons.ItemGrade_Weapon_RepeaterPistol",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Reward_Weapons.CustomWeap_reward_RevolverPistol",
+      "chain": [
+        "gd_customweapons.Reward_Weapons.CustomWeap_reward_RevolverPistol",
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_RevolverPistol"
+      ],
+      "inventory_definition": "gd_weap_revolver_pistol.A_Weapon.WeaponType_revolver_pistol",
+      "manufacturer_source": "gd_itemgrades.Weapons.ItemGrade_Weapon_RevolverPistol",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Reward_Weapons.CustomWeap_reward_SemiAutoSniperRifle",
+      "chain": [
+        "gd_customweapons.Reward_Weapons.CustomWeap_reward_SemiAutoSniperRifle",
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_SemiAutoSniperRifle"
+      ],
+      "inventory_definition": "gd_weap_sniper_rifle_semiauto.A_Weapon.WeaponType_sniper_rifle_semiauto",
+      "manufacturer_source": "gd_customweapons.Reward_Weapons.CustomWeap_reward_SemiAutoSniperRifle",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Reward_Weapons.CustomWeap_reward_SniperRifle",
+      "chain": [
+        "gd_customweapons.Reward_Weapons.CustomWeap_reward_SniperRifle",
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_SniperRifle"
+      ],
+      "inventory_definition": "gd_weap_sniper_rifle.A_Weapon.WeaponType_sniper_rifle",
+      "manufacturer_source": "gd_itemgrades.Weapons.ItemGrade_Weapon_SniperRifle",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Reward_Weapons.CustomWeap_reward_SupportMachineGun",
+      "chain": [
+        "gd_customweapons.Reward_Weapons.CustomWeap_reward_SupportMachineGun",
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_SupportMachineGun"
+      ],
+      "inventory_definition": "gd_weap_support_machinegun.A_Weapon.WeaponType_support_machinegun",
+      "manufacturer_source": "gd_itemgrades.Weapons.ItemGrade_Weapon_SupportMachineGun",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Weapons.CustomWeap_CombatShotgun_TKsWave",
+      "chain": [
+        "gd_customweapons.Weapons.CustomWeap_CombatShotgun_TKsWave"
+      ],
+      "inventory_definition": "gd_weap_combat_shotgun.A_Weapon.WeaponType_combat_shotgun",
+      "manufacturer_source": "gd_customweapons.Weapons.CustomWeap_CombatShotgun_TKsWave",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_customweapons.Weapons.CustomWeap_Sniper_ShepsElephantGun",
+      "chain": [
+        "gd_customweapons.Weapons.CustomWeap_Sniper_ShepsElephantGun"
+      ],
+      "inventory_definition": "gd_weap_sniper_rifle.A_Weapon.WeaponType_sniper_rifle",
+      "manufacturer_source": "gd_customweapons.Weapons.CustomWeap_Sniper_ShepsElephantGun",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Brick",
+      "chain": [
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Brick"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Brick",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Brick",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Lilith",
+      "chain": [
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Lilith"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Lilith",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Lilith",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Mordecai",
+      "chain": [
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Mordecai"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Mordecai",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Mordecai",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Roland",
+      "chain": [
+        "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Roland"
+      ],
+      "inventory_definition": "gd_ElementalUpgrade.A_Item.ElementalArtifact_Roland",
+      "manufacturer_source": "gd_itemgrades.ElementalUpgrades.ItemGrade_Elemental_Roland",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_itemgrades.Gear.ItemGrade_Gear_ComDeck_Brick",
+      "chain": [
+        "gd_itemgrades.Gear.ItemGrade_Gear_ComDeck_Brick"
+      ],
+      "inventory_definition": "gd_CommandDecks.A_Item.Item_CommandDeck_Brick",
+      "manufacturer_source": "gd_itemgrades.Gear.ItemGrade_Gear_ComDeck_Brick",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_itemgrades.Gear.ItemGrade_Gear_ComDeck_Lilith",
+      "chain": [
+        "gd_itemgrades.Gear.ItemGrade_Gear_ComDeck_Lilith"
+      ],
+      "inventory_definition": "gd_CommandDecks.A_Item.Item_CommandDeck_Lilith",
+      "manufacturer_source": "gd_itemgrades.Gear.ItemGrade_Gear_ComDeck_Lilith",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_itemgrades.Gear.ItemGrade_Gear_ComDeck_Mordecai",
+      "chain": [
+        "gd_itemgrades.Gear.ItemGrade_Gear_ComDeck_Mordecai"
+      ],
+      "inventory_definition": "gd_CommandDecks.A_Item.Item_CommandDeck_Mordecai",
+      "manufacturer_source": "gd_itemgrades.Gear.ItemGrade_Gear_ComDeck_Mordecai",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_itemgrades.Gear.ItemGrade_Gear_ComDeck_Roland",
+      "chain": [
+        "gd_itemgrades.Gear.ItemGrade_Gear_ComDeck_Roland"
+      ],
+      "inventory_definition": "gd_CommandDecks.A_Item.Item_CommandDeck_Roland",
+      "manufacturer_source": "gd_itemgrades.Gear.ItemGrade_Gear_ComDeck_Roland",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_itemgrades.Gear.ItemGrade_Gear_GrenadeMODs",
+      "chain": [
+        "gd_itemgrades.Gear.ItemGrade_Gear_GrenadeMODs"
+      ],
+      "inventory_definition": "gd_tunercuffs.A_Item.Item_GrenadeModulator",
+      "manufacturer_source": "gd_itemgrades.Gear.ItemGrade_Gear_GrenadeMODs",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_itemgrades.Gear.ItemGrade_Gear_Shield",
+      "chain": [
+        "gd_itemgrades.Gear.ItemGrade_Gear_Shield"
+      ],
+      "inventory_definition": "gd_shields.A_Item.Item_Shield",
+      "manufacturer_source": "gd_itemgrades.Gear.ItemGrade_Gear_Shield",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_itemgrades.StorageDeckUpgrades.ItemGrade_SDU_EquipSlot_Weapon",
+      "chain": [
+        "gd_itemgrades.StorageDeckUpgrades.ItemGrade_SDU_EquipSlot_Weapon"
+      ],
+      "inventory_definition": "gd_shields.A_Item.Item_Shield",
+      "manufacturer_source": "gd_itemgrades.StorageDeckUpgrades.ItemGrade_SDU_EquipSlot_Weapon",
+      "classification": "native progression SDU"
+    },
+    {
+      "balance": "gd_itemgrades.StorageDeckUpgrades.ItemGrade_SDU_InventorySlots",
+      "chain": [
+        "gd_itemgrades.StorageDeckUpgrades.ItemGrade_SDU_InventorySlots"
+      ],
+      "inventory_definition": "gd_tunercuffs.A_Item.Item_GrenadeModulator",
+      "manufacturer_source": "gd_itemgrades.StorageDeckUpgrades.ItemGrade_SDU_InventorySlots",
+      "classification": "native progression SDU"
+    },
+    {
+      "balance": "gd_itemgrades.Weapons.ItemGrade_Weapon_CombatRifle",
+      "chain": [
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_CombatRifle"
+      ],
+      "inventory_definition": "gd_weap_combat_rifle.A_Weapon.WeaponType_combat_rifle",
+      "manufacturer_source": "gd_itemgrades.Weapons.ItemGrade_Weapon_CombatRifle",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_itemgrades.Weapons.ItemGrade_Weapon_CombatShotgun",
+      "chain": [
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_CombatShotgun"
+      ],
+      "inventory_definition": "gd_weap_combat_shotgun.A_Weapon.WeaponType_combat_shotgun",
+      "manufacturer_source": "gd_itemgrades.Weapons.ItemGrade_Weapon_CombatShotgun",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_itemgrades.Weapons.ItemGrade_Weapon_PatrolSMG",
+      "chain": [
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_PatrolSMG"
+      ],
+      "inventory_definition": "gd_weap_patrol_smg.A_Weapon.WeaponType_patrol_smg",
+      "manufacturer_source": "gd_itemgrades.Weapons.ItemGrade_Weapon_PatrolSMG",
+      "classification": "equipment"
+    },
+    {
+      "balance": "gd_itemgrades.Weapons.ItemGrade_Weapon_SniperRifle",
+      "chain": [
+        "gd_itemgrades.Weapons.ItemGrade_Weapon_SniperRifle"
+      ],
+      "inventory_definition": "gd_weap_sniper_rifle.A_Weapon.WeaponType_sniper_rifle",
+      "manufacturer_source": "gd_itemgrades.Weapons.ItemGrade_Weapon_SniperRifle",
+      "classification": "equipment"
+    }
+  ],
+  "first_playthrough_regions": [
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_gamestages_vs.Regions.ArenaRegionDef",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Arid.Arid_Firestone",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Arid.Arid_Firestone_LocalEnemies",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Arid.Arid_SkagGully",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Arid.Arid_SkagProvingGrounds",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Arid.Arid_SkagWarrens",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Arid.Arid__A",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Arid.Arid__A_Difficult",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Arid.Arid__B",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Arid.Arid__B_Difficult",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Arid.Arid__C",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Arid.Arid__C_Difficult",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Arid.Arid_Bunker",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Arid.Arid_Cave",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Arid.Arid_Mines",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Headlands.Headlands__A",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Headlands.Headlands__A_Difficult",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Headlands.Headlands__B",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap_NewHaven",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap_NewHaven_LocalEnemies",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap__A",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap__A_Difficult",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap__B",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap__B_Difficult",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap__C",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap__C_Difficult",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap_TrashCave",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap_Scrapyard",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap_PirateBay",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap_Canyon",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap_Canyon_Narrows",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap_TrashCoast",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap_TrashCoast_Plateau",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap_TrashCoast_Vents",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.scrap_oldhaven",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.scrap.Scrap_NewHaven_B",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Thor.Thor__A",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Thor.Thor__A_Difficult",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Thor.Thor_Crimson_Fastness",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Thor.Thor_Crimson_Enclave",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Thor.Thor_TheDescent",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Thor.Thor_Promontory",
+      "dynamic": false
+    },
+    {
+      "globals": "gd_globals.General.Globals",
+      "region": "gd_GameStages.Thor.Thor_TheVault",
+      "dynamic": false
+    },
+    {
+      "globals": "dlc1_packagedefinition.CustomGlobals",
+      "region": "dlc1_packagedefinition.DLC1.DLC1_Jakobs_Cove",
+      "dynamic": false
+    },
+    {
+      "globals": "dlc1_packagedefinition.CustomGlobals",
+      "region": "dlc1_packagedefinition.DLC1.DLC1_Jakobs_Cove_VendingMachine",
+      "dynamic": false
+    },
+    {
+      "globals": "dlc1_packagedefinition.CustomGlobals",
+      "region": "dlc1_packagedefinition.DLC1.DLC1_Monster_Haven",
+      "dynamic": false
+    },
+    {
+      "globals": "dlc1_packagedefinition.CustomGlobals",
+      "region": "dlc1_packagedefinition.DLC1.DLC1_Mill",
+      "dynamic": false
+    },
+    {
+      "globals": "dlc1_packagedefinition.CustomGlobals",
+      "region": "dlc1_packagedefinition.DLC1.DLC1_Chest_Jakobs",
+      "dynamic": false
+    },
+    {
+      "globals": "dlc2_packagedefinition.CustomGlobals",
+      "region": "dlc2_packagedefinition.DLC2.DLC2_Colleseum",
+      "dynamic": true
+    },
+    {
+      "globals": "dlc2_packagedefinition.CustomGlobals",
+      "region": "dlc2_packagedefinition.DLC2.DLC2_Lobby",
+      "dynamic": false
+    },
+    {
+      "globals": "dlc3_packagedefinition.CustomGlobals",
+      "region": "dlc3_packagedefinition.DLC3.DLC3_Beginning",
+      "dynamic": false
+    },
+    {
+      "globals": "dlc3_packagedefinition.CustomGlobals",
+      "region": "dlc3_packagedefinition.DLC3.DLC3_Middle",
+      "dynamic": false
+    },
+    {
+      "globals": "dlc3_packagedefinition.CustomGlobals",
+      "region": "dlc3_packagedefinition.DLC3.DLC3_End",
+      "dynamic": false
+    },
+    {
+      "globals": "dlc3_packagedefinition.CustomGlobals",
+      "region": "dlc3_packagedefinition.DLC3.DLC3_Craw",
+      "dynamic": false
+    },
+    {
+      "globals": "dlc4_packagedefinition.CustomGlobals",
+      "region": "dlc4_packagedefinition.DLC4.DLC4_Beginning",
+      "dynamic": false
+    },
+    {
+      "globals": "dlc4_packagedefinition.CustomGlobals",
+      "region": "dlc4_packagedefinition.DLC4_Hyperion_Vendingmachines",
+      "dynamic": false
+    },
+    {
+      "globals": "dlc4_packagedefinition.CustomGlobals",
+      "region": "dlc4_packagedefinition.DLC4.DLC4_Middle",
+      "dynamic": false
+    },
+    {
+      "globals": "dlc4_packagedefinition.CustomGlobals",
+      "region": "dlc4_packagedefinition.DLC4.DLC4_End",
+      "dynamic": false
+    },
+    {
+      "globals": "dlc4_packagedefinition.CustomGlobals",
+      "region": "dlc4_packagedefinition.DLC4_Hyperion_Chests",
+      "dynamic": false
+    }
+  ],
+  "captured_enemy_level_formulas": {
+    "supported": 113
+  },
+  "changes": [
+    "Recognize native HumanoidEnemy allegiance while preserving friendly/player/neutral exclusions.",
+    "Recognize the captured mission-specific Moe balance as named; no ordinary RNG bonus.",
+    "Keep original area GameStage and grade bands when flooring named enemy levels.",
+    "Keep a higher default level on grade-less definitions when applying a rare roll.",
+    "Restore MinimumLevel alongside GameStage/ExpLevel during native mission-floor probes.",
+    "Replace deferred-death GetHealth calls with captured bIsDead/bPlayedDeath BoolProperties, excluding pending/deleted actors.",
+    "Remove resolved temporary Bone Head/Bone Shredder automatic diagnostic probes; retain general F10 initializer/drop counters."
+  ],
+  "unchanged": [
+    "Difficulty weights and player+1 ordinary minimum",
+    "Native named/boss offsets",
+    "Regional max(player, vanilla) rule",
+    "Equipment floor and accepted mission reward levels",
+    "Rarity, pools, probabilities, money and grenade damage",
+    "Save/quest progress"
+  ],
+  "limits": [
+    "No native Windows execution performed during this audit.",
+    "DLC2 dynamic regional resolver remains native; unknown formats remain native.",
+    "Only a default PopulationFactoryWillowAIPawn was captured; no speculative hook added.",
+    "Unsupported cinematic MapProperty fields do not establish item/loot behavior."
+  ],
+  "validation": {
+    "local_tests_passed": 236,
+    "sdkmod_sha256": "9e791eb8768146f6f03e14e11eebc4c9c08689cf9242669c1496c70d3f13ef9e",
+    "archive_integrity": "passed; source files match packaged bytes",
+    "native_gameplay": "Not executed in this audit; user in-game verification still required"
+  }
+}

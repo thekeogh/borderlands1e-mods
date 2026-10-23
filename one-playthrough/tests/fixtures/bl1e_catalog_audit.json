@@ -1,0 +1,711 @@
+{
+  "provenance": [
+    {
+      "file": "borderlens-20261023-150958-597989.zip",
+      "sha256": "06294f3a056027d69443dbf5f8aeaa8ae2bd71a983cae92cb47b8b279bffc5f3",
+      "extractor_version": "0.1.0",
+      "objects": 15097
+    },
+    {
+      "file": "borderlens-20261023-153827-931444.zip",
+      "sha256": "e81efe3c5f8045fb7373eda5be545bdefe617fbaaf65b01b658d45edff5387bf",
+      "extractor_version": "0.2.0",
+      "objects": 20508
+    }
+  ],
+  "note": "Raw captured fields only; tests model native calls separately. No complete-game coverage claim.",
+  "objects": [
+    {
+      "record_type": "object",
+      "path": "gd_Balance_SkillActors.Turret.Pawn_Balance_Scorpio_CrimsonLance",
+      "class": "WillowGame.AIPawnBalanceDefinition",
+      "properties": {
+        "AIPawnArchetype": {
+          "$ref": "gd_AutomatedTurret.PawnArchetype.Pawn_AutomatedTurret_Scorpio_CrimsonLance",
+          "class": "WillowGame.WillowAIPawn"
+        },
+        "DefaultExpLevel": {
+          "$type": "struct",
+          "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+          "fields": {
+            "BaseValueConstant": 0.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": null,
+            "BaseValueScaleConstant": 1.0
+          }
+        },
+        "Grades": {
+          "$type": "array",
+          "length": 5,
+          "items": [
+            {
+              "$type": "struct",
+              "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGameStageGradeWeightData",
+              "fields": {
+                "GradeModifiers": {
+                  "$type": "struct",
+                  "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGradeModifierData",
+                  "fields": {
+                    "CustomAIPawnArchetype": null,
+                    "DisplayName": "Scorpio",
+                    "ExpLevel": 0,
+                    "OnSpawnCustomizations": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "AttributeStartingValues": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "CustomItemPoolList": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    }
+                  }
+                },
+                "GameStageRequirement": {
+                  "$type": "struct",
+                  "struct": "Engine.BaseBalanceDefinition:GameStageRangeData",
+                  "fields": {
+                    "MinGameStage": 1,
+                    "MaxGameStage": 100
+                  }
+                },
+                "MinSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 1.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 1.0
+                  }
+                },
+                "MaxSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 1.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 1.0
+                  }
+                }
+              }
+            },
+            {
+              "$type": "struct",
+              "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGameStageGradeWeightData",
+              "fields": {
+                "GradeModifiers": {
+                  "$type": "struct",
+                  "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGradeModifierData",
+                  "fields": {
+                    "CustomAIPawnArchetype": null,
+                    "DisplayName": "Scorpio",
+                    "ExpLevel": 0,
+                    "OnSpawnCustomizations": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "AttributeStartingValues": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "CustomItemPoolList": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    }
+                  }
+                },
+                "GameStageRequirement": {
+                  "$type": "struct",
+                  "struct": "Engine.BaseBalanceDefinition:GameStageRangeData",
+                  "fields": {
+                    "MinGameStage": 0,
+                    "MaxGameStage": 0
+                  }
+                },
+                "MinSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 0.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 0.0
+                  }
+                },
+                "MaxSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 0.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 0.0
+                  }
+                }
+              }
+            },
+            {
+              "$type": "struct",
+              "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGameStageGradeWeightData",
+              "fields": {
+                "GradeModifiers": {
+                  "$type": "struct",
+                  "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGradeModifierData",
+                  "fields": {
+                    "CustomAIPawnArchetype": null,
+                    "DisplayName": "Scorpio",
+                    "ExpLevel": 0,
+                    "OnSpawnCustomizations": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "AttributeStartingValues": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "CustomItemPoolList": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    }
+                  }
+                },
+                "GameStageRequirement": {
+                  "$type": "struct",
+                  "struct": "Engine.BaseBalanceDefinition:GameStageRangeData",
+                  "fields": {
+                    "MinGameStage": 0,
+                    "MaxGameStage": 0
+                  }
+                },
+                "MinSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 0.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 0.0
+                  }
+                },
+                "MaxSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 0.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 0.0
+                  }
+                }
+              }
+            },
+            {
+              "$type": "struct",
+              "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGameStageGradeWeightData",
+              "fields": {
+                "GradeModifiers": {
+                  "$type": "struct",
+                  "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGradeModifierData",
+                  "fields": {
+                    "CustomAIPawnArchetype": null,
+                    "DisplayName": "Scorpio",
+                    "ExpLevel": 0,
+                    "OnSpawnCustomizations": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "AttributeStartingValues": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "CustomItemPoolList": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    }
+                  }
+                },
+                "GameStageRequirement": {
+                  "$type": "struct",
+                  "struct": "Engine.BaseBalanceDefinition:GameStageRangeData",
+                  "fields": {
+                    "MinGameStage": 0,
+                    "MaxGameStage": 0
+                  }
+                },
+                "MinSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 0.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 0.0
+                  }
+                },
+                "MaxSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 0.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 0.0
+                  }
+                }
+              }
+            },
+            {
+              "$type": "struct",
+              "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGameStageGradeWeightData",
+              "fields": {
+                "GradeModifiers": {
+                  "$type": "struct",
+                  "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGradeModifierData",
+                  "fields": {
+                    "CustomAIPawnArchetype": null,
+                    "DisplayName": "Scorpio",
+                    "ExpLevel": 0,
+                    "OnSpawnCustomizations": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "AttributeStartingValues": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "CustomItemPoolList": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    }
+                  }
+                },
+                "GameStageRequirement": {
+                  "$type": "struct",
+                  "struct": "Engine.BaseBalanceDefinition:GameStageRangeData",
+                  "fields": {
+                    "MinGameStage": 0,
+                    "MaxGameStage": 0
+                  }
+                },
+                "MinSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 0.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 0.0
+                  }
+                },
+                "MaxSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 0.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 0.0
+                  }
+                }
+              }
+            }
+          ],
+          "truncated": false
+        }
+      }
+    },
+    {
+      "record_type": "archetype_binding",
+      "path": "gd_AutomatedTurret.PawnArchetype.Pawn_AutomatedTurret_Scorpio_CrimsonLance",
+      "class": "WillowGame.WillowAIPawn",
+      "properties": {
+        "Allegiance": {
+          "$ref": "gd_allegiance.HumanoidEnemy.BanditAllegiance",
+          "class": "Engine.PawnAllegiance"
+        }
+      }
+    },
+    {
+      "record_type": "archetype_binding",
+      "path": "gd_AutomatedTurret.PawnArchetype.Pawn_AutomatedTurret_Scorpio",
+      "class": "WillowGame.WillowAIPawn",
+      "properties": {
+        "Allegiance": {
+          "$ref": "gd_allegiance.Player.PlayerAllegiance",
+          "class": "Engine.PawnAllegiance"
+        }
+      }
+    },
+    {
+      "record_type": "object",
+      "path": "Z0_MissionData.BalanceDefs.BAIP_Alpha_Named1_E3",
+      "class": "WillowGame.AIPawnBalanceDefinition",
+      "properties": {
+        "AIPawnArchetype": {
+          "$ref": "gd_Skags.Fire.Character.AdultFireSkag_Pawn",
+          "class": "WillowGame.WillowAIPawn"
+        },
+        "DefaultExpLevel": {
+          "$type": "struct",
+          "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+          "fields": {
+            "BaseValueConstant": 0.0,
+            "BaseValueAttribute": null,
+            "InitializationDefinition": null,
+            "BaseValueScaleConstant": 1.0
+          }
+        },
+        "Grades": {
+          "$type": "array",
+          "length": 4,
+          "items": [
+            {
+              "$type": "struct",
+              "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGameStageGradeWeightData",
+              "fields": {
+                "GradeModifiers": {
+                  "$type": "struct",
+                  "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGradeModifierData",
+                  "fields": {
+                    "CustomAIPawnArchetype": null,
+                    "DisplayName": "Badass Fire Skag",
+                    "ExpLevel": 5,
+                    "OnSpawnCustomizations": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "AttributeStartingValues": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "CustomItemPoolList": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    }
+                  }
+                },
+                "GameStageRequirement": {
+                  "$type": "struct",
+                  "struct": "Engine.BaseBalanceDefinition:GameStageRangeData",
+                  "fields": {
+                    "MinGameStage": 6,
+                    "MaxGameStage": 13
+                  }
+                },
+                "MinSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 1.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 1.0
+                  }
+                },
+                "MaxSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 1.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 1.0
+                  }
+                }
+              }
+            },
+            {
+              "$type": "struct",
+              "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGameStageGradeWeightData",
+              "fields": {
+                "GradeModifiers": {
+                  "$type": "struct",
+                  "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGradeModifierData",
+                  "fields": {
+                    "CustomAIPawnArchetype": null,
+                    "DisplayName": "Moe",
+                    "ExpLevel": 32,
+                    "OnSpawnCustomizations": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "AttributeStartingValues": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "CustomItemPoolList": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    }
+                  }
+                },
+                "GameStageRequirement": {
+                  "$type": "struct",
+                  "struct": "Engine.BaseBalanceDefinition:GameStageRangeData",
+                  "fields": {
+                    "MinGameStage": 29,
+                    "MaxGameStage": 35
+                  }
+                },
+                "MinSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 1.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 1.0
+                  }
+                },
+                "MaxSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 1.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 1.0
+                  }
+                }
+              }
+            },
+            {
+              "$type": "struct",
+              "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGameStageGradeWeightData",
+              "fields": {
+                "GradeModifiers": {
+                  "$type": "struct",
+                  "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGradeModifierData",
+                  "fields": {
+                    "CustomAIPawnArchetype": null,
+                    "DisplayName": "Moe",
+                    "ExpLevel": 47,
+                    "OnSpawnCustomizations": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "AttributeStartingValues": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "CustomItemPoolList": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    }
+                  }
+                },
+                "GameStageRequirement": {
+                  "$type": "struct",
+                  "struct": "Engine.BaseBalanceDefinition:GameStageRangeData",
+                  "fields": {
+                    "MinGameStage": 44,
+                    "MaxGameStage": 50
+                  }
+                },
+                "MinSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 1.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 1.0
+                  }
+                },
+                "MaxSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 1.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 1.0
+                  }
+                }
+              }
+            },
+            {
+              "$type": "struct",
+              "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGameStageGradeWeightData",
+              "fields": {
+                "GradeModifiers": {
+                  "$type": "struct",
+                  "struct": "WillowGame.AIPawnBalanceDefinition:AIPawnGradeModifierData",
+                  "fields": {
+                    "CustomAIPawnArchetype": null,
+                    "DisplayName": "Moe",
+                    "ExpLevel": 51,
+                    "OnSpawnCustomizations": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "AttributeStartingValues": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    },
+                    "CustomItemPoolList": {
+                      "$type": "array",
+                      "length": 0,
+                      "items": [],
+                      "truncated": false
+                    }
+                  }
+                },
+                "GameStageRequirement": {
+                  "$type": "struct",
+                  "struct": "Engine.BaseBalanceDefinition:GameStageRangeData",
+                  "fields": {
+                    "MinGameStage": 48,
+                    "MaxGameStage": 54
+                  }
+                },
+                "MinSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 1.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 1.0
+                  }
+                },
+                "MaxSpawnProbabilityModifier": {
+                  "$type": "struct",
+                  "struct": "Engine.AttributeInitializationDefinition:AttributeInitializationData",
+                  "fields": {
+                    "BaseValueConstant": 1.0,
+                    "BaseValueAttribute": null,
+                    "InitializationDefinition": null,
+                    "BaseValueScaleConstant": 1.0
+                  }
+                }
+              }
+            }
+          ],
+          "truncated": false
+        }
+      }
+    },
+    {
+      "record_type": "object",
+      "path": "Z0_MissionData.population.PD_AlphaSkag_Named1:PopulationFactoryBalancedAIPawn_20",
+      "class": "WillowGame.PopulationFactoryBalancedAIPawn",
+      "properties": {
+        "PawnBalanceDefinition": {
+          "$ref": "Z0_MissionData.BalanceDefs.BAIP_Alpha_Named1_E3",
+          "class": "WillowGame.AIPawnBalanceDefinition"
+        }
+      }
+    },
+    {
+      "record_type": "object",
+      "path": "Z0_Missions.Missions.M_OwedMoneyDebt",
+      "class": "WillowGame.MissionDefinition",
+      "properties": {
+        "MissionName": "Product Recall",
+        "MinimumLevel": 10,
+        "GameStageRegion": {
+          "$ref": "gd_GameStages.Arid.Arid__C",
+          "class": "WillowGame.WillowRegionDefinition"
+        },
+        "GameStage": 0,
+        "ExpLevel": 0
+      }
+    },
+    {
+      "record_type": "archetype_binding",
+      "path": "gd_Skags.Fire.Character.AdultFireSkag_Pawn",
+      "class": "WillowGame.WillowAIPawn",
+      "properties": {
+        "Allegiance": {
+          "$ref": "gd_allegiance.CreatureEnemy.SkagAllegiance",
+          "class": "Engine.PawnAllegiance"
+        }
+      }
+    }
+  ],
+  "native_property_metadata": {
+    "WillowGame.WillowAIPawn": [
+      {
+        "name": "bPlayedDeath",
+        "type": "BoolProperty",
+        "flags": "0x0",
+        "array_dim": 1
+      },
+      {
+        "name": "bIsDead",
+        "type": "BoolProperty",
+        "flags": "0x0",
+        "array_dim": 1
+      },
+      {
+        "name": "bDeleteMe",
+        "type": "BoolProperty",
+        "flags": "0x2",
+        "array_dim": 1
+      },
+      {
+        "name": "bPendingDelete",
+        "type": "BoolProperty",
+        "flags": "0x0",
+        "array_dim": 1
+      }
+    ]
+  }
+}

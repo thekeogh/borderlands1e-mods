@@ -89,6 +89,8 @@ class Loot:
         self.deaths[:] = [row for row in self.deaths if row[0] is not token]
 
     def source_kind(self, source):
+        if source is None or getattr(source, "bDeleteMe", False) or getattr(source, "bPendingDelete", False):
+            return None
         if self.is_a(source, "WillowInteractiveObject"):
             definition = getattr(source, "InteractiveObjectDefinition", None)
             name = definition._path_name().lower() if definition is not None else ""
@@ -97,8 +99,9 @@ class Loot:
             if any(address == source._get_address() for _, address in self.deaths):
                 return "enemy"
             # Some native death loot is deferred until after Died returns.
-            health = getattr(source, "GetHealth", None)
-            if callable(health) and health() <= 0:
+            # These BoolProperties are captured on WillowAIPawn. Never query
+            # health: pool calls can also occur on uninitialized live pawns.
+            if getattr(source, "bIsDead", False) or getattr(source, "bPlayedDeath", False):
                 return "enemy"
         return None
 

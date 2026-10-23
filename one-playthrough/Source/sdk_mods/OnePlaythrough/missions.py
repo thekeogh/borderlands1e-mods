@@ -39,7 +39,7 @@ class Missions:
         cached = self.floors.get(name)
         if cached is not None and cached[0] == signature:
             return cached[1]
-        saved = {field: getattr(mission, field) for field in ("GameStage", "ExpLevel")}
+        saved = {field: getattr(mission, field) for field in ("GameStage", "ExpLevel", "MinimumLevel")}
         self.reading_native = True
         try:
             for field in saved:

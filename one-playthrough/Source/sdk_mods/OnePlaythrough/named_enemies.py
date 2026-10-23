@@ -9,6 +9,9 @@ SOURCES = ('https://raw.githubusercontent.com/RedxYeti/Yeti-BL1-SDK-Mods/315f9ea
  'https://raw.githubusercontent.com/Ry0511/my_bl1_sdk_mods/a70761d52b5586292a85d4c1b5edd253810fdd13/src/py/boss_bars/constants.py')
 
 BALANCE_NAMES = {
+    # Captured factory PD_AlphaSkag_Named1 references this mission-specific
+    # balance. Its later grades are Moe; do not give it ordinary rare boosts.
+    "z0_missiondata.balancedefs.baip_alpha_named1_e3": "Moe",
     "dlc1_gd_balance_enemies.franken.pawn_balance_frankenbill": "Franken Bill",
     "dlc1_gd_balance_enemies.golem.pawn_balance_pumpkinhead": "Pumpkin Head",
     "dlc1_gd_balance_enemies.ned.pawn_balance_nedenemy": "Dr. Ned",

@@ -1,81 +1,568 @@
-# Releases
+# One Playthrough changelog
 
-One Playthrough is the active mod in this directory. Keep playthrough-3/ (version
-3) and reference/ unchanged. Record releases in CHANGELOG.md.
-README.md is a concise player guide: installation, New Game, Continue and scope.
-Always retain the full Easy / Normal / Hard spawn-percentage table in README.md
-and keep it synchronized with the actual weights when changing difficulty.
-Preserve vanilla regional/mission floors, native reward identities and money formulas.
-Equipment rewards use the accepted mission level, not turn-in character level.
-Scope inventory grade overrides to native reward calls and restore them afterward;
-never clone saved item balance identities. Materialize inherited manufacturer
-tables on the reward child temporarily, never edit shared parent tables. Convert
-mission use requirement to internal level using the shared requirements module.
-For captured context-free proficiency bonus attributes, call the native static
-AttributeInitializationDefinition.EvaluateInitializationData(bonus, None) only after
-validating NoContextNeeded plus SimpleMath/Constant resolver metadata. Respect its
-resolved value and scaling; use the fallback constant only when no attribute exists.
-Never evaluate actor-dependent attributes on uninitialized inventory or silently
-substitute a guessed offset. Retain native equipped-card behavior. F10's separate
-use_level_bonuses summaries must survive the broad definition graph limit.
-Before native reward-item initialization, encode the accepted mission's internal
-level in native non-interpolated ManufacturerGradeIndex high bits, preserving
-low grade bits and original definition identities. Only encode mission balances in the
-active reward scope. Explicitly recall the bound native function with replacement
-input structs and block the original; SDK hook-argument mutation has no effect.
-Preserve all inputs/returns; never retry after invocation. Discover signatures
-from native metadata; skip unsupported output parameters and interpolated formats.
-Loot level floor is a saved toggle, default on. Use the captured native
-Engine.WillowInventory:InitializeInventory boundary for fresh world/container loot
-(including skag piles) and vendor stock. Every equipment type uses the same
-max(1, player - 2) floor: weapons, shields, grenade mods and class mods. Encode
-before native stats are built, in both InGradeIndex and copied item definition data. Forward all
-other arguments and the original native return value; never initialize twice.
-Preserve higher native levels, rarity/legendary probabilities, pools, stage,
-AwesomeLevel, parts and identities. Only the packed level may change.
-Guard InitializeFromDefinitionData reconstruction with PRE/unconditional POST
-scopes so save loads, pickup copies and player drops keep their levels. Never
-apply the loot floor during mission rewards or to player-owned/live NPC gear;
-do not reinitialize existing items. Carried hostile death drops may be replaced
-with fresh, verified copies after native DropFrom. Commit at Died POST, preserving
-parts, names, balance/manufacturer, quantity, rarity and physics; initialize each
-copy once, disable name reselection, validate its detached pickup before retiring
-the original. Keep originals until validation succeeds and clean failed copies.
-BL1E refuses direct Destroy for these actors: hide/disable retired pickups and
-schedule native LifeSpan=0.01 expiry instead. Let pickup expiry handle attached
-inventory; expire only pickup-less failed copies directly. Respect static/no-delete
-actors, restore original flags before failed commit, and retain no actor wrappers
-for future ticks. Check both bDeleteMe and bPendingDelete. F10 changed counts plus
-clean retirement records are required before claiming native replacement success.
-Never run this for player/live NPC drops or outside confirmed hostile death scopes.
-Player attribute-query context is not itself
-ownership. Never call health methods on NPCs during native item construction;
-require a confirmed death/loot scope for NPC query sources.
-Leave unknown/interpolated/dynamic formats native and record skip reasons in F10.
-Keep SDU progression upgrades and non-levelled consumables native.
-Enemy difficulty is a saved Easy / Normal / Hard selector, default Normal.
-Ordinary hostile roll weights (native / +1 / +2 / +3): Easy 70/20/9/1,
-Normal 50/20/25/5, Hard 20/5/55/20. All preserve max(player, vanilla area)
-as their base. Native ordinary levels floor at player level +1; keep the original
-factory GameStage/grade bands when applying that floor. Native/+1 rolls overlap
-at the +1 minimum; keep raw weights and named/boss player-level floors unchanged.
-No extra +4 roll.
-Retain naturally higher levels without stacking or capping them at +3.
-Difficulty changes affect new spawns only; never rewrite existing pawn data.
-Named enemies/bosses never use that roll. No fixed boss levels or completion
-flags to enable scaling. Keep rare-level data private to those spawns.
-Only log the loading/version line automatically. A manually requested diagnostic
-export must log its request, saved path or failure; never swallow export errors.
-Keep the legacy Playthrough3 settings path only for migration. Preserve historical
-names in credits, changelog entries and captured-fixture provenance.
+## 4.5.10 — 2026-10-23
 
-4.5.1's broad read-only trace hooks are no longer registered. Keep bounded native
-initializer signatures/counters/samples in F10 until actual Windows generation,
-copying and reload persistence have been checked. Local engine models are not
-proof of native Windows behavior. Never claim unsupported loot paths are fixed.
+- Audit two BL1E Borderlens captures: 218 mission definitions, 74 reward balances,
+  59 first-playthrough regional rows and 113 non-default enemy level definitions.
+  Record evidence, coverage limits and regression fixtures in audit/ and tests/.
+- Recognize the native HumanoidEnemy allegiance category, including enemy Scorpio
+  turrets and custom humanoids whose balance path does not contain _Enemies.
+  Preserve friendly/player/neutral exclusions and the legacy HumanEnemy spelling.
+- Identify the captured mission-specific Moe balance as named, excluding it from
+  ordinary difficulty rolls without changing its native higher grades.
+- Preserve the original area GameStage and grade-selection bands when applying
+  a named-enemy level floor; do not reduce the factory stage to player level.
+- Preserve naturally higher default levels on grade-less enemy definitions when
+  applying an ordinary rare bonus.
+- Restore original MinimumLevel during native mission-floor queries, then restore
+  the live scaled fields even on failure. Acceptance locks remain unchanged.
+- Recover release history from the last intact Git changelog; the loose file had
+  been replaced by a copy of AGENTS.md. Consolidate the intervening releases below.
+- Replace deferred-death NPC health queries with captured bIsDead/bPlayedDeath
+  flags; exclude deleted/pending-delete sources and keep live construction native.
+- Remove resolved temporary Bone Head/Bone Shredder automatic diagnostic probes;
+  retain general F10 reports, initializer signatures and carried-drop counters.
+- No difficulty-weight, economy, rarity, pool, equipment-floor or grenade changes.
 
-4.5.5 temporarily records Bone Head/Bone Shredder initialization decisions and
-before/after death/drop ownership using properties only. Do not change gameplay,
-call actor methods or reinitialize carried items for these probes. Keep records
-bounded and indexed as primitive maps so F10 preserves nested detail. Remove the
-targeted probes after the carried-unique path has been diagnosed and resolved.
+## 4.5.5–4.5.9 — recovered summary
+
+The individual notes for these releases were lost when the changelog was
+replaced. This summary reflects the shipped code, regression fixtures and
+recorded in-game tests; earlier notes below are restored verbatim from Git.
+
+- Diagnose Bone Head's carried unique and raise confirmed hostile death drops
+  using fresh verified copies, preserving definition parts, rarity and physics.
+- Retire replaced BL1E pickups through native expiry with rollback and failed-copy
+  cleanup; leave player/live-NPC drops unchanged.
+- Floor native ordinary enemy variation at player level +1, preserving area stage
+  and native grade bands. Named/boss floors remain at player level.
+- Resolve supported context-free proficiency bonuses natively, fixing low-level
+  equipment use-requirement conversion, including the Lady Finger grave drop.
+
+## 4.5.4 — 2026-10-22
+
+- Apply max(1, player level - 2) uniformly to all supported equipment, including
+  weapons, shields, grenade mods and class mods, from new drops, containers and
+  vending stock. Remove 4.5.3's separate minus-three allowance for other gear.
+- Update the README, in-game option description and F10 floor description.
+  Keep difficulty weights, native rarities, mission rewards and existing gear unchanged.
+- Verify equipment types share the same minimum through player levels 1–6 and
+  retain the native-generation/copy/persistence regressions.
+
+## 4.5.3 — 2026-10-22
+
+- Tune Hard ordinary-enemy rolls to native 20%, +1 5%, +2 55%, +3 20%.
+  Easy/Normal, named/boss rules, regional floors and the +3 bonus limit stay unchanged.
+- Raise the minimum for newly generated weapon drops/container loot/vendor stock
+  to max(1, player level - 2). Other equipment retains max(1, player level - 3).
+  Apply both rules through the native initializer and recognized pool scopes.
+- Preserve higher gear levels, native rarity/legendary chances, accepted mission
+  reward levels and existing inventory. Record the two floors separately in F10.
+- Update the permanent README difficulty table and in-game loot option description.
+  Verify all 100 tickets for each difficulty and separate weapon/gear low-level
+  clamps, along with the existing native-generation/persistence regression models.
+
+## 4.5.2 — 2026-10-22
+
+- Apply the level floor at the captured Engine.WillowInventory:InitializeInventory
+  boundary. Fresh native equipment bypasses InitializeFromDefinitionData, explaining
+  4.5.0/4.5.1's zero checked equipment despite actual drops and vendor stock.
+- Include newly generated world drops, all loot containers (including skag piles)
+  and vending stock, without requiring a recognized chest name or ItemPool context.
+  Minimum use requirement remains max(1, player level - 3), based on the player.
+- Forward one native initialization with an explicit packed internal level; persist
+  the same grade in detached definition data before stats are built. Preserve low
+  grade bits, balance/manufacturer identities, parts and every other native input.
+  Do not reroll equipment, edit pools or change rarity/legendary probabilities.
+- Guard definition-data reconstruction with paired PRE/unconditional POST scopes:
+  saved gear, pickups and player-drop copies retain their existing levels. Keep
+  accepted mission reward levels independent; never upgrade live NPC equipment.
+  An additional player attribute-query source alone is not player ownership.
+- Avoid new health or other actor-method calls on potentially uninitialized NPCs.
+  NPC query sources require a confirmed death/loot scope; preserve carried gear
+  created earlier. Unknown/dynamic/interpolated grade formats remain native.
+- Remove broad temporary trace-hook registration. Keep bounded F10 counters,
+  initializer signature, skips and recent raised native items for Windows checking.
+- Add captured vendor/drop/chest fixtures and model native stat initialization,
+  persistence through reconstruction, ownership exclusions, low-level clamps,
+  argument/return forwarding and detached rollback after partial assignment failure.
+  Windows playtest of the new native boundary remains required.
+
+## 4.5.1 — 2026-10-22
+
+- Diagnostic update for a confirmed 4.5.0 coverage failure. The captured level-10
+  session recognized enemy pool contexts but checked/upgraded zero equipment and
+  recorded no chest contexts. A dropped shotgun retained internal level 3 and
+  requirement 1. This does not establish its original chest-generation call.
+- Add bounded, read-only observations of loaded chest/loot/inventory functions,
+  discovered from native metadata. Exclude generic inherited actor functions and
+  functions already instrumented. Record scalar/path arguments and chest identities.
+- Count all compatible initializer calls, including equipment outside recognized
+  loot scopes; export their actual signatures and the latest equipment samples.
+  Keep at most 80 additional hooks, 64 event groups and 16 equipment samples.
+- Add known chest definitions to manual F10 snapshots. No gameplay functions are
+  invoked by tracing; no calls are blocked/replayed and no automatic logs are added.
+- Preserve 4.5.0's floor logic, rarity, rewards and generation behavior. This build
+  diagnoses missing coverage; it does not claim to fix the chest floor yet.
+- Add the captured failure fixture and read-only/bounded/failure-isolation tests.
+
+## 4.5.0 — 2026-10-21
+
+- Add a saved Loot level floor option, enabled by default. Supported equipment
+  freshly generated by enemy death loot pools or red/white/Knoxx chest pools has
+  a minimum use requirement of max(1, player level - 3). Never lower native gear.
+- Encode the floor before native item initialization, using the inventory's own
+  fallback requirement bonus. Native initialization builds stats at the new level;
+  the original item identity, manufacturer, parts and low grade bits are retained.
+- Do not reroll loot or alter pools, rarity probabilities, legendary chances,
+  quantity, GameStage or AwesomeLevel. Keep mission reward levels independent.
+- Leave vendors, player drops, existing inventory, live enemy equipment, mission
+  items, SDUs and consumables native. Enemy-carried items generated before death
+  are not reinitialized. Unrecognized contexts, interpolated formats and dynamic
+  native grade formulas remain native rather than being guessed.
+- Reflect pool context parameters at load time. Pair read-only PRE and unconditional
+  POST scopes; clean up on disable, nested calls and failures. F10 includes hook
+  signatures, context counts, raised items and skipped formats; no automatic logs.
+- Add native-data model coverage for floors, inherited manufacturer grades,
+  untouched pools/parts, higher gear, non-equipment exclusions, mission precedence,
+  settings persistence, scope failure cleanup and single native initialization.
+  Actual BL1E pool context/format coverage requires Windows playtesting.
+
+## 4.4.2 — 2026-10-21
+
+- Adjust Hard ordinary-enemy rolls to native 30%, +1 10%, +2 45%, +3 15%.
+- Keep Easy/Normal, named enemies/bosses, scaling floors and reward logic unchanged.
+
+## 4.4.1 — 2026-10-21
+
+- Fix a second reward-level failure: the captured Scavenger: Combat Rifle preview
+  was internally 22 (requirement 20), but the granted copy reused manufacturer
+  grade 1, recalculating to internal 18 (requirement 16) after scoped edits ended.
+- Encode the accepted mission's internal level in the reward's native definition
+  data before initialization. Preserve the original grade bits, balance identity,
+  parts and manufacturer; copied/saved items retain the explicit level.
+- Discover compatible native initializers from their reflected parameters and
+  explicitly forward encoded inputs. SDK hook argument snapshots alone cannot
+  change a native call. Preserve other arguments/returns and never retry after
+  invoking an initializer. Skip unsupported output-parameter/interpolated formats.
+- Restrict encoding to equipment belonging to the active mission reward scope.
+  Leave world loot, existing inventory, SDUs and consumables unchanged. Previously
+  awarded low-level equipment is not retroactively repaired.
+- Include initializer paths and recent encoding attempts in manual F10 exports.
+  Add captured preview/copy regression and modeled persistence, argument-forwarding
+  and failure tests. Native Windows generation/save-load verification pending.
+
+## 4.4.0 — 2026-10-21
+
+- Floor ordinary hostile native levels at the player's level, including negative
+  offsets and low fixed grades. Prepare private data before native spawning;
+  do not call post-spawn actor level setters or alter existing pawns.
+- Preserve the factory's max(player, vanilla area) GameStage and grade-selection
+  bands when flooring native levels. Retain naturally higher grades/defaults.
+- Revise difficulty weights (native / +1 / +2 / +3): Easy 70/20/9/1,
+  Normal 50/20/25/5, Hard 35/20/35/10. Normal remains the default.
+- Remove the mod's +4 roll. Higher vanilla-area/native levels remain uncapped;
+  boosts are minimum targets, never stacked onto naturally higher levels.
+- Keep named/boss rules, mission rewards, region/DLC floors and money unchanged.
+- Verify all tickets/presets, grade bands, fixed tutorial levels, distinct cache
+  defaults, old-pawn isolation and native +5 enemies. Windows playtest pending.
+
+## 4.3.1 — 2026-10-21
+
+- Fix inherited equipment rewards such as Scavenger: Sniper Rifle. The captured
+  reward balance has no Manufacturers of its own; 4.2.0 checked only that empty
+  table and silently missed the parent grades. Temporarily materialize a deep
+  copy on the reward child and restore its empty table after generation.
+- Account for native PlayerUseLevelBonus when choosing the internal item level.
+  The captured sniper is internally 7 but requires 5; a mission-17 sniper needs
+  internal 19 for an ordinary backpack requirement of 17. Use each definition's
+  own fallback, including the repeater's different value, not player proficiency.
+- Preserve original reward/balance identity, parts and manufacturer weights;
+  do not edit shared parent tables, existing items, enemy difficulty, named/boss
+  rules, regional floors or money formulas. Leave native equipped proficiency
+  display differences, SDUs and non-levelled consumables unchanged.
+- Add the captured case as a fixture, explicitly marking unavailable grade rows
+  as modelled. Cover inherited tables, exceptions, nested restoration, custom
+  inventory definitions, internal levels above 69 and bounded manual F10 summaries.
+- Validation: 120 local tests pass. Windows reward-generation confirmation is
+  still required. Already granted items are not upgraded retroactively.
+
+## 4.3.0 — 2026-10-21
+
+- Add a saved Enemy difficulty selector: Easy / Normal / Hard, default Normal.
+  Ordinary-enemy roll weights (native / +1 / +2 / +3 / +4): Easy 85/8/6/1/0,
+  Normal 70/15/10/4/1, Hard 55/20/15/8/2.
+- Preserve max(player level, vanilla area level) as the base in every preset.
+  Retain naturally higher levels without stacking bonuses. Named/boss rules,
+  mission levels/rewards, world loot, money and DLC floors remain unchanged.
+- Read the selected difficulty when spawning. Changes do not rewrite existing
+  enemies or clear their private definitions. Manual diagnostics include the
+  selected difficulty and its roll distribution.
+- Test all 100 tickets per preset, both directions of the regional floor,
+  naturally high and named enemies, live changes and settings persistence.
+
+## 4.2.1 — 2026-10-21
+
+- Increase ordinary hostile enemy rolls to 70% native, 15% at least area-base +1,
+  10% at least +2, 4% at least +3 and 1% at least +4. Retain naturally higher
+  levels without stacking bonuses.
+- Named/boss enemy rules and accepted-level mission rewards remain unchanged.
+
+## 4.2.0 — 2026-10-20
+
+- Make equipment rewards use the mission level locked at acceptance, rather than
+  native fixed/offset item grades or the character level at turn-in. Preview and
+  grant paths share the same rule, including rewards without a regional input.
+- Temporarily set each reward balance's manufacturer grade ExpLevel to the locked
+  mission level during native reward calls, then restore the original data.
+  Extend only end grade bands when necessary; preserve parts, probabilities,
+  manufacturer/class selection and original balance identities for item saving.
+- Preserve SDU upgrade behaviour, world loot, vendors, money/XP formulas and
+  the existing ordinary/named enemy rules. Existing items are not rewritten.
+- Add regression models for low/high turn-in levels, offers and acceptance,
+  class-specific and regionless rewards, shared nested balances, SDUs, cleanup
+  after failures/disabling, and end-band extension. These model captured native
+  data conventions; Windows reward-generation confirmation remains pending.
+
+## 4.1.1 — 2026-10-20
+
+- Increase ordinary hostile enemy rolls to 85% native, 8% at least area-base +1,
+  6% at least area-base +2 and 1% at least area-base +3. Naturally higher levels
+  remain higher; bonuses never stack onto them.
+- Named enemies and bosses keep their existing rules and never receive this roll.
+
+## 4.1.0 — 2026-10-20
+
+- Areas retain their original first-playthrough level floors and scale upward
+  when the player outlevels them. Keep each native story-dependent regional
+  override separate, so an early area does not inherit its end-of-story floor.
+- Apply the same rule to all four DLCs, including Knoxx before its finale.
+  No DLC completion flags or playthrough transitions are required or changed.
+- Mission offers use the higher of player level and their native mission level.
+  Read that native level through the game's reward-stage refresh against the
+  original regional data, preserving native story-override selection. Newly
+  accepted missions lock to the offered level, including offers above the player.
+  Existing acceptance levels and their rewards remain unchanged after upgrading.
+- Ordinary hostile enemies use 95% native scaling, a 4% roll for area-base +1,
+  and a 1% roll for area-base +2. Area base is the higher of player level and
+  the resolved native regional stage. Naturally higher enemy/grade levels are
+  retained rather than receiving another additive bonus.
+- Named enemies and bosses are excluded from that roll. Keep native level
+  inputs and apply a player-level floor where needed; no fixed boss level.
+  Exact-ID exclusions cover the base game and all DLCs, with conservative
+  exclusions for additional definitions identified as named/bosses. Identifier
+  sources: RedxYeti's Dedicated Drops SDK and -Ry's Boss Bars (pinned URLs in
+  `named_enemies.py`). Friendly, neutral and unknown-allegiance actors do not roll.
+- Rare spawns use private, cached balance definitions and the native exact-stage
+  attribute. Preserve grade selection/combat modifiers, restore the factory's
+  original definition after each synchronous call, and never retry a native
+  spawn after invocation. Existing pawns keep actor-local stages; shared native
+  definitions are not rewritten to a rare spawn's level. Positive grade levels
+  remain absolute overrides, rather than being mistaken for additive offsets.
+  Unrecognized dynamic
+  level formulas retain native evaluation rather than guessing their values;
+  diagnostic reports record these cases.
+- Keep native loot, money, XP formulas and quest progress. Update the README,
+  short in-game description and local mod-database listing draft. Manual F10
+  reports now include original/current regional floors and the enemy policy.
+- Validation: 95 local regression tests, including captured base-game regional
+  data, modeled DLC pre-completion floors/offers, story override selection,
+  offer/acceptance/reward locks, exhaustive 95/4/1 tickets, named exclusions,
+  private-definition reuse, failure cleanup, settings and diagnostics. These
+  tests model native calls; BL1E gameplay, DLCs and the new rare-spawn path still
+  require Windows testing.
+
+## 4.0.4 — 2026-10-19
+
+- Prepared mod-database submission metadata: a valid internal project identifier
+  (`OnePlaythrough`), direct SDK download URL, source/changelog links and a separate
+  listing draft. The displayed name remains One Playthrough; gameplay is unchanged.
+- Shortened the in-game description to under half its previous length.
+- Fixed enabled-state persistence on installations where the OnePlaythrough
+  settings directory does not yet exist. The SDK writes mod.json directly after
+  enabling, but does not create its parent directory. Enabling from the main menu
+  could therefore appear successful while no enabled state was saved for restart.
+- Create `sdk_mods/settings/OnePlaythrough/` before registering the mod, so the
+  SDK can save `mod.json` without loading a character, accepting a mission or
+  exporting diagnostics first. Existing settings are not replaced. Manual
+  disabling is still remembered; auto-enable is not forced over a saved choice.
+- Validation: reproduced the missing-directory failure with a model of the SDK's
+  settings lifecycle, then passed 65 local tests after the fix, including enabling
+  at the menu and restoring on restart, persisting manual disable, and preserving
+  saved keybinds/mission data. Windows restart confirmation remains pending.
+- Scaling, economy, mission levels and legacy acceptance-level migration are
+  unchanged. Continue with existing characters after enabling the updated mod.
+
+## 4.0.3 — 2026-10-19
+
+- Renamed the active mod to One Playthrough, including the repository directory
+  (`one-playthrough`), SDK module/archive (`OnePlaythrough`), download ZIP,
+  in-game name and description, diagnostic keybind, log messages and export names.
+- Rewrote the README as a short player guide: one continuous level-1-to-69
+  playthrough, main game and all DLCs, installation, New Game, Continue and credits.
+- Clarified that available missions follow your level until you accept them,
+  highlighting the benefit of leaving missions for later.
+- Settings and diagnostics now use `sdk_mods/settings/OnePlaythrough/`. Valid
+  mission acceptance levels are copied automatically from the old Playthrough3
+  settings when the new file does not exist. Existing new settings take priority;
+  legacy files are preserved, and invalid data is not silently overwritten.
+- Existing v4 characters can Continue after removing the old Playthrough 3 SDK
+  archive/unpacked folder. Do not enable both versions together. Replaced the
+  obsolete generated packages in the active distribution folder.
+- Gameplay scaling, native economy, enemy variety and mission reward rules are
+  unchanged. Historical release names and original-author attribution remain.
+- Validation: 62 local tests passed, including seven upgrade cases covering
+  accepted-level preservation, multiple characters, new-file precedence, one-time
+  migration, corrupt/invalid files and a fresh installation. Renamed archives and
+  source/doc contents verified; reference/ and the older mods remain unchanged.
+
+## 4.0.2 — 2026-10-19
+
+- Diagnostic-only release for the reported Fix'er Upper vendor: a level-3
+  character saw no regular shields and could only buy a level-4 Item of the Day
+  for approximately $940. The cause is not established; no stock, level or price
+  changes have been applied to gameplay.
+- Manual exports now include reflected vendor stock, generation/price inputs,
+  runtime inventory and native required-level queries. Loaded shield balances
+  (including Intro/Stock), item pools, pricing definitions and referenced data
+  resolvers are captured even if stock generation produced no shield.
+- Include available character XP/currency fields. Data collection is bounded,
+  follows data definitions only and does not generate inventory, refresh vendors,
+  change prices, load extra packages or grant rewards.
+- Fixed the two mission-progress export errors observed in Windows reports:
+  WrappedArray also exposes `_type`, but it describes an element property rather
+  than a struct schema. Arrays are now serialized before inspecting struct fields.
+- Gameplay source and acceptance metadata are unchanged. Existing characters can
+  Continue; no reset or New Game required. Restarting may regenerate vendor stock.
+- Validation: 55 local tests passed, including modeled SDK array/struct layouts,
+  empty stock, shield grade restrictions, native item queries, partial field/class
+  failures, definition cycles/limits and unchanged objects after export. Windows
+  vendor export and the underlying stock issue still require gameplay evidence.
+
+## 4.0.1 — 2026-10-19
+
+- Fixed silent diagnostic failures: manual F10 exports now log a request and
+  either the saved path or the actual error. The previous general-purpose safe
+  wrapper swallowed export exceptions, hiding why no report was produced.
+- Added an Export diagnostics button as a fallback for keybind/enablement issues.
+  The startup version line also reports whether the runtime was enabled at load.
+- Write a basic policy/status report before optional Unreal reflection. Collect
+  optional properties independently, skip class defaults and retain readable
+  partial reports when a definition, field or class cannot be read.
+- Serialize nonfinite native floats safely. Atomically replace the basic report
+  after collection; preserve its path if final writing fails.
+- Automatic gameplay logging remains quiet. Scaling, spawning, mission locks,
+  native economy and save data are unchanged; no new character/reset required.
+- Validation: 48 local tests passed, including actual registered keybind/menu
+  callbacks, unreadable fields, missing classes, nonfinite values and disk errors.
+  Windows export confirmation pending; the original failing field is not known
+  without a report or visible failure message from the affected game session.
+
+## 4.0.0 — 2026-10-19
+
+- Clean implementation in a separate directory; v3 and reference/ are unchanged.
+- Uses the normal first-playthrough progress slot, New Game, character creation,
+  full introduction, starting equipment and Continue. No PT2-completion gate,
+  third-slot creation, quest resets, completion flags or intro skips.
+- Native first-playthrough regional defaults and story-stage overrides follow
+  character level 1–69 in the main game and all four DLC globals. Native region
+  coverage includes Arid__C and other regions missing from the original PT3 UPK.
+- No custom UPK is needed. Native loot-quality values and story dependencies are
+  retained; only regional level inputs are replaced.
+- Population factories receive the player-relative base before native spawning;
+  the game retains DefaultExpLevel, grade offsets, native random choices and
+  health/damage calculations. No actor level setters, post-spawn rescaling,
+  weighted levels, named-enemy list or fixed boss level.
+- Extended the first/last native AI grade eligibility bands to cover low-level
+  DLC entry and levels through the cap. Intermediate bands and modifiers remain.
+- Mission offers follow the player. Acceptance levels persist per save slot/class
+  in SDK settings, including across Continue and game restarts. Native .sav files
+  are not rewritten. Actual acceptance is distinguished from preview/tracking.
+- Native reward entry points use the locked level, including synchronous regional
+  overrides for internal C++ refreshes that bypass Python hooks. Nested scopes,
+  early exits and level-ups during reward grants restore the latest world base.
+- Removed mission minimum-level gates while retaining quest dependencies, story
+  unlocks and objective progress. Existing accepted missions on an imported save
+  can only be locked at the level first observed by v4; fresh characters intended.
+- Native money formulas, wallet transactions, XP multipliers, reward definitions,
+  ammo amounts, grenade damage and first-playthrough combat multipliers remain.
+- Removed v3 settings and all automatic difficulty switching. PT2, old PT3 slots
+  and network clients are excluded; co-op is not verified.
+- Read-only F10 diagnostic exports include regional coverage, acceptance levels,
+  native enemy definition inputs and bounded errors. Only the version logs normally.
+- New concise player README covers installation, New Game, intro and Continue.
+- Validation: 38 local tests passed. Real exported BL1E base-game regional rows
+  were exercised at levels 1, 10, 30, 50 and 69. Tests also cover modeled DLC
+  tables, acceptance/reload isolation, native C++-style reward refreshes, nested
+  cleanup, level-ups during rewards, native spawn offsets and one-call spawning.
+- Package/source integrity, unchanged v3 files and reference hashes checked.
+  Local models cannot execute the Windows engine; low-level DLCs, scripted
+  spawns, special boss floors and the full New Game flow need in-game confirmation.
+
+## 3.0.2 — 2026-10-16
+
+- Fixed missing base-game regions in the original PT3 balance, including
+  `Arid__C`, `Arid__C_Difficult`, `Headlands__B` and `Scrap_NewHaven_B`.
+  Missing loaded regions are added to the matching PT3 balance at level 69.
+  Existing entries and their story overrides are preserved.
+- Corrected affected mission GameStage and ExpLevel before native UI, XP and
+  item-reward reads, and after native reward-stage refreshes. This covers offered
+  and accepted missions, including What Hit The Fan and Scavenger: Combat Rifle.
+- Retained quest progress, reward definitions, XP multipliers, enemy presets,
+  named-enemy levels, level-1 cash formulas and native grenade damage. No rewards
+  are reissued and already granted items are not changed.
+- Applied the fix through the SDK mod; the original UPK remains unchanged.
+  Fully restart after replacing the SDK mod. No quest or playthrough reset needed.
+- Restore added regional entries and edited transient mission fields on disable;
+  restore mission fields when leaving PT3. PT1/PT2 and clients are excluded.
+- Optional diagnostics 2.2.2 includes missing-region policy status and bounded
+  errors. Normal runtime logging remains limited to the loading/version line.
+- Validation: 85 local tests passed, including region omissions, accepted/offered
+  mission reads, native refresh overwrites, turn-in preparation, Continue/load,
+  restoration, client/PT1/PT2 exclusions and existing enemy/cash regressions.
+  Original UPK row layouts checked. Windows UI, XP and item rewards need gameplay
+  confirmation; local models do not execute the game's native reward code.
+
+## 3.0.1 — 2026-10-14
+
+- Removed all grenade damage adjustments, card overrides, hooks and callbacks.
+  Grenade damage and damage cards now use native game values at every setting.
+- Removed the grenade preset column from the in-game table and README, along
+  with the damage module, its tests and its diagnostic status export.
+- Optional diagnostics updated to 2.2.1; normal installation remains separate.
+- Enemy levels, probabilities, named/boss level 71, default max 5, level-1 economy
+  and the original PT3 assets and mission setup are unchanged.
+- Fully restart the game after replacing the SDK mod to clear previous runtime
+  damage changes. Existing settings and saves are retained.
+- Validation: 66 local tests passed; archive contents, unchanged enemy/economy
+  code, original UPK and 95 reference hashes verified. Windows gameplay pending.
+
+## 3.0.0 — 2026-10-13
+
+- Replaced Enemy Level Spread with **Enemy Max Level**, range **3–5**, default **5**.
+- Ordinary enemies start at **71**. Max 3: 71/72 at **20/80%**; max 4:
+  71/72/73 at **20/50/30%**; max 5: 71/72/73/74 at **20/48/30/2%**.
+- Recognised named enemies/bosses remain fixed at **71**, at every setting.
+- Standard grenade mods use exact base card damage **700 / 775 / 800** for
+  settings 3 / 4 / 5. Removed the grenade toggle and relative damage multipliers.
+- Retained grenade levels, parts and native definitions. Original damage slots
+  restore on PT1/PT2 selection or disable, including dropped and natively copied
+  items. Slot updates wait for native initialization to finish; they do not
+  reinitialize items, intercept damage events or compound the boost.
+- Retained the Continue/load activation fix from 2.5.1.
+- Removed Enemy Spawn Debug Logging and all PT3 runtime log messages except the
+  loading/version line. Optional manual diagnostics retain bounded error details.
+- Generated the in-game preset table from the same constants used by gameplay.
+- Rewrote README.md for players; consolidated release history here. Included the
+  README, changelog and named-enemy reference in the SDK archive.
+- Normal installation no longer automatically installs diagnostics. The companion
+  remains an optional separate artifact.
+- Preserved native enemy initialization, DLC setup, UPK, level-1 cash calculations,
+  save reset behavior and named-enemy identifiers.
+- The new setting identifier starts upgrades at max 5; removed settings are ignored.
+- Validation: 94 local tests passed, including every probability ticket, native
+  factory arguments/restoration, exact grenade targets, Continue transitions,
+  copied/reinitialized slots, silent runtime behavior and unchanged cash results.
+  Archive integrity, source contents, table consistency and reference hashes checked.
+  New presets and exact grenade targets still require Windows gameplay confirmation.
+
+## 2.5.1
+
+- Fixed grenade activation when continuing a save without a difficulty-selection
+  callback. The supplied export showed PT3 active and the toggle on, but multiplier
+  1 and zero updated slots.
+- Detected the live playthrough at profile/level-ready events, item initialization
+  and damage reads; preserved explicit choices during transient old controllers.
+- Added startup grenade logging and pending-selection diagnostic status.
+- Retained the 2.5.0 multipliers, enemy policy and economy. Gameplay subsequently
+  confirmed the updated card and increased grenade damage.
+
+## 2.5.0
+
+- Added Boost Grenade Damage, enabled by default in PT3.
+- Used 5x at spread 3; weighted mean enemy level gently adjusted other spreads,
+  including 5.26x at spread 5 and 5.34x at spread 6.
+- Updated native grenade card/damage slots without changing the shared projectile
+  formula, item levels or parts. Added option callbacks and native restoration.
+- Diagnostics 2.2.0 added grenade state and cached damage to F10 exports.
+
+## 2.4.0
+
+- Added spread 6, reaching level 75.
+- Reduced level-69 chance to 2% in spreads 5 and 6; moved the freed 3% to level 72.
+- Spread 5: 69–74 at 2/10/45/33/7/3%.
+- Spread 6: 69–75 at 2/10/40/33/8/5/2%.
+- Updated in-game descriptions, diagnostics and README; preserved default spread 3.
+
+## 2.3.0
+
+- Rebalanced ordinary enemy probabilities; default spread 3 became
+  69/70/71/72 at 5/20/55/20%.
+- Set recognised named enemies/bosses to 71 at every spread.
+- Included all configured odds in the in-game description and option description.
+- Preserved the existing spawn hooks, mission/region baseline and economy.
+
+## 2.2.0
+
+- Added fixed level-69 named enemies/bosses using 71 named entities and 146 exact
+  balance/archetype identifiers, including DLCs and known Underdome variants.
+- Kept generic enemies/badasses on the weighted policy; excluded friendly/player/
+  neutral spawns and name-substring guessing.
+- Included a named-enemy list, source attribution, diagnostic counters and native
+  stage forwarding for Mad Mel/Krom's turret.
+
+## 2.1.2
+
+- Disabled spawn phase logging by default after initial gameplay confirmation.
+- Applied the 200-enemy diagnostic limit after skipping expired weak references.
+- Kept existing probabilities, native initialization and economy.
+
+## 2.1.1
+
+- Replaced the crashing 2.1.0 spawn path with native population-factory initialization.
+- Removed unsafe template/pawn hostility and death queries, level-setter hooks,
+  post-initialization rescaling and load/enable actor scans.
+- Used the native exact-stage level attribute and zeroed grade experience offsets;
+  retained health/damage bonuses and restored temporary grade eligibility ranges.
+- Added guarded fresh/restored AI and supported vehicle spawning, weak tracking,
+  diagnostic counts and bounded phase logging without duplicate spawn retries.
+- Retained the working level-1 economy. Initial Windows gameplay confirmed 69–72
+  enemies without another crash; complete spawn-path coverage was not established.
+
+## 2.1.0
+
+- Introduced Enemy Level Spread, minimum 69 and a weighted upper range.
+- Fixed the shared PT3 mission/region baseline at 69.
+- Added enemy-level diagnostics. This build crashed on the first enemy encounter
+  in Enhanced and was superseded by 2.1.1.
+
+## 2.0.0
+
+- Fixed early profile callbacks restoring normal cash formulas during PT3 loading.
+- Kept the PT3 menu selection until an explicit PT1/PT2 choice.
+- Confirmed formulas and refreshed cached cash values at native vendor/display/
+  buy/sell operations; preserved wallet transactions and item/mission levels.
+- Added loaded mod versions, runtime cash state and expanded read-only diagnostics.
+- Changed author to keogh and began the private 2.x version series.
+
+## 1.2.0
+
+- Introduced the level-1 PT3 cash economy for gear prices, cash pickup effects,
+  mission payouts, respec costs and the death-fee ceiling.
+- Retained item levels, packed manufacturer grades, rarity, combat stats, fixed
+  consumable prices, vendor markups and native wallet transaction handling.
+- Recomputed cached inventory cash values and restored native formulas on PT1/PT2
+  selection or disable. Did not multiply AddCurrencyOnHand or scan every frame.
+- Declared BL1/BL1E support and guarded original level callbacks against missing
+  player/stage objects during loading.
+- Included the unchanged original UPK and supplied-export-based cash validation.
+  The activation/loading problem was subsequently fixed in 2.0.0.
+
+## Original mod — RedxYeti and Miner Of Worlds
+
+- **1.1.2:** fixed DLC 3 and 4 scaling.
+- **1.1.1:** fixed the fast-travel list not updating.
+- **1.1.0:** started PT3 at Skags At The Gate and used PT2 ammo pickup amounts.
+
+The earlier Playthrough 3 distribution retains its original notes and
+named-enemy sources. These historical features are not part of One Playthrough.

@@ -35,7 +35,9 @@ class LootFloorTests(unittest.TestCase):
         self.chest.InteractiveObjectDefinition = Object("gd_InteractiveObjects.Chests.InteractiveObj_TreasureChest")
         self.enemy = self.actor("WillowAIPawn", "World.Enemy")
         self.enemy.Allegiance = Object("gd_AI_Allegiance.CreatureEnemy.Skag")
-        self.enemy.GetHealth = lambda: 0
+        self.enemy.GetHealth = lambda: self.fail("pool context must never call NPC health")
+        self.enemy.bIsDead = True
+        self.enemy.bPlayedDeath = False
         self.calls = []
 
     def actor(self, kind, path):
@@ -141,16 +143,36 @@ class LootFloorTests(unittest.TestCase):
         self.assertEqual(self.h.runtime.loot.raised, 0)
 
     def test_live_enemy_and_friendly_npc_equipment_untouched(self):
-        self.enemy.GetHealth = lambda: 100
+        self.enemy.bIsDead = False
         with self.pool(self.enemy):
             self.assertEqual(self.initialize().required, 5)
         self.enemy.Allegiance = Object("gd_AI_Allegiance.Friendly.NPC")
-        self.enemy.GetHealth = lambda: 0
+        self.enemy.bIsDead = True
         with self.pool(self.enemy):
             self.assertEqual(self.initialize().required, 5)
 
+    def test_uninitialized_pool_source_never_calls_health_or_raises_its_gear(self):
+        self.enemy.bIsDead = False
+        with self.pool(self.enemy):
+            self.assertEqual(self.initialize().required,5)
+        self.assertEqual(self.h.runtime.problems,[])
+
+    def test_deferred_death_flag_handles_loot_without_a_live_death_scope(self):
+        self.enemy.bIsDead = False
+        self.enemy.bPlayedDeath = True
+        with self.pool(self.enemy):
+            self.assertEqual(self.initialize().required,18)
+        self.assertEqual(self.h.runtime.loot.deaths,[])
+
+    def test_deleted_enemy_pool_source_is_not_used(self):
+        for field in ('bDeleteMe','bPendingDelete'):
+            setattr(self.enemy,field,True)
+            with self.pool(self.enemy):
+                self.assertEqual(self.initialize().required,5)
+            setattr(self.enemy,field,False)
+
     def test_death_scope_handles_generation_before_health_is_updated(self):
-        self.enemy.GetHealth = lambda: 100
+        self.enemy.bIsDead = False
         self.h.callbacks[(DEATH, "PRE")](self.enemy, None, None, None)
         with self.pool(self.enemy):
             self.assertEqual(self.initialize().required, 18)
@@ -268,13 +290,16 @@ class LootFloorTests(unittest.TestCase):
         self.assertIsNone(self.h.mod.pool_specs(self.h.sdk)[0][1])
 
     def test_failed_nested_context_read_shadows_outer_scope_and_unwinds(self):
-        self.enemy.GetHealth = lambda: (_ for _ in ()).throw(RuntimeError("unavailable health"))
+        class MissingDeathState(Object):
+            @property
+            def bIsDead(self):raise RuntimeError("unavailable death state")
+        self.enemy.__class__ = MissingDeathState
         with self.pool(self.chest):
             with self.pool(self.enemy):
                 self.assertEqual(self.initialize().required, 5)
             self.assertEqual(self.initialize().required, 18)
         self.assertEqual(self.h.runtime.loot.scopes, [])
-        self.assertIn("unavailable health", str(self.h.runtime.problems))
+        self.assertIn("unavailable death state", str(self.h.runtime.problems))
 
     def test_unknown_grade_is_not_guessed_and_input_remains_original(self):
         self.data.ManufacturerGradeIndex = 100

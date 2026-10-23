@@ -268,13 +268,11 @@ def loot_death_hooks(path):
     def before(obj, _args, _ret, _func):
         stack.append(None)
         if runtime.enabled and runtime.loot.selected():
-            runtime.loot.native.boss_trace.death(obj, "before")
             stack[-1] = runtime.loot.dying(obj)
 
     @hook(path, Type.POST_UNCONDITIONAL)
     @safe
     def after(_obj, _args, _ret, _func):
-        runtime.loot.native.boss_trace.death(_obj, "after")
         token = stack.pop() if stack else None
         if token is not None:
             try:
@@ -292,13 +290,11 @@ def carried_drop_hooks(path):
     @safe
     def before(obj, args, _ret, _func):
         stack.append(None)
-        runtime.loot.native.boss_trace.drop(obj, "before")
         stack[-1] = runtime.loot.carried.prepare(obj, args, get_pc())
 
     @hook(path, Type.POST_UNCONDITIONAL)
     @safe
     def after(obj, _args, _ret, _func):
-        runtime.loot.native.boss_trace.drop(obj, "after")
         plan = stack.pop() if stack else None
         runtime.loot.carried.finish_drop(obj, plan, get_pc())
 

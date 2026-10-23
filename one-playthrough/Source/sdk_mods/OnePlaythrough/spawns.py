@@ -56,7 +56,7 @@ def hostile(factory, definition, archetype):
     path = allegiance._path_name().lower() if allegiance is not None else ""
     if any(word in path for word in ("friendly", "player", "neutral")):
         return False
-    return any(word in path for word in (".creatureenemy.", ".humanenemy.", ".enemy.", ".enemies.")) or (
+    return any(word in path for word in (".creatureenemy.", ".humanoidenemy.", ".humanenemy.", ".enemy.", ".enemies.")) or (
         bool(path) and definition is not None and "_enemies" in definition._path_name().lower())
 
 
@@ -87,7 +87,7 @@ class Spawns:
         overrides = tuple(level if preserve_stage or level > target else 0 for level in levels)
         # A native floor must keep the original area GameStage for grade/type
         # selection. Use absolute level inputs, not a reduced factory stage.
-        default = max(target, native) if preserve_stage else None
+        default = max(target, native) if preserve_stage or not definition.Grades else None
         key = (definition._get_address(), overrides, default)
         if key in self.clones:
             return self.clones[key]
@@ -104,8 +104,8 @@ class Spawns:
         self.pins.pin(clone)
         self.pins.pin(exact)
         data = clone.DefaultExpLevel
-        data.BaseValueConstant = float(default) if preserve_stage else 0.0
-        data.BaseValueAttribute = None if preserve_stage else exact
+        data.BaseValueConstant = float(default) if default is not None else 0.0
+        data.BaseValueAttribute = None if default is not None else exact
         data.InitializationDefinition = None
         data.BaseValueScaleConstant = 1.0
         for grade, fixed in zip(clone.Grades, overrides):
@@ -133,7 +133,7 @@ class Spawns:
                         if g.GameStageRequirement.MinGameStage <= base <= g.GameStageRequirement.MaxGameStage]
             if natural is not None and (natural < player or any(
                     grade_level(natural, g.GradeModifiers.ExpLevel) < player for g in eligible)):
-                return player, self.exact_definition(definition, base, player)
+                return base, self.exact_definition(definition, base, player, preserve_stage=True)
             return base, None
         extra = bonus(self.roll(), self.selected_difficulty())
         if natural is None:

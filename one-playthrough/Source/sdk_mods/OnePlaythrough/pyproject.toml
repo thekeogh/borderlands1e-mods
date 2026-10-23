@@ -1,6 +1,6 @@
 [project]
 name = "OnePlaythrough"
-version = "4.5.9"
+version = "4.5.10"
 authors = [{ name = "keogh" }]
 description = "One journey, levels 1–69. Enemies and missions scale across all DLCs, keeping vanilla minimums. Optional loot level floor; vanilla rarities and economy."
 

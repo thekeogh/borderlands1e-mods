@@ -107,14 +107,15 @@ class Floors(unittest.TestCase):
     def test_exception_during_native_floor_query_restores_all_live_fields(self):
         h = self.h
         h.enable(30)
-        before = (h.row().DefaultGameStage.BaseValueConstant, h.mission.GameStage, h.mission.ExpLevel)
+        before = (h.row().DefaultGameStage.BaseValueConstant, h.mission.GameStage, h.mission.ExpLevel, h.mission.MinimumLevel)
         h.runtime.missions.floors.clear()
         def fail(_pc):
             self.assertEqual(h.row().DefaultGameStage.BaseValueConstant, 16)
+            self.assertEqual(h.mission.MinimumLevel,12)
             raise RuntimeError("modeled native refresh error")
         h.mission.RefreshRewardGameStage = fail
         with self.assertRaises(RuntimeError): h.runtime.missions.apply(h.mission, h.pc)
-        self.assertEqual(before, (h.row().DefaultGameStage.BaseValueConstant, h.mission.GameStage, h.mission.ExpLevel))
+        self.assertEqual(before, (h.row().DefaultGameStage.BaseValueConstant, h.mission.GameStage, h.mission.ExpLevel, h.mission.MinimumLevel))
         self.assertFalse(h.runtime.missions.reading_native)
 
 

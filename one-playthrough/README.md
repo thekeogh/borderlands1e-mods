@@ -1,6 +1,6 @@
 # One Playthrough
 
-**4.5.9 · keogh · Borderlands GOTY Enhanced**
+**4.5.10 · keogh · Borderlands GOTY Enhanced**
 
 Play from level **1 to 69** in one continuous journey through Pandora. Enemies
 and mission offers scale with you across the main story and all four DLCs,

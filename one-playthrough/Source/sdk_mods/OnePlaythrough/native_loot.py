@@ -9,7 +9,6 @@ never reinitialize an actor or reroll a pool. Definition-data reconstruction
 from copy import deepcopy
 
 from .rewards import inherited
-from .boss_trace import BossTrace
 
 PATH = "Engine.WillowInventory:InitializeInventory"
 REQUIRED = {"InBalanceDef", "InManufacturer", "InGradeIndex", "InAdditionalQueryInterfaceSource"}
@@ -47,7 +46,6 @@ class NativeLoot:
         self.calls = 0
         self.skipped = {}
         self.recent = []
-        self.boss_trace = BossTrace(runtime)
 
     def enter_definition(self):
         token = object()
@@ -92,25 +90,20 @@ class NativeLoot:
             return None
         self.calls += 1
         if self.definition_scopes:
-            self.boss_trace.native(obj, args, "definition-data reconstruction")
             self.loot.count(self.skipped, "definition-data reconstruction")
             return None
         if self.runtime.missions.scopes:
-            self.boss_trace.native(obj, args, "mission reward")
             self.loot.count(self.skipped, "mission reward")
             return None
         player = self.runtime.level(pc)
         if player is None:
-            self.boss_trace.native(obj, args, "no player context")
             return None
         kind = self.owner_kind(obj, args.InAdditionalQueryInterfaceSource, pc)
         if kind in ("player", "live/neutral enemy"):
-            self.boss_trace.native(obj, args, kind)
             self.loot.count(self.skipped, kind)
             return None
         original = getattr(obj, "DefinitionData", None)
         if original is None or args.InBalanceDef is None:
-            self.boss_trace.native(obj, args, "no equipment definition data")
             self.loot.count(self.skipped, "no equipment definition data")
             return None
         original = deepcopy(original)  # Rollback must not retain a write-through native view.
@@ -125,16 +118,13 @@ class NativeLoot:
             definition = next((getattr(b, "InventoryDefinition", None) for b in inherited(args.InBalanceDef)
                                if getattr(b, "InventoryDefinition", None) is not None), None)
             if definition is None:
-                self.boss_trace.native(obj, args, "definition not ready")
                 self.loot.count(self.skipped, "definition not ready")
                 return None
             setattr(probe, field, definition)
         scope = {"kind": kind, "source": obj._path_name(), "floor": self.loot.minimum(player, probe)}
         prepared = self.loot.prepare_data(probe, scope)
         if prepared is None:
-            self.boss_trace.native(obj, args, "native level retained or unsupported")
             return None
-        self.boss_trace.native(obj, args, "raise planned")
         # Persist only the selected level: all original UObject identities and
         # part fields remain exactly as native generation supplied them.
         encoded = deepcopy(original)
@@ -153,5 +143,4 @@ class NativeLoot:
     def snapshot(self):
         return {"signature": self.signature, "calls": self.calls,
                 "definition_scopes": len(self.definition_scopes),
-                "skipped": dict(self.skipped), "recent": list(self.recent),
-                "boss_trace": self.boss_trace.snapshot()}
+                "skipped": dict(self.skipped), "recent": list(self.recent)}

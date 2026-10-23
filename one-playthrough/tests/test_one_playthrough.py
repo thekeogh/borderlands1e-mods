@@ -4,6 +4,7 @@ from contextlib import nullcontext
 from copy import deepcopy
 import importlib.util
 import json
+import re
 from pathlib import Path
 import sys
 import tempfile
@@ -13,6 +14,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "Source/sdk_mods/OnePlaythrough"
+VERSION = re.search(r'^version = "([^"]+)"', (SOURCE / "pyproject.toml").read_text(), re.M).group(1)
 NATIVE = json.loads((ROOT / "tests/fixtures/native.json").read_text())
 
 
@@ -183,7 +185,7 @@ class Harness:
         spec = importlib.util.spec_from_file_location(name, SOURCE / "__init__.py",
                                                     submodule_search_locations=[str(SOURCE)])
         module = importlib.util.module_from_spec(spec)
-        module.__version__, module.__version_info__ = "4.5.9", (4, 5, 9)
+        module.__version__, module.__version_info__ = VERSION, tuple(map(int, VERSION.split(".")))
         self.modules[name] = module
         with patch.dict(sys.modules, self.modules):
             spec.loader.exec_module(module)
