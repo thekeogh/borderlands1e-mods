@@ -1,3 +1,10 @@
+import { GroupStatus } from "./group-status";
+import { BatchActions } from "./batch-actions";
+import { RebuildActions } from "./rebuild-actions";
+import { ItemImage, ImageCoveragePanel } from "./item-images";
+import type { ImageCoverage, ImageMatch } from "../shared/images";
+import { acquisitionSources } from "../shared/acquisition";
+import { agentNames } from "../shared/agents";
 import { SourceViewer } from "./source-viewer";
 import { useChromeHelper, ChromeHelperSetup } from "./chrome-helper";
 import { CATALOGUE_SCHEMA_VERSION } from "../shared/versions";
@@ -24,6 +31,8 @@ import {
   Download,
   RefreshCw,
   RotateCcw,
+  Trash2,
+  Undo2,
   ArrowRight,
   Target,
   TriangleAlert,
@@ -51,8 +60,12 @@ import type {
 } from "../shared/models";
 import "./style.css";
 type Detail = {
+  finalValidation: { checkedAt: string; compilerVersion: string } | null;
+  image: ImageMatch;
+  savedRebuild: { available: boolean; reason: string };
   websiteOutput: import("../shared/website").WebsiteEntry | null;
   parts: import("../shared/models").PartDefinition[];
+  researchAudit: any;
   research: ResearchReport | null;
   family: Family;
   packet: Packet | null;
@@ -66,17 +79,18 @@ async function request<T = any>(
   url: string,
   body?: unknown,
   method = "POST",
+  options: RequestInit = {},
 ): Promise<T> {
-  const r = await fetch(
-    url,
-    body === undefined
+  const r = await fetch(url, {
+    ...options,
+    ...(body === undefined
       ? {}
       : {
           method,
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
-        },
-  );
+        }),
+  });
   const value = await r.json();
   if (!r.ok) throw new Error(value.error || "Request failed");
   return value;
@@ -85,7 +99,7 @@ const stepLabels = {
   evidence: "Read game data",
   sources: "Research sources",
   draft: "Write the entry",
-  validate: "Validate & save",
+  validate: "Validate final JSON",
   complete: "Ready to export",
 };
 const statusLabel = {
@@ -93,10 +107,11 @@ const statusLabel = {
   running: "Processing",
   blocked: "Needs attention",
   done: "Ready",
-  excluded: "Excluded",
+  excluded: "Removed",
 };
 function App() {
   const [state, setState] = useState<Project | null>(null),
+    [images, setImages] = useState<ImageCoverage | null>(null),
     [selected, setSelected] = useState(
       localStorage.getItem("borderlens.selection") || "",
     ),
@@ -118,7 +133,7 @@ function App() {
     [connected, setConnected] = useState(true),
     [settingsOpen, setSettingsOpen] = useState(false),
     [viewedSource, setViewedSource] = useState<Source | null>(null),
-    [codex, setCodex] = useState<any>(null),
+    [agents, setAgents] = useState<any>(null),
     [correction, setCorrection] = useState(""),
     [source, setSource] = useState(""),
     [html, setHtml] = useState(""),
@@ -137,18 +152,32 @@ function App() {
     )
       setCollapsed((current) => ({ ...current, [group]: false }));
     previousGroup.current = { id: selected, group };
-  }, [selected, state?.revision]);
+  }, [selected, state?.revision, images?.revision]);
   const editDirty = useRef(false);
   const formId = useRef("");
-  const editRevision = useRef(-1);
+  const editRevision = useRef("");
   const input = useRef<HTMLInputElement>(null);
   const refresh = async () => {
     try {
-      setState(await request("/api/state"));
+      const [project, imageLibrary] = await Promise.all([
+        request("/api/state"),
+        request("/api/images"),
+      ]);
+      setState(project);
+      setImages(imageLibrary);
       setConnected(true);
     } catch {
       setConnected(false);
     }
+  };
+  const refreshImageFolder = async () => {
+    const library = await request<ImageCoverage>(
+      "/api/images",
+      undefined,
+      "GET",
+      { cache: "no-store" },
+    );
+    setImages(library);
   };
   const chromeHelper = useChromeHelper({
     saved: (message) => {
@@ -157,6 +186,9 @@ function App() {
     },
     error: (message) => setError(message),
   });
+  useEffect(() => {
+    if (settingsOpen) void request("/api/agents").then(setAgents);
+  }, [settingsOpen]);
   useEffect(() => {
     void refresh();
     let timer: ReturnType<typeof setTimeout>;
@@ -167,7 +199,7 @@ function App() {
     };
     es.onerror = () => setConnected(false);
     const t = setInterval(refresh, 10000);
-    void request("/api/codex").then(setCodex);
+    void request("/api/agents").then(setAgents);
     return () => {
       es.close();
       clearInterval(t);
@@ -175,12 +207,21 @@ function App() {
     };
   }, []);
   useEffect(() => {
-    if (state && !selected && state.families.length)
+    if (!state) return;
+    const visible = state.families.filter(
+      (f) =>
+        !f.supersededBy &&
+        (filter === "excluded"
+          ? f.status === "excluded"
+          : f.status !== "excluded"),
+    );
+    if (!visible.some((f) => f.id === selected))
       setSelected(
-        state.families.find((f) => /hellfire/i.test(f.name))?.id ||
-          state.families[0].id,
+        visible.find((f) => /hellfire/i.test(f.name))?.id ||
+          visible[0]?.id ||
+          "",
       );
-  }, [state, selected]);
+  }, [state, selected, filter]);
   useEffect(() => {
     localStorage.setItem("borderlens.selection", selected);
     if (!selected) {
@@ -195,7 +236,7 @@ function App() {
       })
       .catch(() => {});
     return () => c.abort();
-  }, [selected, state?.revision]);
+  }, [selected, state?.revision, images?.revision]);
   useEffect(() => {
     if (detail && detail.family.id === selected) {
       const changed = formId.current !== selected;
@@ -206,11 +247,12 @@ function App() {
         setGameOnly(detail.family.gameOnly);
         setSource(detail.family.sourceUrls[0] || "");
       }
+      const signature = `${detail.family.revision}:${detail.websiteOutput?.image}:${images?.revision}`;
       if (
         changed ||
-        (!editDirty.current && editRevision.current !== detail.family.revision)
+        (!editDirty.current && editRevision.current !== signature)
       ) {
-        editRevision.current = detail.family.revision;
+        editRevision.current = signature;
         setEdit(
           JSON.stringify(
             detail.websiteOutput || detail.output || detail.draft?.entry || {},
@@ -220,7 +262,13 @@ function App() {
         );
       }
     }
-  }, [selected, detail?.family.id, detail?.family.revision]);
+  }, [
+    selected,
+    detail?.family.id,
+    detail?.family.revision,
+    detail?.websiteOutput?.image,
+    images?.revision,
+  ]);
   useEffect(() => {
     localStorage.setItem("borderlens.groups", JSON.stringify(collapsed));
   }, [collapsed]);
@@ -276,14 +324,21 @@ function App() {
     current = state.families.find((f) => f.id === run.currentId),
     done = state.families.filter((f) => f.status === "done").length,
     blocked = state.families.filter((f) => f.status === "blocked").length,
+    removed = state.families.filter(
+      (f) => f.status === "excluded" && !f.supersededBy,
+    ).length,
     percent = run.queue.length
       ? Math.round((run.index / run.queue.length) * 100)
       : 0;
   const groups: Record<string, Family[]> = {};
   for (const f of state.families) {
+    if (f.supersededBy || (filter !== "excluded" && f.status === "excluded"))
+      continue;
     if (
       query &&
-      !`${f.name} ${f.subtype}`.toLowerCase().includes(query.toLowerCase())
+      !`${f.name} ${f.subtype} ${f.character || ""}`
+        .toLowerCase()
+        .includes(query.toLowerCase())
     )
       continue;
     if (filter !== "all" && f.status !== filter) continue;
@@ -369,6 +424,12 @@ function App() {
             Needs attention{blocked > 0 && ` ${blocked}`}
           </button>
         </div>
+        <button
+          className={`removed-items-link ${filter === "excluded" ? "selected" : ""}`}
+          onClick={() => setFilter(filter === "excluded" ? "all" : "excluded")}
+        >
+          <Trash2 size={13} /> Removed items{removed > 0 && ` (${removed})`}
+        </button>
         <div className="item-tree">
           {Object.entries(groups).map(([group, items]) => (
             <div key={group} className="tree-group">
@@ -384,27 +445,69 @@ function App() {
                   <ChevronDown size={13} />
                 )}
                 <span>{group}</span>
-                <small>{items.length}</small>
+                <GroupStatus items={items} />
               </button>
               {!collapsed[group] &&
-                items.map((item) => (
-                  <button
-                    key={item.id}
-                    className={`item-row ${selected === item.id ? "selected" : ""}`}
-                    onClick={() => select(item.id)}
-                    title={`${item.name} · ${statusLabel[item.status]}`}
-                  >
-                    <span className={`status-dot ${item.status}`} />
-                    <span>{item.name}</span>
-                    {item.status === "running" ? (
-                      <span className="tiny-spinner" />
-                    ) : item.status === "done" ? (
-                      <Check size={13} />
-                    ) : item.status === "blocked" ? (
-                      <TriangleAlert size={13} />
-                    ) : null}
-                  </button>
-                ))}
+                (() => {
+                  const renderItem = (item: Family) => (
+                    <button
+                      key={item.id}
+                      className={`item-row ${selected === item.id ? "selected" : ""}`}
+                      onClick={() => select(item.id)}
+                      title={`${item.name} · ${statusLabel[item.status]}`}
+                    >
+                      <span className={`status-dot ${item.status}`} />
+                      <span>{item.name}</span>
+                      {item.status === "running" ? (
+                        <span className="tiny-spinner" />
+                      ) : item.status === "done" ? (
+                        <Check size={13} />
+                      ) : item.status === "blocked" ? (
+                        <X
+                          size={14}
+                          className="failed-item-icon"
+                          aria-label="Failed — needs attention"
+                        />
+                      ) : null}
+                    </button>
+                  );
+                  if (!["Class mods", "Artifacts"].includes(group))
+                    return items.map(renderItem);
+                  const characters = [
+                    ...new Set(
+                      items.map((item) => item.character || "Needs review"),
+                    ),
+                  ];
+                  return characters.map((character) => {
+                    const key = `${group}:${character}`,
+                      children = items.filter(
+                        (item) =>
+                          (item.character || "Needs review") === character,
+                      );
+                    return (
+                      <div key={key} className="character-group">
+                        <button
+                          className="group-toggle"
+                          onClick={() =>
+                            setCollapsed({
+                              ...collapsed,
+                              [key]: !collapsed[key],
+                            })
+                          }
+                        >
+                          {collapsed[key] ? (
+                            <ChevronRight size={13} />
+                          ) : (
+                            <ChevronDown size={13} />
+                          )}
+                          <span>{character}</span>
+                          <GroupStatus items={children} />
+                        </button>
+                        {!collapsed[key] && children.map(renderItem)}
+                      </div>
+                    );
+                  });
+                })()}
             </div>
           ))}
           {!Object.keys(groups).length && (
@@ -438,6 +541,18 @@ function App() {
             </strong>
           </div>
           <div className="toolbar">
+            <select
+              className="agent-select"
+              aria-label="Default agent"
+              title="Default agent; changes apply to the next AI call. Automatic fallback is enabled."
+              value={state.settings.agent || "grok"}
+              onChange={(event) =>
+                void setSetting({ agent: event.target.value })
+              }
+            >
+              <option value="grok">Grok 4.6</option>
+              <option value="codex">Codex</option>
+            </select>
             <button
               className="button quiet chrome-helper-button"
               title={
@@ -522,36 +637,14 @@ function App() {
               <span>Current item</span>
             </button>
           )}
-          <button
-            className={`button ${busy ? "pause-button" : "primary"}`}
-            disabled={
-              working || !state.families.length || run.status === "pausing"
+          <BatchActions
+            run={run}
+            busy={busy}
+            disabled={working || !state.families.length}
+            action={(action, sourceMode) =>
+              void act(() => request("/api/run", { action, sourceMode }))
             }
-            onClick={() =>
-              act(() =>
-                request("/api/run", {
-                  action: busy
-                    ? "pause"
-                    : run.status === "paused" || run.status === "blocked"
-                      ? "resume"
-                      : "start",
-                }),
-              )
-            }
-          >
-            {busy ? (
-              <Pause size={16} />
-            ) : (
-              <Play size={16} fill="currentColor" />
-            )}
-            {run.status === "pausing"
-              ? "Pausing…"
-              : busy
-                ? "Pause"
-                : run.status === "paused" || run.status === "blocked"
-                  ? "Resume"
-                  : "Start"}
-          </button>
+          />
         </div>
         {(error || notice) && (
           <div
@@ -649,6 +742,11 @@ function App() {
                   Compare catalogues
                 </button>
               </div>
+              <ImageCoveragePanel
+                library={images}
+                select={select}
+                refresh={() => void refresh()}
+              />
               <div className="metric-grid">
                 {[
                   ["Extracted candidates", state.families.length],
@@ -817,16 +915,14 @@ function App() {
                   </p>
                 </div>
                 <div className="item-actions">
-                  <button
-                    className="button secondary"
-                    disabled={working}
-                    onClick={() => itemAction("rebuild")}
-                  >
-                    <RotateCcw size={15} /> Rebuild this item
-                  </button>
+                  <RebuildActions
+                    saved={detail?.savedRebuild}
+                    disabled={working || f.status === "excluded"}
+                    run={(action) => void itemAction(action)}
+                  />
                   <button
                     className="button quiet"
-                    disabled={working}
+                    disabled={working || f.status === "excluded"}
                     onClick={() => itemAction("from")}
                   >
                     Start from here <ArrowRight size={14} />
@@ -900,6 +996,30 @@ function App() {
                         {output ? "LAST VALIDATED REVISION" : "NOT BUILT YET"}
                       </span>
                     </div>
+                    <ItemImage
+                      name={f.name}
+                      match={
+                        images?.items.find((item) => item.id === f.id) ||
+                        detail?.image
+                      }
+                      library={images}
+                      refresh={refreshImageFolder}
+                      busy={working}
+                      choose={(body) =>
+                        void act(
+                          () => request("/api/items/" + f.id + "/image", body),
+                          "Image saved.",
+                        )
+                      }
+                    />
+                    {detail?.finalValidation &&
+                      output &&
+                      detail.finalValidation.compilerVersion ===
+                        output.compilerVersion && (
+                        <p className="muted">
+                          <CheckCircle2 size={14} /> Final JSON checked
+                        </p>
+                      )}
                     {output ? (
                       <>
                         <div className="preview-tags">
@@ -921,6 +1041,14 @@ function App() {
                             {paragraph}
                           </p>
                         ))}
+                        {output.details?.map((section, i) => (
+                          <section key={i}>
+                            <h2>{section.heading}</h2>
+                            {section.paragraphs.map((paragraph, j) => (
+                              <p key={j}>{paragraph}</p>
+                            ))}
+                          </section>
+                        ))}
                         <h2>What makes it different</h2>
                         {output.specialEffects.length ? (
                           <ul className="effect-list">
@@ -939,7 +1067,10 @@ function App() {
                           <div className="stats-list">
                             {output.stats.map((s, i) => (
                               <div key={i}>
-                                <strong>{s.name}</strong>
+                                <strong>
+                                  {s.name}
+                                  {s.context ? ` (${s.context})` : ""}
+                                </strong>
                                 <span>
                                   {s.minimum ?? "—"}
                                   {s.maximum !== s.minimum && s.maximum !== null
@@ -947,15 +1078,12 @@ function App() {
                                     : ""}{" "}
                                   {s.unit}
                                 </span>
-                                <p>{s.notes}</p>
+                                {s.notes && <p>{s.notes}</p>}
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <p className="muted">
-                            No verified final stat ranges yet. Shared type
-                            defaults are kept in the evidence.
-                          </p>
+                          <p className="muted">No stat ranges available yet.</p>
                         )}
                         {output.variants?.length > 0 && (
                           <>
@@ -998,7 +1126,7 @@ function App() {
                         )}
                         <h2>Where to find it</h2>
                         {output.sources.length ? (
-                          output.sources.map((s, i) => (
+                          acquisitionSources(output.sources).map((s, i) => (
                             <p key={i}>
                               <strong>{s.label}</strong>
                               <br />
@@ -1015,12 +1143,17 @@ function App() {
                                   {condition}
                                 </small>
                               ))}
-                              {s.dropChance && (
-                                <small className="source-context">
-                                  {s.dropChance.percent}% ·{" "}
-                                  {s.dropChance.conditions}
+                              {s.dropChances.map((rate, j) => (
+                                <small className="source-context" key={j}>
+                                  {rate.percent}%
+                                  {rate.players
+                                    ? ` · ${rate.players} player${rate.players === 1 ? "" : "s"}`
+                                    : ""}
+                                  {rate.conditions.length
+                                    ? ` · ${rate.conditions.join("; ")}`
+                                    : ""}
                                 </small>
-                              )}
+                              ))}
                               {s.url && (
                                 <a
                                   target="_blank"
@@ -1058,7 +1191,13 @@ function App() {
                         </p>
                         <button
                           className="button secondary"
-                          onClick={() => itemAction("rebuild")}
+                          onClick={() =>
+                            itemAction(
+                              detail?.savedRebuild.available
+                                ? "rebuild-saved"
+                                : "rebuild-fresh",
+                            )
+                          }
                           disabled={working}
                         >
                           <Play size={14} /> Build {f.name}
@@ -1073,6 +1212,12 @@ function App() {
                       <dd>{f.name}</dd>
                       <dt>Category</dt>
                       <dd>{catalogueGroup(f)}</dd>
+                      {f.character && (
+                        <>
+                          <dt>Character</dt>
+                          <dd>{f.character}</dd>
+                        </>
+                      )}
                       <dt>Game</dt>
                       <dd>Borderlands GOTY Enhanced</dd>
                       <dt>Game evidence</dt>
@@ -1091,6 +1236,36 @@ function App() {
                       <dt>Saved revision</dt>
                       <dd>{f.revision || "Not built yet"}</dd>
                     </dl>
+                    <div className="catalogue-removal">
+                      {f.status === "excluded" ? (
+                        <>
+                          <p>
+                            Removed from batches and exports. Saved data is
+                            kept.
+                          </p>
+                          <button
+                            className="button secondary"
+                            disabled={working}
+                            onClick={() => itemAction("restore")}
+                          >
+                            <Undo2 size={14} /> Restore to catalogue
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            className="button remove-item-button"
+                            disabled={
+                              working || (busy && run.currentId === f.id)
+                            }
+                            onClick={() => itemAction("remove")}
+                          >
+                            <Trash2 size={14} /> Remove from catalogue
+                          </button>
+                          <p>You can restore it from Removed items.</p>
+                        </>
+                      )}
+                    </div>
                     <div className="inspector-note">
                       <Database size={16} />
                       <p>
@@ -1223,6 +1398,23 @@ function App() {
                         this item reaches that step.
                       </div>
                     )}
+                    {detail?.researchAudit?.ledger && (
+                      <details className="evidence-details">
+                        <summary>
+                          Compilation coverage (
+                          {detail.researchAudit.ledger.length} sources)
+                        </summary>
+                        <p>
+                          Every source is read in full. Each extracted fact is
+                          used, merged as a duplicate, or given an explicit
+                          reason for exclusion. This audit stays out of website
+                          exports.
+                        </p>
+                        <pre>
+                          {JSON.stringify(detail.researchAudit, null, 2)}
+                        </pre>
+                      </details>
+                    )}
                     <details className="evidence-details">
                       <summary>
                         Captured game evidence (
@@ -1255,7 +1447,7 @@ function App() {
                             disabled={working || busy}
                             value={
                               f.classification?.origin === "manual"
-                                ? f.classification.weaponType
+                                ? f.classification.weaponType || ""
                                 : ""
                             }
                             onChange={(event) =>
@@ -1356,7 +1548,7 @@ function App() {
                       className="text-button danger"
                       disabled={working || busy}
                       onClick={() =>
-                        itemAction("exclude", {
+                        itemAction("remove", {
                           notes:
                             correction ||
                             "Deliberately excluded from this catalogue.",
@@ -1446,7 +1638,7 @@ function App() {
         </main>
         <footer>
           <span>ONE FAMILY. EVERY DETAIL.</span>
-          <span>Borderlens workshop · 0.3.1</span>
+          <span>Borderlens workshop · 0.15.2</span>
         </footer>
       </section>
       <input
@@ -1485,32 +1677,45 @@ function App() {
             </button>
             <div className="eyebrow">YOUR WORKSHOP</div>
             <h2>Settings</h2>
-            <div className="codex-status">
-              <span
-                className={
-                  codex?.chatgpt ? "connection-dot" : "connection-dot offline"
-                }
-              />
-              <div>
-                <strong>{codex?.message || "Checking Codex…"}</strong>
-                <small>
-                  {codex?.version ||
-                    "Run codex login on this machine to connect."}
-                </small>
-              </div>
-              <button
-                className="icon-button"
-                onClick={() => request("/api/codex").then(setCodex)}
-              >
-                <RefreshCw size={15} />
-              </button>
-            </div>
+            {(["grok", "codex"] as const).map((name) => {
+              const status = agents?.providers?.[name] || agents;
+              return (
+                <div className="codex-status" key={name}>
+                  <span
+                    className={
+                      status?.ready || status?.chatgpt
+                        ? "connection-dot"
+                        : "connection-dot offline"
+                    }
+                  />
+                  <div>
+                    <strong>{agentNames[name]}</strong>
+                    <small>{status?.message || "Checking connection…"}</small>
+                    {status?.lastError && (
+                      <small className="agent-error">
+                        Last call: {status.lastError}
+                      </small>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            <button
+              className="button quiet"
+              onClick={() =>
+                void request("/api/agents/recheck", {}).then(setAgents)
+              }
+            >
+              Recheck agents
+            </button>
             <p className="muted small">
-              Uses your ChatGPT Codex allowance. No paid API-key fallback. Model
-              processing happens online.
+              Uses your signed-in Grok/Codex subscriptions. Grok stays on 4.6.
+              Writing uses low effort; extraction/research uses medium. Failed
+              calls or calls over five minutes switch to the other agent. No
+              API-key fallback.
             </p>
             <label>
-              Model
+              Codex model
               <input
                 defaultValue={state.settings.model}
                 key={state.settings.model}

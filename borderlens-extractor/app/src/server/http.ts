@@ -1,3 +1,5 @@
+import { savedSourceCache } from "./source-cache.ts";
+import { ImagePath } from "../shared/images.ts";
 import { chromeRoutes } from "./chrome-http.ts";
 import { websiteZip, websiteEntry } from "./website-export.ts";
 import { weaponTypes } from "../shared/taxonomy.ts";
@@ -82,10 +84,48 @@ export function api(store: Store, worker: Worker) {
       res.json(result);
     },
   );
+  app.get("/api/images", (_req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    store.syncClassifications();
+    res.json(store.images.coverage(store.state.families));
+  });
+  app.get("/api/images/file/:folder/:filename", (req, res) => {
+    const file = store.images.file(
+      req.params.folder + "/" + req.params.filename,
+    );
+    if (!file) throw new HttpError(404, "Image not found.");
+    res.sendFile(file, { headers: { "Cache-Control": "no-cache" } });
+  });
+  app.post("/api/items/:id/image", (req, res) => {
+    const f = store.family(req.params.id);
+    const body = z
+      .object({
+        image: ImagePath.nullable().optional(),
+        automatic: z.boolean().optional(),
+      })
+      .strict()
+      .parse(req.body);
+    if (!body.automatic && body.image === undefined)
+      throw new HttpError(400, "Choose an image or automatic matching.");
+    try {
+      store.images.set(f.id, body.image ?? null, body.automatic);
+    } catch (error: any) {
+      throw new HttpError(400, error.message);
+    }
+    f.revision++;
+    f.updatedAt = now();
+    store.save();
+    res.json(store.images.match(f));
+  });
   app.get("/api/items/:id", (req, res) => {
     store.syncClassifications();
     const f = store.family(req.params.id);
     res.json({
+      finalValidation: store.get(f.id, "finalValidation"),
+      savedRebuild: (({ available, reason }) => ({ available, reason }))(
+        savedSourceCache(store, f),
+      ),
+      image: (store.images.refresh(), store.images.match(f)),
       family: f,
       packet: store.get(f.id, "packet"),
       draft: store.get(f.id, "draft"),
@@ -105,10 +145,14 @@ export function api(store: Store, worker: Worker) {
       .object({
         action: z.enum([
           "rebuild",
+          "rebuild-saved",
+          "rebuild-fresh",
           "from",
           "refresh",
           "retry",
           "exclude",
+          "remove",
+          "restore",
           "resolve",
           "classification",
           "save-output",
@@ -126,12 +170,25 @@ export function api(store: Store, worker: Worker) {
     res.json({ ok: true });
   });
   app.post("/api/run", (req, res) => {
-    const { action } = z
-      .object({ action: z.enum(["start", "pause", "resume"]) })
+    const { action, sourceMode } = z
+      .object({
+        action: z.enum(["start", "pause", "resume"]),
+        sourceMode: z.enum(["saved", "fresh"]).optional(),
+      })
+      .strict()
+      .refine(
+        (body) => body.action === "start" || body.sourceMode === undefined,
+        "Choose a source mode only when starting a batch.",
+      )
       .parse(req.body);
+    if (action === "start" && worker.busy)
+      throw new HttpError(
+        409,
+        "Pause the current run before starting a new batch.",
+      );
     if (action === "pause") worker.pause();
     else if (action === "resume") worker.resume();
-    else worker.start();
+    else worker.start(undefined, undefined, sourceMode || "saved");
     res.json(store.state.run);
   });
   app.post("/api/coverage", (_req, res) => {
@@ -174,10 +231,9 @@ export function api(store: Store, worker: Worker) {
     res.json({ ok: true });
   });
   app.patch("/api/settings", (req, res) => {
-    if (worker.busy)
-      throw new HttpError(409, "Pause processing before changing settings.");
     const body = z
       .object({
+        agent: z.enum(["grok", "codex"]).optional(),
         model: z.string().max(100).optional(),
         writingStyle: z.string().max(4000).optional(),
         research: z.boolean().optional(),
@@ -185,6 +241,11 @@ export function api(store: Store, worker: Worker) {
       })
       .strict()
       .parse(req.body);
+    if (worker.busy && Object.keys(body).some((key) => key !== "agent"))
+      throw new HttpError(
+        409,
+        "Pause processing before changing settings other than the default agent.",
+      );
     const prev = store.state.settings;
     const invalidate =
       (body.model !== undefined && body.model !== prev.model) ||
@@ -203,8 +264,15 @@ export function api(store: Store, worker: Worker) {
     res.json(prev);
   });
   app.get("/api/codex", async (_req, res) =>
+    res.json(await worker.ai.status("codex")),
+  );
+  app.get("/api/agents", async (_req, res) =>
     res.json(await worker.ai.status()),
   );
+  app.post("/api/agents/recheck", async (_req, res) => {
+    worker.ai.resetFailures?.();
+    res.json(await worker.ai.status());
+  });
   app.get("/api/export", (_req, res) => {
     store.syncClassifications();
     const zip = websiteZip(store);
@@ -233,6 +301,7 @@ export function api(store: Store, worker: Worker) {
         "DELETE FROM raw; DELETE FROM artifacts; DELETE FROM sources;",
       );
       store.classifications.clear();
+      store.images.clear();
       store.state = initial();
       store.reloadRecords();
       for (const dir of ["captures", "sources", "ai", "exports"]) {
@@ -256,6 +325,8 @@ export function api(store: Store, worker: Worker) {
         f.issue = null;
       }
       store.state.run = {
+        sourceMode: "saved",
+        sourcePrepared: [],
         status: "idle",
         queue: [],
         index: 0,
@@ -291,7 +362,9 @@ export function api(store: Store, worker: Worker) {
           ? 413
           : error instanceof HttpError
             ? error.status
-            : error instanceof z.ZodError || error instanceof multer.MulterError
+            : error instanceof z.ZodError ||
+                error instanceof multer.MulterError ||
+                error.type === "entity.parse.failed"
               ? 400
               : 500;
       res.status(status).json({

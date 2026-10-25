@@ -71,6 +71,7 @@ export function discover(records: Map<string, Raw>): Family[] {
       .replace(/<[^>]+>/g, "")
       .trim();
     if (!name || name === "None") continue;
+    if (["Class mods", "Artifacts"].includes(category(r.path))) continue;
     const cat = category(r.path),
       sub = cat === "Weapons" ? subtype(r.path) : cat,
       key = `${cat}|${sub}|${name.toLowerCase()}`;
@@ -103,8 +104,195 @@ export function discover(records: Map<string, Raw>): Family[] {
     }
     f.roots.push(r.path);
   }
-  return [...groups.values()].sort(catalogueOrder);
+  return [...groups.values(), ...discoverCharacterFamilies(records)].sort(
+    catalogueOrder,
+  );
 }
+// Character equipment uses meaningful prefixes, rather than generic titles.
+export function discoverCharacterFamilies(records: Map<string, Raw>): Family[] {
+  const result = new Map<string, Family>();
+  const characters = {
+    1: "Roland",
+    2: "Mordecai",
+    3: "Lilith",
+    4: "Brick",
+  } as const;
+  const rows = [...records.values()].filter(
+    (r) => !/Default__|test_|delete/i.test(r.path),
+  );
+  const lookup = (p: string) => records.get(p.toLowerCase());
+  const add = (
+    cat: "Class mods" | "Artifacts",
+    character: Family["character"],
+    name: string,
+    roots: string[],
+    element?: Family["element"],
+  ) => {
+    const key = `${cat}|${character}|${name.toLowerCase()}`;
+    const existing = result.get(key);
+    if (existing) {
+      existing.roots = [...new Set([...existing.roots, ...roots])];
+      return;
+    }
+    result.set(key, {
+      id: `${cat.toLowerCase().replace(/ /g, "-")}-${character!.toLowerCase()}-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${hash(key).slice(0, 6)}`,
+      name,
+      category: cat,
+      subtype: cat,
+      character,
+      element,
+      discoveryVersion: 1,
+      aliases: [],
+      roots: [...new Set(roots)],
+      status: "queued",
+      stage: "evidence",
+      inputHash: "",
+      issue: null,
+      notes: "",
+      gameOnly: false,
+      sourceUrls: [],
+      history: [],
+      updatedAt: now(),
+      manualOutput: false,
+      revision: 0,
+    });
+  };
+  for (const item of rows.filter((r) => r.class?.endsWith(".ItemDefinition"))) {
+    const p = unpack(item.properties),
+      cat = category(item.path);
+    const character =
+      characters[p.RequiredCharacter as keyof typeof characters];
+    if (!character || !["Class mods", "Artifacts"].includes(cat)) continue;
+    const listPath = cat === "Class mods" ? p.BodyParts : p.RightSideParts;
+    const list = typeof listPath === "string" ? lookup(listPath) : undefined;
+    if (!list) continue;
+    for (const rule of unpack(list.properties)?.WeightedParts || []) {
+      // A disabled selection rule does not establish an obtainable family.
+      const weight = rule.DefaultWeight;
+      if (
+        weight &&
+        weight.BaseValueConstant === 0 &&
+        !weight.BaseValueAttribute &&
+        !weight.InitializationDefinition &&
+        !(rule.Manufacturers || []).some(
+          (m: any) =>
+            m.DefaultWeight?.BaseValueConstant ||
+            m.DefaultWeight?.InitializationDefinition ||
+            m.DefaultWeight?.BaseValueAttribute,
+        )
+      )
+        continue;
+      const body = lookup(String(rule.Part));
+      if (!body) continue;
+      for (const prefix of unpack(body.properties)?.PrefixList || []) {
+        const title = lookup(prefix),
+          name = String(unpack(title?.properties)?.PartName || "")
+            .replace(/<[^>]+>/g, "")
+            .trim();
+        if (!title || !name || name === "None") continue;
+        const element =
+          cat === "Artifacts"
+            ? (["Incendiary", "Shock", "Corrosive", "Explosive"].find(
+                (e) => name.toLowerCase() === e.toLowerCase(),
+              ) as Family["element"])
+            : undefined;
+        if (cat === "Artifacts" && !element) continue;
+        add(
+          cat as "Class mods" | "Artifacts",
+          character,
+          cat === "Artifacts" ? `${name} Artifact` : name,
+          [title.path, body.path, item.path],
+          element,
+        );
+      }
+    }
+  }
+  // DLC custom rewards use enabled fixed part collections, including zero-weight forced parts.
+  for (const collection of rows.filter((r) =>
+    r.class?.endsWith(".ItemPartListCollectionDefinition"),
+  )) {
+    const p = unpack(collection.properties),
+      item = lookup(String(p.AssociatedItem));
+    const character =
+      characters[
+        unpack(item?.properties)?.RequiredCharacter as keyof typeof characters
+      ];
+    if (
+      !item ||
+      !character ||
+      category(item.path) !== "Class mods" ||
+      !p.BodyPartData?.bEnabled
+    )
+      continue;
+    for (const rule of p.BodyPartData.WeightedParts || []) {
+      const body = lookup(String(rule.Part));
+      if (!body) continue;
+      for (const prefix of unpack(body.properties)?.PrefixList || []) {
+        const title = lookup(prefix),
+          name = String(unpack(title?.properties)?.PartName || "").trim();
+        if (title && name && name !== "None")
+          add("Class mods", character, name, [
+            title.path,
+            body.path,
+            collection.path,
+            item.path,
+            ...rows
+              .filter(
+                (r) =>
+                  r.class?.endsWith(".InventoryBalanceDefinition") &&
+                  unpack(r.properties)?.PartListCollection === collection.path,
+              )
+              .map((r) => r.path),
+          ]);
+      }
+    }
+  }
+  return [...result.values()];
+}
+
+// Preserve older captures and research; broad candidates must never export as items.
+export function reconcileCharacterFamilies(store: Store) {
+  const found = discoverCharacterFamilies(store.records);
+  if (!found.length) return;
+  const old = store.state.families.filter(
+    (f) =>
+      ["Class mods", "Artifacts"].includes(f.category) && !f.discoveryVersion,
+  );
+  const added = found.filter(
+    (f) => !store.state.families.some((x) => x.id === f.id),
+  );
+  store.state.families.push(...added);
+  for (const f of old) {
+    f.supersededBy = found
+      .filter((x) => x.category === f.category)
+      .map((x) => x.id);
+    f.status = "excluded";
+    f.issue =
+      "Replaced by character-specific families. Earlier research and output are retained privately.";
+  }
+  // Remove obsolete placeholders from pending work, without touching completed weapons.
+  const r = store.state.run;
+  const obsolete = new Set(old.map((f) => f.id));
+  const previous = r.queue.slice(0, r.index).filter((id) => !obsolete.has(id));
+  const pending = r.queue.slice(r.index).filter((id) => !obsolete.has(id));
+  if (r.queue.length && added.length) {
+    const queued = new Set([...previous, ...pending]);
+    pending.push(...added.filter((f) => !queued.has(f.id)).map((f) => f.id));
+    pending.sort((a, b) => catalogueOrder(store.family(a), store.family(b)));
+  }
+  r.queue = [...previous, ...pending];
+  r.index = previous.length;
+  if (r.currentId && obsolete.has(r.currentId)) {
+    r.currentId = null;
+    r.status = "paused";
+    r.message =
+      "Character families updated. Resume to build the new entries and remaining items.";
+  }
+  r.deferred = r.deferred.filter((id) => !obsolete.has(id));
+  if (r.pendingFrom && obsolete.has(r.pendingFrom)) r.pendingFrom = null;
+  store.state.families.sort(catalogueOrder);
+}
+
 export function importZip(store: Store, buffer: Buffer, filename: string) {
   if (["running", "pausing"].includes(store.state.run.status))
     throw new HttpError(
@@ -229,6 +417,7 @@ export function importZip(store: Store, buffer: Buffer, filename: string) {
     for (const old of store.state.families)
       if (!found.some((f) => f.id === old.id)) found.push(old);
     store.state.families = found.sort(catalogueOrder);
+    reconcileCharacterFamilies(store);
     if (store.state.run.status === "idle")
       store.state.run.message =
         "Capture imported. Start the catalogue or build one item first.";

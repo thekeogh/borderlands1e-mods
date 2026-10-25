@@ -1,3 +1,5 @@
+import { reconcileCharacterFamilies } from "./importer.ts";
+import { Images, defaultImageRoot } from "./images.ts";
 import { parseSource } from "./source-content.ts";
 import {
   CATALOGUE_SCHEMA_VERSION,
@@ -18,6 +20,7 @@ import { EventEmitter } from "node:events";
 import { createHash } from "node:crypto";
 import {
   initial,
+  PublicEntry,
   now,
   type Project,
   type Raw,
@@ -35,14 +38,19 @@ export const stable = (v: unknown): string =>
   );
 export class Store extends EventEmitter {
   classifications: Classifications;
+  images: Images;
   db: DatabaseSync;
   state: Project;
   records: Map<string, Raw> = new Map();
-  constructor(public dir: string) {
+  constructor(
+    public dir: string,
+    imageRoot = defaultImageRoot,
+  ) {
     super();
     mkdirSync(dir, { recursive: true });
     for (const d of ["captures", "sources", "ai", "exports"])
       mkdirSync(path.join(dir, d), { recursive: true });
+    this.images = new Images(imageRoot, path.join(dir, "image-overrides.json"));
     this.classifications = new Classifications(
       path.join(dir, "classification-overrides.json"),
     );
@@ -54,6 +62,14 @@ export class Store extends EventEmitter {
       .prepare("SELECT value FROM meta WHERE key=?")
       .get("project") as { value: string } | undefined;
     this.state = r ? JSON.parse(r.value) : initial();
+    if (!["saved", "fresh", "auto"].includes(this.state.run.sourceMode))
+      this.state.run.sourceMode = "auto";
+    if (this.state.run.continueOnError === undefined)
+      this.state.run.continueOnError = this.state.run.queue.length > 1;
+    if (!Array.isArray(this.state.run.sourcePrepared))
+      this.state.run.sourcePrepared = [];
+    if (!["grok", "codex"].includes(this.state.settings.agent))
+      this.state.settings.agent = "grok";
     if (this.state.schemaVersion !== 1)
       throw new Error(
         "Unsupported project database version; keep this folder for migration.",
@@ -73,21 +89,44 @@ export class Store extends EventEmitter {
     }
     this.state.families.sort(catalogueOrder);
     this.reloadRecords();
+    reconcileCharacterFamilies(this);
     for (const f of this.state.families) {
       const output = this.get<any>(f.id, "output");
       const provenance = this.get<any>(f.id, "provenance");
+      let pending = this.get<any>(f.id, "draft");
+      const resumable =
+        ["draft", "validate"].includes(f.stage) &&
+        PublicEntry.safeParse(pending?.entry).success;
       if (
-        output &&
-        (output.schemaVersion !== CATALOGUE_SCHEMA_VERSION ||
-          provenance?.compilerVersion !== COMPILER_VERSION) &&
+        !resumable &&
+        ((output &&
+          (output.schemaVersion !== CATALOGUE_SCHEMA_VERSION ||
+            provenance?.compilerVersion !== COMPILER_VERSION)) ||
+          (pending?.entry &&
+            (pending.entry.schemaVersion !== CATALOGUE_SCHEMA_VERSION ||
+              pending.entry.compilerVersion !== COMPILER_VERSION))) &&
         f.status !== "excluded"
       ) {
+        if (pending)
+          this.put(
+            f.id,
+            "draft:compiler:" + (pending.entry?.compilerVersion || "unknown"),
+            pending,
+          );
         f.stage = "evidence";
         f.status = f.manualOutput ? "blocked" : "queued";
         f.issue = f.manualOutput
-          ? "Saved manual entry uses an older schema. Its content is retained; update it to schema 2 before saving."
+          ? "Saved manual entry uses an older schema. Its content is retained; update it to the current website schema before saving."
           : null;
-        this.forget(f.id, ["packet", "draft", "validationFeedback"]);
+        this.forget(f.id, [
+          "packet",
+          "draft",
+          "validationFeedback",
+          "modifierRepairs",
+          "statRepairs",
+          "proseRepairs",
+          "buildAttempt",
+        ]);
       }
     }
     this.save();
@@ -107,9 +146,53 @@ export class Store extends EventEmitter {
     for (const f of this.state.families) {
       const effective = this.classifications.effective(f.id);
       const previous = f.classification?.weaponType;
+      const previousCategory = f.category;
+      if (effective?.category && effective.category !== f.category) {
+        f.rawCategory ||= f.category;
+        f.rawSubtype ||= f.subtype;
+        f.category = effective.category;
+        f.subtype =
+          f.category === "Weapons"
+            ? f.rawCategory === "Weapons"
+              ? f.rawSubtype
+              : "Other weapons"
+            : f.category;
+      } else if (
+        !effective?.category &&
+        f.rawCategory &&
+        f.category !== f.rawCategory
+      ) {
+        f.category = f.rawCategory;
+        f.subtype = f.rawSubtype || f.category;
+      }
       if (effective) f.classification = effective;
       else delete f.classification;
-      if (
+      if (previousCategory !== f.category) {
+        // Category is compiler metadata. Keep identity, content and evidence;
+        // validate the saved draft before promoting a corrected completed item.
+        const draft = this.get<any>(f.id, "draft");
+        for (const key of ["draft", "manualDraft"]) {
+          const saved = key === "draft" ? draft : this.get<any>(f.id, key);
+          if (saved?.entry) {
+            saved.entry.category = f.category;
+            if (f.category !== "Weapons") saved.entry.weaponType = null;
+            this.put(f.id, key, saved);
+          }
+        }
+        for (const key of ["packet", "validatedPacket"]) {
+          const packet = this.get<any>(f.id, key);
+          if (packet) {
+            packet.category = f.category;
+            packet.subtype = f.subtype;
+            this.put(f.id, key, packet);
+          }
+        }
+        if (f.status === "done" && this.get(f.id, "output")) {
+          f.status = "queued";
+          f.stage = draft?.entry ? "validate" : "draft";
+          f.issue = null;
+        }
+      } else if (
         previous !== effective?.weaponType &&
         f.status === "done" &&
         this.get(f.id, "output")

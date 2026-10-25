@@ -1,7 +1,7 @@
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 import assert from "node:assert/strict";
 import path from "node:path";
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { spawn } from "node:child_process";
 const dir = mkdtempSync(path.join(tmpdir(), "borderlens-browser-"));
@@ -33,10 +33,35 @@ try {
     viewport: { width: 1440, height: 1000 },
   });
   page.setDefaultTimeout(15000);
+  const waitForState = async (predicate: (state: any) => boolean) => {
+    await expect
+      .poll(
+        async () =>
+          predicate(await page.request.get("/api/state").then((r) => r.json())),
+        { timeout: 15000 },
+      )
+      .toBe(true);
+  };
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("http://127.0.0.1:4321");
   await page.getByRole("heading", { name: /Build a clearer/ }).waitFor();
+  const agentSelect = page.getByRole("combobox", { name: "Default agent" });
+  assert.equal(await agentSelect.inputValue(), "grok");
+  assert.deepEqual(
+    await agentSelect
+      .locator("option")
+      .evaluateAll((options) =>
+        options.map((option) => (option as HTMLOptionElement).value),
+      ),
+    ["grok", "codex"],
+  );
+  await agentSelect.selectOption("codex");
+  await waitForState((s) => s.settings.agent === "codex");
+  await page.reload();
+  assert.equal(await agentSelect.inputValue(), "codex");
+  await agentSelect.selectOption("grok");
+  await waitForState((s) => s.settings.agent === "grok");
   mkdirSync(".test-data/screenshots", { recursive: true });
   await page.screenshot({ path: ".test-data/screenshots/empty.png" });
   await page
@@ -48,7 +73,79 @@ try {
     .getByRole("heading", { name: /Hellfire/i })
     .waitFor({ timeout: 60000 });
   const before = await page.request.get("/api/state").then((r) => r.json());
-  assert.equal(before.families.length, 255);
+  assert.equal(before.families.length, 299);
+  assert.equal(
+    before.families.filter((f: any) => f.category === "Class mods").length,
+    44,
+  );
+  assert.equal(
+    before.families.filter((f: any) => f.category === "Artifacts").length,
+    16,
+  );
+  for (const category of ["Artifacts", "Class mods"]) {
+    const group = page.locator(".tree-group").filter({
+      has: page.locator(":scope > .group-toggle").filter({ hasText: category }),
+    });
+    assert.equal(await group.locator(".character-group").count(), 4);
+    assert.equal(
+      await group
+        .locator(".character-group")
+        .filter({ hasText: "Lilith" })
+        .count(),
+      1,
+    );
+  }
+  assert.equal(
+    await page
+      .getByRole("button", { name: "Start from saved sources", exact: true })
+      .isEnabled(),
+    true,
+  );
+  await page.getByLabel("Rebuild options", { exact: true }).click();
+  assert.equal(
+    await page
+      .locator(".rebuild-options-panel")
+      .getByRole("button", { name: /^Rebuild from saved sources/ })
+      .isDisabled(),
+    true,
+  );
+  assert.equal(
+    await page
+      .locator(".rebuild-options-panel")
+      .getByRole("button", { name: /^Rebuild from fresh sources/ })
+      .isEnabled(),
+    true,
+  );
+  await page.getByLabel("Rebuild options", { exact: true }).click();
+
+  const hero = page.getByRole("img", { name: /Hellfire/i });
+  await hero.waitFor();
+  await page.waitForFunction(
+    () =>
+      !!document.querySelector<HTMLImageElement>(".item-image-stage img")
+        ?.naturalWidth,
+  );
+  await page.locator(".image-picker summary").click();
+  await page
+    .getByRole("combobox", { name: "Item image file" })
+    .selectOption("weapons/bessie.png");
+  await page.waitForFunction(() =>
+    document
+      .querySelector<HTMLImageElement>(".item-image-stage img")
+      ?.src.includes("weapons/bessie.png"),
+  );
+  assert.equal(
+    (await page.request.get("/api/state").then((r) => r.json())).run.status,
+    before.run.status,
+  );
+  await page.getByRole("button", { name: "Use automatic matching" }).click();
+  await page.waitForFunction(() =>
+    document
+      .querySelector<HTMLImageElement>(".item-image-stage img")
+      ?.src.includes("weapons/hellfire.png"),
+  );
+  await page.screenshot({ path: ".test-data/screenshots/item-image.png" });
+
   await page.getByRole("button", { name: "Sources & evidence" }).click();
   await page.getByRole("heading", { name: "Help it move forward" }).waitFor();
   await page.getByRole("button", { name: "Final JSON" }).click();
@@ -65,7 +162,9 @@ try {
       .inputValue(),
     '{"unfinished":"keep this edit"}',
   );
-  await page.getByRole("button", { name: "Rebuild this item" }).click();
+  await page
+    .getByRole("button", { name: "Rebuild from fresh sources", exact: true })
+    .click();
   await page.getByRole("button", { name: "Pause", exact: true }).waitFor();
   await page.getByRole("textbox", { name: "Find an item" }).fill("Thunder");
   await page
@@ -94,6 +193,7 @@ try {
     /browser test description/,
   );
   await page.getByRole("button", { name: "Preview", exact: true }).click();
+  await page.getByText("Final JSON checked", { exact: true }).waitFor();
   await page.screenshot({ path: ".test-data/screenshots/catalogue.png" });
   const top = await page.locator(".runbar").boundingBox();
   await page.locator("main").evaluate((el) => {
@@ -103,6 +203,30 @@ try {
   assert.equal(top?.y, after?.y);
   await page.getByRole("button", { name: /Coverage/ }).click();
   await page.getByRole("heading", { name: "Catalogue coverage" }).waitFor();
+  await page
+    .getByRole("heading", { name: "Image coverage", exact: true })
+    .waitFor();
+  assert.equal(
+    await page
+      .getByRole("combobox", { name: "Image coverage filter" })
+      .inputValue(),
+    "missing",
+  );
+  assert.ok((await page.locator(".image-missing-label").count()) > 0);
+  await page
+    .getByRole("textbox", { name: "Find image candidate" })
+    .fill("Bessie");
+  await page
+    .getByRole("combobox", { name: "Image coverage filter" })
+    .selectOption("matched");
+  await page
+    .locator(".image-coverage-table")
+    .getByRole("button", { name: "Bessie", exact: true })
+    .click();
+  await page.getByRole("heading", { name: /Bessie/ }).waitFor();
+  await page.getByRole("img", { name: "Bessie", exact: true }).waitFor();
+  await page.getByRole("button", { name: /Coverage/ }).click();
+
   await page.screenshot({ path: ".test-data/screenshots/coverage.png" });
   await page.getByTitle("Settings", { exact: true }).first().click();
   await page.getByRole("dialog").waitFor();
@@ -125,7 +249,9 @@ try {
       gameOnly: true,
     },
   });
-  await page.getByRole("button", { name: "Rebuild this item" }).click();
+  await page
+    .getByRole("button", { name: "Rebuild from saved sources", exact: true })
+    .click();
   await page
     .locator(".group-toggle")
     .filter({ hasText: "Combat rifles" })
@@ -206,9 +332,166 @@ try {
     ),
     "Show more: " + savedSource.title,
   );
+
+  await page.getByLabel("Batch source options", { exact: true }).click();
+  await page
+    .locator(".batch-options .rebuild-options-panel")
+    .screenshot({ path: ".test-data/screenshots/batch-source-options.png" });
+  await page
+    .locator(".batch-options")
+    .getByRole("button", { name: /^Start from fresh sources/ })
+    .click();
+  await page.getByRole("button", { name: "Pause", exact: true }).waitFor();
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await waitForState((s) => s.run.status === "paused");
+  assert.equal(
+    (await page.request.get("/api/state").then((r) => r.json())).run.sourceMode,
+    "fresh",
+  );
+  await page.reload();
+  await page.getByRole("button", { name: "Resume", exact: true }).waitFor();
+
+  await page.getByRole("button", { name: "Final JSON", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "Edit final item JSON" })
+    .fill('{"unsaved":"keep during folder refresh"}');
+  await page.getByRole("button", { name: "Preview", exact: true }).click();
+  await page.locator(".image-picker summary").click();
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: "Pause", exact: true }).waitFor();
+  const runningBefore = await page.request
+    .get("/api/state")
+    .then((r) => r.json());
+  const folder = path.join(dir, "image-library", "new-images");
+  mkdirSync(folder, { recursive: true });
+  writeFileSync(
+    path.join(folder, "added.png"),
+    Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jq1sAAAAASUVORK5CYII=",
+      "base64",
+    ),
+  );
+  const [folderResponse] = await Promise.all([
+    page.waitForResponse(
+      (r) => r.url().endsWith("/api/images") && r.status() === 200,
+    ),
+    page.getByRole("button", { name: "Refresh folder", exact: true }).click(),
+  ]);
+  assert.ok(
+    (await folderResponse.json()).files.includes("new-images/added.png"),
+  );
+  await page
+    .getByRole("combobox", { name: "Item image file" })
+    .locator('option[value="new-images/added.png"]')
+    .waitFor({ state: "attached" });
+  await page.getByText("Folder refreshed.", { exact: true }).waitFor();
+  const runningAfter = await page.request
+    .get("/api/state")
+    .then((r) => r.json());
+  assert.equal(runningAfter.run.status, "running");
+  assert.equal(runningAfter.run.startedAt, runningBefore.run.startedAt);
+  assert.deepEqual(runningAfter.run.queue, runningBefore.run.queue);
+  assert.equal(runningAfter.run.pauseRequested, false);
+  await page.getByRole("button", { name: "Final JSON", exact: true }).click();
+  assert.equal(
+    await page
+      .getByRole("textbox", { name: "Edit final item JSON" })
+      .inputValue(),
+    '{"unsaved":"keep during folder refresh"}',
+  );
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await waitForState((s) => s.run.status === "paused");
+  await page.getByRole("button", { name: "All", exact: true }).click();
+  await page.getByRole("textbox", { name: "Find an item" }).fill("Hellfire");
+  await page
+    .locator(".item-row")
+    .filter({ hasText: /Hellfire/i })
+    .first()
+    .click();
+  await page.getByRole("button", { name: "Preview", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Remove from catalogue", exact: true })
+    .click();
+  await waitForState(
+    (s) =>
+      s.families.find((f: any) => /hellfire/i.test(f.name)).status ===
+      "excluded",
+  );
+  await page
+    .locator(".item-row")
+    .filter({ hasText: /Hellfire/i })
+    .waitFor({ state: "detached" });
+  await page.getByRole("button", { name: /^Removed items/ }).click();
+  await page
+    .locator(".item-row")
+    .filter({ hasText: /Hellfire/i })
+    .first()
+    .click();
+  await page
+    .getByRole("button", { name: "Restore to catalogue", exact: true })
+    .click();
+  await waitForState(
+    (s) =>
+      s.families.find((f: any) => /hellfire/i.test(f.name)).status !==
+      "excluded",
+  );
+  await page.getByRole("button", { name: "All", exact: true }).click();
+  await page
+    .locator(".item-row")
+    .filter({ hasText: /Hellfire/i })
+    .first()
+    .waitFor();
+  const shield = before.families.find((f: any) => f.name === "Ironclad");
+  assert.ok(shield);
+  await page.getByRole("textbox", { name: "Find an item" }).fill("Ironclad");
+  await page
+    .locator(".item-row")
+    .filter({ hasText: "Ironclad" })
+    .first()
+    .click();
+  await page.request.post("/api/run", { data: { action: "pause" } });
+  await waitForState((s) => s.run.status === "paused" && !s.run.pauseRequested);
+  const savedShield = await page.request.post(
+    `/api/items/${shield.id}/action`,
+    {
+      data: {
+        action: "resolve",
+        url: "https://www.lootlemon.com/shield/ironclad-bl1",
+        html: "<h1>Ironclad • BL1 – Pearlescent Shield | Lootlemon</h1><p>Synthetic fixture article identifies Ironclad as a Borderlands 1 shield for browser testing.</p>",
+      },
+    },
+  );
+  assert.equal(savedShield.status(), 200, await savedShield.text());
+  assert.equal(
+    (
+      await page.request.post(`/api/items/${shield.id}/action`, {
+        data: { action: "rebuild-saved" },
+      })
+    ).status(),
+    200,
+  );
+  await waitForState((s) => {
+    const f = s.families.find((f: any) => f.id === shield.id);
+    return f.category === "Shields" && f.status === "done";
+  });
+  await page
+    .locator(".tree-group")
+    .filter({
+      has: page
+        .locator(":scope > .group-toggle")
+        .filter({ hasText: "Shields" }),
+    })
+    .locator(".item-row")
+    .filter({ hasText: "Ironclad" })
+    .waitFor();
+  const shieldDetail = await page.request
+    .get(`/api/items/${shield.id}`)
+    .then((r) => r.json());
+  assert.equal(shieldDetail.family.id, shield.id);
+  assert.equal(shieldDetail.websiteOutput.category, "Shields");
   assert.deepEqual(errors, []);
   console.log(
-    "Browser: import, background selection, pause/resume, editor persistence, coverage, settings and fixed progress passed. 255 real capture candidates.",
+    "Browser: import, background selection, pause/resume, editor persistence, coverage, settings and fixed progress passed. 299 real capture candidates; character equipment grouped.",
   );
 } finally {
   await browser.close();

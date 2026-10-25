@@ -1,11 +1,15 @@
+import { emptySourceReading } from "./source-fixture.ts";
 // Isolated browser-test server. Fake drafting is never part of the application.
 import express from "express";
+import { cpSync } from "node:fs";
 import path from "node:path";
 import { Store } from "../src/server/store.ts";
 import { Worker, type AI } from "../src/server/worker.ts";
 import { api } from "../src/server/http.ts";
 import { buildPacket } from "../src/server/evidence.ts";
-const s = new Store(process.env.BORDERLENS_DATA_DIR!);
+const imageRoot = path.join(process.env.BORDERLENS_DATA_DIR!, "image-library");
+cpSync(path.resolve("img/borderlands"), imageRoot, { recursive: true });
+const s = new Store(process.env.BORDERLENS_DATA_DIR!, imageRoot);
 s.state.settings.research = false;
 const ai: AI = {
   status: async () => ({
@@ -15,6 +19,10 @@ const ai: AI = {
     message: "Test fixture only",
   }),
   run: async (_label, _prompt, schema) => {
+    if (_label.startsWith("Read source"))
+      return schema.parse(
+        emptySourceReading(s.family(s.state.run.currentId!).category),
+      );
     await new Promise((r) => setTimeout(r, 1500));
     const f = s.family(s.state.run.currentId!),
       p = buildPacket(s, f);
@@ -37,8 +45,8 @@ const ai: AI = {
     }
     return schema.parse({
       entry: {
-        schemaVersion: "2",
-        compilerVersion: "0.2.0",
+        schemaVersion: "5",
+        compilerVersion: "0.7.0",
         description: [
           "An original fixture paragraph describing this item for players.",
         ],
@@ -49,7 +57,7 @@ const ai: AI = {
         name: f.name,
         game: "borderlands-goty-enhanced",
         category: f.category,
-        weaponType: f.subtype,
+        weaponType: f.category === "Weapons" ? f.subtype : null,
         summary:
           "A browser test description backed by captured family definitions.",
         manufacturers: [],

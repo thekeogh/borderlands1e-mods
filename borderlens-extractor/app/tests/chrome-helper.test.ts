@@ -1,3 +1,4 @@
+import { emptySourceReading } from "./source-fixture.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync, existsSync } from "node:fs";
@@ -56,13 +57,15 @@ function ai(s: Store, wait?: () => Promise<void>): AI {
   return {
     status: async () => ({ chatgpt: true }),
     run: async (_label, _prompt, schema) => {
+      if (_label.startsWith("Read source"))
+        return schema.parse(emptySourceReading());
       await wait?.();
       const f = s.family(s.state.run.currentId!),
         p = buildPacket(s, f);
       return schema.parse({
         entry: {
-          schemaVersion: "2",
-          compilerVersion: "0.2.0",
+          schemaVersion: "5",
+          compilerVersion: "0.7.0",
           id: f.id,
           name: f.name,
           game: "borderlands-goty-enhanced",

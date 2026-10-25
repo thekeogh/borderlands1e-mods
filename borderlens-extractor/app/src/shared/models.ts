@@ -49,6 +49,13 @@ export const PartDefinition = z
   })
   .strict();
 export type PartDefinition = z.infer<typeof PartDefinition>;
+export const Element = z.enum([
+  "Non-elemental",
+  "Incendiary",
+  "Shock",
+  "Corrosive",
+  "Explosive",
+]);
 export const PublicEntry = z
   .object({
     schemaVersion: z.literal(CATALOGUE_SCHEMA_VERSION),
@@ -58,8 +65,19 @@ export const PublicEntry = z
     game: z.literal("borderlands-goty-enhanced"),
     category: Category,
     weaponType: z.string().nullable(),
+    character: z.enum(["Roland", "Lilith", "Mordecai", "Brick"]).optional(),
     summary: z.string().min(15).max(200),
-    description: z.array(z.string().min(20).max(6000)).min(1).max(12),
+    description: z.array(z.string().min(20).max(6000)).min(1).max(30),
+    details: z
+      .array(
+        z
+          .object({
+            heading: z.string().min(1),
+            paragraphs: z.array(z.string().min(1)).min(1),
+          })
+          .strict(),
+      )
+      .default([]),
     variants: z.array(
       z
         .object({
@@ -80,7 +98,7 @@ export const PublicEntry = z
     ),
     manufacturers: z.array(z.string()),
     rarities: z.array(z.string()),
-    elements: z.array(z.string()),
+    elements: z.array(Element),
     redText: z.string().nullable(),
     specialEffects: z.array(z.string()),
     levels: z.object({
@@ -90,7 +108,8 @@ export const PublicEntry = z
     }),
     stats: z.array(
       z.object({
-        name: z.string(),
+        name: z.string().trim().min(1),
+        context: z.string().min(1).nullable().default(null),
         minimum: z.number().nullable(),
         maximum: z.number().nullable(),
         unit: z.string(),
@@ -110,7 +129,8 @@ export const PublicEntry = z
         dropChance: z
           .object({
             percent: z.number().min(0).max(100),
-            conditions: z.string(),
+            players: z.number().int().min(1).max(4).nullable().default(null),
+            conditions: z.array(z.string().min(1)),
           })
           .strict()
           .nullable(),
@@ -133,6 +153,7 @@ export const Draft = z
           field: z.enum([
             "summary",
             "description",
+            "details",
             "variants",
             "parts",
             "manufacturers",
@@ -150,6 +171,34 @@ export const Draft = z
         })
         .strict(),
     ),
+    sourceUsage: z
+      .array(
+        z
+          .object({
+            factId: z
+              .string()
+              .describe(
+                "Exact extracted PAGE FACT id from ALL SOURCE FACTS; never a game:, manual: or page-level evidence id.",
+              ),
+            disposition: z.enum([
+              "used",
+              "duplicate",
+              "overridden",
+              "irrelevant",
+              "conflict",
+            ]),
+            fields: z.array(z.string()),
+            reason: z.string().min(1),
+            duplicateOf: z
+              .string()
+              .nullable()
+              .describe(
+                "For duplicate: used equivalent fact ID. For overridden: used Lootlemon fact ID that supersedes the contradictory Wiki fact. Otherwise null.",
+              ),
+          })
+          .strict(),
+      )
+      .default([]),
     uncertainties: z.array(z.string()),
     conflicts: z.array(z.string()),
     requiresReview: z.boolean(),
@@ -157,6 +206,13 @@ export const Draft = z
   })
   .strict();
 export type Draft = z.infer<typeof Draft>;
+// Model-facing structured outputs require every object property. The compiler
+// supplies the authoritative character; older saved/public entries may omit it.
+export const WriterDraft = Draft.extend({
+  entry: PublicEntry.extend({
+    character: PublicEntry.shape.character.unwrap().nullable().default(null),
+  }),
+});
 export const SourceMatches = z
   .object({
     matches: z
@@ -189,6 +245,12 @@ export type Family = {
   name: string;
   category: Category;
   subtype: string;
+  rawCategory?: Category;
+  rawSubtype?: string;
+  character?: "Roland" | "Lilith" | "Mordecai" | "Brick";
+  element?: z.infer<typeof Element>;
+  discoveryVersion?: number;
+  supersededBy?: string[];
   classification?: EffectiveClassification;
   classificationReview?: string;
   aliases: string[];
@@ -239,6 +301,8 @@ export type Evidence = {
   value: unknown;
 };
 export type Packet = {
+  character?: Family["character"];
+  element?: Family["element"];
   familyId: string;
   name: string;
   category: Category;
@@ -263,7 +327,11 @@ export type CoverageEntry = {
   familyIds: string[];
   reason: string;
 };
+export type BatchSourceMode = "saved" | "fresh" | "auto";
 export type Run = {
+  continueOnError?: boolean;
+  sourceMode: BatchSourceMode;
+  sourcePrepared: string[];
   status: "idle" | "running" | "pausing" | "paused" | "blocked" | "complete";
   queue: string[];
   index: number;
@@ -275,6 +343,7 @@ export type Run = {
   pauseRequested: boolean;
 };
 export type Settings = {
+  agent: "grok" | "codex";
   model: string;
   writingStyle: string;
   research: boolean;
@@ -303,6 +372,8 @@ export const initial = (): Project => ({
   families: [],
   captures: [],
   run: {
+    sourceMode: "saved",
+    sourcePrepared: [],
     status: "idle",
     queue: [],
     index: 0,
@@ -314,6 +385,7 @@ export const initial = (): Project => ({
     pauseRequested: false,
   },
   settings: {
+    agent: "grok",
     model: "",
     writingStyle:
       "Clear, concise player reference. Explain what makes the item useful and its tradeoffs. Natural original prose, no hype or engine jargon.",

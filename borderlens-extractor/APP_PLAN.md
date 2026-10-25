@@ -835,3 +835,837 @@ Escape/backdrop close, focus containment and opener focus restoration. Checks
 compare exact DOM text and HTML against saved values, compare the source record,
 verify no live fetch/record modification and assert embedded scripts do not run.
 Chrome extension files/protocol, compiler schema and website exports are unchanged.
+
+
+### Workshop 0.4.0 full-source reading and consistent enrichment
+
+Compiler 0.4.0 uses internal catalogue schema 3 and self-contained website schema 4.
+Public numeric ranges are ordinary catalogue facts, without source-reported flags,
+provenance labels or verification disclaimers. Missing levels stay null; do not
+turn raw modifiers into final stat extrema. Website JSON excludes references;
+acquisition sources remain acquisition data. Exact HTML and private evidence stay
+in the workshop, never bundled in the item-only website ZIP.
+
+`source-analysis.ts` defines stable per-category field/stat checklists. Every saved
+source's full text plus saved sections/tables is split into exact 18k-character
+chunks with short neighbouring context to preserve boundary meaning, never dropped by the synthesis budget. Each chunk gets an independently
+cached Codex extraction with short exact supporting quotes, stat objects, field
+coverage and proposed structured fields. Cache keys include compiler version,
+content, family/category, model and user corrections. Checkpoints survive failed
+subsequent steps. Missing quotes/checklist entries block the build.
+
+Synthesis receives ALL fact ledgers plus bounded game context. Draft.sourceUsage
+accounts for every fact exactly once: used with matching source claims, duplicate
+linked to a used fact, genuinely irrelevant with a reason, or conflict requiring
+review. Used catalogue stats must survive unchanged. Private researchAudit stores
+checklists, ledger, usage, proposals and manual-review status; the Sources tab
+exposes it without including it in public JSON. These checks establish mechanical
+coverage, not infallible semantic interpretation by AI.
+
+Summary remains <=200 characters; descriptions may contain up to 30 substantial
+paragraphs, normally 4–8 for rich evidence. `details` contains titled paragraph
+sections for surplus mechanics, usage, interactions or trivia. Special effects
+stay short (<=45 words). ALL prose must be newly written by Codex; names, exact
+red text, numbers and necessary labels are exceptions. Copy detection covers
+description/details, effects, notes, variants, parts and acquisition/stat notes.
+A matched passage can receive a bounded, targeted Codex rewrite; facts, numeric
+values, claims and fact dispositions stay unchanged and are validated again.
+Current-schema validation checkpoints survive restarts even while the previous
+completed output is still on an older schema.
+Never paraphrase using templates or copy source sentences.
+
+New useful numeric stats fit named stats[] without schema changes. Potential new
+structured fields are saved as private proposals; never let an item rewrite Zod
+on the fly. A reviewed schema/checklist change must bump versions and queue older
+generated entries for another pass from caches. Preserve manual prose/corrections;
+manual old entries remain blocked for explicit review, never auto-rewrite them.
+
+Verification: 45 local tests passed; 2 optional research-HTTP simulation tests
+skipped. TypeScript/build, OpenAPI syntax and browser smoke passed. Real cached
+rebuilds completed for HellFire (70 source facts, 4 paragraphs, 2 detail sections,
+6 stats) and Volcano (73 facts, 4 paragraphs, 4 detail sections, 6 stats). Both
+used both archived providers and accounted for every extracted fact privately.
+The live UI audit and item-only ZIP were checked. These examples establish
+mechanical coverage, not correctness of every AI interpretation or all 255
+candidate families. Browser capture/snapshot behaviour is unchanged.
+
+
+### Workshop 0.4.1 scope policy and Codex liveness
+
+Compiler 0.4.1 retains catalogue schema 3 / website schema 4 (no field-shape
+change). `shared/catalogue-policy.ts` excludes generic site-wide farming guides,
+routes, respawn/fast-travel tips and generic luck explanations. Apply the scope
+instruction at both full-source extraction and final synthesis, and reject known
+boilerplate in every public prose field. Keep item-specific mechanics, modifiers,
+locations, acquisition conditions and drop probabilities. Saved text/HTML stays
+verbatim. Filtered source facts carry private excludedReason and must be marked
+irrelevant; coverage must not force irrelevant guide text into public notes.
+Prior generated entries are queued to rebuild, preserving their last output;
+manual edits are retained for review. Unfinished old drafts are archived by
+compiler version before restarting them.
+
+CodexRunner reports a 15-second heartbeat: elapsed time, age of last stdout/stderr
+and the existing 12-minute per-call ceiling. Local process liveness does not prove
+remote service progress. `activity.json` and `events.jsonl` update during calls and
+record terminal state/errors. A dead process fails promptly; quiet calls wait up
+to the bound, then fail visibly. Build messages include attempt 1/3 through 3/3,
+and keep a pause-request prefix. Do not auto-resume a user's paused queue.
+Scope modifiers are valid part modifiers too: numeric bonuses may be preserved
+in part/mechanics text, rather than incorrectly treated as final card damage.
+
+0.4.1 verification: 51 tests passed, 2 optional HTTP simulations skipped;
+TypeScript/build, browser smoke and OpenAPI syntax passed. New modeled subprocess
+checks verify live heartbeat/event persistence, quiet-call timeout, crash failure
+and heartbeat cleanup. Both user-provided generic tips are rejected in public
+notes/details; item-specific modifiers and acquisition facts remain allowed.
+The saved Bessie draft's source coverage passes the corrected scope-modifier
+check without a new Codex call. The observed slow run had two validation retries,
+then returned and paused normally. The restarted service preserves that pause;
+no batch or new real Codex call was automatically started for this update.
+
+
+### Workshop 0.5.0 interchangeable subscription agents
+
+The user explicitly added local Grok Build alongside Codex. AgentRouter is now
+Worker's production AI. Settings.agent defaults/migrates to grok; the toolbar
+selector persists grok/codex and may change during processing. It applies to the
+next AI call and does not invalidate completed entries. Existing model is a Codex
+model override only; Grok is pinned to grok-4.6. Build/Rewrite labels use low
+reasoning effort; Read source/Classify/Find sources use medium. No high effort.
+
+CliRunner implements shared validated caching, live heartbeat/activity/event
+files, bounded output and process error handling. CodexRunner and GrokRunner
+provide provider identity/commands. Grok uses --prompt-file, streaming-messages-json,
+--json-schema, read-only sandbox, dontAsk, no subagents/plan and restricted tools;
+structured_output is validated with the same Zod schema. Existing subscription
+login must be confirmed before running. Strip inherited API-key environment vars;
+never silently use paid API billing or substitute another Grok model. Grok auth
+status via models is not proof that a subsequent model request is permitted.
+
+Each production provider has a five-minute call budget. Terminate its process
+(group on POSIX), escalate if needed, and wait for close before fallback starts.
+Try the alternate once; if both fail, block visibly with both reasons. Failure
+cooldowns last ten minutes and persist; Settings/Recheck agents explicitly clears
+them without starting a model call or resuming the queue. The default choice stays
+unchanged during fallback. Never bounce indefinitely or erase successful work.
+Provider/model/effort are included in CLI cache keys; only successful validated
+results are cached. Source-reading keys include preferred agent. Last actual draft
+agent/model/effort/fallback provenance stays private, outside website exports.
+
+GET /api/agents reports both CLI statuses, selected default, failures and cooldowns.
+POST /api/agents/recheck clears cooldowns; /api/codex remains Codex-only compatibility.
+PATCH /api/settings permits agent-only changes during work; other settings still
+require pause. Catalogue schema 3, website schema 4 and compiler 0.4.1 stay unchanged
+because this feature changes execution/provider selection, not item field shapes.
+
+During integration, the real installed Grok 1.0.70 listed grok-4.6 and confirmed
+OAuth grok.com authentication, but a tiny model call failed with HTTP 403: Build
+is unsupported in Legacy (no storage), requiring the user's account Privacy Mode.
+Do not change their account setting automatically. Implement and test fallback;
+report this remaining account prerequisite honestly. Modeled Grok protocol tests
+cannot establish that a real Grok generation succeeds until that restriction is
+removed. tests/live-agents.ts is an optional tiny live subscription/fallback check.
+
+0.5.0 verification: 58 local tests passed; 2 optional research-HTTP simulations
+skipped. TypeScript/build, OpenAPI syntax, browser smoke (including persistent
+Grok/Codex dropdown) and live production UI/API checks passed. A real tiny call
+confirmed the Grok OAuth privacy-mode 403, then successful automatic Codex fallback
+at low effort, with actual-provider metadata retained. Modeled subprocess tests
+cover successful Grok structured output, low/medium effort, fixed 4.6 model,
+subscription environment, tool restrictions, cache separation, cooldown/recheck,
+reverse fallback and waiting for timed-out Grok to exit before Codex starts.
+Real Grok generation remains unverified until the user resolves the account mode.
+The user's catalogue queue remains paused; no catalogue batch was auto-started.
+
+
+### Workshop 0.5.1 Bessie validation/retry diagnosis
+
+Observed three medium source calls of 87–148 seconds and three low writing calls
+of 140–153 seconds. These all completed; the full draft retried due to our
+validation, not a hung Grok process. elements=[] correctly represented no elemental
+options but the source-use validator demanded non-empty output; variants=[] had
+the same issue. Accept a cited explicit absence for elements/variants/parts/sources,
+without relaxing required numeric ranges. A scope FOV percent was also attributed
+to a captured WeaponPartDefinition but lacked the literal word modifier. Recognize
+that exact captured-part attribution, while still requiring the numeric value in
+public mechanics/part text. Both cases have regressions; the saved Bessie response
+passes all 83 fact checks, schema, copy checks and part validation without AI.
+
+History now records the actual validation error. Source progress says page N of M
+and extraction attempt; writing progress says draft attempt; prose repair is named
+explicitly. Two processes had the real SQLite project open with divergent in-memory
+states. Stop the stale dev process and production server before restart, preserving
+the latest on-disk project checkpoint and refreshed source captures. Do not overwrite
+newly captured sources with the older cached draft just to mark it complete. The
+latest saved state stays paused for user resume; raw captures/HTML and cached model
+responses are retained. Run only one app instance for this project.
+
+0.5.1 verification: 60 local tests passed; 2 optional HTTP simulations skipped.
+TypeScript/build and API syntax passed. The archived real Bessie response passes
+all four validators, including all 83 source facts, without new AI. Production is
+restarted as a single database owner, with the latest refreshed wiki/Lootlemon
+captures retained and queue paused. Historical sources/AI results remain archived.
+
+
+### Workshop 0.6.0 local Ollama option
+
+User installed Ollama and gemma4:e4b-mlx, and requested it as an additional agent.
+Agent enum/settings/UI/API now include ollama; keep the existing Grok default
+until the user chooses otherwise. OllamaRunner uses only loopback HTTP (default
+127.0.0.1:11434, optional BORDERLENS_OLLAMA_URL for local protocol simulation).
+Pin gemma4:e4b-mlx, never download or substitute models. /api/tags confirms the
+installation; /api/show provides context length and supported thinking values.
+The real installed 0.40.4 server advertises boolean thinking and 131072 context:
+writing => think:false, analysis => think:true; do not send unsupported low/medium
+strings. POST /api/chat uses Zod JSON schema format, NDJSON streaming, temperature
+0, no tools, bounded generation and explicit context capacity. Conservatively
+reject input exceeding the context budget rather than truncating evidence.
+
+Track activity/events and final runtime statistics; validate all output before
+caching. Abort/cancel a timed-out HTTP request, never kill the user's Ollama daemon.
+The same catalogue validators still apply. Local inference has no live web tools:
+source discovery skips Ollama and uses an available subscription provider. Ordered
+fallback tries each available provider once; Ollama preference may fall back to
+Grok/Codex. Disclose this in Settings/README; do not claim the whole pipeline stays
+offline. Existing model setting remains Codex-only; no field-shape/compiler change.
+
+postman/simulations/ollama.sim.yaml models official tags/show/chat HTTP contracts.
+Run with port 4326, then BORDERLENS_OLLAMA_SIM=http://127.0.0.1:4326/ollama pnpm test.
+Its handlers support Postman's pre-parsed req.body. This checks the real client's
+streaming, schema validation, cache, HTTP failure, timeout and size/search guards.
+Do not publish mock/workspace data. tests/live-ollama.ts uses Ollama directly,
+without cloud fallback or writes to the real project; --bessie uses the archived
+full request and preserves private diagnostics under temp/ollama-live-*.
+
+0.6.0 live results: local warm tiny JSON request passed in ~0.7s (first model load
+was ~16s). A full archived Bessie request initially ran for 260s, emitted repeated
+whitespace partway through JSON and hit 16000 output tokens; reject incomplete
+output. Compact-JSON prompting plus an early repeated-whitespace guard was added.
+The compact full request returned schema-valid JSON in 199.9s, but failed semantic
+validation: 82 of 83 facts accounted for, duplicate family part reference and
+specialEffects exceeding 45 words. No local output was published or installed in
+the real project. Do not claim this model is faster/reliable for complete family
+compilation; keep the option for experimentation and report the benchmark honestly.
+
+65 local/protocol tests passed, 2 optional research simulations skipped; TypeScript,
+build, OpenAPI syntax and browser smoke passed. Postman logs confirm real HTTP to
+tags/show/chat, including schema failure, HTTP error, timeout and whitespace-loop
+cases. Existing Grok preference and paused queue are retained. The current API
+reports Bessie.issue=null: the screenshot repeats a historical error banner.
+
+
+### Workshop 0.6.1 removal of the local experiment
+
+User explicitly instructed removal if Gemma was not up to catalogue quality.
+The full test already demonstrated failure, so remove Ollama completely from the
+active app: enum, selector/status cards, router/fallback, HTTP adapter, protocol
+mocks and live/test harness. Keep historical benchmark artifacts and release notes;
+do not uninstall or delete user-managed Ollama models. Only Grok/Codex remain,
+with their existing five-minute limits, bounded fallback and cooldowns. Grok stays
+the default. Invalid/removed saved provider preferences migrate to Grok, preserving
+other settings and user work. No model calls or catalogue rebuilds are needed.
+This section supersedes the 0.6.0 implementation guidance above; do not restore
+Gemma merely because its old benchmark scripts or cache files exist under temp.
+
+0.6.1 verification: 61 tests passed, 2 optional research simulations skipped;
+TypeScript/build, browser smoke and API syntax passed. The toolbar offers exactly
+Grok/Codex; invalid/removed provider preferences migrate safely to Grok. Production
+was restarted with the user's Grok preference and paused queue preserved. The
+retired local adapter and its mocks/harness are absent from active source code.
+
+### Workshop 0.6.2 source usage and focused modifier repair
+
+Source-usage validation must check field presence and a matching source-page claim,
+not truthiness/nonempty arrays or absence keywords. A cited fixed-parts source can
+legitimately support variants: []. Missing fields and missing citations still fail.
+Numeric range/modifier, part, schema and originality checks remain enforced.
+
+MissingCatalogueStat carries the precise missing fact. For modifiers explicitly
+attributed to a captured, referenced part and saved source page, worker validation
+can request a low-effort rewrite of just the relevant mechanics paragraph. Save
+the repaired draft and rerun every validator, with at most three focused repairs.
+Do not infer final weapon-card stats from accessory modifiers. Unattributed stats
+retain the normal validation failure/retry path. No schema/compiler upgrade or
+completed-entry requeue is needed.
+
+Live Bessie recovery: resumed its saved validate-stage draft, preserved refreshed
+sources and used one short Grok call to include the omitted +30% scope damage
+modifier. Entry is done, issue=null, website output saved; no full build repeated.
+Verification: 62 tests passed, 2 optional research simulations skipped;
+TypeScript, production build and OpenAPI syntax passed.
+
+### Workshop 0.7.0 public catalogue refinement
+
+Internal schema 4 / compiler 0.5.0 adds nullable stat context and player count,
+and keeps probability conditions as arrays. Website schema 5 groups acquisition
+identities into one source with dropChances[] (percent, players, conditions[]).
+Unknown player counts remain null; no implicit solo assumption, highest-rate
+selection, rounding or merging distinct locations. Preserve edition/player/other
+conditions for every rate and reject contradictory probabilities for identical
+scopes. Conditions on unknown-rate rows are preserved as distinct source entries
+when necessary. Preview uses the same grouping; manual website JSON round-trips
+the condition arrays losslessly. The first retained source URL is a link only,
+not a reason to select a probability; full provenance stays private.
+
+Repeated stat names at the same level require distinct evidenced contexts such
+as Card and While scoped. Preserve source stat names/ranges; never label card
+accuracy as a percentage without support. Use meaningful units only when known.
+Website levels/stat/source notes and inline familyNotes omit empty strings;
+internal storage keeps these as strings for strict AI synthesis. Unknown level
+bounds remain null, never inferred from example card damage.
+
+Shared quality instructions cover all equipment and source reading/synthesis:
+original AI wording, player language, useful supported numeric part effects,
+no raw part/material IDs, numbered engine scopes, Zoom End FOV constants or
+title-link explanations. Keep internal FOV constants in the private source ledger
+with an explicit exclusion reason. Vague damage/one-shot benchmarks lacking
+reproducible build requirements also remain private, while useful supported
+mechanics and trivia remain available. Description has no required paragraph
+count; avoid repeated facts across overview/mechanics/notes. Numeric modifiers
+explicitly attributed to captured parts must appear in that part's effects;
+focused repair can update effects and mechanics together. Known generated shared
+parts may be enriched with verified modifiers; manual edits stay local.
+
+Upgrades preserve raw ZIPs, pages, outputs and manual corrections, queue older
+generated output, and clear obsolete retry counters. No automatic live model
+rebuild was launched for this release; rebuild Bessie to generate new prose and
+schema. Its prior output and both source pages were verified retained after
+restart. Local verification: 65 tests passed, 2 optional research simulations
+skipped; TypeScript, production build, browser smoke and OpenAPI syntax passed.
+The focused tests exercise grouped probabilities, conflict rejection, precision,
+unknown-rate conditions, optional notes, API/manual-edit round-trips, contextual
+stats, public wording checks and attributed modifier repairs. These checks do
+not establish the historical correctness of every sourced weapon claim.
+
+### Workshop 0.7.1 focused stat role repair
+
+Compiler 0.5.1, app 0.7.1; internal/public schema shapes remain 4/5. Sources can
+describe a base bonus, a multiplicative component and a resulting total with the
+same stat name. These are distinct quantities, not contradictory alternatives.
+The writer must preserve all such useful numeric facts with distinct context
+labels, even when mechanics also explains them. This supersedes any implication
+that one stat row per name is sufficient.
+
+StatContextError identifies an ambiguous group. MissingCatalogueStat still
+identifies a precise omitted value. Before spending another full draft attempt,
+repairCatalogueStats gathers the used, nonexcluded numeric facts for that name,
+checks their source pages, and makes a low-effort label/notes-only model call.
+The model returns fact IDs and original player-facing contexts/notes; code copies
+the exact names, units, levels and numeric bounds from the existing ledger. No
+model arithmetic or replacement numeric values are accepted. Corroborating rows
+can merge only when their numbers and contexts match; different quantities cannot
+share a role label. Reject missing/extra/duplicate fact IDs. Update the stats claim
+and per-fact field accounting, save the draft, then rerun every validator.
+
+Explicit captured-part modifiers retain their existing dedicated repair path;
+do not promote them into final card-stat ranges. Identity, source captures,
+description, mechanics, parts and unrelated stats are preserved by context repair.
+Limit stat repairs to two per item run; clear their counter on invalidation.
+Manual entries, unresolved conflicts and requiresReview entries remain protected.
+
+Paused 0.5.0 validate-stage drafts with the same schema can migrate compiler
+metadata to 0.5.1, including their part definitions, only after strict Draft
+validation. Archive the original draft first. Preserve the source ledger and
+queue; do not restart research or invent migration prose. Other old outputs
+follow the usual retained-output/requeue behavior.
+
+Live Bessie: the third draft already contained 150%, 200% and 500%, but all three
+contexts were null. One small Grok label repair restored distinct component/base/
+total labels; schema/content, part and full source-usage validators all passed.
+Saved the repaired validate-stage draft and left the queue paused. Resume saves
+the existing draft; Rebuild would unnecessarily restart generation.
+
+0.7.1 verification: 67 tests passed, 2 optional research simulations skipped;
+TypeScript/production build, browser smoke and OpenAPI syntax passed. Live local
+API checks confirmed all three distinct stat values/contexts, both saved source
+pages and the paused validation checkpoint. The worker regression also verifies
+focused recovery after both full-draft retries have already been exhausted.
+
+### Workshop 0.8.0 local item images
+
+User-provided raster library is app/img/borderlands/<type>/<filename>. Support
+PNG, JPEG, WebP and AVIF; never edit those originals, download replacements or
+bundle images into the website ZIP. Website schema 6 adds required image:
+relative path or null. Internal schema remains 4; compiler becomes 0.6.0. Images
+are resolved by the filesystem-owned app/export layer, never invented by AI or
+added to game/source claims. A filename change or manual image choice does not
+require a rebuild. Existing older generated entries follow the normal retained-
+output/requeue upgrade; same-shape validate drafts can retain metadata-only
+migration from compiler 0.5.0/0.5.1.
+
+Images matches exact canonical slugs in the candidate's category, then normalized
+punctuation/spacing, then aliases. Do not fuzzy-match unrelated names or choose
+the first ambiguous file. Other equipment, whose raw category can be unresolved,
+can use a globally unique name match; multiple matches still require review.
+Store manual paths (including an explicit null) separately by stable family ID
+in .data/image-overrides.json. This survives imports, reclassifications, restarts
+and generated resets. Automatic mode removes the manual entry. A deleted chosen
+file becomes missing, rather than silently selecting another image. Full reset
+clears overrides but never deletes app/img/borderlands.
+
+GET /api/images returns file paths, a content revision, per-candidate matches and
+matched/missing/ambiguous counts. Excluded candidates are omitted; this is a
+candidate audit, not proof that all captured names are obtainable items. POST
+/api/items/:id/image saves a valid local choice or restores automatic matching;
+it does not invalidate research/output, invoke AI or touch the processing queue.
+GET /api/images/file/:folder/:filename serves indexed raster files with no-cache
+revalidation. Enforce the path schema, known type folders and realpath containment;
+do not follow symlink files or escaping folder symlinks. Missing/unsafe files get
+404. Item detail also includes image metadata for unbuilt candidates.
+
+Preview places a contained image on a white stage with path/match status, a clear
+missing/load-error placeholder and a collapsible image selector. Coverage includes
+a separate Image coverage section, defaulting to missing/ambiguous, searchable by
+name/category, with links to items and expected paths. Refresh rescans files;
+regular polling updates image revision and item details without overwriting dirty
+JSON edits. Website/manual JSON round-trips retain the chosen path. ZIP export
+contains only item JSON, with image paths kept relative to the website's base URL.
+
+0.8.0 verification: 70 tests passed, 2 optional research simulations skipped;
+TypeScript/production build, browser smoke and OpenAPI syntax passed. Browser
+checks load actual images, change/restore a match without changing the run, and
+open Bessie through Image coverage. API tests exercise asset bytes/content type,
+missing/unsafe paths, overrides, manual JSON/export agreement and reset behavior.
+Live read-only API checks found 216 files, 181 matched candidates, 74 missing and
+no ambiguous matches. Those 74 include unreviewed raw candidates, not necessarily
+74 obtainable items. Bessie resolves to weapons/bessie.png; previous output and
+both source captures are retained. No live AI rebuild was started.
+
+### Workshop 0.9.0 fact accounting and rebuild source modes
+
+App 0.9.0 / compiler 0.6.1; internal schema 4 and website schema 6 remain unchanged.
+sourceUsage accounts only for extracted page FACT IDs, not game:, manual: or page-
+level evidence IDs. Before validation, separateEvidenceUsage removes ONLY known
+game/manual IDs actually present in the packet and retains their records in the
+private additionalEvidenceUsage artifact. Do not delete unknown IDs, synthesize
+missing rows, collapse duplicate page rows or weaken source/part/numeric checks.
+Real accounting failures name missing, duplicate and unexpected IDs plus counts.
+Writer/schema instructions explicitly distinguish claims from page-fact usage.
+
+UI labels are exactly Rebuild from saved sources / Rebuild from fresh sources.
+The primary action uses saved sources when pages exist; dropdown exposes both,
+with saved disabled when no pages are present. Public actions are rebuild-saved
+and rebuild-fresh; legacy rebuild keeps prior behavior. GET item detail reports
+savedRebuild availability/reason. Images and manual output remain protected.
+
+Saved mode starts at draft: no coverage scan, source discovery or HTTP fetching.
+savedSourceCache checks current page IDs/hashes, complete source/chunk coverage,
+strict reading shape, exact fact IDs/content, and the evidence/correction snapshot.
+Source analysis can be reused across model/agent/compiler changes if compatible.
+SourceLedgerInput records the packet fingerprint after a complete read; legacy
+ledgers can use the last inputHash when it still matches. A source nonce/cache key
+also includes the individual source ID, preventing identical-content pages from
+silently sharing page-specific analysis. Saved pages remain usable if analysis is
+absent/stale: read the necessary saved data without any HTTP. Classification may
+still run against saved evidence when the item's identity/type needs resolution;
+already classified Bessie skips that step. Complete matching ledgers skip source
+reading entirely, so agent comparisons synthesize from the same facts.
+
+Fresh mode starts at evidence, skips the unrelated catalogue-wide coverage scan,
+and forces HTTP refresh of known pages (or discovery for missing providers).
+Successful fetches replace current same-URL references; historical HTML stays on
+disk. Failed refreshes keep the stored page and block rather than pretending old
+data is fresh. A fresh-request timestamp identifies pages refreshed/captured after
+the request, allowing Chrome imports to satisfy blocked pages on Resume. The
+request nonce forces fact-reading passes for the refreshed corpus. Preserve
+rebuildPlan and pendingRebuild mode/timestamp for queued and interrupted work.
+Deferred preparation failures become a visible blocked state, not an unhandled
+worker promise. Same-shape 0.6.0 validation drafts receive metadata-only migration
+with an archived original; the queue and source ledger stay preserved.
+
+Verification: 78 tests passed, none skipped with the existing local Postman
+research simulation enabled. Logs confirm real application HTTP requests to the
+stand-in source pages, including 200 refreshes and 503 failure preservation; no
+live wiki/Lootlemon fetch or production model rebuild was performed. Tests cover
+agent/model-independent saved reuse, missing-analysis reads without fetching,
+fresh fetch/read behavior, deferred saved mode, and exact accounting failures.
+TypeScript/build, browser smoke and OpenAPI syntax pass. The live app remains
+paused with Codex selected; both Bessie pages and previous output are retained,
+and savedRebuild confirms complete facts are ready without another source read.
+
+### Workshop 0.10.0 whole-document validation and public consistency
+
+App 0.10.0 / compiler 0.7.0. Internal schema 5 and website schema 7 enforce the
+same element enum across all equipment: Non-elemental, Incendiary, Shock,
+Corrosive, Explosive; unknown stays []. Do not publish None or lowercase aliases.
+This is a schema upgrade: archive older drafts and retain output/corrections for
+rebuilding rather than relabeling incompatible data as current. Source readings
+have unchanged shapes, so matching saved analysis remains reusable.
+
+cleanPublicEntry removes stat notes only when they repeat the structured number/
+range/unit (allowing formatting differences), retains notes with additional facts,
+and translates the context label scale to Multiplier. It never rewrites human
+sentences or changes the numeric values. Acquisition grouping recognizes only
+explicit edition/player qualifiers in labels, keeps their conditions, preserves
+the first original spelling for equivalent conditions, and groups the source.
+Pure player text can map to players only when explicit and unambiguous; conflicting
+counts fail. Remove common edition conditions from rates and redundant player
+conditions already represented structurally; never round or select probabilities.
+
+assembleWebsiteEntry creates the exact self-contained consumer object from the
+validated entry, inline parts and local image match. validateWebsiteDocument runs
+the strict WebsiteEntry Zod schema and cross-field checks: numeric bounds, canonical
+weapon types/elements, unique contexts/parts/sources, URLs, condition/player/scope
+consistency, unsupported scalar probability ranges, original-only edition claims
+and public wording. serializeWebsiteDocument serializes that complete object and
+parses/validates it again. The generated worker invokes this before promoting any
+output; API/manual-save and export paths reuse the same checks. ZIPs still contain
+only per-item JSON. This validates schema/consistency, not every historical gameplay
+claim independently; existing source usage, evidence, numeric and part checks stay.
+
+Successful checks create private finalValidation metadata and a Preview badge;
+the stage label is Validate final JSON. No validation/provenance flags are added
+to public files. UnclearPublicProse identifies vague unnamed scope comparisons
+or listing commentary. A bounded low-effort repair rewrites only that exact prose
+slot in original words without inventing a baseline or altering numeric facts,
+then reruns every validator. Manual text is not silently rewritten. Malformed
+manual HTTP JSON gets 400 and cannot replace prior valid output.
+
+Live Bessie recovery used the existing Codex draft, source ledger and captures.
+Confirmed its stored JSON was already syntactically valid (the user's pasted
+quote formatting differed). Updated schema/compiler metadata on a strictly parsed
+candidate, applied deterministic cleanup, made one short Codex wording call for
+the scope, and passed all evidence/source/part/final-document checks before saving.
+Numeric ranges and 0.143%/0.159% Crawmerax rates are unchanged; root edition/DLC
+conditions remain, and the rates use players 1/4 without duplicate text. Saved
+analysis is still available without source fetching or rereading. Prior data is
+archived; no fresh source fetch or complete model rebuild was performed.
+
+Verification: 83 tests passed with the existing Postman research simulation,
+none skipped; TypeScript/build, browser badge/flows and API syntax pass. Tests
+cover quoted text and malformed JSON, all equipment categories, enum enforcement,
+value-only note cleanup, missing parts, reversed bounds, duplicate/conflicting
+contexts and rates, and blocking bad final data before promotion. The live ZIP
+is parsed with the same whole-document validator, alongside read-only local API
+assertions. Simulation results establish source HTTP behavior against existing
+stand-ins; they do not claim a new live wiki/Lootlemon fetch.
+
+### Workshop 0.11.0 batch source controls
+
+App/API version 0.11.0; catalogue compiler remains 0.7.0 and schemas remain 5/7.
+No catalogue fields or writing instructions changed, so completed items must not
+be requeued or regenerated by this upgrade. The top run control adds Start from
+saved sources / Start from fresh sources. Saved is the initial/default API choice;
+the primary button reflects the current run's saved/fresh mode when starting a
+new batch. Pause/Resume remains the primary action during active/paused work.
+The dropdown is unavailable while running. While paused it explains that Resume
+keeps the checkpoint whereas starting a new batch restarts unfinished work.
+
+POST /api/run accepts sourceMode saved|fresh only for action=start; omitted mode
+defaults to saved. Reject starting a new batch while a worker is active (409),
+and reject mode fields on pause/resume (400). Both batch modes retain existing
+unfinished-item ordering, maxItems limit and completed/excluded skipping. Starting
+fresh does not rebuild already-completed items; use the per-item rebuild action
+for those. No batch was started on the user's real catalogue for verification.
+
+Run.sourceMode stores saved|fresh|auto and Run.sourcePrepared stores the IDs whose
+source policy was already initialized. Saved batches choose the existing saved
+rebuild path when an item has pages, otherwise fresh; this is per-item fallback,
+not an instruction to refetch missing providers on already-cached items. Missing
+or stale analysis for saved pages follows the existing saved-page reading rules.
+Fresh batches choose the existing fresh rebuild path for each unfinished item.
+Initialize policy exactly once before the first step and persist the marker
+before processing; Resume must not invalidate the checkpoint or reset freshSince.
+
+Older runs missing these fields migrate to auto plus an empty prepared list.
+Auto preserves legacy/single-item behavior and must not reinitialize old active
+checkpoints. Per-item rebuilds continue to use their explicit rebuildPlan. Deferred
+individual rebuilds are marked prepared after their own mode is applied, so the
+batch policy cannot overwrite a requested saved-item rebuild in a fresh batch.
+Generated reset restores default batch metadata; source/page/JSON data stay
+governed by the existing reset rules.
+
+Verification: 89 tests passed with the existing local Postman research simulation,
+none skipped. Added cached/uncached mixed-batch tests for both modes, completed-item
+protection, fresh checkpoint recovery across process restart, strict API modes,
+legacy run migration and deferred mode overrides. Browser checks exercise the
+batch dropdown, select fresh, pause and reload to Resume with the mode retained.
+TypeScript/build and OpenAPI syntax pass. These are isolated/fake-agent and local
+HTTP simulation checks; no production model call or live-source batch was run.
+
+
+### Workshop 0.11.1 image-folder refresh
+
+Add Refresh folder inside Change image. Fetch GET /api/images with no-store,
+update the shared image-library state, and show local loading/success/error
+feedback. Do not mutate run state or use the global working lock. Preserve dirty
+JSON edits and selection while the background batch continues.
+
+Scan safe actual top-level subdirectories under the configured image root, not
+only the category-folder whitelist. Retain safe folder/filename raster paths,
+realpath containment and symlink exclusion. Allow arbitrary safe folders for
+manual selection, plus singular artifact as an automatic Artifacts alias. Do not
+rename user files. The image API response disables caching. App/API version
+0.11.1; compiler 0.7.0 and schemas 5/7 stay unchanged to preserve active work.
+
+Verification: 11 focused image/export/document tests passed, plus build and
+browser smoke. Browser checks add a new folder during a running fake batch,
+refresh the picker, verify the new option, preserve dirty JSON and leave the run
+active. HTTP checks verify new folder indexing, raster bytes, no-store, symlink
+exclusion and unchanged active run state. User batch checkpoint-paused for the
+service update and resumed with its saved-source mode and queue intact.
+
+
+### Workshop 0.12.0 character equipment and unattended batches
+
+Discovery must be category-aware: class mods use their meaningful prefix linked
+from a body part selected by a character-restricted ItemDefinition. Include
+enabled fixed BodyPartData collections (DLC custom items), where zero default
+weight does not mean a forced part is unavailable. Use RequiredCharacter 1/2/3/4
+for Roland/Mordecai/Lilith/Brick. Merge manufacturer variants of the same named
+family for one character. Preserve defining prefix, body, item, custom collection
+and balance evidence. Current capture yields 44 named class mods. Artifacts use
+the character-restricted item and right-side element parts: 16 families, four
+elements per character; ranks belong within each family. Do not treat a generic
+Class Mod, Loyalty Mod, manufacturer Enhancement Mod or Artifact title as a
+standalone family. Discovery IDs include category, character and family name.
+
+Family metadata has optional character/element/discoveryVersion. Character is an
+optional typed PublicEntry/WebsiteEntry field, set authoritatively from the game
+restriction during drafting/validation. Existing schema5/website7/compiler0.7.0
+remain valid; no weapon rebuild is needed. Research prompts include the character
+and element and warn against mixing sibling bonuses. Export same-name families
+using character-qualified slugs. Sidebar groups Class mods/Artifacts, then
+character, then item. Character participates in search, sorting and the inspector.
+
+At import/startup reconcile new families and retire old broad candidates as
+excluded with supersededBy IDs. Keep their sources, drafts, corrections and
+outputs privately. Do not transfer a broad generated entry as a verified named
+family. Completed weapon entries and raw captures remain unchanged. Remove old
+IDs from pending work and add newly discovered families to the pending queue;
+pause if its current placeholder is retired. Never automatically start paid work
+as part of migration. Startup remains idempotent.
+
+Run.continueOnError is true for batch starts in either source mode, false for
+individual work. Old multi-item queues infer true. On item failure save blocked
+status, issue and history, advance the index and continue; honor pause at the next
+checkpoint. Single-item failures retain blocked run status. Deferred rebuild
+preparation failures also continue for batches. Failed items remain selectable
+with red X and Needs attention filter; completion reports the failure count.
+Starting another batch retries unfinished/blocked entries while done/excluded
+entries stay skipped. Pause/resume retains this behavior.
+
+Verification: full local suite passed (92 tests, three unchanged external research
+simulation tests skipped); production build and real-capture browser smoke
+passed. Browser imports 299 active families and checks four character subgroups
+inside both categories. Batch saved/fresh tests exercise the actual local HTTP
+start endpoint with an injected failing step and prove later items finish.
+OpenAPI syntax passes. Local migration was backed up and checked against the
+original SQLite database: every weapon metadata record and every raw/source/
+generated-artifact row is unchanged. The existing blocked batch becomes paused
+with 297 pending entries, including the new families; no agent work auto-started.
+
+
+### Workshop 0.12.1 writer schema and fallback history
+
+PublicEntry.character remains optional for old data. Do not send that optional
+field directly in a Codex response schema: all properties must be required.
+WriterDraft extends Draft with entry.character required-nullable (Zod default
+null accommodates older fake/cached entries). Parse the returned draft through
+Draft with the character replaced by Family.character; artifacts also retain the
+known element. The model cannot override the captured character restriction.
+
+AgentRouter records failure switches and cooldown skips in the current family's
+History, with task label, reason and cooldown timestamp. Ordinary heartbeats stay
+only in live progress. ai/agent-failures.json retains the last provider errors;
+per-call CLI directories retain schema, events and stderr. Schema/compiler
+versions stay unchanged. 36 focused tests passed, three unchanged external HTTP
+simulation tests skipped. Schema test recursively checks required properties;
+fallback test checks both failure and cooldown History persisted to SQLite.
+
+
+### Workshop 0.12.2 quotation presentation matching
+
+The source reader compares chunks containing JSON-serialized sections/tables.
+Codex may quote a displayed newline while the packet contains literal backslash-n.
+sourceQuoteMatches canonicalizes only JSON layout/quote/backslash escapes and
+whitespace/case, preserving words/numbers/punctuation. Do not use fuzzy matching
+or silently discard unsupported facts. Repair errors now identify the actual
+rejected quote and chunk. Source-reader prompts include the character/element.
+No compiler/schema bump or global source-reading invalidation is needed. Twelve
+source-analysis tests pass, including altered manufacturer/number rejection.
+All 13 facts from the actual failed Support Gunner reading match after this fix.
+
+
+### Workshop 0.12.3 class-mod rarity and regeneration semantics
+
+Source/writer scope must retain category-wide rules that genuinely constrain the
+family (rarity tiers and skill combinations), while still excluding shared farming
+boilerplate. A Lootlemon Epic tag is not an exhaustive rarity restriction. Consult
+applicable class-mod rules plus family selection exceptions, not a universal
+hardcoded rarity list. Writer instructions distinguish a card regeneration bonus
+from weapon-specific maximum /s rates, and acknowledge wearer/solo benefits.
+cleanPublicEntry labels a class-mod ammo regeneration stat with blank unit and
+generic Team bonus context as Card bonus; numeric values and explicit /s stats
+are unchanged.
+
+Reviewed Support Gunner directly against saved Wiki/Lootlemon: rarities Uncommon,
+Rare, Epic; +2..25 Card bonus; weapon-type /s contexts marked maximum rate; original
+solo/co-op wording. Add the saved Wiki rarity evidence claim and a persistent user
+correction; preserve the original draft/output privately and retain manualOutput
+false so later builds can still incorporate new research. Full draft/source-usage/
+final JSON validation passed without a model call or refetch. Nineteen focused
+policy/document/source-reader tests passed. No compiler/schema version change.
+
+
+### Workshop 0.13.0 per-item revision metadata
+
+Website schema 8 requires revision: positive integer, placed after schemaVersion
+and compilerVersion. This is the existing persistent Family.revision counter,
+not an AI-invented field and not a counter for each CLI call. Successful validated
+builds/saved edits increment it exactly once. Failures, retries that have not
+saved output, browsing, downloads and pause/resume do not increment it. Export
+uses Family.revision (legacy zero baseline treated as one for ready entries);
+prepromotion validation uses revision+1. Manual website-to-internal conversion
+strips submitted revision, so users cannot spoof/reset the counter in JSON.
+
+Internal schema 5/compiler0.7.0 remain unchanged, retaining existing completed
+entries and their recorded counters. No scrape, source reread or model rebuild
+is needed to expose the metadata. Final document validation orders all three
+version fields first. Documentation distinguishes shared format changes from
+compiler rule changes and successful per-item saved versions. Thirty-two focused
+export/schema/character/manual-edit tests and build passed; explicit checks cover
+repeat exports, persistence, and an attempted manual revision override.
+
+
+### Workshop 0.14.0 Lootlemon-first conflict decisions
+
+Use all saved sources. For genuine like-for-like Wiki/Lootlemon contradictions,
+prefer the verified Lootlemon fact. Applies across rarity, stats, timers, effects,
+manufacturers and acquisition; do not let speculative raw constants overturn
+the decision. User corrections and captured family identity/restrictions remain
+authoritative. Distinguish complementary ranges, maximum rolls, editions, player
+counts, levels and conditions. A page Epic tag does not contradict a supported
+broader set of class-mod rarities. Unrelated Wiki details must remain included.
+
+Draft.sourceUsage supports disposition overridden. Reuse duplicateOf as the
+exact USED preferred Lootlemon fact ID; fields must be empty and reason must
+explain the same-scope conflict. Validate Wiki -> Lootlemon direction, same field,
+known target actually used, exhaustive accounting and no suppressed Wiki rarity
+or stat value left in public output. Preferred numeric facts must still pass
+normal preservation checks. Keep the source HTML/facts unchanged and record
+sourcePolicy lootlemon-first-v1 in the private research audit. Public JSON never
+contains disputed-source commentary. No new public field or schema bump.
+
+Resolved disagreements do not set requiresReview/conflicts/reviewReason. If a
+draft still flags source conflicts and both providers exist, permit one bounded
+policy-aware rewrite before failing. Do not merely clear flags. Same-provider or
+identity conflicts still fail if unresolved. Invalidate clears the policy-repair
+marker. Existing source ledgers remain valid; no scrape/re-reading/global item
+reset needed. Keep the paused batch and enqueue MIRV for a saved-source retry.
+
+Verification: full suite 100 passed, three unchanged external research simulation
+tests skipped. Added direct rarity/timer conflict tests, reverse/unknown/unused
+priority target rejection, complementary Wiki fact accounting and bounded
+policy-aware rewrite validation. Build, TypeScript, OpenAPI syntax and diff checks
+pass. Saved MIRV's old rejected draft, queued it immediately after the current
+item for a saved-source retry, and retained the batch pause/checkpoint. No live
+agent/source call was started as part of this update.
+
+Also corrected a discovered restart bug: character-family reconciliation sorted
+pending work even when no new families existed. Sort only during genuine family
+addition; regression test verifies an arbitrary pending order/current checkpoint
+survives reconciliation. Restored the original pending order from the pre-update
+backup, with MIRV inserted just after the current item. Six character/batch tests
+and TypeScript passed after the fix; API confirms paused/current/next alignment.
+
+
+### Workshop 0.15.0 reversible catalogue removal
+
+Reuse excluded status for deliberate removal. The API accepts remove/exclude and
+restore. Remove saves previous status/stage/issue in the private removal artifact,
+marks excluded, drops deferred rebuild requests and retains raw/source/output
+data. A repeated removal is idempotent. Reject removal of the active in-flight
+item; future items may be removed while another runs. Existing queues skip them,
+and no model call is started. Guard excluded item mutations/rebuilds until restore.
+
+Restore rejects obsolete superseded placeholders. Restore ready status only if
+complete/current output remains; preserve prior blocked issue when stage still
+matches; otherwise queued, restarting missing complete output at evidence. Restore
+never auto-starts a build. Pending active/paused queues may append restored
+unfinished work. Reimport preserves status; refreshImported must skip excluded
+families. Generated reset preserves removal; restore after reset queues missing
+output. Full data reset intentionally clears the project.
+
+Normal sidebar filters omit excluded items. A separate Removed items link/count
+lists deliberate exclusions, excluding internal superseded placeholders. Preview
+inspector shows a red remove button or a restore button/retention explanation.
+Rebuild/start-from controls are disabled for removed selections. Selection adjusts
+when removing/restoring or entering/leaving Removed items. No irreversible delete
+or confirmation modal is needed. Removal state is in workshop.sqlite, not the raw
+ZIP. The six gd_StorageDeckUpgrade.Title.Title_Level_1..6 candidates are SDU name
+modifiers, and are deliberately removed using this facility, remaining restorable.
+
+Verification: full suite 104 passed, three unchanged external research tests
+skipped; build/TypeScript, browser smoke, OpenAPI syntax and diff checks pass.
+New local HTTP tests cover removal/export exclusion, retained source/output data,
+restart/reimport persistence, rebuild guards, safe removal of future items while
+busy, current-item protection, and restore after generated reset. Browser checks
+exercise Preview removal, disappearance from normal navigation, Removed items
+inspection and restoration. Removed the six SDU level labels through the same
+worker action without model calls, leaving the user's batch paused.
+
+
+### Workshop 0.15.1 equipment category correction
+
+Weapon subtype classification previously did not change top-level categories.
+DLC item title paths such as Ironclad/Omega/Rose fell into Other equipment, and
+the writer was locked to that category despite shield research.
+
+equipmentCategoryCandidate accepts Other equipment families only, excluding
+removed/superseded/manual-classified items. Require a saved Lootlemon exact
+/shield|grenade-mod/<name-or-alias>-bl1 route AND matching name + BL1 + type in
+the archived article title. Conflicting typed candidates remain unresolved; no
+name-only guesses, navigation inference, image-folder inference or model call.
+
+ClassificationOverride gains optional category and nullable weaponType for
+equipment; existing schemaVersion1 override files remain compatible. The model
+weapon ClassificationDecision stays strict and unchanged. Category overrides
+are authoritative in classification-overrides.json. Family.rawCategory/rawSubtype
+preserve native grouping; stable IDs/roots never change. Store applies effective
+category/subtype and adjusts draft/manualDraft/packet category metadata; completed
+entries queue validation when a saved draft exists, otherwise drafting. No output
+is promoted until normal validation passes. Removing an override restores native
+category. Manual overrides win. Reimport/reset retain the file and effective view.
+
+Worker classifies after sources are available and before writing, rebuilding the
+packet for the effective category; saved source cache hashes then naturally
+request category-specific analysis on future rebuilds. Correct category controls
+sidebar, inspector, source checklist, images, Final JSON and export folder. The
+three unknown DLC shield IDs remain stable even though the IDs contain the old
+category name. No public schema or compiler version change is needed.
+
+Verification: 107 unit/integration tests passed, three unchanged external research
+tests skipped. New tests reject generic/wrong-game/mismatched typed pages, respect
+manual/removal priority, retain stable IDs on reimport/restart, verify shield
+export paths and revalidate ready content without model calls. Build/TypeScript,
+OpenAPI syntax and diff checks pass. Browser smoke confirms an actual imported
+Ironclad moves from Other equipment to Shields with its stable ID and correct
+Final JSON category. Browser fake source readings now use the effective category;
+API waits use awaited expect.poll rather than async waitForFunction predicates.
+
+Applied the saved-proof correction to Ironclad (ready, revision2, categoryShields)
+and Omega (queued at validation, categoryShields). Kept the paused Omega checkpoint
+and all source data. No fresh fetch/AI rewrite was used for these corrections.
+Rose has no saved typed proof yet and will be handled when its item source exists.
+
+
+### Workshop 0.15.2 sidebar group progress
+
+GroupStatus renders one compact blue done / red blocked / muted total capsule
+for every main category and nested character group. It uses the group's current
+visible items, preserving existing search/status-filter count semantics. Queued
+and running counts appear in the native hover title and accessible role-img
+label; excluded counts appear when browsing Removed items. Zero values are muted.
+Entirely complete groups have a subtle blue border/background; attention groups
+have a subtle red border. Tabular numerals and non-shrinking inline-flex layout
+keep columns tidy. Badges remain inside the existing collapse button, without a
+new tab stop or behaviour change. Counts update from the normal live state feed;
+no backend/source/compiler changes, new polling or model work.
+
+Verification: TypeScript/production build passed. Inspected the live sidebar in
+an isolated headless browser, including collapsed/expanded character groups.
+Actual examples rendered 1/0/16 for Artifacts and 1/0/4 for Brick, with hover
+counts showing the remaining queued work. Screenshot checked for compact layout
+and legible status colours; no browser errors. No worker pause/restart or model
+call was needed; the active user batch remained running.

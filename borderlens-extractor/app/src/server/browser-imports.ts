@@ -139,7 +139,7 @@ export class BrowserImports {
         job.message ||
         (job.status === "queued"
           ? "Capture saved; applies after the current processing step."
-          : "Source saved. Rebuild this item to use it."),
+          : "Source saved. Rebuild from saved sources to use it."),
     };
   }
   flush() {
@@ -198,7 +198,9 @@ export class BrowserImports {
         );
         job.status = "imported";
         job.message =
-          "Saved for " + f.name + ". Rebuild this item to use the new source.";
+          "Saved for " +
+          f.name +
+          ". Rebuild from saved sources to use the new source.";
       } catch (error: any) {
         job.status = "failed";
         job.message = error.message;

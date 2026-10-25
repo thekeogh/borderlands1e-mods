@@ -1,4 +1,11 @@
 import {
+  genericAdviceReason,
+  UnclearPublicProse,
+  publicQualityIssue,
+  publicPassages,
+} from "../shared/catalogue-policy.ts";
+import { acquisitionSources } from "../shared/acquisition.ts";
+import {
   type Family,
   type Raw,
   type Packet,
@@ -94,7 +101,7 @@ export function buildPacket(store: Store, f: Family): Packet {
     redText: null,
     manufacturers: [],
     rarities: [],
-    elements: [],
+    elements: f.element ? [f.element.toLowerCase()] : [],
   };
   for (const r of chosen.values()) {
     const p = unpack(r.properties);
@@ -173,7 +180,7 @@ export function buildPacket(store: Store, f: Family): Packet {
         url: s.url,
         hash: s.hash,
         retrievedAt: s.fetchedAt,
-        text: s.text.slice(0, 30000),
+        text: s.text,
         imported: s.imported,
         sections: s.sections || [],
         tables: s.tables || [],
@@ -202,6 +209,8 @@ export function buildPacket(store: Store, f: Family): Packet {
     "Only captured definitions and saved pages are evidence; unresolved fields must stay unknown.",
   );
   return {
+    character: f.character,
+    element: f.element,
     familyId: f.id,
     name: f.name,
     category: f.category,
@@ -214,7 +223,35 @@ export function buildPacket(store: Store, f: Family): Packet {
 export function packetHash(p: Packet) {
   return hash(stable(p));
 }
+export class StatContextError extends Error {
+  constructor(public statName: string) {
+    super(
+      "Repeated stat name needs distinct evidenced contexts (such as Card and While scoped), or different explicit levels.",
+    );
+  }
+}
 export function validateDraft(draft: any, p: Packet) {
+  acquisitionSources(draft.entry.sources);
+  const statKeys = new Set<string>();
+  for (const stat of draft.entry.stats) {
+    if (
+      !stat.context?.trim() &&
+      draft.entry.stats.some(
+        (other: any) =>
+          other !== stat &&
+          other.name.trim().toLowerCase() === stat.name.trim().toLowerCase() &&
+          other.level === stat.level,
+      )
+    )
+      throw new StatContextError(stat.name);
+    const key = JSON.stringify([
+      stat.name.trim().toLowerCase(),
+      stat.context?.trim().toLowerCase() || null,
+      stat.level,
+    ]);
+    if (statKeys.has(key)) throw new StatContextError(stat.name);
+    statKeys.add(key);
+  }
   if (
     draft.entry.id !== p.familyId ||
     draft.entry.name !== p.name ||
@@ -229,9 +266,30 @@ export function validateDraft(draft: any, p: Packet) {
     if (!claim.basis.trim())
       throw new Error("Claim is missing its supporting basis.");
   }
+  for (const passage of [
+    ...publicPassages(draft.entry),
+    ...publicPassages(draft.partDefinitions || []),
+  ]) {
+    const quality = publicQualityIssue(passage);
+    if (
+      quality?.startsWith("Vague comparison") ||
+      quality?.startsWith("Research wording")
+    )
+      throw new UnclearPublicProse(passage, quality);
+    const reason = genericAdviceReason(passage) || quality;
+    if (reason)
+      throw new Error(
+        reason +
+          ": remove shared-site guide content; keep item-specific facts only.",
+      );
+  }
   const publicText = [
     draft.entry.summary,
     ...(draft.entry.description || []),
+    ...(draft.entry.details || []).flatMap((s: any) => [
+      s.heading,
+      ...s.paragraphs,
+    ]),
     ...(draft.entry.variants || []).flatMap((v: any) => [
       v.name,
       v.description,
@@ -245,8 +303,13 @@ export function validateDraft(draft: any, p: Packet) {
     ...(draft.entry.parts || []).map((p: any) => p.notes),
     ...draft.entry.specialEffects,
     ...draft.entry.notes,
+    draft.entry.levels.notes,
     ...draft.entry.stats.map((s: any) => s.notes),
-    ...draft.entry.sources.map((s: any) => s.notes),
+    ...draft.entry.sources.flatMap((s: any) => [
+      s.notes,
+      ...s.conditions,
+      ...(s.dropChance?.conditions || []),
+    ]),
   ].join("\n");
   if (
     /\bgd_[\w]|WillowGame\.|BaseValueAttribute|ManufacturerGradeIndex|resolver chain|\bUObject\b/i.test(
@@ -255,6 +318,24 @@ export function validateDraft(draft: any, p: Packet) {
   )
     throw new Error(
       "Player-facing text contains engine/debug language. Rebuild or edit the draft.",
+    );
+  if (
+    /source[- ]reported|according to (?:the )?(?:wiki|lootlemon|source)|(?:wiki|lootlemon) (?:reports|states|says)/i.test(
+      publicText,
+    )
+  )
+    throw new Error(
+      "Public catalogue facts must not contain source-reporting labels; keep attribution in private evidence.",
+    );
+  if (
+    draft.entry.stats.some((stat: any) =>
+      /published (?:weapon |stat )?range|source (?:does not|doesn't|has not|reports)|no (?:specific )?level (?:is )?specified|unit and level unspecified/i.test(
+        stat.notes,
+      ),
+    )
+  )
+    throw new Error(
+      "Remove source/range verification commentary from public stat notes; use null levels and private evidence instead.",
     );
   // Catch substantial verbatim copying while allowing names, red text and short labels.
   const words = (text: string) =>
@@ -265,15 +346,34 @@ export function validateDraft(draft: any, p: Packet) {
       .split(/\s+/);
   const sourcePhrases = new Set<string>();
   for (const page of p.evidence.filter((e) => e.kind === "page")) {
-    const tokens = words(String((page.value as any).text || ""));
-    for (let i = 0; i + 12 <= tokens.length; i++)
-      sourcePhrases.add(tokens.slice(i, i + 12).join(" "));
+    const value = page.value as any;
+    for (const text of [
+      String(value.text || ""),
+      ...(value.sections || []).map((section: any) => section.text),
+      ...(value.tables || []).flatMap((table: any) => table.rows.flat()),
+    ]) {
+      const tokens = words(text);
+      for (let i = 0; i + 12 <= tokens.length; i++)
+        sourcePhrases.add(tokens.slice(i, i + 12).join(" "));
+    }
   }
   for (const passage of [
     draft.entry.summary,
     ...(draft.entry.description || []),
+    ...(draft.entry.details || []).flatMap((s: any) => [
+      s.heading,
+      ...s.paragraphs,
+    ]),
     ...draft.entry.specialEffects,
     ...draft.entry.notes,
+    draft.entry.levels.notes,
+    ...draft.entry.stats.map((s: any) => s.notes),
+    ...draft.entry.sources.flatMap((s: any) => [
+      s.notes,
+      ...s.conditions,
+      ...(s.dropChance?.conditions || []),
+    ]),
+    ...(draft.entry.parts || []).map((part: any) => part.notes),
     ...(draft.entry.variants || []).flatMap((v: any) => [
       v.description,
       ...v.differences,
@@ -287,7 +387,7 @@ export function validateDraft(draft: any, p: Packet) {
     for (let i = 0; i + 12 <= tokens.length; i++)
       if (sourcePhrases.has(tokens.slice(i, i + 12).join(" ")))
         throw new Error(
-          "Public prose repeats a substantial source passage verbatim. Rewrite in original wording; preserve only names, red text and necessary labels.",
+          `Public prose repeats a substantial source passage verbatim (${tokens.slice(i, i + 12).join(" ")}). Rewrite in original wording; preserve only names, red text and necessary labels.`,
         );
   }
   const effects = draft.entry.specialEffects as string[];
@@ -337,6 +437,7 @@ export function validateDraft(draft: any, p: Packet) {
   const required = [
     "summary",
     "description",
+    ...(draft.entry.details?.length ? ["details"] : []),
     ...(draft.entry.variants?.length ? ["variants"] : []),
     ...(draft.entry.parts?.length ? ["parts"] : []),
     ...(["manufacturers", "rarities", "elements", "notes"] as const).filter(

@@ -1,3 +1,5 @@
+import { assembleWebsiteEntry } from "./final-entry.ts";
+import { serializeWebsiteDocument } from "../shared/final-document.ts";
 import AdmZip from "adm-zip";
 import { Store, HttpError } from "./store.ts";
 import { PublicEntry, PartDefinition, type Family } from "../shared/models.ts";
@@ -6,6 +8,7 @@ import { catalogueGroup } from "../shared/taxonomy.ts";
 function readyItems(store: Store) {
   return store.state.families.filter(
     (f) =>
+      !f.supersededBy &&
       f.status === "done" &&
       PublicEntry.safeParse(store.get(f.id, "output")).success,
   );
@@ -21,10 +24,13 @@ function exportSlugs(items: Family[]) {
     );
     let slug = base;
     if (group.length > 1) {
-      slug += "-" + itemSlug(catalogueGroup(f));
+      slug += "-" + itemSlug(f.character || catalogueGroup(f));
       if (
-        group.filter((other) => catalogueGroup(other) === catalogueGroup(f))
-          .length > 1
+        group.filter(
+          (other) =>
+            (other.character || catalogueGroup(other)) ===
+            (f.character || catalogueGroup(f)),
+        ).length > 1
       )
         slug += "-" + f.id.slice(-6);
     }
@@ -41,25 +47,34 @@ export function websiteEntry(
   store: Store,
   f: Family,
   slug = exportSlugs(readyItems(store)).get(f.id) || itemSlug(f.name),
+  refreshImages = true,
 ): WebsiteEntry | null {
+  if (refreshImages) store.images.refresh();
   const parsed = PublicEntry.safeParse(store.get(f.id, "output"));
   if (!parsed.success) return null;
   const output = parsed.data,
     local = store.get<PartDefinition[]>(f.id, "parts") || [];
-  const parts = output.parts.map((ref) => {
-    const definition =
-      local.find((part) => part.id === ref.partId) ||
-      store.get<any>("_parts", ref.partId)?.definition;
-    if (!definition)
-      throw new HttpError(
-        409,
-        "Missing part data; rebuild " + f.name + " before exporting.",
-      );
-    const { schemaVersion, compilerVersion, ...part } =
-      PartDefinition.parse(definition);
-    return { ...part, relationship: ref.relationship, familyNotes: ref.notes };
-  });
-  return WebsiteEntry.parse({ ...output, schemaVersion: "3", slug, parts });
+  const definitions = output.parts
+    .map(
+      (ref) =>
+        local.find((part) => part.id === ref.partId) ||
+        store.get<any>("_parts", ref.partId)?.definition,
+    )
+    .filter(Boolean);
+  try {
+    return assembleWebsiteEntry(
+      output,
+      definitions,
+      slug,
+      store.images.match(f).image,
+      Math.max(1, f.revision),
+    );
+  } catch (error: any) {
+    throw new HttpError(
+      409,
+      "Final JSON validation failed for " + f.name + ": " + error.message,
+    );
+  }
 }
 export function websiteZip(store: Store) {
   const ready = readyItems(store);
@@ -68,6 +83,7 @@ export function websiteZip(store: Store) {
       409,
       "No completed current-schema items are ready to export. Build an item first.",
     );
+  store.images.refresh();
   const zip = new AdmZip(),
     slugs = exportSlugs(ready);
   for (const f of ready) {
@@ -75,7 +91,9 @@ export function websiteZip(store: Store) {
     const filename = categoryFolders[f.category] + "/" + slug + ".json";
     zip.addFile(
       filename,
-      Buffer.from(JSON.stringify(websiteEntry(store, f, slug), null, 2) + "\n"),
+      Buffer.from(
+        serializeWebsiteDocument(websiteEntry(store, f, slug, false)),
+      ),
     );
   }
   return zip.toBuffer();

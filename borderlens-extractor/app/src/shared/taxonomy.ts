@@ -18,7 +18,7 @@ export function catalogueGroup(
   >,
 ): string {
   if (f.category !== "Weapons") return f.subtype;
-  if (f.classification) return f.classification.weaponType;
+  if (f.classification?.weaponType) return f.classification.weaponType;
   switch (f.subtype) {
     case "Machine guns":
       return "Combat rifles";
@@ -51,6 +51,7 @@ export function catalogueOrder(a: Family, b: Family) {
     Number(catalogueGroup(a) === "Needs review") -
       Number(catalogueGroup(b) === "Needs review") ||
     catalogueGroup(a).localeCompare(catalogueGroup(b)) ||
+    (a.character || "").localeCompare(b.character || "") ||
     a.name.localeCompare(b.name) ||
     a.id.localeCompare(b.id)
   );

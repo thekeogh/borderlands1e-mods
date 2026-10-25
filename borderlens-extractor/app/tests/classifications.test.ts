@@ -1,3 +1,4 @@
+import { emptySourceReading } from "./source-fixture.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync, readFileSync, writeFileSync } from "node:fs";
@@ -77,6 +78,8 @@ function ai(
   return {
     status: async () => ({ chatgpt: true }),
     run: async (label, _prompt, schema) => {
+      if (label.startsWith("Read source"))
+        return schema.parse(emptySourceReading());
       if (label.startsWith("Classify"))
         return schema.parse({
           weaponType: "Combat rifles",
@@ -98,8 +101,8 @@ function ai(
         p = buildPacket(s, f);
       return schema.parse({
         entry: {
-          schemaVersion: "2",
-          compilerVersion: "0.2.0",
+          schemaVersion: "5",
+          compilerVersion: "0.7.0",
           description: [
             "An original fixture paragraph describing this item for players.",
           ],

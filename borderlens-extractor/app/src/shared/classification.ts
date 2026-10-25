@@ -1,3 +1,4 @@
+import { Category } from "./models.ts";
 import { z } from "zod";
 import { weaponTypes } from "./taxonomy.ts";
 export const ClassificationEvidence = z
@@ -12,7 +13,8 @@ export const ClassificationEvidence = z
 export const ClassificationOverride = z
   .object({
     name: z.string(),
-    weaponType: z.enum(weaponTypes),
+    weaponType: z.enum(weaponTypes).nullable(),
+    category: Category.optional(),
     reason: z.string().min(1),
     verifiedAt: z.string(),
     evidence: z.array(ClassificationEvidence),

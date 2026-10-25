@@ -1,3 +1,4 @@
+import { emptySourceReading } from "./source-fixture.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync, existsSync, writeFileSync } from "node:fs";
@@ -57,8 +58,9 @@ function fixture(t: any) {
 }
 function entry(f: Family): PublicEntry {
   return {
-    schemaVersion: "2",
-    compilerVersion: "0.2.0",
+    details: [],
+    schemaVersion: "5",
+    compilerVersion: "0.7.0",
     description: [
       "An original fixture paragraph describing this item for players.",
     ],
@@ -86,6 +88,8 @@ function fakeAI(s: Store, wait?: () => Promise<void>): AI {
   return {
     status: async () => ({ chatgpt: true }),
     run: async (_label, prompt, schema) => {
+      if (_label.startsWith("Read source"))
+        return schema.parse(emptySourceReading());
       await wait?.();
       const f = s.family(s.state.run.currentId!);
       return schema.parse({
@@ -360,7 +364,7 @@ test("local HTTP service protects origins, exports schema-valid JSON, fully rese
   assert.equal(JSON.parse(z.readAsText("weapons/hellfire.json")).id, f.id);
   assert.equal(
     JSON.parse(z.readAsText("weapons/hellfire.json")).schemaVersion,
-    "3",
+    "8",
   );
   writeFileSync(path.join(s.dir, "ai", "test-cache"), "cached");
   const reset = await fetch(base + "/api/reset", {
@@ -575,3 +579,558 @@ test(
     assert.equal(searches, 1);
   },
 );
+
+async function sourceRebuildFixture(t: any) {
+  const { readSources } = await import("../src/server/source-analysis.ts");
+  const { packetHash } = await import("../src/server/evidence.ts");
+  const s = fixture(t);
+  importZip(s, capture(), "data.zip");
+  const f = s.state.families[0],
+    research = new Research(s);
+  for (const url of [
+    "https://borderlands.fandom.com/wiki/Fixture",
+    "https://www.lootlemon.com/weapon/fixture-bl1",
+  ])
+    research.save(
+      f,
+      url,
+      "<main><h1>Fixture</h1><p>This original synthetic source paragraph is long enough for a complete saved-page fixture.</p></main>",
+    );
+  f.sourceUrls = s.sources(f.id).map((p) => p.url);
+  f.inputHash = packetHash(buildPacket(s, f));
+  await readSources(
+    s,
+    {
+      status: async () => ({}),
+      run: async (_l, _p, schema) => schema.parse(emptySourceReading()),
+    },
+    f,
+    () => {},
+  );
+  return { s, f, research };
+}
+test("saved-source rebuild reuses full fact readings across agent/model changes and makes no source calls", async (t) => {
+  const { savedSourceCache } = await import("../src/server/source-cache.ts");
+  const { s, f, research } = await sourceRebuildFixture(t);
+  const old = s.sources(f.id).map((p) => p.hash);
+  s.state.settings.agent = "codex";
+  s.state.settings.model = "comparison-model";
+  assert.ok(savedSourceCache(s, f).ledger);
+  let reads = 0;
+  const labels: string[] = [];
+  const inner = fakeAI(s);
+  const ai: AI = {
+    ...inner,
+    run: async (label, prompt, schema, ...rest) => {
+      labels.push(label);
+      if (label.startsWith("Read source")) {
+        reads++;
+        throw Error("Source read must be skipped");
+      }
+      return inner.run(label, prompt, schema, ...rest);
+    },
+  };
+  research.fetchPage = async () => {
+    throw Error("Fetching must be skipped");
+  };
+  research.inventory = async () => {
+    throw Error("Inventory must be skipped");
+  };
+  const w = new Worker(s, ai, research);
+  await w.action(f.id, "rebuild-saved", {});
+  await until(() => !w.busy);
+  assert.equal(f.status, "done", f.issue || "");
+  assert.equal(reads, 0);
+  assert.deepEqual(labels, ["Build " + f.name]);
+  assert.deepEqual(
+    s.sources(f.id).map((p) => p.hash),
+    old,
+  );
+  // Correction invalidation keeps saved pages usable but refuses to reuse stale analysis.
+  f.notes = "A new correction";
+  assert.equal(savedSourceCache(s, f).available, true);
+  assert.equal(savedSourceCache(s, f).ledger, undefined);
+});
+test("fresh-source rebuild forces page fetching and fact reading; failed refresh retains old pages/output", async (t) => {
+  const { s, f, research } = await sourceRebuildFixture(t);
+  s.state.settings.research = true;
+  const old = s.sources(f.id);
+  const fetched: string[] = [];
+  let reads = 0;
+  research.fetchPage = async (family, url, refresh) => {
+    assert.equal(refresh, true);
+    fetched.push(url);
+    return research.save(
+      family,
+      url,
+      "<main><h1>Fixture fresh</h1><p>A freshly fetched synthetic page contains changed content for the refreshed build source fixture.</p></main>",
+    );
+  };
+  const inner = fakeAI(s),
+    ai: AI = {
+      ...inner,
+      run: async (label, prompt, schema, ...rest) => {
+        if (label.startsWith("Read source")) {
+          reads++;
+          return schema.parse(emptySourceReading());
+        }
+        return inner.run(label, prompt, schema, ...rest);
+      },
+    };
+  const w = new Worker(s, ai, research);
+  await w.action(f.id, "rebuild-fresh", {});
+  await until(() => !w.busy);
+  assert.equal(f.status, "done", f.issue || "");
+  assert.equal(fetched.length, 2);
+  assert.equal(reads, 2);
+  assert.equal(s.sources(f.id).length, 2);
+  for (const page of old)
+    assert.ok(existsSync(path.join(s.dir, "sources", page.filename)));
+  const output = s.get(f.id, "output"),
+    pages = s.sources(f.id);
+  research.fetchPage = async () => {
+    throw Error("403 synthetic refresh failure");
+  };
+  await w.action(f.id, "rebuild-fresh", {});
+  await until(() => !w.busy);
+  assert.equal(f.status, "blocked");
+  assert.match(f.issue!, /Existing pages are preserved/);
+  assert.deepEqual(s.sources(f.id), pages);
+  assert.deepEqual(s.get(f.id, "output"), output);
+});
+test("saved rebuild reads newly saved pages when analysis is absent, without fetching them", async (t) => {
+  const { s, f, research } = await sourceRebuildFixture(t);
+  s.forget(f.id, ["sourceLedger", "sourceLedgerInput"]);
+  s.db
+    .prepare(
+      "DELETE FROM artifacts WHERE family=? AND kind LIKE 'sourceReading:%'",
+    )
+    .run(f.id);
+  let reads = 0;
+  const inner = fakeAI(s),
+    ai: AI = {
+      ...inner,
+      run: async (label, prompt, schema, ...rest) => {
+        if (label.startsWith("Read source")) {
+          reads++;
+          return schema.parse(emptySourceReading());
+        }
+        return inner.run(label, prompt, schema, ...rest);
+      },
+    };
+  research.fetchPage = async () => {
+    throw Error("Must not fetch");
+  };
+  const w = new Worker(s, ai, research);
+  await w.action(f.id, "rebuild-saved", {});
+  await until(() => !w.busy);
+  assert.equal(f.status, "done", f.issue || "");
+  assert.equal(reads, 2);
+});
+
+test(
+  "Postman: fresh rebuild traverses real source HTTP and retains cached pages on a refresh error",
+  { skip: !process.env.BORDERLENS_SIMULATION },
+  async (t) => {
+    const s = fixture(t);
+    importZip(s, capture(), "data.zip");
+    const f = s.state.families[0];
+    const research = new Research(s, fetch, process.env.BORDERLENS_SIMULATION);
+    for (const url of [
+      "https://borderlands.fandom.com/wiki/Hellfire_(Borderlands)",
+      "https://www.lootlemon.com/weapon/hellfire-bl1",
+    ])
+      research.save(
+        f,
+        url,
+        "<main><h1>Old saved fixture</h1><p>Previously stored source content for checking an explicit fresh-source rebuild over actual HTTP.</p></main>",
+      );
+    f.sourceUrls = s.sources(f.id).map((p) => p.url);
+    s.state.settings.research = true;
+    const inner = fakeAI(s),
+      ai: AI = {
+        ...inner,
+        run: async (label, prompt, schema, ...rest) =>
+          label.startsWith("Read source")
+            ? schema.parse(emptySourceReading())
+            : inner.run(label, prompt, schema, ...rest),
+      };
+    const w = new Worker(s, ai, research);
+    await w.action(f.id, "rebuild-fresh", {});
+    await until(() => !w.busy);
+    assert.equal(f.status, "done", f.issue || "");
+    assert.ok(
+      s.sources(f.id).every((p) => p.text.includes("Contract fixture")),
+    );
+    const prior = s.get(f.id, "output");
+    const failed = research.save(
+      f,
+      "https://borderlands.fandom.com/wiki/upstream-fail",
+      "<main><h1>Retain this page</h1><p>This saved article must remain intact if the upstream source responds with a temporary service failure.</p></main>",
+    );
+    await w.action(f.id, "rebuild-fresh", {});
+    await until(() => !w.busy);
+    assert.equal(f.status, "blocked");
+    assert.match(f.issue!, /503/);
+    assert.ok(s.sources(f.id).some((p) => p.id === failed.id));
+    assert.deepEqual(s.get(f.id, "output"), prior);
+  },
+);
+
+test("a deferred saved-source rebuild keeps its mode and reuses analysis after the active draft completes", async (t) => {
+  const { s, f, research } = await sourceRebuildFixture(t);
+  s.state.settings.research = false;
+  let release!: () => void,
+    entered = false,
+    calls = 0;
+  const inner = fakeAI(s),
+    ai: AI = {
+      ...inner,
+      run: async (label, prompt, schema, ...rest) => {
+        if (label.startsWith("Read source"))
+          throw Error("Cached analysis should be reused");
+        if (++calls === 1) {
+          entered = true;
+          await new Promise<void>((r) => (release = r));
+        }
+        return inner.run(label, prompt, schema, ...rest);
+      },
+    };
+  research.fetchPage = async () => {
+    throw Error("Saved mode must not fetch");
+  };
+  const w = new Worker(s, ai, research);
+  w.start(undefined, f.id);
+  await until(() => entered);
+  await w.action(f.id, "rebuild-saved", {});
+  assert.equal(s.get<any>(f.id, "pendingRebuild").mode, "saved");
+  assert.equal(s.get(f.id, "rebuildPlan"), null);
+  release();
+  await until(() => !w.busy);
+  assert.equal(s.state.run.status, "complete");
+  assert.equal(calls, 2);
+  assert.equal(s.get<any>(f.id, "rebuildPlan").mode, "saved");
+  assert.equal(f.revision, 2);
+});
+
+for (const mode of ["saved", "fresh"] as const)
+  test(`batch ${mode} handles cached and uncached items and skips completed work`, async (t) => {
+    const { s, f: cached, research } = await sourceRebuildFixture(t),
+      uncached = s.state.families.find((f) => f.id !== cached.id)!;
+    s.state.settings.research = true;
+    uncached.sourceUrls = [
+      "https://borderlands.fandom.com/wiki/UncachedFixture",
+      "https://www.lootlemon.com/weapon/uncached-fixture-bl1",
+    ];
+    const completed = {
+      ...structuredClone(cached),
+      id: "already-complete",
+      name: "Already complete",
+      status: "done" as const,
+    };
+    s.state.families.push(completed);
+    const prior = entry(completed);
+    s.put(completed.id, "output", prior);
+    const fetched: string[] = [],
+      read: string[] = [];
+    research.fetchPage = async (family, url, refresh) => {
+      assert.equal(refresh, true);
+      fetched.push(family.id);
+      if (mode === "saved") assert.notEqual(family.id, cached.id);
+      return research.save(
+        family,
+        url,
+        `<main><h1>${family.name}</h1><p>A newly fetched synthetic source for ${family.name}, URL ${url}, with enough text for a source fixture.</p></main>`,
+      );
+    };
+    research.inventory = async () => {
+      throw Error("Batch must not trigger unrelated inventory scans");
+    };
+    const inner = fakeAI(s),
+      ai: AI = {
+        ...inner,
+        run: async (label, prompt, schema, ...rest) => {
+          if (label.startsWith("Read source")) {
+            read.push(s.state.run.currentId!);
+            return schema.parse(emptySourceReading());
+          }
+          return inner.run(label, prompt, schema, ...rest);
+        },
+      };
+    const w = new Worker(s, ai, research);
+    w.start(undefined, undefined, mode);
+    await until(() => !w.busy);
+    assert.equal(s.state.run.status, "complete", s.state.run.message);
+    assert.equal(s.state.run.sourceMode, mode);
+    assert.equal(s.state.run.queue.length, 2);
+    assert.equal(s.state.run.sourcePrepared.length, 2);
+    assert.equal(
+      fetched.filter((id) => id === cached.id).length,
+      mode === "saved" ? 0 : 2,
+    );
+    assert.equal(
+      read.filter((id) => id === cached.id).length,
+      mode === "saved" ? 0 : 2,
+    );
+    assert.equal(fetched.filter((id) => id === uncached.id).length, 2);
+    assert.equal(read.filter((id) => id === uncached.id).length, 2);
+    assert.deepEqual(s.get(completed.id, "output"), prior);
+  });
+
+test("fresh batch resumes its validation checkpoint after restart without preparing or writing the item again", async (t) => {
+  const dir = mkdtempSync(path.join(tmpdir(), "borderlens-batch-resume-"));
+  let store = new Store(dir);
+  t.after(() => {
+    store.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+  importZip(store, capture(), "data.zip");
+  store.state.settings.research = false;
+  let release!: () => void,
+    entered = false;
+  const first = fakeAI(store, async () => {
+      entered = true;
+      await new Promise<void>((r) => (release = r));
+    }),
+    w = new Worker(store, first);
+  store.state.settings.maxItems = 1;
+  w.start(undefined, undefined, "fresh");
+  await until(() => entered);
+  w.pause();
+  release();
+  await until(() => !w.busy);
+  const id = store.state.run.queue[0];
+  assert.equal(store.family(id).stage, "validate");
+  assert.ok(store.state.run.sourcePrepared.includes(id));
+  store.close();
+  store = new Store(dir);
+  assert.equal(store.state.run.sourceMode, "fresh");
+  assert.equal(store.state.run.status, "paused");
+  const next = new Worker(store, {
+    status: async () => ({}),
+    run: async () => {
+      throw Error("Resume must not repeat writing or source reading");
+    },
+  });
+  next.resume();
+  await until(() => !next.busy);
+  assert.equal(store.state.run.status, "complete");
+  assert.equal(store.family(id).revision, 1);
+});
+
+test("batch API validates source choices, defaults to saved and refuses to switch an active run", async (t) => {
+  const s = fixture(t),
+    w = new Worker(s),
+    server = api(s, w).listen(0, "127.0.0.1");
+  await new Promise<void>((r) => server.once("listening", r));
+  t.after(() => server.close());
+  const base = `http://127.0.0.1:${(server.address() as any).port}/api/run`;
+  const request = (body: unknown) =>
+    fetch(base, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  assert.equal(
+    (await (await request({ action: "start" })).json()).sourceMode,
+    "saved",
+  );
+  assert.equal(
+    (await (await request({ action: "start", sourceMode: "fresh" })).json())
+      .sourceMode,
+    "fresh",
+  );
+  assert.equal(
+    (await request({ action: "start", sourceMode: "invalid" })).status,
+    400,
+  );
+  assert.equal(
+    (await request({ action: "resume", sourceMode: "saved" })).status,
+    400,
+  );
+  w.busy = true;
+  const before = structuredClone(s.state.run);
+  assert.equal(
+    (await request({ action: "start", sourceMode: "saved" })).status,
+    409,
+  );
+  assert.deepEqual(s.state.run, before);
+  w.busy = false;
+});
+
+test("older run metadata migrates without assigning a new batch policy or losing its checkpoint", async (t) => {
+  const dir = mkdtempSync(path.join(tmpdir(), "borderlens-legacy-run-"));
+  let s = new Store(dir);
+  t.after(() => {
+    s.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+  importZip(s, capture(), "data.zip");
+  const f = s.state.families[0];
+  f.stage = "draft";
+  s.state.run.status = "paused";
+  s.state.run.queue = [f.id];
+  s.state.run.currentId = f.id;
+  delete (s.state.run as any).sourceMode;
+  delete (s.state.run as any).sourcePrepared;
+  s.save();
+  s.close();
+  s = new Store(dir);
+  assert.equal(s.state.run.status, "paused");
+  assert.equal(s.state.run.currentId, f.id);
+  assert.equal(s.family(f.id).stage, "draft");
+  assert.equal(s.state.run.sourceMode, "auto");
+  assert.deepEqual(s.state.run.sourcePrepared, []);
+});
+
+test("an explicit saved-item rebuild deferred during a fresh batch is not overridden by the batch policy", async (t) => {
+  const { s, f, research } = await sourceRebuildFixture(t);
+  s.state.settings.research = true;
+  for (const other of s.state.families)
+    if (other.id !== f.id) other.status = "excluded";
+  let release!: () => void,
+    entered = false,
+    writes = 0,
+    fetches = 0,
+    reads = 0;
+  research.fetchPage = async (family, url, refresh) => {
+    assert.equal(refresh, true);
+    fetches++;
+    return research.save(
+      family,
+      url,
+      `<main><h1>Fresh fixture</h1><p>Updated source for ${family.name} at ${url} with enough text for the source fixture.</p></main>`,
+    );
+  };
+  const inner = fakeAI(s),
+    ai: AI = {
+      ...inner,
+      run: async (label, prompt, schema, ...rest) => {
+        if (label.startsWith("Read source")) {
+          reads++;
+          return schema.parse(emptySourceReading());
+        }
+        if (++writes === 1) {
+          entered = true;
+          await new Promise<void>((r) => (release = r));
+        }
+        return inner.run(label, prompt, schema, ...rest);
+      },
+    };
+  const w = new Worker(s, ai, research);
+  w.start(undefined, undefined, "fresh");
+  await until(() => entered);
+  await w.action(f.id, "rebuild-saved", {});
+  release();
+  await until(() => !w.busy);
+  assert.equal(s.state.run.status, "complete", s.state.run.message);
+  assert.equal(s.state.run.sourceMode, "fresh");
+  assert.equal(fetches, 2);
+  assert.equal(reads, 2);
+  assert.equal(writes, 2);
+  assert.equal(f.revision, 2);
+  assert.equal(s.get<any>(f.id, "rebuildPlan").mode, "saved");
+});
+
+test("source conflicts get one policy-aware retry and only resolved drafts can complete", async (t) => {
+  const s = fixture(t);
+  importZip(s, capture(), "fixture.zip");
+  const f = s.state.families[0];
+  const ll = new Research(s).save(
+    f,
+    "https://www.lootlemon.com/weapon/test-fixture-bl1",
+    "<main><h1>Synthetic item fixture</h1><p>This synthetic family is Rare. These are fixture facts, not production game data.</p></main>",
+  );
+  const wiki = new Research(s).save(
+    f,
+    "https://borderlands.fandom.com/wiki/Test_fixture",
+    "<main><h1>Synthetic item fixture</h1><p>This synthetic family is Common. These are fixture facts, not production game data.</p></main>",
+  );
+  s.state.run.currentId = f.id;
+  const packet = buildPacket(s, f);
+  s.put(f.id, "packet", packet);
+  const ledger = [ll, wiki].map((page, i) => ({
+    sourceId: page.id,
+    url: page.url,
+    chunks: [
+      {
+        facts: [
+          {
+            id: page.id + ":0:0",
+            field: "rarities",
+            detail: i ? "Common" : "Rare",
+            quote: i ? "Common" : "Rare",
+            stat: null,
+          },
+        ],
+      },
+    ],
+  }));
+  s.put(f.id, "sourceLedger", ledger);
+  const d: any = await fakeAI(s).run(
+    "Build fixture",
+    "",
+    Draft,
+    "",
+    false,
+    () => {},
+  );
+  d.requiresReview = true;
+  d.conflicts = ["Contradictory rarity classifications"];
+  d.reviewReason = "Rarity conflict";
+  d.sourceUsage = [ll, wiki].map((p) => ({
+    factId: p.id + ":0:0",
+    disposition: "conflict",
+    fields: [],
+    reason: "Different rarity classifications",
+    duplicateOf: null,
+  }));
+  s.put(f.id, "draft", d);
+  f.stage = "validate";
+  const w = new Worker(s, {
+    status: async () => ({}),
+    run: async () => {
+      throw Error("Unexpected model call");
+    },
+  } as any);
+  await w.step(f);
+  assert.equal(f.stage, "draft");
+  assert.equal(s.get(f.id, "sourcePriorityRepair"), true);
+  assert.match(
+    s.get<any>(f.id, "validationFeedback").instruction,
+    /choose Lootlemon/,
+  );
+  f.stage = "validate";
+  await assert.rejects(() => w.step(f), /Rarity conflict/);
+  d.requiresReview = false;
+  d.conflicts = [];
+  d.reviewReason = null;
+  d.entry.rarities = ["Rare"];
+  d.claims.push({
+    field: "rarities",
+    evidenceIds: [ll.id],
+    basis: "Preferred same-scope rarity",
+  });
+  d.sourceUsage = [
+    {
+      factId: ll.id + ":0:0",
+      disposition: "used",
+      fields: ["rarities"],
+      reason: "Preferred rarity",
+      duplicateOf: null,
+    },
+    {
+      factId: wiki.id + ":0:0",
+      disposition: "overridden",
+      fields: [],
+      reason:
+        "Same item and scope; use Lootlemon over the conflicting Wiki classification",
+      duplicateOf: ll.id + ":0:0",
+    },
+  ];
+  s.put(f.id, "draft", d);
+  f.stage = "validate";
+  await w.step(f);
+  assert.equal(f.stage, "complete");
+  assert.deepEqual(s.get<any>(f.id, "output").rarities, ["Rare"]);
+});

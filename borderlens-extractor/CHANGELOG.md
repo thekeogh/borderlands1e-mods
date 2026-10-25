@@ -1,5 +1,179 @@
 # Changelog
 
+## Workshop app 0.15.2
+
+- Replace category/character-group totals with compact coloured completed / needs attention / total badges. Hover text and accessible labels also report waiting/processing counts.
+- Update counts live from item state and honour the visible search/status filter; add subtle highlights for completed groups and groups needing attention.
+
+## Workshop app 0.15.1
+
+- Correct Other equipment entries from verified item-specific BL1 Lootlemon shield/grenade pages. Require a matching item/alias URL and a matching typed BL1 title; generic pages/navigation cannot classify items.
+- Persist category overrides alongside weapon types, keep original category/subtype and stable IDs, and update sidebar grouping and JSON/export categories. Respect manual overrides and removed items.
+- Revalidate completed drafts after category metadata corrections without rewriting their content; retain source readings and allow future category-specific rebuilds. Correct Ironclad and Omega using their saved shield pages.
+
+## Workshop app 0.15.0
+
+- Add a red **Remove from catalogue** button to Preview and a **Removed items** sidebar view with restoration. Hidden items are skipped in normal navigation, batches, image coverage and exports; their saved research/output stays intact.
+- Support removing future items during a batch; protect the item currently being built until paused. Prevent accidental rebuilding of removed items until restored.
+- Preserve removal through restart, reimport and generated-data resets. Restore ready items without rebuilding when valid output remains, otherwise return them to the queue.
+- Remove the six standalone Storage Deck Upgrade level-label candidates from this catalogue; retain them in Removed items.
+
+## Workshop app 0.14.0
+
+- Preserve pending queue order on service restarts when character-family discovery adds nothing.
+
+- Prefer verified Lootlemon facts over directly contradictory Wiki facts about the same item, edition and conditions, while retaining complementary facts from both. Preserve scoped variations such as maximum rolls versus full rarity ranges.
+- Add private overridden fact accounting linked to the exact used Lootlemon fact. Validate direction, target field, source provider and use of the preferred fact; reject publishing superseded rarity/stat values.
+- Give drafts that still flag a cross-source conflict one policy-aware retry. Unresolved identity, same-provider disagreements and unsupported evidence can still require attention.
+- Keep public JSON schema, item revisions and existing source readings intact. Queue the blocked MIRV entry to retry using its saved pages/facts; preserve the paused batch.
+
+## Workshop app 0.13.0
+
+- Add `revision` beside schema/compiler versions in Final JSON and item-only exports, using the existing persistent per-item saved-version counter. Successful builds and validated saved edits increment it; failed attempts, viewing, exporting and pause/resume do not.
+- Upgrade website JSON schema to 8 for the required positive revision field. Internal schema/compiler stay unchanged, so completed items need no AI rebuild. Existing recorded revisions are preserved.
+- Keep the counter compiler-owned when saving edited JSON; an edited revision value cannot override it. Document the distinction between schema, compiler and item versions.
+
+## Workshop app 0.12.3
+
+- Retain applicable equipment-wide rarity/skill rules during research; distinguish Lootlemon rarity labels from exhaustive legal tiers and respect family-specific exceptions.
+- Label class-mod ammo regeneration card bonuses separately from weapon-specific maximum per-second rates. Clarify that team bonuses also benefit the wearer in solo play.
+- Correct the saved Support Gunner rarity tiers, regeneration contexts and solo wording against its saved sources; preserve numeric values, research and future rebuild support.
+
+## Workshop app 0.12.2
+
+- Match source quotations across literal JSON table line-break/tab/quote escapes and their displayed equivalents. Preserve checks on all words, numbers and punctuation.
+- Include the rejected quotation and chunk in extraction repair feedback; include character/element context in equipment source reading. Reuse saved pages and successful reading checkpoints.
+
+## Workshop app 0.12.1
+
+- Fix Codex structured-output rejection of the optional character field. Use a required nullable character in the writer schema, then supply the authoritative captured restriction; saved/public JSON stays backwards compatible.
+- Persist agent failures and cooldown skips in the active item History, including the task, reason and fallback agent. Keep existing private CLI logs and provider cooldown diagnostics.
+- Add regression checks for every required writer-schema property and persisted fallback History.
+
+## Workshop app 0.12.0
+
+- Discover class-mod families from their character-restricted body/prefix links, including fixed DLC part collections. Replace generic manufacturer/title placeholders with 44 named class-mod families from the current capture.
+- Discover 16 artifact families: four elements for each character, with ranks kept within the family. Group both equipment categories by character in the sidebar; include the character restriction in generated JSON.
+- Retire broad placeholders without deleting their research/output; preserve weapons and add the new families to existing pending batch work. Disambiguate same-name export filenames by character.
+- Batch runs in either source mode save item failures, show a red cross and continue. Individual rebuilds stop on failure. Completed batches report items needing attention.
+- Keep compiler/schema versions unchanged; the character field is optional and additive. No blanket rebuild of completed weapons.
+
+## Workshop app 0.11.1
+
+- Add **Refresh folder** beside the image selector, with loading, success and error feedback. Reload local files without interrupting the batch or losing unsaved JSON edits.
+- Discover images in newly added safe top-level folders as well as the standard category folders. Preserve actual relative paths and existing manual image choices.
+- Keep catalogue schemas/compiler unchanged; no item rebuild required.
+
+## Workshop app 0.11.0
+
+- Add **Start from saved sources** / **Start from fresh sources** to the top batch control, matching the individual rebuild choices.
+- Saved batches reuse saved pages/facts for cached items and fetch sources for items with no saved pages. Fresh batches refresh each unfinished item.
+- Preserve the selected source mode and per-item initialization through pause/resume and service restarts; do not repeat source preparation at a saved checkpoint.
+- Keep completed/excluded items skipped and respect the existing run-size limit. Explicit individual rebuilds queued during a batch keep their own source mode.
+- Migrate older run metadata without resetting active checkpoints or altering completed JSON. Catalogue schemas/compiler remain unchanged.
+
+## Workshop app 0.10.0
+
+- Add whole-document validation after inline parts, images and acquisition sources are assembled, before promoting generated output and whenever exporting. Serialize and parse the actual consumer JSON to verify syntax and quoting.
+- Check numeric bounds, repeated stat contexts/parts/sources, URLs, player-count conflicts, drop-rate scopes/ranges, edition conditions and public wording. Record successful checks privately and show **Final JSON checked** in Preview.
+- Enforce canonical element labels across all equipment: Non-elemental, Incendiary, Shock, Corrosive and Explosive. Upgrade internal schema to 5, website schema to 7 and compiler to 0.7.0.
+- Remove stat notes that only repeat structured values; retain meaningful context. Deduplicate edition/player conditions without changing probabilities or losing explicit player counts.
+- Group acquisition labels with explicit player/edition qualifiers under their source identity. Reject contradictory scopes instead of choosing a rate arbitrarily.
+- Repair unclear scope comparisons with one focused original-wording call; preserve numeric facts and rerun every check. Reject malformed manually submitted JSON with HTTP 400.
+- Preserve old outputs/drafts and source captures through the schema upgrade. Apply the cleanup and a short wording repair to the saved Bessie entry without fetching sources or rebuilding the full item.
+
+## Workshop app 0.9.0
+
+- Separate known game/manual evidence usage from extracted page-fact accounting without rewriting the item. Keep those extra records privately; missing, duplicate and invented fact IDs still fail with exact diagnostics.
+- Clarify the private sourceUsage schema and writer instructions: only extracted page-fact IDs belong there; raw evidence IDs belong in claims.
+- Add **Rebuild from saved sources** and **Rebuild from fresh sources**, with a dropdown and saved sources as the default when pages exist.
+- Reuse complete, matching source analysis across agent/model changes. Newly added or changed saved pages can be read without fetching them again.
+- Fresh rebuilds explicitly fetch current pages and reread facts, preserving failed-page copies and historical HTML. Chrome captures can satisfy a blocked refresh before resuming.
+- Preserve source mode for deferred rebuilds and across pause/restart. Keep legacy rebuild behavior for older callers.
+- Upgrade compiler to 0.6.1; preserve paused validation drafts and saved source analysis. Public JSON schemas remain unchanged.
+
+## Workshop app 0.8.0
+
+- Match local item images by category, name and aliases; handle punctuation differences, expose ambiguous/missing matches and allow saved manual corrections.
+- Show item images before or after building, with a clear missing/load-failure state and a compact image picker.
+- Add searchable Image coverage with missing/matched filters, expected filenames and links to candidate pages; excluded candidates stay hidden.
+- Add a nullable relative image path to website schema 6. Image assignments update dynamically without AI or item regeneration; export remains item JSON only.
+- Serve only supported local raster images, reject unsafe paths/symlinks and refresh files without changing the active queue.
+- Preserve image choices in a separate override file across imports, restarts and generated resets. Full reset clears choices while retaining the image library.
+- Bump compiler to 0.6.0; retain earlier output and source captures for rebuilding. Images remain outside the AI draft schema and source claims.
+
+## Workshop app 0.7.1
+
+- Distinguish base, multiplier and total quantities sharing a stat name; preserve all supported values with explicit context labels.
+- Repair missing or ambiguous cited stat rows with a focused label/notes call before attempting a complete rewrite. Copy numeric values directly from saved evidence and reject incomplete or ambiguous repairs.
+- Preserve captured-part modifier safeguards, per-fact citations, bounded retries and full validation after repairs.
+- Upgrade compiler to 0.5.1 without changing public field shapes. Retain paused 0.5.0 validation drafts through a metadata-only migration and archive their originals.
+
+## Workshop app 0.7.0
+
+- Group acquisition locations with conditional drop rates in website JSON and Preview; preserve solo/multiplayer rates and reject contradictory rates with identical conditions.
+- Add explicit player counts and stat contexts; distinguish card and scoped accuracy without changing published ranges or inventing units.
+- Omit empty optional note strings from website output; retain unknown level bounds as null.
+- Require player-facing part/mechanics wording, preserve numeric modifiers in the relevant part effects, and keep raw scope constants and unscoped damage benchmarks private.
+- Tighten original-writing instructions and reduce repetition between overview, mechanics and notes.
+- Preserve conditional rate arrays through Final JSON editing; keep manual part edits local and allow cited generated part definitions to gain missing numerical effects.
+- Upgrade internal schema to 4, website schema to 5 and compiler to 0.5.0. Queue older generated entries for rebuilding while preserving their output, captures, source pages and corrections.
+
+## Workshop app 0.6.2
+
+- Validate source usage by field presence and matching source claims; valid empty arrays no longer depend on particular absence wording.
+- Keep numeric coverage checks enforced. Repair omitted, explicitly attributed part modifiers with a focused mechanics-paragraph rewrite before considering a full rebuild.
+- Preserve saved drafts and source captures; recover the blocked Bessie entry without restarting its build.
+
+## Workshop app 0.6.1
+
+- Remove the experimental Ollama/Gemma integration after its full Bessie run was slower and failed coverage, part-reference and effect-length checks.
+- Remove its selector/status entry, adapter, mocks and test harness; fallback is exclusively Grok and Codex again.
+- Migrate removed-provider preferences back to Grok while preserving writing settings, sources and catalogue work.
+
+## Workshop app 0.6.0
+
+- Add Ollama/Gemma 4 to the toolbar agent selector and connection statuses, pinned to the installed gemma4:e4b-mlx model.
+- Stream schema-constrained JSON from the local Ollama API with heartbeat, timing/token statistics, validated cache and bounded cancellation.
+- Use thinking off for local writing and on for local analysis, matching the installed model's advertised boolean controls.
+- Preserve the same schema, evidence, originality and numeric checks; reject oversized context, incomplete output and requested tools rather than silently dropping evidence.
+- Extend bounded fallback across available providers; local inference is loopback-only and live web discovery uses subscription agents. Settings explicitly disclose cloud fallback.
+- Add local protocol simulation and full-request diagnostics; retain the existing Grok default and paused catalogue queue.
+
+## Workshop app 0.5.1
+
+- Accept empty element/variant/part/source arrays when a cited source explicitly establishes absence, rather than rebuilding a correct entry repeatedly.
+- Recognize numeric modifiers attributed to captured weapon parts even when their notes omit the word modifier; preserve their values in mechanics/part text.
+- Record exact validation failures in History; distinguish source-page/extraction counters from full writing attempts and copied-passage rewrites.
+- Verify the saved Bessie draft against schema, originality, captured parts and all 83 extracted facts without another model call.
+
+## Workshop app 0.5.0
+
+- Add a persistent toolbar agent selector, defaulting to Grok with Codex available.
+- Integrate the authenticated Grok Build CLI, pinned to grok-4.6; use low effort for writing/rewriting and medium for extraction, classification and research on both agents.
+- Stop timed-out jobs after five minutes before trying the other agent; bound fallback to one attempt per provider, with a ten-minute failure cooldown and explicit recheck.
+- Share subprocess heartbeat/error handling across providers; isolate provider/model/effort caches and retain actual draft-provider metadata privately.
+- Keep subscription authentication; strip API-key environment variables, restrict model tools/filesystem use and report actionable account errors.
+- Preserve catalogue schemas, saved corrections, completed entries and paused queues. Changing the default affects future calls without rebuilding completed work.
+
+## Workshop app 0.4.1
+
+- Exclude generic farming, route, fast-travel/respawn and shared loot-guide boilerplate during extraction and synthesis; reject known templates in public catalogue text.
+- Keep filtered facts privately auditable and retain item-specific mechanics, acquisition conditions and gear bonuses.
+- Show per-call elapsed time, last-output age and timeout, plus build attempt; persist live process activity and JSONL events.
+- Detect process failures promptly and retain the existing bounded timeout without assuming quiet output means a crash.
+- Recognize scope modifiers alongside other part modifiers, avoiding false missing weapon-stat validation retries.
+- Queue prior generated entries for the revised compiler and archive unfinished drafts; retain captures, corrections and manual edits. Catalogue/website field shapes are unchanged.
+
+## Workshop app 0.4.0
+
+- Read every saved source in full through independently cached source/chunk passes, then synthesize all extracted facts alongside game evidence.
+- Add category checklists and private fact dispositions; reject omitted facts, unsupported quotations and silently discarded numeric ranges.
+- Accept published catalogue stat ranges directly, with no source-reporting labels or invented levels.
+- Allow longer descriptions and titled detail sections; require freshly written prose and reject copied passages across public text fields.
+- Keep source references, coverage, field proposals and extraction provenance private; website ZIP still contains only self-contained item JSON.
+- Bump compiler to 0.4.0, internal catalogue schema to 3 and website schema to 4; queue older generated entries while retaining outputs, sources and manual corrections.
+
 ## Workshop app 0.3.1
 
 - Add Show more to each saved source card with a read-only full-source modal.

@@ -1,11 +1,57 @@
 openapi: 3.0.3
 info:
   title: Borderlens local workshop
-  version: 0.3.1
+  version: 0.15.2
   description: Local-only catalogue processing. Disk-backed checkpoints; no hosted accounts or API-key billing.
 servers:
   - url: http://127.0.0.1:4317
 paths:
+  /api/images:
+    get:
+      operationId: imageCoverage
+      responses:
+        "200":
+          description: Local raster files from safe top-level library folders, per-candidate matches and revision, with matched/missing/ambiguous counts; excludes deliberately excluded candidates. No-store response; rescans files without invoking AI or changing the queue.
+  /api/images/file/{folder}/{filename}:
+    parameters:
+      - { name: folder, in: path, required: true, schema: { type: string } }
+      - { name: filename, in: path, required: true, schema: { type: string } }
+    get:
+      operationId: itemImage
+      responses:
+        "200":
+          description: "Supported local raster image, with no-cache revalidation."
+        "404": { description: "Missing, unsupported or unsafe image path." }
+  /api/items/{id}/image:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: setItemImage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                image:
+                  {
+                    type: string,
+                    nullable: true,
+                    description: Existing category/filename raster image; null explicitly marks no image.,
+                  }
+                automatic:
+                  {
+                    type: boolean,
+                    description: Clear the saved override and use name matching.,
+                  }
+      responses:
+        "200":
+          {
+            description: Effective image match; preserves processing state and does not rebuild content.,
+          }
+        "400": { description: Invalid request or nonexistent image. }
+        "404": { description: Item not found. }
   /api/chrome-helper:
     get:
       operationId: chromeHelperSetup
@@ -95,7 +141,7 @@ paths:
       responses:
         "200":
           {
-            description: "Queue, families, settings, captures and recent activity. No raw capture blobs.",
+            description: "Queue, families, settings, captures and recent activity. Active run messages include build attempt, subprocess elapsed time, time since last output and the bounded timeout; process liveness does not prove service progress. No raw capture blobs.",
           }
   /api/events:
     get:
@@ -135,7 +181,7 @@ paths:
       responses:
         "200":
           {
-            description: "Family with effective classification override, facts/evidence, per-provider research status/errors, sources, stage history and last valid output. Does not change the queue.",
+            description: "Family with effective classification override (equipment category and/or weapon subtype; equipment overrides have a null weaponType), facts/evidence, per-provider research status/errors, sources, private researchAudit with full-source chunk readings and fact dispositions, stage history and last valid output. Final whole-document validation status, image metadata and savedRebuild availability/reason are included for built and unbuilt candidates. Website output is schema 8: canonical element enum, full-document consistency checks, relative image path or null, rich description/details, contextual stat ranges, grouped conditional dropChances and inline parts; empty note strings are omitted; provenance and coverage stay private. Final JSON includes the item revision counter. Viewing/exporting does not increment revision. Does not change the queue.",
           }
         "404": { description: "Family not found." }
   /api/items/{id}/action:
@@ -143,6 +189,7 @@ paths:
       - { name: id, in: path, required: true, schema: { type: string } }
     post:
       operationId: itemAction
+      description: "rebuild-saved uses saved pages and matching extracted facts without fetching; missing analysis is read from those saved pages. rebuild-fresh fetches and reads current sources, preserving old pages on failure. Busy rebuilds are deferred with their chosen mode. Legacy rebuild retains its prior behavior."
       requestBody:
         required: true
         content:
@@ -157,10 +204,14 @@ paths:
                     enum:
                       [
                         rebuild,
+                        rebuild-saved,
+                        rebuild-fresh,
                         from,
                         refresh,
                         retry,
                         exclude,
+                        remove,
+                        restore,
                         resolve,
                         classification,
                         save-output,
@@ -189,14 +240,17 @@ paths:
       responses:
         "200":
           {
-            description: "Action checkpointed. Rebuilds queue behind active work; selection never triggers action.",
+            description: "Action checkpointed. Remove/exclude hides an item from normal navigation, batches and exports while retaining its data. Restore returns it without starting a build. The currently processing item must be paused before removal; other items can be removed during a batch. Rebuilds queue behind active work; selection never triggers action.",
           }
         "400":
           {
             description: "Invalid action or invalid output; last successful output retained.",
           }
         "404": { description: "Family not found." }
-        "409": { description: "Action requires a paused worker." }
+        "409":
+          {
+            description: "Action requires a paused worker, or saved-source rebuild has no saved pages.",
+          }
   /api/run:
     post:
       operationId: controlRun
@@ -209,12 +263,18 @@ paths:
               required: [action]
               properties:
                 action: { type: string, enum: [start, pause, resume] }
+                sourceMode:
+                  type: string
+                  enum: [saved, fresh]
+                  description: Only valid with start. Defaults to saved; reuse cached items and fetch sources for items with none. Fresh refreshes each unfinished item.
       responses:
         "200":
           {
-            description: "Run state saved; pause settles the in-flight stage before stopping.",
+            description: "Run state and per-item source initialization saved. Completed/excluded items are skipped; pause/resume preserves sourceMode and checkpoints. Batch item failures are saved as blocked and processing continues; successful entries remain available. Single-item rebuilds stop on errors.",
           }
-        "400": { description: "No eligible work or invalid request." }
+        "400": { description: "Invalid action or source mode." }
+        "409":
+          { description: "Pause an active run before starting another batch." }
   /api/coverage:
     post:
       operationId: scanCoverage
@@ -255,16 +315,37 @@ paths:
             schema:
               type: object
               properties:
-                model: { type: string }
+                agent: { type: string, enum: [grok, codex], default: grok }
+                model:
+                  {
+                    type: string,
+                    description: Optional Codex model override. Grok is pinned to grok-4.6.,
+                  }
                 writingStyle: { type: string }
                 research: { type: boolean }
                 maxItems: { type: integer, minimum: 1, maximum: 10000 }
       responses:
         "200":
           {
-            description: "Saved settings. Changed writing settings invalidate dependent completed work.",
+            description: "Saved settings. Agent preference may change during a call and applies to subsequent calls; it does not rebuild completed entries. Changed writing settings invalidate dependent work.",
           }
         "409": { description: "Pause first." }
+  /api/agents:
+    get:
+      operationId: agentStatus
+      responses:
+        "200":
+          {
+            description: "Selected default, Grok/Codex subscription CLI statuses, recent failures, cooldowns and the five-minute per-provider call budget. Each provider is tried once; no third provider. No credentials exposed.",
+          }
+  /api/agents/recheck:
+    post:
+      operationId: recheckAgents
+      responses:
+        "200":
+          {
+            description: "Clear failure cooldowns and check CLI connections again. Does not start a model call or resume the queue.",
+          }
   /api/codex:
     get:
       operationId: codexStatus
@@ -279,7 +360,7 @@ paths:
       responses:
         "200":
           {
-            description: "Item-only website ZIP: type-folder/slug.json, inline parts, no sidecars or manifests.",
+            description: "Item-only website schema 7 ZIP: type-folder/slug.json, inline parts, grouped acquisition dropChances with player counts and conditions, contextual stats, omitted empty note strings; no sidecars or manifests.",
           }
         "409":
           {
@@ -305,7 +386,10 @@ paths:
           }
         "409": { description: "Pause the worker and coverage scan first." }
 
-# Catalogue payload: schema v2 is defined by src/shared/models.ts (Zod).
+# Internal catalogue schema 5 is defined by src/shared/models.ts (Zod).
+# Self-contained website schema 7 is defined by src/shared/website.ts.
 # Entries carry compilerVersion, <=200-character summary, paragraph description,
-# variants, detailed acquisition sources and references to shared part definitions.
+# variants, contextual stats and references to shared part definitions.
+# Website acquisition sources group conditional dropChances; null players means
+# unspecified, never assumed solo. Nonempty optional notes are retained.
 # Older outputs remain inspectable but are excluded from current-schema exports.
