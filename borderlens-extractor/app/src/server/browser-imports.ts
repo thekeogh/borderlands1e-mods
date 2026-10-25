@@ -55,6 +55,11 @@ export class BrowserImports {
     const f = this.store.family(familyId);
     if (f.status === "excluded")
       throw new HttpError(400, "This item is excluded.");
+    if (this.store.isSourceExcluded(f.id, url))
+      throw new HttpError(
+        409,
+        "This source is removed from this item. Restore it first.",
+      );
     articleKey(url);
     if (
       this.jobs().filter(
@@ -158,7 +163,7 @@ export class BrowserImports {
         this.store.db
           .prepare("UPDATE sources SET value=? WHERE id=?")
           .run(JSON.stringify(source), source.id);
-        for (const old of this.store.sources(f.id))
+        for (const old of this.store.rawSources(f.id))
           if (
             old.id !== source.id &&
             articleKey(old.url) === articleKey(source.url)
@@ -185,13 +190,7 @@ export class BrowserImports {
           checkedAt: now(),
         });
         this.store.put(f.id, "research", report);
-        this.worker.invalidate(f, "sources");
-        const run = this.store.state.run;
-        if (
-          (this.worker.busy || run.status === "paused") &&
-          !run.queue.slice(run.index).includes(f.id)
-        )
-          run.queue.push(f.id);
+        this.worker.sharedArticleChanged(f, source.url);
         this.worker.history(
           f,
           "Saved " + provider + " article from Chrome: " + source.url,

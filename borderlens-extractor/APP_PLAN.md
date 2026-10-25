@@ -1669,3 +1669,175 @@ Actual examples rendered 1/0/16 for Artifacts and 1/0/4 for Brick, with hover
 counts showing the remaining queued work. Screenshot checked for compact layout
 and legible status colours; no browser errors. No worker pause/restart or model
 call was needed; the active user batch remained running.
+
+
+### Workshop 0.15.3 sidebar tree navigation
+
+familyTreePath returns the catalogue group plus character key for class mods and
+artifacts. Selecting opens all ancestors; Current item also clears search/status
+filters and sets a pending reveal. After rendering, scroll the matching stable
+data-family-id row into view. Repeat selection of the same ID must still reveal
+it. Selection/category changes open the path, but ordinary progress updates must
+not reopen manually collapsed groups. Existing collapse preferences persist.
+
+Collapse/Expand toolbar controls apply to the currently visible tree. Collapse
+closes deepest visible child groups first, then all root groups and normalizes
+their hidden children closed. Expand opens closed parents first, keeping their
+children closed and preserving already-open branches; the next click opens
+children. Step functions never mutate previous state or unrelated saved keys.
+
+Busy run/current family determines active ancestor keys independently of selection.
+Show one small spinner on each visible active group header; collapsed root/group
+headers retain the signal. Paused/blocked/complete runs do not spin. Counters keep
+their existing filtered semantics. Group toggles expose aria-expanded; toolbar
+icons have labels and level-order tooltips. No worker restart, backend API or
+source/schema/compiler changes.
+
+Verification: four navigation tests cover depth ordering, mixed open branches,
+immutability and full ancestor reveal. TypeScript/build and diff checks pass.
+Read-only browser checks exercise stored nested selection, staged toolbar actions,
+filter clearing and current-item scrolling. An isolated UI state fixture verifies
+active ancestor spinners with root/child collapsed and repeated jump to the same
+ID; asserted zero write requests. Screenshots inspected for toolbar/spinner layout.
+No active user batch was paused/restarted or otherwise changed.
+
+
+### Workshop 0.16.0 reversible per-item source exclusions
+
+Source cards have a labelled red X. Removed sources is a collapsible restore
+list. Actions exclude-source/restore-source require a saved sourceId belonging
+to the item. getItem exposes active sources plus excludedSources. Removal is
+reversible and does not start a model call. Block changing the in-flight current
+item until paused; non-current items may be changed during a batch.
+
+Persist sourceExclusions in workshop.sqlite artifacts, recording source ID, URL,
+title and date. sourceKey normalizes host alias, encoded Wiki spaces/underscores,
+case and trailing slash, ignoring query tracking/revision parameters. The scope
+is family + article URL, not global. allSources retains metadata/HTML; sources
+returns only active pages. Fetch, discovery URL aggregation/results, putSource
+and Chrome ticket creation/import honor the block. A capture queued before
+removal fails at save rather than resurrecting the article. Retain exclusions
+on generated reset, reimport and service restart; full project reset clears all.
+
+Removing/restoring sources invalidates the affected draft, packet, source ledger,
+audit and research report while retaining old output/archived audit and valid
+per-chunk caches. Queue evidence rebuilding (then reuse remaining saved pages);
+if no sources remain discover alternatives or require explicit game-only mode.
+Clear research category/type overrides that cite the removed URL; manual choices
+remain. Old output is not ready/exportable until a successful rebuild. For manual
+JSON, mark manualSourceReviewRequired and block promotion until the user reviews
+and saves it; do not silently regenerate or preserve stale reviewed content.
+Restoration restores saved pages without an automatic model run. Shared part
+definitions and other items' use of the same URL remain untouched.
+
+Explicit Refresh sources deletes only active source metadata, retains excluded
+archives and starts at evidence so the next collection step has a fresh packet.
+No public item schema/compiler change is needed. Exclusions and private source
+changes remain outside website exports.
+
+Verification: full suite 115 passed, three unchanged external research tests
+skipped. New local HTTP tests cover scoped exclusion/restore, preserved archived
+HTML/output, stale draft/ledger invalidation, restart persistence, URL aliases,
+blocked direct fetch/import, pending Chrome capture rejection, excluded discovery
+results, active-call protection, category-override invalidation and generated
+reset/manual-review behaviour. Browser smoke clicks the source X, observes card
+removal, opens Removed sources and restores the card without a build. Build,
+TypeScript, OpenAPI syntax and diff checks passed. Loaded the backend update with
+the user's Lady Finger checkpoint still paused. No actual source was removed on
+the user's behalf; they can select the incorrect card themselves.
+
+
+### Shared evidence and URL-only discovery (workshop 0.17.0)
+
+Shared scope definitions live in Project.sharedScopes in workshop.sqlite metadata.
+They are synthetic Family owners with evidenceScope {category, group?, character?},
+stable shared-* IDs, and sourceUrls. They never enter actual families, catalogue
+counts, exports, coverage, image matching or build queues. GET/POST
+/api/shared-sources exposes scopes, URLs, pages and descendant counts. The UI
+opens the manager via category/character book buttons or Shared evidence. Its
+selector includes all Weapons, individual weapon types, categories and character
+subgroups. Sources can be added, Chrome-captured, imported as HTML or detached.
+A detached article stays archived and can be reused by re-adding its URL.
+
+Store.sources(item) merges owned and matching inherited articles, deduplicates
+canonical article URLs, selects the newest capture and honors group/item
+exclusions. inheritedFrom is transient display metadata. Shared cache rows/HTML
+are stored once and reused when binding a URL in another scope. Each family
+still gets its own applicability-filtered source reading, facts and validation;
+sharing an overview never transfers sibling-specific facts. Fresh fetching reuses
+shared captures within the run, avoids repeating a failed shared request per
+child and retains archived versions. Chrome capture changes notify all scopes
+bound to that article, invalidate dependent source work and queue actual items;
+never enqueue the synthetic scope. Protect affected in-flight items against
+direct edits; Chrome jobs apply at a saved-step boundary. Manual outputs require
+review after evidence changes. Public item schema/compiler versions stay intact.
+
+Run.mode is build or discover (absent means legacy build). Discover queues every
+active item including completed ones, skips removed/retired entries, and runs
+source URL discovery ONLY. Persist URL matches, provider urls_ready statuses,
+sourceUrls and separate family.urlDiscovery completion/error metadata. Never
+change item output, revision, build status or stage just for finding links.
+Continue discovery after individual failures; sidebar attention/filter includes
+URL failures. The progress bar and current-path spinners work during either job.
+
+When URL discovery replaces a paused/blocked build, clone that Run into
+Project.buildCheckpoint. /api/run discover, pause and resume control discovery;
+resume-build restores that saved build and resumes it. Starting a new build
+explicitly drops the older checkpoint. Captures arriving during discovery queue
+affected items in buildCheckpoint, never change the discovery queue. Both
+checkpoints survive restarts. Generated-data reset clears checkpoints but retains
+shared definitions/captures; full reset removes all. No URL-only pass or model
+run should be started merely to deploy these capabilities.
+
+
+Verification for 0.17.0: all 128 tests passed with the local Postman research
+simulation enabled (no skipped tests), including real HTTP capture reuse for
+shared descendants, shared detach/pending-ticket rejection, scope isolation,
+per-item exclusion, paused-build recovery and URL-only output immutability.
+Browser smoke covers the shared manager, URL binding and saved HTML import,
+inherited source labels and URL-only batch controls. Screenshot inspected.
+TypeScript, production build, OpenAPI syntax lint and diff checks pass. No
+live external agent/source run was started, and no user catalogue source was
+added or removed. Existing Lady Finger checkpoint and all item states retained.
+
+
+Workshop 0.17.1: shared-source cards render source.text.slice(0,550) verbatim from
+the stored article, with ellipsis only when truncated. Show captureMethod=chrome
+as Captured in Chrome, otherwise imported as Imported HTML or Fetched & cached,
+alongside fetchedAt and saved text character count. URL-only entries explicitly
+say Not captured yet. Do not generate, summarize or fetch preview text. Canonical
+URL matching uses the same sourceKey as server-side inheritance/exclusions.
+
+
+### Global shared evidence (workshop 0.18.0)
+
+EvidenceScope.category additionally accepts Everything, a private scope only;
+actual item Category/public Zod enums remain unchanged. The synthetic global
+owner uses Other equipment as a storage-only Family.category and evidenceScope
+is authoritative for matching. scopeMatches(Everything,actual item) is true
+across every category/character/type; synthetic scopes themselves never match.
+No subgroups/characters are valid under Everything. The sidebar Shared evidence
+link opens this global scope and it appears first in the manager selector.
+
+Store.sharedScopesFor enumerates ALL matching scopes, so item sources combine
+global, category, character/weapon subgroup and directly owned articles. No
+nearest-parent override. Canonical URLs deduplicate, latest capture wins, and
+explicit per-item exclusions suppress an article from every inherited scope.
+readSources traverses the full resulting list and every chunk; the synthesis
+packet includes every extracted source ledger without per-source count caps.
+Only applicable facts should enter item prose: general corrosion references do
+not make a non-corrosive item corrosive. URLs without saved content are not yet
+readable evidence. Manual/game-only handling and source-priority rules persist.
+Adding/removing/recapturing global evidence queues matching active items, respects
+in-flight guards and retains captured HTML, outputs and paused checkpoints.
+
+
+Verification for 0.18.0: 126 tests pass, four existing external-simulation tests
+skipped in the normal suite. New hierarchy tests verify all four evidence levels
+reach full-page reading and the writing packet together, cross-category global
+matching, narrower subgroup isolation, canonical deduplication, item exclusions,
+global invalidation without output/revision loss and invalid subgroup rejection.
+Browser smoke creates/captures Everything, verifies it on weapons, artifacts and
+class mods, and passes the existing group/discovery workflows. Production build,
+TypeScript and local OpenAPI syntax lint pass. No real global evidence was added
+on the user's behalf and no catalogue rebuild was triggered.

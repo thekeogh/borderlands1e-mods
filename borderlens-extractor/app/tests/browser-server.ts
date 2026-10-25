@@ -19,6 +19,18 @@ const ai: AI = {
     message: "Test fixture only",
   }),
   run: async (_label, _prompt, schema) => {
+    if (_label.startsWith("Find missing sources"))
+      return schema.parse({
+        matches: [
+          {
+            url: "https://borderlands.fandom.com/wiki/Fixture_article",
+            title: "Fixture article",
+            gameEvidence: "BL1 synthetic test",
+            reason: "URL-only fixture",
+          },
+        ],
+        notFoundReason: "No Lootlemon item page for this synthetic fixture",
+      });
     if (_label.startsWith("Read source"))
       return schema.parse(
         emptySourceReading(s.family(s.state.run.currentId!).category),

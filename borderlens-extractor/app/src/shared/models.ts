@@ -1,3 +1,4 @@
+import type { EvidenceScope } from "./evidence-scopes.ts";
 import { CATALOGUE_SCHEMA_VERSION, COMPILER_VERSION } from "./versions.ts";
 import type { EffectiveClassification } from "./classification.ts";
 import { z } from "zod";
@@ -241,6 +242,12 @@ export type Raw = {
 };
 export type History = { at: string; stage: string; message: string };
 export type Family = {
+  evidenceScope?: EvidenceScope;
+  urlDiscovery?: {
+    status: "complete" | "failed";
+    at: string;
+    issue: string | null;
+  };
   id: string;
   name: string;
   category: Category;
@@ -278,6 +285,7 @@ export type Capture = {
   manifest: Record<string, unknown>;
 };
 export type Source = {
+  inheritedFrom?: { id: string; name: string };
   id: string;
   familyId: string;
   url: string;
@@ -329,6 +337,7 @@ export type CoverageEntry = {
 };
 export type BatchSourceMode = "saved" | "fresh" | "auto";
 export type Run = {
+  mode?: "build" | "discover";
   continueOnError?: boolean;
   sourceMode: BatchSourceMode;
   sourcePrepared: string[];
@@ -355,6 +364,8 @@ export type Project = {
   families: Family[];
   captures: Capture[];
   run: Run;
+  buildCheckpoint?: Run;
+  sharedScopes?: Family[];
   settings: Settings;
   coverage: {
     status: "idle" | "running" | "complete" | "partial" | "failed";

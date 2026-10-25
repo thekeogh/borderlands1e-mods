@@ -6,19 +6,19 @@ A local workspace for turning BL1 Enhanced extractions into readable item-family
 
 Paths are relative to this folder (default configuration).
 
-| Path                                  | Contents                                                                                                     |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `.data/workshop.sqlite`               | Built item JSON, drafts, extracted records, source facts, corrections, removed items, progress and settings. |
-| `.data/captures/`                     | Imported extractor ZIPs.                                                                                     |
-| `.data/sources/`                      | Saved Wiki/Lootlemon HTML, including Chrome captures.                                                        |
-| `.data/classification-overrides.json` | Item category and weapon-type overrides.                                                                     |
-| `.data/image-overrides.json`          | Manual image selections.                                                                                     |
-| `.data/ai/`                           | Agent requests, responses, caches and logs.                                                                  |
-| `.data/ai/agent-failures.json`        | Last agent failures and fallback cooldowns.                                                                  |
-| `img/borderlands/`                    | Item images, organised by type.                                                                              |
-| `src/shared/models.ts`                | Internal item and writer Zod schemas.                                                                        |
-| `src/shared/website.ts`               | Final website JSON Zod schema.                                                                               |
-| `src/shared/versions.ts`              | Schema and compiler versions.                                                                                |
+| Path                                  | Contents                                                                                                                                     |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.data/workshop.sqlite`               | Built item JSON, drafts, extracted records, source facts, corrections, shared evidence groups, removed items/sources, progress and settings. |
+| `.data/captures/`                     | Imported extractor ZIPs.                                                                                                                     |
+| `.data/sources/`                      | Saved Wiki/Lootlemon HTML, including Chrome captures.                                                                                        |
+| `.data/classification-overrides.json` | Item category and weapon-type overrides.                                                                                                     |
+| `.data/image-overrides.json`          | Manual image selections.                                                                                                                     |
+| `.data/ai/`                           | Agent requests, responses, caches and logs.                                                                                                  |
+| `.data/ai/agent-failures.json`        | Last agent failures and fallback cooldowns.                                                                                                  |
+| `img/borderlands/`                    | Item images, organised by type.                                                                                                              |
+| `src/shared/models.ts`                | Internal item and writer Zod schemas.                                                                                                        |
+| `src/shared/website.ts`               | Final website JSON Zod schema.                                                                                                               |
+| `src/shared/versions.ts`              | Schema and compiler versions.                                                                                                                |
 
 **Export** downloads `borderlens-catalogue.zip`, containing final item `.json` files in type folders. Individual final JSON files are generated on export, not saved separately in the app folder.
 
@@ -56,6 +56,8 @@ Completed items pass source checks and a final whole-document check for JSON syn
 
 **Coverage** compares extracted families with wiki/Lootlemon listings. Link ambiguous names to a family or exclude irrelevant candidates. Settings control writing style, optional game-evidence-only processing, run size, and resets.
 
+**Current item** clears sidebar search/status filters, opens its category/character path and scrolls to the item. The sidebar collapse/expand controls work one level per click: collapse deepest groups first, expand parents first. Spinners mark the active category and character group even when collapsed.
+
 Category and character-group badges show **completed / needs attention / total**. Hover for waiting and processing counts. Counts follow the current search/filter.
 
 ## Remove an item
@@ -63,6 +65,20 @@ Category and character-group badges show **completed / needs attention / total**
 In **Preview**, click the red **Remove from catalogue** button on the right. The item disappears from normal navigation and is skipped by batches and exports. **Removed items** in the sidebar lets you inspect it and **Restore to catalogue** later. Saved data is retained; removal survives restarts, capture imports and generated-data resets. Restoring does not start a build. Pause before removing the item currently being processed.
 
 Verified item-specific BL1 Lootlemon shield/grenade pages can also correct entries initially grouped as **Other equipment**. Category overrides persist in `classification-overrides.json`; IDs and saved research stay intact. Corrected entries export under their actual category.
+
+## Shared evidence
+
+Click **Shared evidence** above the tree for **Everything**: articles shared with the entire catalogue. Use this for elemental mechanics or other universal references. Click the book beside a sidebar category or character for that group. Add a Wiki/Lootlemon URL, then capture it with **Open in Chrome** or import saved HTML. Category sources apply to every child; character and weapon-type sources apply only to that subgroup. Use the group selector for **Weapons** to cover all weapon types.
+
+Each shared-source card shows its saved text preview, capture method, date and character count. **Not captured yet** means only the URL is stored.
+
+Capture a shared article once. Each item uses all applicable levels together: **Everything → category → weapon type/character → individual sources**. All saved articles are read; relevant facts inform the entry. Duplicate URLs are merged. Item source cards show where inherited evidence came from; their X excludes it for that item only. Remove a URL in the shared panel to stop using it for that group. Re-adding the URL reuses its saved article. Changes queue affected items without starting a build.
+
+## Find URLs first
+
+Choose **Find evidence URLs only** from the top Start menu. It finds and stores Wiki/Lootlemon links across active items, including completed ones, without fetching article HTML or building JSON. Capture the pages in Chrome, then **Start from saved sources**. Failures are flagged and the queue continues; **Needs attention** includes discovery failures.
+
+**Pause / Resume** works for URL discovery too. A paused build is kept separately: **Resume saved build** returns to it afterward. Starting a new build replaces that older checkpoint.
 
 ## Character equipment
 
@@ -97,6 +113,12 @@ Click **Chrome helper** in the toolbar. The app opens Chrome’s extensions page
 No HTML copying or cookie sharing. It captures article content you explicitly send, not browser history or account fields. It makes no background wiki requests and does not solve access challenges. Imports received during processing wait for its next safe checkpoint. Each ticket is tied to one item/article and expires after 30 minutes; open the source again from the app if it expires. Capture does not automatically spend Codex allowance or start a new run.
 
 The helper lives in `chrome-extension/`; the setup screen also offers a separate helper ZIP. Keep it in place after loading it. After moving this project or updating extension files, reload the helper through `chrome://extensions/` and refresh the workshop. Website catalogue ZIPs remain item-only.
+
+## Remove a source
+
+In **Sources & evidence**, click the **X** on a saved source card. The article is excluded from this item’s future builds, discovery results and fetching—including fresh-source runs. The item is queued for rebuilding; **Rebuild from saved sources** updates its JSON using the remaining pages. Add a correct source first if none remain. Previous output stays inspectable but is not exported while queued.
+
+Expand **Removed sources** to restore an article. Saved HTML is retained; exclusions survive restarts and generated-data resets and affect only this item. Pause before changing the current processing item’s sources. Manually edited JSON requires review and saving after its sources change.
 
 ## Inspect a saved source
 

@@ -6,12 +6,14 @@ export function BatchActions({
   busy,
   disabled,
   action,
+  savedBuild,
 }: {
   run: Run;
+  savedBuild?: boolean;
   busy: boolean;
   disabled: boolean;
   action: (
-    action: "start" | "pause" | "resume",
+    action: "start" | "pause" | "resume" | "discover" | "resume-build",
     sourceMode?: "saved" | "fresh",
   ) => void;
 }) {
@@ -40,7 +42,9 @@ export function BatchActions({
             ? "Pause"
             : checkpoint
               ? "Resume"
-              : `Start from ${mode} sources`}
+              : run.mode === "discover"
+                ? "Find evidence URLs only"
+                : `Start from ${mode} sources`}
       </button>
       <details ref={menu} className="rebuild-options batch-options">
         <summary
@@ -67,6 +71,33 @@ export function BatchActions({
               their facts again.
             </span>
           </button>
+          <button
+            disabled={busy || disabled}
+            onClick={() => {
+              if (menu.current) menu.current.open = false;
+              action("discover");
+            }}
+          >
+            <strong>Find evidence URLs only</strong>
+            <span>
+              Find Wiki and Lootlemon links for every item. No article capture
+              or JSON building.
+            </span>
+          </button>
+          {savedBuild && (
+            <button
+              disabled={busy || disabled}
+              onClick={() => {
+                if (menu.current) menu.current.open = false;
+                action("resume-build");
+              }}
+            >
+              <strong>Resume saved build</strong>
+              <span>
+                Return to the build checkpoint from before URL discovery.
+              </span>
+            </button>
+          )}
           {checkpoint && (
             <p className="batch-checkpoint-note">
               Resume keeps your saved checkpoint. Starting a new batch restarts

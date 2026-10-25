@@ -1,3 +1,6 @@
+import { SharedSources } from "./shared-sources";
+import type { EvidenceScope } from "../shared/evidence-scopes";
+import { familyTreePath, revealTreePath, stepTree } from "./tree-navigation";
 import { GroupStatus } from "./group-status";
 import { BatchActions } from "./batch-actions";
 import { RebuildActions } from "./rebuild-actions";
@@ -23,6 +26,8 @@ import {
   ArrowUpRight,
   ChevronDown,
   ChevronRight,
+  ChevronsDownUp,
+  ChevronsUpDown,
   Check,
   FileJson,
   BookOpen,
@@ -49,6 +54,7 @@ import {
   researchProviders,
   providerForUrl,
   type ResearchReport,
+  type ExcludedSource,
 } from "../shared/research";
 import type {
   Project,
@@ -70,6 +76,7 @@ type Detail = {
   family: Family;
   packet: Packet | null;
   sources: Source[];
+  excludedSources?: ExcludedSource[];
   output: PublicEntry | null;
   draft: Draft | null;
   provenance: any;
@@ -132,6 +139,7 @@ function App() {
     [working, setWorking] = useState(false),
     [connected, setConnected] = useState(true),
     [settingsOpen, setSettingsOpen] = useState(false),
+    [sharedScope, setSharedScope] = useState<EvidenceScope | null>(null),
     [viewedSource, setViewedSource] = useState<Source | null>(null),
     [agents, setAgents] = useState<any>(null),
     [correction, setCorrection] = useState(""),
@@ -141,18 +149,31 @@ function App() {
     [edit, setEdit] = useState(""),
     [resetScope, setResetScope] = useState(""),
     [resetConfirm, setResetConfirm] = useState("");
-  const previousGroup = useRef({ id: "", group: "" });
+  const previousGroup = useRef({ id: "", path: "" });
+  const pendingReveal = useRef("");
   useEffect(() => {
     const family = state?.families.find((f) => f.id === selected);
     if (!family) return;
-    const group = catalogueGroup(family);
+    const path = familyTreePath(family),
+      key = path.join("|");
     if (
-      previousGroup.current.id === selected &&
-      previousGroup.current.group !== group
-    )
-      setCollapsed((current) => ({ ...current, [group]: false }));
-    previousGroup.current = { id: selected, group };
-  }, [selected, state?.revision, images?.revision]);
+      previousGroup.current.id !== selected ||
+      previousGroup.current.path !== key
+    ) {
+      setCollapsed((current) => revealTreePath(current, path));
+    }
+    previousGroup.current = { id: selected, path: key };
+  }, [selected, state?.revision]);
+  useEffect(() => {
+    if (!pendingReveal.current) return;
+    const row = document.querySelector<HTMLElement>(
+      `[data-family-id="${CSS.escape(pendingReveal.current)}"]`,
+    );
+    if (row) {
+      row.scrollIntoView({ block: "nearest" });
+      pendingReveal.current = "";
+    }
+  }, [selected, collapsed, filter, query, state?.revision]);
   const editDirty = useRef(false);
   const formId = useRef("");
   const editRevision = useRef("");
@@ -290,7 +311,23 @@ function App() {
     act(() =>
       request("/api/items/" + selected + "/action", { action, ...body }),
     );
+  const sourceAction = (
+    action: "exclude-source" | "restore-source",
+    sourceId: string,
+  ) =>
+    act(
+      () => request("/api/items/" + selected + "/action", { action, sourceId }),
+      action === "exclude-source"
+        ? "Source removed from future builds and fetching. Rebuild the item to update its JSON."
+        : "Source restored. Rebuild the item to include it.",
+    );
   const select = (id: string) => {
+    const family = state?.families.find((f) => f.id === id);
+    if (family)
+      setCollapsed((current) =>
+        revealTreePath(current, familyTreePath(family)),
+      );
+    pendingReveal.current = id;
     setSelected(id);
     setView("catalogue");
     setHtml("");
@@ -323,7 +360,11 @@ function App() {
     busy = ["running", "pausing"].includes(run.status),
     current = state.families.find((f) => f.id === run.currentId),
     done = state.families.filter((f) => f.status === "done").length,
-    blocked = state.families.filter((f) => f.status === "blocked").length,
+    blocked = state.families.filter(
+      (f) =>
+        f.status !== "excluded" &&
+        (f.status === "blocked" || f.urlDiscovery?.status === "failed"),
+    ).length,
     removed = state.families.filter(
       (f) => f.status === "excluded" && !f.supersededBy,
     ).length,
@@ -341,9 +382,17 @@ function App() {
         .includes(query.toLowerCase())
     )
       continue;
-    if (filter !== "all" && f.status !== filter) continue;
+    if (
+      filter !== "all" &&
+      !(filter === "blocked"
+        ? f.status === "blocked" || f.urlDiscovery?.status === "failed"
+        : f.status === filter)
+    )
+      continue;
     (groups[catalogueGroup(f)] ||= []).push(f);
   }
+  const treePaths = Object.values(groups).flat().map(familyTreePath);
+  const activePath = busy && current ? familyTreePath(current) : [];
   const f = detail?.family.id === selected ? detail.family : null,
     output = f ? detail?.output : null;
   const setSetting = (patch: Record<string, unknown>) =>
@@ -387,12 +436,38 @@ function App() {
         </nav>
         <div className="sidebar-heading">
           <span>ITEM FAMILIES</span>
-          <button
-            title="Import extractor ZIP"
-            onClick={() => input.current?.click()}
-          >
-            <Plus size={17} />
-          </button>
+          <div className="sidebar-tree-actions">
+            <button
+              aria-label="Collapse all"
+              title="Collapse all — one level per click, deepest first"
+              disabled={!treePaths.length}
+              onClick={() =>
+                setCollapsed((current) =>
+                  stepTree(current, treePaths, "collapse"),
+                )
+              }
+            >
+              <ChevronsDownUp size={15} />
+            </button>
+            <button
+              aria-label="Expand all"
+              title="Expand all — one level per click, parents first"
+              disabled={!treePaths.length}
+              onClick={() =>
+                setCollapsed((current) =>
+                  stepTree(current, treePaths, "expand"),
+                )
+              }
+            >
+              <ChevronsUpDown size={15} />
+            </button>
+            <button
+              title="Import extractor ZIP"
+              onClick={() => input.current?.click()}
+            >
+              <Plus size={17} />
+            </button>
+          </div>
         </div>
         <div className="search">
           <Search size={15} />
@@ -430,11 +505,18 @@ function App() {
         >
           <Trash2 size={13} /> Removed items{removed > 0 && ` (${removed})`}
         </button>
+        <button
+          className="shared-evidence-link"
+          onClick={() => setSharedScope({ category: "Everything" })}
+        >
+          <BookOpen size={14} /> Shared evidence
+        </button>
         <div className="item-tree">
           {Object.entries(groups).map(([group, items]) => (
             <div key={group} className="tree-group">
               <button
-                className="group-toggle"
+                className={`group-toggle${activePath[0] === group ? " is-active" : ""}`}
+                aria-expanded={!collapsed[group]}
                 onClick={() =>
                   setCollapsed({ ...collapsed, [group]: !collapsed[group] })
                 }
@@ -445,29 +527,53 @@ function App() {
                   <ChevronDown size={13} />
                 )}
                 <span>{group}</span>
+                {activePath[0] === group && (
+                  <span
+                    className="tiny-spinner group-spinner"
+                    role="status"
+                    aria-label={`Processing in ${group}`}
+                    title={`Processing: ${current?.name}`}
+                  />
+                )}
                 <GroupStatus items={items} />
+              </button>
+              <button
+                className="group-evidence-button"
+                aria-label={"Shared evidence for " + group}
+                title={"Shared evidence for " + group}
+                onClick={() =>
+                  setSharedScope(
+                    items[0].category === "Weapons"
+                      ? { category: "Weapons", group: group as any }
+                      : { category: items[0].category },
+                  )
+                }
+              >
+                <BookOpen size={13} />
               </button>
               {!collapsed[group] &&
                 (() => {
                   const renderItem = (item: Family) => (
                     <button
                       key={item.id}
+                      data-family-id={item.id}
                       className={`item-row ${selected === item.id ? "selected" : ""}`}
                       onClick={() => select(item.id)}
                       title={`${item.name} · ${statusLabel[item.status]}`}
                     >
                       <span className={`status-dot ${item.status}`} />
                       <span>{item.name}</span>
-                      {item.status === "running" ? (
+                      {busy && run.currentId === item.id ? (
                         <span className="tiny-spinner" />
-                      ) : item.status === "done" ? (
-                        <Check size={13} />
-                      ) : item.status === "blocked" ? (
+                      ) : item.status === "blocked" ||
+                        item.urlDiscovery?.status === "failed" ? (
                         <X
                           size={14}
                           className="failed-item-icon"
                           aria-label="Failed — needs attention"
                         />
+                      ) : item.status === "done" ? (
+                        <Check size={13} />
                       ) : null}
                     </button>
                   );
@@ -487,7 +593,8 @@ function App() {
                     return (
                       <div key={key} className="character-group">
                         <button
-                          className="group-toggle"
+                          className={`group-toggle${activePath[1] === key ? " is-active" : ""}`}
+                          aria-expanded={!collapsed[key]}
                           onClick={() =>
                             setCollapsed({
                               ...collapsed,
@@ -501,8 +608,33 @@ function App() {
                             <ChevronDown size={13} />
                           )}
                           <span>{character}</span>
+                          {activePath[1] === key && (
+                            <span
+                              className="tiny-spinner group-spinner"
+                              role="status"
+                              aria-label={`Processing in ${character}`}
+                              title={`Processing: ${current?.name}`}
+                            />
+                          )}
                           <GroupStatus items={children} />
                         </button>
+                        {character !== "Needs review" && (
+                          <button
+                            className="group-evidence-button"
+                            aria-label={
+                              "Shared evidence for " + group + " " + character
+                            }
+                            title="Shared character evidence"
+                            onClick={() =>
+                              setSharedScope({
+                                category: items[0].category,
+                                character: character as any,
+                              })
+                            }
+                          >
+                            <BookOpen size={13} />
+                          </button>
+                        )}
                         {!collapsed[key] && children.map(renderItem)}
                       </div>
                     );
@@ -607,7 +739,9 @@ function App() {
             <div className="run-title">
               <strong>
                 {busy
-                  ? "Building your catalogue"
+                  ? run.mode === "discover"
+                    ? "Finding evidence URLs"
+                    : "Building your catalogue"
                   : run.status === "blocked"
                     ? "A little input needed"
                     : run.status === "complete"
@@ -630,7 +764,11 @@ function App() {
           {current && (
             <button
               className="jump"
-              onClick={() => select(current.id)}
+              onClick={() => {
+                setQuery("");
+                setFilter(current.status === "excluded" ? "excluded" : "all");
+                select(current.id);
+              }}
               title="Jump to current item"
             >
               <Target size={15} />
@@ -641,6 +779,7 @@ function App() {
             run={run}
             busy={busy}
             disabled={working || !state.families.length}
+            savedBuild={!!state.buildCheckpoint}
             action={(action, sourceMode) =>
               void act(() => request("/api/run", { action, sourceMode }))
             }
@@ -663,6 +802,12 @@ function App() {
           </div>
         )}
         <main>
+          {f?.urlDiscovery?.status === "failed" && (
+            <div className="banner error" role="alert">
+              URL discovery needs attention: {f.urlDiscovery.issue}
+            </div>
+          )}
+
           {!state.families.length ? (
             <div className="empty-workshop">
               <div className="eyebrow">FROM GAME DATA TO PLAYER KNOWLEDGE</div>
@@ -1370,7 +1515,32 @@ function App() {
                             <a target="_blank" rel="noreferrer" href={s.url}>
                               <ArrowUpRight size={15} />
                             </a>
+                            <button
+                              className="source-remove-button"
+                              aria-label={"Remove source: " + s.title}
+                              title={
+                                busy && run.currentId === f.id
+                                  ? "Pause processing before removing this source"
+                                  : "Remove this source from this item"
+                              }
+                              disabled={
+                                working ||
+                                f.status === "excluded" ||
+                                (busy && run.currentId === f.id)
+                              }
+                              onClick={() =>
+                                sourceAction("exclude-source", s.id)
+                              }
+                            >
+                              <X size={15} />
+                            </button>
                           </div>
+                          {s.inheritedFrom && (
+                            <small className="inherited-source">
+                              Shared from {s.inheritedFrom.name} · remove here
+                              to exclude for this item only
+                            </small>
+                          )}
                           <small>
                             {new Date(s.fetchedAt).toLocaleString()} ·{" "}
                             {s.captureMethod === "chrome"
@@ -1397,6 +1567,45 @@ function App() {
                         No pages saved yet. Research runs automatically when
                         this item reaches that step.
                       </div>
+                    )}
+                    {!!detail?.excludedSources?.length && (
+                      <details className="removed-sources">
+                        <summary>
+                          Removed sources ({detail.excludedSources.length})
+                        </summary>
+                        <p>
+                          These pages are excluded from builds and automatic
+                          fetching for this item.
+                        </p>
+                        {detail.excludedSources.map((source) => (
+                          <div className="removed-source" key={source.sourceId}>
+                            <div>
+                              <a
+                                href={source.url}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {source.title}
+                              </a>
+                              <small>{source.url}</small>
+                            </div>
+                            <button
+                              className="text-button"
+                              disabled={
+                                working ||
+                                f.status === "excluded" ||
+                                (busy && run.currentId === f.id)
+                              }
+                              onClick={() =>
+                                sourceAction("restore-source", source.sourceId)
+                              }
+                              aria-label={"Restore source: " + source.title}
+                            >
+                              <Undo2 size={13} /> Restore
+                            </button>
+                          </div>
+                        ))}
+                      </details>
                     )}
                     {detail?.researchAudit?.ledger && (
                       <details className="evidence-details">
@@ -1638,7 +1847,7 @@ function App() {
         </main>
         <footer>
           <span>ONE FAMILY. EVERY DETAIL.</span>
-          <span>Borderlens workshop · 0.15.2</span>
+          <span>Borderlens workshop · 0.18.0</span>
         </footer>
       </section>
       <input
@@ -1657,6 +1866,14 @@ function App() {
           key={viewedSource.id}
           source={viewedSource}
           onClose={() => setViewedSource(null)}
+        />
+      )}
+      {sharedScope && (
+        <SharedSources
+          initial={sharedScope}
+          onClose={() => setSharedScope(null)}
+          onChange={() => void refresh()}
+          openPage={(id, url) => chromeHelper.openPage(id, url)}
         />
       )}
       <ChromeHelperSetup helper={chromeHelper} />

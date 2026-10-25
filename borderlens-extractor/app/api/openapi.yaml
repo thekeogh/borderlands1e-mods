@@ -1,11 +1,57 @@
 openapi: 3.0.3
 info:
   title: Borderlens local workshop
-  version: 0.15.2
+  version: 0.18.0
   description: Local-only catalogue processing. Disk-backed checkpoints; no hosted accounts or API-key billing.
 servers:
   - url: http://127.0.0.1:4317
 paths:
+  /api/shared-sources:
+    get:
+      operationId: listSharedEvidence
+      responses:
+        "200":
+          description: "Saved global, category and subgroup scopes with their URLs, captured articles, exclusions and affected item counts."
+    post:
+      operationId: saveSharedEvidence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scope]
+              properties:
+                scope:
+                  type: object
+                  required: [category]
+                  properties:
+                    category:
+                      type: string
+                      description: Everything applies to the entire catalogue; other values scope evidence to one category.
+                      enum:
+                        [
+                          Everything,
+                          Weapons,
+                          Shields,
+                          Grenade mods,
+                          Class mods,
+                          Artifacts,
+                          Other equipment,
+                        ]
+                    group: { type: string }
+                    character: { type: string }
+                url: { type: string }
+                html: { type: string }
+                remove: { type: boolean }
+      responses:
+        "200":
+          {
+            description: Saved scope. URL-only binding does not fetch; HTML is cached once and inherited by matching items. Changes queue dependent builds without starting them. Remove detaches the URL from this scope.,
+          }
+        "400": { description: "Invalid scope, URL or HTML." }
+        "409":
+          { description: Affected item is currently processing; pause first. }
   /api/images:
     get:
       operationId: imageCoverage
@@ -181,7 +227,7 @@ paths:
       responses:
         "200":
           {
-            description: "Family with effective classification override (equipment category and/or weapon subtype; equipment overrides have a null weaponType), facts/evidence, per-provider research status/errors, sources, private researchAudit with full-source chunk readings and fact dispositions, stage history and last valid output. Final whole-document validation status, image metadata and savedRebuild availability/reason are included for built and unbuilt candidates. Website output is schema 8: canonical element enum, full-document consistency checks, relative image path or null, rich description/details, contextual stat ranges, grouped conditional dropChances and inline parts; empty note strings are omitted; provenance and coverage stay private. Final JSON includes the item revision counter. Viewing/exporting does not increment revision. Does not change the queue.",
+            description: "Family with active sources plus excludedSources (restorable per-item URL exclusions), effective classification override (equipment category and/or weapon subtype; equipment overrides have a null weaponType), facts/evidence, per-provider research status/errors, sources, private researchAudit with full-source chunk readings and fact dispositions, stage history and last valid output. Final whole-document validation status, image metadata and savedRebuild availability/reason are included for built and unbuilt candidates. Website output is schema 8: canonical element enum, full-document consistency checks, relative image path or null, rich description/details, contextual stat ranges, grouped conditional dropChances and inline parts; empty note strings are omitted; provenance and coverage stay private. Final JSON includes the item revision counter. Viewing/exporting does not increment revision. Does not change the queue.",
           }
         "404": { description: "Family not found." }
   /api/items/{id}/action:
@@ -212,6 +258,8 @@ paths:
                         exclude,
                         remove,
                         restore,
+                        exclude-source,
+                        restore-source,
                         resolve,
                         classification,
                         save-output,
@@ -220,6 +268,11 @@ paths:
                 url: { type: string }
                 html: { type: string }
                 notes: { type: string }
+                sourceId:
+                  {
+                    type: string,
+                    description: Saved source ID; required for exclude-source or restore-source.,
+                  }
                 gameOnly: { type: boolean }
                 output: { type: object }
                 weaponType:
@@ -240,7 +293,7 @@ paths:
       responses:
         "200":
           {
-            description: "Action checkpointed. Remove/exclude hides an item from normal navigation, batches and exports while retaining its data. Restore returns it without starting a build. The currently processing item must be paused before removal; other items can be removed during a batch. Rebuilds queue behind active work; selection never triggers action.",
+            description: "Action checkpointed. exclude-source/restore-source take sourceId; they invalidate source-dependent drafts, keep HTML, and suppress automatic fetching until restored. Changing the currently processing item requires pause. No model call is started. Remove/exclude hides an item from normal navigation, batches and exports while retaining its data. Restore returns it without starting a build. The currently processing item must be paused before removal; other items can be removed during a batch. Rebuilds queue behind active work; selection never triggers action.",
           }
         "400":
           {
@@ -262,7 +315,11 @@ paths:
               type: object
               required: [action]
               properties:
-                action: { type: string, enum: [start, pause, resume] }
+                action:
+                  {
+                    type: string,
+                    enum: [start, pause, resume, discover, resume-build],
+                  }
                 sourceMode:
                   type: string
                   enum: [saved, fresh]
@@ -270,7 +327,7 @@ paths:
       responses:
         "200":
           {
-            description: "Run state and per-item source initialization saved. Completed/excluded items are skipped; pause/resume preserves sourceMode and checkpoints. Batch item failures are saved as blocked and processing continues; successful entries remain available. Single-item rebuilds stop on errors.",
+            description: "Run state and per-item source initialization saved. Discover finds URLs for all active items including completed entries; it never fetches article HTML, reads source facts or builds JSON. Failed URL discovery is recorded separately and continues. A paused build checkpoint is retained for resume-build. Build runs skip completed/excluded items; pause/resume preserves sourceMode and checkpoints. Batch item failures are saved as blocked and processing continues; successful entries remain available. Single-item rebuilds stop on errors.",
           }
         "400": { description: "Invalid action or source mode." }
         "409":

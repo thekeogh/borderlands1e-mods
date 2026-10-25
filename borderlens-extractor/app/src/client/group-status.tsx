@@ -2,9 +2,17 @@ import React from "react";
 import type { Family } from "../shared/models";
 
 /** Counts follow the currently visible group, including search/status filters. */
-export function GroupStatus({ items }: { items: Pick<Family, "status">[] }) {
+export function GroupStatus({
+  items,
+}: {
+  items: Pick<Family, "status" | "urlDiscovery">[];
+}) {
   const counts = { done: 0, blocked: 0, queued: 0, running: 0, excluded: 0 };
   for (const item of items) counts[item.status]++;
+  counts.blocked = items.filter(
+    (item) =>
+      item.status === "blocked" || item.urlDiscovery?.status === "failed",
+  ).length;
   const label = [
     `${counts.done} complete`,
     `${counts.blocked} need attention`,

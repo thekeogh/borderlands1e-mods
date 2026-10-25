@@ -1,3 +1,6 @@
+import { EvidenceScope } from "../shared/evidence-scopes.ts";
+import { sourceKey } from "../shared/research.ts";
+import { sourceUrl } from "./research.ts";
 import { savedSourceCache } from "./source-cache.ts";
 import { ImagePath } from "../shared/images.ts";
 import { chromeRoutes } from "./chrome-http.ts";
@@ -6,7 +9,7 @@ import { weaponTypes } from "../shared/taxonomy.ts";
 import express from "express";
 import multer from "multer";
 import { z } from "zod";
-import { Store, HttpError } from "./store.ts";
+import { Store, HttpError, hash } from "./store.ts";
 import { Worker } from "./worker.ts";
 import { compareCoverage } from "./research.ts";
 import { importZip } from "./importer.ts";
@@ -30,6 +33,83 @@ export function api(store: Store, worker: Worker) {
   });
   app.use(express.json({ limit: "6mb" }));
   chromeRoutes(app, worker);
+  const scopeDetail = (owner: ReturnType<Store["ensureScope"]>) => ({
+    family: owner,
+    sources: store.sources(owner.id),
+    excludedSources: store.sourceExclusions(owner.id),
+    children: store.scopeChildren(owner).length,
+  });
+  app.get("/api/shared-sources", (_req, res) =>
+    res.json((store.state.sharedScopes || []).map(scopeDetail)),
+  );
+  app.post("/api/shared-sources", (req, res) => {
+    const body = z
+      .object({
+        scope: EvidenceScope,
+        url: z.string().max(4000).optional(),
+        html: z.string().max(5000000).optional(),
+        remove: z.boolean().optional(),
+      })
+      .strict()
+      .parse(req.body);
+    if (body.html && !body.url)
+      throw new HttpError(400, "HTML requires its original article URL.");
+    if (body.url) {
+      try {
+        sourceUrl(body.url);
+      } catch (error: any) {
+        throw new HttpError(400, error.message);
+      }
+    }
+    if (body.html && worker.research.parse(body.html).text.length < 60)
+      throw new HttpError(400, "Source has too little readable content.");
+    const owner = store.ensureScope(body.scope);
+    if (body.url) {
+      if (
+        worker.evidenceOwnerIsBusy(owner) ||
+        (body.html && worker.sharedArticleIsBusy(body.url))
+      )
+        throw new HttpError(
+          409,
+          "Pause processing before changing shared evidence used by the current item.",
+        );
+      const key = sourceKey(body.url),
+        exists = owner.sourceUrls.some((url) => sourceKey(url) === key);
+      if (body.remove) {
+        if (!store.isSourceExcluded(owner.id, body.url)) {
+          const source = store
+            .sources(owner.id)
+            .find((source) => sourceKey(source.url) === key);
+          store.put(owner.id, "sourceExclusions", [
+            ...store.sourceExclusions(owner.id),
+            {
+              sourceId: source?.id || "url:" + hash(key).slice(0, 20),
+              url: body.url,
+              title: source?.title || body.url,
+              excludedAt: now(),
+            },
+          ]);
+        }
+        owner.sourceUrls = owner.sourceUrls.filter(
+          (url) => sourceKey(url) !== key,
+        );
+      } else {
+        if (!exists) owner.sourceUrls.push(body.url);
+        store.put(
+          owner.id,
+          "sourceExclusions",
+          store
+            .sourceExclusions(owner.id)
+            .filter((row) => sourceKey(row.url) !== key),
+        );
+        if (body.html) worker.research.save(owner, body.url, body.html, true);
+      }
+      if (body.html) worker.sharedArticleChanged(owner, body.url);
+      else if (body.remove || !exists) worker.invalidate(owner, "evidence");
+      store.save();
+    }
+    res.json(scopeDetail(owner));
+  });
   app.get("/api/state", (_req, res) => {
     store.syncClassifications();
     res.json(store.state);
@@ -135,6 +215,7 @@ export function api(store: Store, worker: Worker) {
       matches: store.get(f.id, "matches"),
       research: store.get(f.id, "research"),
       sources: store.sources(f.id),
+      excludedSources: store.sourceExclusions(f.id),
       parts: store.get(f.id, "parts") || [],
       researchAudit: store.get(f.id, "researchAudit"),
       classification: store.classifications.data.entries[f.id] || null,
@@ -153,6 +234,8 @@ export function api(store: Store, worker: Worker) {
           "exclude",
           "remove",
           "restore",
+          "exclude-source",
+          "restore-source",
           "resolve",
           "classification",
           "save-output",
@@ -160,6 +243,7 @@ export function api(store: Store, worker: Worker) {
         url: z.string().max(4000).optional(),
         html: z.string().max(5000000).optional(),
         notes: z.string().max(10000).optional(),
+        sourceId: z.string().max(200).optional(),
         gameOnly: z.boolean().optional(),
         output: z.unknown().optional(),
         weaponType: z.enum(weaponTypes).nullable().optional(),
@@ -172,7 +256,13 @@ export function api(store: Store, worker: Worker) {
   app.post("/api/run", (req, res) => {
     const { action, sourceMode } = z
       .object({
-        action: z.enum(["start", "pause", "resume"]),
+        action: z.enum([
+          "start",
+          "pause",
+          "resume",
+          "discover",
+          "resume-build",
+        ]),
         sourceMode: z.enum(["saved", "fresh"]).optional(),
       })
       .strict()
@@ -181,13 +271,16 @@ export function api(store: Store, worker: Worker) {
         "Choose a source mode only when starting a batch.",
       )
       .parse(req.body);
-    if (action === "start" && worker.busy)
+    if (["start", "discover", "resume-build"].includes(action) && worker.busy)
       throw new HttpError(
         409,
         "Pause the current run before starting a new batch.",
       );
     if (action === "pause") worker.pause();
     else if (action === "resume") worker.resume();
+    else if (action === "resume-build") worker.resumeBuild();
+    else if (action === "discover")
+      worker.start(undefined, undefined, "auto", "discover");
     else worker.start(undefined, undefined, sourceMode || "saved");
     res.json(store.state.run);
   });
@@ -324,6 +417,7 @@ export function api(store: Store, worker: Worker) {
         if (f.status !== "excluded") f.status = "queued";
         f.issue = null;
       }
+      delete store.state.buildCheckpoint;
       store.state.run = {
         sourceMode: "saved",
         sourcePrepared: [],

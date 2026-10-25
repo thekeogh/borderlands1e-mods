@@ -1,3 +1,9 @@
+import {
+  EvidenceScope,
+  scopeLabel,
+  scopeMatches,
+} from "../shared/evidence-scopes.ts";
+import { sourceKey, type ExcludedSource } from "../shared/research.ts";
 import { reconcileCharacterFamilies } from "./importer.ts";
 import { Images, defaultImageRoot } from "./images.ts";
 import { parseSource } from "./source-content.ts";
@@ -23,6 +29,7 @@ import {
   PublicEntry,
   now,
   type Project,
+  type Family,
   type Raw,
   type Source,
 } from "../shared/models.ts";
@@ -66,6 +73,7 @@ export class Store extends EventEmitter {
       this.state.run.sourceMode = "auto";
     if (this.state.run.continueOnError === undefined)
       this.state.run.continueOnError = this.state.run.queue.length > 1;
+    this.state.sharedScopes ||= [];
     if (!Array.isArray(this.state.run.sourcePrepared))
       this.state.run.sourcePrepared = [];
     if (!["grok", "codex"].includes(this.state.settings.agent))
@@ -238,7 +246,143 @@ export class Store extends EventEmitter {
         .prepare("DELETE FROM artifacts WHERE family=? AND kind=?")
         .run(family, k);
   }
+  sourceExclusions(family: string): ExcludedSource[] {
+    return this.get<ExcludedSource[]>(family, "sourceExclusions") || [];
+  }
+  isSourceExcluded(family: string, url: string): boolean {
+    return this.sourceExclusions(family).some(
+      (source) => sourceKey(source.url) === sourceKey(url),
+    );
+  }
+  sharedScopesFor(f: Family): Family[] {
+    return (this.state.sharedScopes || []).filter((scope) =>
+      scopeMatches(scope.evidenceScope!, f),
+    );
+  }
+  ensureScope(definition: unknown): Family {
+    const scope = EvidenceScope.parse(definition),
+      id = "shared-" + hash(stable(scope)).slice(0, 20);
+    const existing = this.state.sharedScopes?.find((f) => f.id === id);
+    if (existing) return existing;
+    const owner: Family = {
+      id,
+      name: scopeLabel(scope),
+      category:
+        scope.category === "Everything" ? "Other equipment" : scope.category,
+      subtype: scope.group || scope.category,
+      character: scope.character,
+      evidenceScope: scope,
+      aliases: [],
+      roots: [],
+      status: "queued",
+      stage: "evidence",
+      inputHash: "",
+      issue: null,
+      notes: "",
+      gameOnly: false,
+      sourceUrls: [],
+      history: [],
+      updatedAt: now(),
+      manualOutput: false,
+      revision: 0,
+    };
+    (this.state.sharedScopes ||= []).push(owner);
+    this.save();
+    return owner;
+  }
+  scopeChildren(owner: Family): Family[] {
+    return owner.evidenceScope
+      ? this.state.families.filter(
+          (f) =>
+            !f.supersededBy &&
+            f.status !== "excluded" &&
+            scopeMatches(owner.evidenceScope!, f),
+        )
+      : [owner];
+  }
+  sharedCached(url: string): Source | undefined {
+    return (
+      this.db
+        .prepare("SELECT value FROM sources WHERE family LIKE 'shared-%'")
+        .all() as { value: string }[]
+    )
+      .map((row) => JSON.parse(row.value) as Source)
+      .filter((source) => sourceKey(source.url) === sourceKey(url))
+      .sort((a, b) => (b.fetchedAt || "").localeCompare(a.fetchedAt || ""))[0];
+  }
+  scopeSources(owner: Family): Source[] {
+    const raw = this.rawSources(owner.id).filter((source) =>
+        owner.sourceUrls.some(
+          (url) => sourceKey(url) === sourceKey(source.url),
+        ),
+      ),
+      cached = owner.sourceUrls
+        .map((url) => this.sharedCached(url))
+        .filter(Boolean) as Source[];
+    return [
+      ...new Map(
+        [...cached, ...raw]
+          .sort((a, b) => (a.fetchedAt || "").localeCompare(b.fetchedAt || ""))
+          .map((source) => [sourceKey(source.url), source]),
+      ).values(),
+    ];
+  }
+  effectiveSourceUrls(f: Family): string[] {
+    const urls = [
+      ...f.sourceUrls,
+      ...this.sharedScopesFor(f).flatMap((scope) =>
+        scope.sourceUrls.filter((url) => !this.isSourceExcluded(scope.id, url)),
+      ),
+    ];
+    return [
+      ...new Map(
+        urls
+          .filter((url) => !this.isSourceExcluded(f.id, url))
+          .map((url) => [sourceKey(url), url]),
+      ).values(),
+    ];
+  }
+  sourceOwner(f: Family, url: string): Family {
+    if (f.evidenceScope) return f;
+    return (
+      this.sharedScopesFor(f).find(
+        (scope) =>
+          scope.sourceUrls.some(
+            (candidate) => sourceKey(candidate) === sourceKey(url),
+          ) && !this.isSourceExcluded(scope.id, url),
+      ) || f
+    );
+  }
   sources(family: string): Source[] {
+    const scope = this.state.sharedScopes?.find((f) => f.id === family);
+    const pages = scope ? this.scopeSources(scope) : this.allSources(family);
+    return [
+      ...new Map(
+        pages
+          .filter((source) => !this.isSourceExcluded(family, source.url))
+          .sort((a, b) => (a.fetchedAt || "").localeCompare(b.fetchedAt || ""))
+          .map((source) => [sourceKey(source.url), source]),
+      ).values(),
+    ];
+  }
+  allSources(family: string): Source[] {
+    const f = this.state.families.find((f) => f.id === family),
+      scope = this.state.sharedScopes?.find((f) => f.id === family);
+    if (scope) return this.scopeSources(scope);
+    const inherited = f
+      ? this.sharedScopesFor(f).flatMap((owner) =>
+          this.scopeSources(owner)
+            .filter((source) => !this.isSourceExcluded(owner.id, source.url))
+            .map((source) => ({
+              ...source,
+              inheritedFrom: { id: owner.id, name: owner.name },
+            })),
+        )
+      : [];
+    // Keep all candidates; sources() chooses the newest capture per article.
+    return [...inherited, ...this.rawSources(family)];
+  }
+  rawSources(family: string): Source[] {
     return (
       this.db
         .prepare("SELECT value FROM sources WHERE family=?")
@@ -265,13 +409,20 @@ export class Store extends EventEmitter {
     return r ? JSON.parse(r.value) : undefined;
   }
   putSource(s: Source, html: string) {
+    if (this.isSourceExcluded(s.familyId, s.url))
+      throw new HttpError(
+        409,
+        "This source was removed from this item. Restore it before importing or fetching it again.",
+      );
     atomic(path.join(this.dir, "sources", s.filename), html);
     this.db
       .prepare("INSERT OR REPLACE INTO sources VALUES(?,?,?)")
       .run(s.id, s.familyId, JSON.stringify(s));
   }
   family(id: string) {
-    const f = this.state.families.find((f) => f.id === id);
+    const f =
+      this.state.families.find((f) => f.id === id) ||
+      this.state.sharedScopes?.find((f) => f.id === id);
     if (!f) throw new HttpError(404, "Item not found.");
     return f;
   }

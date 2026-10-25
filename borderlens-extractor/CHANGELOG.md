@@ -1,5 +1,34 @@
 # Changelog
 
+## Workshop app 0.18.0
+
+- Add **Everything** shared evidence for the entire catalogue; the sidebar Shared evidence button opens this scope.
+- Combine global, category, weapon-type/character and individual sources for each item. Read all applicable saved articles, deduplicate matching URLs and retain per-item exclusions. Existing public item schemas remain unchanged.
+
+## Workshop app 0.17.1
+
+- Show the first 550 characters of saved text on shared-source cards, directly from the stored article. Include capture method, date and saved character count; distinguish Chrome captures, imported HTML and fetched pages from URLs awaiting capture.
+
+## Workshop app 0.17.0
+
+- Add shared evidence for categories, weapon types and character subgroups. Capture each article once; matching children inherit it alongside individual sources, with duplicates merged and per-item exclusions retained.
+- Add sidebar book controls and a shared evidence panel with URL, Chrome capture, HTML import and group removal controls. Source changes queue dependent builds without starting them.
+- Add **Find evidence URLs only** to batch actions: discover links without article fetching, source reading or JSON compilation; include completed items, continue failures, and preserve a separate paused build checkpoint.
+- Keep shared captures and discovery progress on disk; expose inherited evidence and discovery errors in the existing item/sidebar views. Public JSON schemas remain unchanged.
+
+## Workshop app 0.16.0
+
+- Add an X to saved source cards, with a Removed sources list and Restore controls. Exclude the article per item, including URL aliases, without deleting archived HTML.
+- Filter exclusions from evidence packets, source reading, discovery and fresh fetching; reject manual/Chrome imports until restored. Preserve exclusions across restart and generated-data resets.
+- Invalidate affected drafts/audits and queue rebuilding; old output remains inspectable but is not exported until rebuilt. Clear research classifications supported by a removed page. Manually edited output requires review.
+- Protect current in-flight processing while allowing source changes to other items. Refresh keeps removed-source archives and rebuilds its evidence packet.
+
+## Workshop app 0.15.3
+
+- Reveal every ancestor and scroll to the selected item when jumping to Current item, including repeat jumps to the same selection. Clear sidebar filters so the current item can be seen.
+- Add level-by-level collapse/expand controls above the sidebar search; preserve open branches during expansion and saved collapse preferences.
+- Show an activity spinner on the current category and character subgroup, including collapsed groups; stop it while paused.
+
 ## Workshop app 0.15.2
 
 - Replace category/character-group totals with compact coloured completed / needs attention / total badges. Hover text and accessible labels also report waiting/processing counts.

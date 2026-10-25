@@ -1,3 +1,4 @@
+import { sourceKey } from "../shared/research.ts";
 import { parseSource } from "./source-content.ts";
 import { load } from "cheerio";
 import robotsParser from "robots-parser";
@@ -34,6 +35,7 @@ export function sourceUrl(input: string) {
 export class Research {
   robots = new Map<string, string>();
   last = 0;
+  sharedAttempts = new Map<string, string>();
   constructor(
     public store: Store,
     public fetcher: typeof fetch = fetch,
@@ -126,6 +128,26 @@ export class Research {
 
   save(f: Family, url: string, html: string, imported = false) {
     sourceUrl(url);
+    if (this.store.isSourceExcluded(f.id, url))
+      throw new Error(
+        "This source was removed; restore it before importing again.",
+      );
+    if (f.evidenceScope) {
+      if (
+        !f.sourceUrls.some(
+          (candidate) => sourceKey(candidate) === sourceKey(url),
+        )
+      )
+        f.sourceUrls.push(url);
+      const cached = this.store.sharedCached(url);
+      if (cached?.hash === hash(html)) {
+        cached.fetchedAt = now();
+        this.store.db
+          .prepare("UPDATE sources SET value=? WHERE id=?")
+          .run(JSON.stringify(cached), cached.id);
+        return cached;
+      }
+    }
     const parsed = this.parse(html);
     if (parsed.text.length < 60)
       throw new Error("Source has too little readable content.");
@@ -148,11 +170,40 @@ export class Research {
     return s;
   }
   async fetchPage(f: Family, url: string, refresh = false) {
-    const existing = this.store.sources(f.id).find((s) => s.url === url);
-    if (existing && !refresh) return existing;
-    const fetched = await this.fetchText(url);
-    return this.save(f, fetched.url, fetched.text);
+    if (this.store.isSourceExcluded(f.id, url))
+      throw new Error(
+        "This source was removed from this item; restore it before fetching again.",
+      );
+    const owner = this.store.sourceOwner(f, url);
+    const existing = this.store
+      .sources(owner.id)
+      .find((s) => sourceKey(s.url) === sourceKey(url));
+    if (
+      existing &&
+      (!refresh ||
+        (owner.evidenceScope &&
+          this.store.state.run.startedAt &&
+          existing.fetchedAt >= this.store.state.run.startedAt))
+    )
+      return existing;
+    const run = this.store.state.run;
+    const attempt =
+      owner.evidenceScope &&
+      run.startedAt &&
+      ["running", "pausing"].includes(run.status)
+        ? run.startedAt + "|" + sourceKey(url)
+        : null;
+    if (attempt && this.sharedAttempts.has(attempt))
+      throw new Error(this.sharedAttempts.get(attempt)!);
+    try {
+      const fetched = await this.fetchText(url);
+      return this.save(owner, fetched.url, fetched.text);
+    } catch (error: any) {
+      if (attempt) this.sharedAttempts.set(attempt, error.message);
+      throw error;
+    }
   }
+
   async inventory(onProgress: (m: string) => void) {
     const existing = this.store.get<{
       at: string;

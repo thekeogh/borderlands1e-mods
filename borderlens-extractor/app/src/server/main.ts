@@ -37,7 +37,7 @@ const server = app.listen(port, "127.0.0.1", () =>
 for (const signal of ["SIGTERM", "SIGINT"])
   process.once(signal, () => {
     worker.closed = true;
-    worker.pause();
+    if (store.state.run.status !== "idle") worker.pause();
     server.close();
     const poll = setInterval(() => {
       if (!worker.busy && !worker.coverageBusy) {

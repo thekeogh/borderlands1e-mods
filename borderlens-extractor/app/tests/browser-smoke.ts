@@ -489,6 +489,174 @@ try {
     .then((r) => r.json());
   assert.equal(shieldDetail.family.id, shield.id);
   assert.equal(shieldDetail.websiteOutput.category, "Shields");
+  await page.getByRole("button", { name: /^Sources & evidence/ }).click();
+  const removeSource = page.getByRole("button", {
+    name: "Remove source: Ironclad • BL1 – Pearlescent Shield | Lootlemon",
+    exact: true,
+  });
+  await removeSource.click();
+  await waitForState(
+    (s) => s.families.find((f: any) => f.id === shield.id).status === "queued",
+  );
+  await page
+    .locator(".source-card")
+    .filter({ hasText: "Synthetic fixture article" })
+    .waitFor({ state: "detached" });
+  const removedSources = page.locator(".removed-sources");
+  await removedSources.locator("summary").click();
+  await removedSources
+    .getByRole("button", {
+      name: "Restore source: Ironclad • BL1 – Pearlescent Shield | Lootlemon",
+      exact: true,
+    })
+    .click();
+  await page
+    .locator(".source-card")
+    .filter({ hasText: "Synthetic fixture article" })
+    .waitFor();
+  // Shared evidence is managed without touching the individual item's form.
+  const sharedCategory = (
+    await page.request.get(`/api/items/${shield.id}`).then((r) => r.json())
+  ).family.category;
+  await page
+    .getByRole("button", {
+      name: "Shared evidence for " + sharedCategory,
+      exact: true,
+    })
+    .click();
+  const shared = page.getByRole("dialog", {
+    name: "Shared evidence",
+    exact: true,
+  });
+  await expect(
+    shared.getByRole("combobox", { name: "Evidence group" }),
+  ).toHaveValue(sharedCategory);
+  const sharedUrl = "https://borderlands.fandom.com/wiki/Shield_(Borderlands)";
+  await shared
+    .getByRole("textbox", { name: "Shared evidence URL" })
+    .fill(sharedUrl);
+  await shared.getByRole("button", { name: "Add source", exact: true }).click();
+  await shared
+    .getByRole("button", { name: "Open in Chrome", exact: true })
+    .waitFor();
+  await expect(
+    shared.getByText(
+      "Not captured yet · URL only. Open in Chrome to capture the article.",
+    ),
+  ).toBeVisible();
+  await shared
+    .getByLabel("Import shared HTML: " + sharedUrl, { exact: true })
+    .setInputFiles({
+      name: "shield-overview.html",
+      mimeType: "text/html",
+      buffer: Buffer.from(
+        "<h1>Shield overview fixture</h1><p>Stored shared shield mechanics and capacity evidence for this synthetic browser workflow. These original words are not copied from any external source.</p>",
+      ),
+    });
+  await expect(
+    shared.getByText(/Imported HTML · .*characters saved/),
+  ).toBeVisible();
+  const savedShared = await page.request
+    .get("/api/shared-sources")
+    .then((r) => r.json());
+  const storedArticle = savedShared
+    .find((row: any) => row.family.evidenceScope.category === sharedCategory)
+    .sources.find((source: any) => source.url === sharedUrl);
+  await expect(shared.locator(".shared-captured-text")).toHaveText(
+    storedArticle.text.slice(0, 550),
+  );
+  await page.screenshot({ path: ".test-data/screenshots/shared-evidence.png" });
+  await shared.getByRole("button", { name: "Close shared evidence" }).click();
+  await page
+    .getByText(
+      "Shared from " +
+        sharedCategory +
+        " · remove here to exclude for this item only",
+    )
+    .waitFor();
+  await page
+    .getByRole("button", { name: "Shared evidence", exact: true })
+    .click();
+  const globalDialog = page.getByRole("dialog", {
+    name: "Shared evidence",
+    exact: true,
+  });
+  await expect(
+    globalDialog.getByRole("combobox", { name: "Evidence group" }),
+  ).toHaveValue("Everything");
+  const globalUrl = "https://borderlands.fandom.com/wiki/Elemental_fixture";
+  await globalDialog
+    .getByRole("textbox", { name: "Shared evidence URL" })
+    .fill(globalUrl);
+  await globalDialog
+    .getByRole("button", { name: "Add source", exact: true })
+    .click();
+  await globalDialog
+    .getByLabel("Import shared HTML: " + globalUrl, { exact: true })
+    .setInputFiles({
+      name: "global.html",
+      mimeType: "text/html",
+      buffer: Buffer.from(
+        "<h1>Universal elemental fixture</h1><p>Original global evidence fixture available to every category, weapon type and character in this synthetic catalogue.</p>",
+      ),
+    });
+  await expect(
+    globalDialog.getByText(/Imported HTML · .*characters saved/),
+  ).toBeVisible();
+  await page.screenshot({ path: ".test-data/screenshots/global-evidence.png" });
+  await globalDialog
+    .getByRole("button", { name: "Close shared evidence" })
+    .click();
+  const allState = await page.request.get("/api/state").then((r) => r.json());
+  for (const sample of [
+    allState.families.find((f: any) => f.category === "Weapons"),
+    allState.families.find((f: any) => f.category === "Artifacts"),
+    allState.families.find((f: any) => f.category === "Class mods"),
+  ]) {
+    const sampleDetail = await page.request
+      .get(`/api/items/${sample.id}`)
+      .then((r) => r.json());
+    assert(
+      sampleDetail.sources.some(
+        (source: any) =>
+          source.url === globalUrl &&
+          source.inheritedFrom.name === "Everything",
+      ),
+    );
+  }
+  const beforeDiscovery = await page.request
+    .get("/api/state")
+    .then((r) => r.json());
+  await page.request.patch("/api/settings", { data: { maxItems: 2 } });
+  await page.getByLabel("Batch source options", { exact: true }).click();
+  await page.getByRole("button", { name: /Find evidence URLs only/ }).click();
+  await waitForState(
+    (s) => s.run.mode === "discover" && s.run.status === "complete",
+  );
+  const afterDiscovery = await page.request
+    .get("/api/state")
+    .then((r) => r.json());
+  assert.deepEqual(
+    afterDiscovery.families.map((f: any) => [
+      f.id,
+      f.status,
+      f.stage,
+      f.revision,
+    ]),
+    beforeDiscovery.families.map((f: any) => [
+      f.id,
+      f.status,
+      f.stage,
+      f.revision,
+    ]),
+  );
+  assert.equal(afterDiscovery.run.index, 2);
+  assert.equal(
+    afterDiscovery.families.filter(
+      (f: any) => f.urlDiscovery?.status === "complete",
+    ).length,
+    2,
+  );
   assert.deepEqual(errors, []);
   console.log(
     "Browser: import, background selection, pause/resume, editor persistence, coverage, settings and fixed progress passed. 299 real capture candidates; character equipment grouped.",
