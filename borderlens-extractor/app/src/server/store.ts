@@ -1,3 +1,4 @@
+import { Names } from "./names.ts";
 import type {
   InheritedEvidence,
   SourceInclusionMode,
@@ -50,6 +51,7 @@ export const stable = (v: unknown): string =>
 export class Store extends EventEmitter {
   private articleIndex?: { changes: string; pages: Map<string, Source> };
   classifications: Classifications;
+  names: Names;
   images: Images;
   db: DatabaseSync;
   state: Project;
@@ -66,6 +68,7 @@ export class Store extends EventEmitter {
     this.classifications = new Classifications(
       path.join(dir, "classification-overrides.json"),
     );
+    this.names = new Names(path.join(dir, "name-overrides.json"));
     this.db = new DatabaseSync(path.join(dir, "workshop.sqlite"));
     this.db.exec(
       "PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY,value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS raw(capture TEXT,id TEXT,path TEXT,class TEXT,value TEXT,PRIMARY KEY(capture,id)); CREATE TABLE IF NOT EXISTS artifacts(family TEXT,kind TEXT,value TEXT,PRIMARY KEY(family,kind)); CREATE TABLE IF NOT EXISTS sources(id TEXT PRIMARY KEY,family TEXT,value TEXT);",
@@ -218,10 +221,44 @@ export class Store extends EventEmitter {
     }
     this.state.families.sort(catalogueOrder);
   }
+  applyNames() {
+    for (const f of this.state.families) {
+      const override = this.names.data.entries[f.id];
+      const previous = f.name;
+      if (override) {
+        f.rawName ||= override.originalName || previous;
+        f.name = override.name;
+        f.nameOverride = override;
+        f.aliases = [
+          ...new Set([
+            ...f.aliases,
+            f.rawName,
+            ...(previous !== f.name ? [previous] : []),
+          ]),
+        ].filter((name) => name !== f.name);
+      } else if (f.rawName) {
+        f.name = f.rawName;
+        delete f.nameOverride;
+      }
+      if (
+        previous !== f.name &&
+        f.status === "done" &&
+        this.get(f.id, "output")
+      ) {
+        f.status = "queued";
+        f.stage = "draft";
+        f.issue = null;
+        this.forget(f.id, ["packet", "draft", "workingSourceLedger"]);
+      }
+    }
+  }
   syncClassifications() {
-    if (this.classifications.reload()) this.save();
+    const classificationsChanged = this.classifications.reload();
+    const namesChanged = this.names.reload();
+    if (classificationsChanged || namesChanged) this.save();
   }
   save() {
+    this.applyNames();
     this.applyClassifications();
     this.state.revision++;
     this.db

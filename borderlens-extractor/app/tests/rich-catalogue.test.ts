@@ -74,11 +74,11 @@ function setup(t: any) {
 }
 function entry(f: Family) {
   return PublicEntry.parse({
-    schemaVersion: "5",
+    schemaVersion: "7",
     compilerVersion: COMPILER_VERSION,
     id: f.id,
     name: f.name,
-    game: "borderlands-goty-enhanced",
+    dlc: null,
     category: f.category,
     weaponType: "SMGs",
     summary: "A short and useful overview of the fixture family.",
@@ -257,7 +257,7 @@ test("website export embeds parts in the item JSON without extra files", async (
     ["weapons/fixture.json"],
   );
   const item = JSON.parse(zip.readAsText("weapons/fixture.json"));
-  assert.equal(item.schemaVersion, "8");
+  assert.equal(item.schemaVersion, "9");
   assert.equal(item.slug, "fixture");
   assert.equal(item.parts[0].name, "Fixture accessory");
   assert.equal(item.parts[0].relationship, "defining");

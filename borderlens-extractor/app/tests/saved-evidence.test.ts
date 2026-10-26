@@ -87,7 +87,7 @@ function fixture(
         compilerVersion: COMPILER_VERSION,
         id: f.id,
         name: f.name,
-        game: "borderlands-goty-enhanced",
+        dlc: null,
         category: "Weapons",
         weaponType: "SMGs",
         summary: "A conventional submachine gun built for steady bursts.",
@@ -473,7 +473,8 @@ test("retrieved snapshots survive restart, while recapture invalidates cached an
 
 test("all model-facing request and source schemas require their properties for strict structured output", async () => {
   const { z } = await import("zod");
-  const { WriterDraft } = await import("../src/shared/models.ts");
+  const { WriterDraft, SourceMatches } =
+    await import("../src/shared/models.ts");
   const { WriterSourceReading } =
     await import("../src/server/source-analysis.ts");
   const visit = (value: any) => {
@@ -490,6 +491,12 @@ test("all model-facing request and source schemas require their properties for s
       else visit(child);
   };
   visit(z.toJSONSchema(WriterDraft));
+  visit(z.toJSONSchema(SourceMatches));
+  const { TypeSyncDecision, NameSyncResponse } =
+    await import("../src/shared/identity-sync.ts");
+  visit(z.toJSONSchema(TypeSyncDecision));
+  visit(z.toJSONSchema(NameSyncResponse));
+  assert.equal(z.toJSONSchema(NameSyncResponse).type, "object");
   visit(z.toJSONSchema(WriterSourceReading));
   const dir = mkdtempSync(path.join(tmpdir(), "strict-shared-")),
     s = new Store(dir);

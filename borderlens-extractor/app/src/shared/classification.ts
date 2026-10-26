@@ -17,6 +17,7 @@ export const ClassificationOverride = z
     category: Category.optional(),
     reason: z.string().min(1),
     verifiedAt: z.string(),
+    verification: z.enum(["discovery", "saved_sources"]).optional(),
     evidence: z.array(ClassificationEvidence),
   })
   .strict();

@@ -1,3 +1,6 @@
+import { ManualType } from "../shared/manual-type.ts";
+import { extractedContent } from "./content.ts";
+import { findDuplicates } from "./duplicates.ts";
 import { gameData } from "./game-data.ts";
 import { EvidenceScope } from "../shared/evidence-scopes.ts";
 import { sourceKey, sourceInclusionModes } from "../shared/research.ts";
@@ -33,6 +36,18 @@ export function api(store: Store, worker: Worker) {
     next();
   });
   app.use(express.json({ limit: "6mb" }));
+  app.use((req, _res, next) => {
+    if (
+      worker.identitySync &&
+      !["GET", "HEAD"].includes(req.method) &&
+      req.path !== "/api/settings"
+    )
+      throw new HttpError(
+        409,
+        "Wait for metadata sync to finish before changing project data.",
+      );
+    next();
+  });
   chromeRoutes(app, worker);
   const scopeDetail = (owner: ReturnType<Store["ensureScope"]>) => ({
     family: owner,
@@ -123,7 +138,7 @@ export function api(store: Store, worker: Worker) {
   });
   app.get("/api/state", (_req, res) => {
     store.syncClassifications();
-    res.json(store.state);
+    res.json({ ...store.state, identitySync: worker.identitySync });
   });
   app.get("/api/sources/:id/html", (req, res) => {
     const source = store.source(req.params.id);
@@ -208,6 +223,31 @@ export function api(store: Store, worker: Worker) {
     store.save();
     res.json(store.images.match(f));
   });
+  app.post("/api/items/:id/type", (req, res) => {
+    const { type, notes } = z
+      .object({ type: ManualType, notes: z.string().max(10000).optional() })
+      .strict()
+      .parse(req.body);
+    res.json(worker.setManualType(req.params.id, type, notes));
+  });
+  app.post("/api/items/:id/sync", async (req, res) => {
+    const { target } = z
+      .object({ target: z.enum(["type", "name"]) })
+      .strict()
+      .parse(req.body);
+    res.json(await worker.syncIdentity(req.params.id, target));
+  });
+  app.get("/api/items/:id/duplicates", (req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    res.json(findDuplicates(store, req.params.id));
+  });
+  app.post("/api/items/:id/duplicates/remove", async (req, res) => {
+    z.object({})
+      .strict()
+      .parse(req.body || {});
+    await worker.action(req.params.id, "remove-review-duplicate", {});
+    res.json({ ok: true });
+  });
   app.get("/api/items/:id/game-data", (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     res.json(gameData(store, req.params.id));
@@ -222,6 +262,7 @@ export function api(store: Store, worker: Worker) {
       ),
       image: (store.images.refresh(), store.images.match(f)),
       family: f,
+      extractedDlc: extractedContent(f, store.records).dlc,
       packet: store.get(f.id, "packet"),
       draft: store.get(f.id, "draft"),
       output: store.get(f.id, "output"),
@@ -234,6 +275,7 @@ export function api(store: Store, worker: Worker) {
       excludedSources: store.sourceExclusions(f.id),
       parts: store.get(f.id, "parts") || [],
       researchAudit: store.get(f.id, "researchAudit"),
+      nameDecision: store.get(f.id, "nameDecision"),
       sharedSourceSelection: store.get(f.id, "sharedSourceSelection"),
       evidenceFollowup: store.get(f.id, "evidenceFollowup"),
       classification: store.classifications.data.entries[f.id] || null,
@@ -450,6 +492,7 @@ export function api(store: Store, worker: Worker) {
         "DELETE FROM raw; DELETE FROM artifacts; DELETE FROM sources;",
       );
       store.classifications.clear();
+      store.names.clear();
       store.images.clear();
       store.state = initial();
       store.reloadRecords();

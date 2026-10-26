@@ -1,3 +1,5 @@
+import { ManualTypePicker } from "./manual-type";
+import { DuplicateFinder } from "./duplicate-finder";
 import { EvidenceFollowupSummary } from "./evidence-followup";
 import { SharedResearchSummary } from "./shared-research-summary";
 import { SourcePromote } from "./source-promote";
@@ -20,11 +22,7 @@ import { agentNames } from "../shared/agents";
 import { SourceViewer } from "./source-viewer";
 import { useChromeHelper, ChromeHelperSetup } from "./chrome-helper";
 import { CATALOGUE_SCHEMA_VERSION } from "../shared/versions";
-import {
-  catalogueGroup,
-  classificationNote,
-  weaponTypes,
-} from "../shared/taxonomy";
+import { catalogueGroup, classificationNote } from "../shared/taxonomy";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -75,6 +73,7 @@ import type {
 } from "../shared/models";
 import "./style.css";
 type Detail = {
+  extractedDlc: import("../shared/content").ItemDLC;
   finalValidation: { checkedAt: string; compilerVersion: string } | null;
   image: ImageMatch;
   savedRebuild: { available: boolean; reason: string };
@@ -369,8 +368,12 @@ function App() {
       </div>
     );
   const run = state.run,
-    busy = ["running", "pausing"].includes(run.status),
-    current = state.families.find((f) => f.id === run.currentId),
+    busy =
+      ["running", "pausing"].includes(run.status) ||
+      Boolean(state.identitySync),
+    current = state.families.find(
+      (f) => f.id === (state.identitySync?.familyId || run.currentId),
+    ),
     done = state.families.filter((f) => f.status === "done").length,
     blocked = state.families.filter(
       (f) =>
@@ -407,6 +410,15 @@ function App() {
   const activePath = busy && current ? familyTreePath(current) : [];
   const f = detail?.family.id === selected ? detail.family : null,
     output = f ? detail?.output : null;
+  const manualTypeChange = (
+    type: import("../shared/manual-type").ManualType,
+  ) => {
+    if (!f) return;
+    void act(async () => {
+      const result = await request(`/api/items/${f.id}/type`, { type });
+      setNotice(f.name + ": " + result.message);
+    });
+  };
   const inheritedKeys = new Set(
     (detail?.inheritedEvidence || []).map((source) => sourceKey(source.url)),
   );
@@ -780,17 +792,19 @@ function App() {
           <div className="run-content">
             <div className="run-title">
               <strong>
-                {busy
-                  ? run.mode === "discover"
-                    ? "Finding evidence URLs"
-                    : "Building your catalogue"
-                  : run.status === "blocked"
-                    ? "A little input needed"
-                    : run.status === "complete"
-                      ? "This run is complete"
-                      : run.status === "paused"
-                        ? "Ready when you are"
-                        : "Your catalogue, one item at a time"}
+                {state.identitySync
+                  ? "Checking item " + state.identitySync.target
+                  : busy
+                    ? run.mode === "discover"
+                      ? "Finding evidence URLs"
+                      : "Building your catalogue"
+                    : run.status === "blocked"
+                      ? "A little input needed"
+                      : run.status === "complete"
+                        ? "This run is complete"
+                        : run.status === "paused"
+                          ? "Ready when you are"
+                          : "Your catalogue, one item at a time"}
               </strong>
               {run.scope && (
                 <span className="run-scope" aria-label="Batch group">
@@ -803,10 +817,12 @@ function App() {
                   : `${done} / ${state.families.length} ready`}
               </span>
             </div>
-            <p>{run.message}</p>
-            <div className="progress-track">
-              <div style={{ width: `${percent}%` }} />
-            </div>
+            <p>{state.identitySync?.message || run.message}</p>
+            {!state.identitySync && (
+              <div className="progress-track">
+                <div style={{ width: `${percent}%` }} />
+              </div>
+            )}
           </div>
           {current && (
             <button
@@ -822,15 +838,17 @@ function App() {
               <span>Current item</span>
             </button>
           )}
-          <BatchActions
-            run={run}
-            busy={busy}
-            disabled={working || !state.families.length}
-            savedBuild={!!state.buildCheckpoint}
-            action={(action, sourceMode) =>
-              void act(() => request("/api/run", { action, sourceMode }))
-            }
-          />
+          {!state.identitySync && (
+            <BatchActions
+              run={run}
+              busy={busy}
+              disabled={working || !state.families.length}
+              savedBuild={!!state.buildCheckpoint}
+              action={(action, sourceMode) =>
+                void act(() => request("/api/run", { action, sourceMode }))
+              }
+            />
+          )}
         </div>
         {(error || notice) && (
           <div
@@ -1403,9 +1421,29 @@ function App() {
                   </section>
                   <aside className="inspector">
                     <div className="section-label">AT A GLANCE</div>
+                    <ManualTypePicker
+                      family={f}
+                      disabled={
+                        working ||
+                        busy ||
+                        f.status === "excluded" ||
+                        Boolean(f.supersededBy)
+                      }
+                      change={manualTypeChange}
+                    />
                     <dl>
                       <dt>Item family</dt>
                       <dd>{f.name}</dd>
+                      {f.nameOverride && (
+                        <>
+                          <dt>Extracted name</dt>
+                          <dd>{f.rawName}</dd>
+                          <dt>Name verified</dt>
+                          <dd title={f.nameOverride.reason}>
+                            From saved evidence
+                          </dd>
+                        </>
+                      )}
                       <dt>Category</dt>
                       <dd>{catalogueGroup(f)}</dd>
                       {f.character && (
@@ -1415,7 +1453,13 @@ function App() {
                         </>
                       )}
                       <dt>Game</dt>
-                      <dd>Borderlands GOTY Enhanced</dd>
+                      <dd>Borderlands</dd>
+                      <dt>DLC</dt>
+                      <dd>
+                        {detail?.extractedDlc ||
+                          output?.dlc ||
+                          "Not established yet"}
+                      </dd>
                       <dt>Game evidence</dt>
                       <dd>
                         {detail?.packet?.evidence.filter(
@@ -1432,6 +1476,76 @@ function App() {
                       <dt>Saved revision</dt>
                       <dd>{f.revision || "Not built yet"}</dd>
                     </dl>
+                    <section
+                      className="identity-sync-controls"
+                      aria-label="Sync item identity"
+                    >
+                      <div className="section-label">SYNC FROM SAVED DATA</div>
+                      <div className="identity-sync-buttons">
+                        {(["type", "name"] as const).map((target) => (
+                          <button
+                            key={target}
+                            className="button secondary"
+                            disabled={
+                              working ||
+                              busy ||
+                              f.status === "excluded" ||
+                              Boolean(f.supersededBy)
+                            }
+                            title={
+                              busy
+                                ? "Wait for the current job to finish or pause it first."
+                                : "Check saved evidence and game data without rebuilding."
+                            }
+                            onClick={() =>
+                              void act(async () => {
+                                const result = await request(
+                                  `/api/items/${f.id}/sync`,
+                                  { target },
+                                );
+                                setNotice(f.name + ": " + result.message);
+                              })
+                            }
+                          >
+                            {state.identitySync?.familyId === f.id &&
+                            state.identitySync.target === target ? (
+                              <span className="tiny-spinner" />
+                            ) : (
+                              <RefreshCw size={14} />
+                            )}
+                            Sync {target}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="muted small">
+                        Checks saved evidence, game data and existing JSON.
+                        Updates verified identity only; no rebuild.
+                      </p>
+                      {state.identitySync?.familyId === f.id && (
+                        <p className="muted small" role="status">
+                          {state.identitySync.message}
+                        </p>
+                      )}
+                    </section>
+                    {catalogueGroup(f) === "Needs review" &&
+                      f.status !== "excluded" &&
+                      !f.supersededBy && (
+                        <DuplicateFinder
+                          key={f.id}
+                          family={f}
+                          busy={working || (busy && run.currentId === f.id)}
+                          remove={() =>
+                            act(
+                              () =>
+                                request(
+                                  `/api/items/${f.id}/duplicates/remove`,
+                                  {},
+                                ),
+                              "Needs review entry removed. Possible matches were left unchanged; restore it from Removed items if needed.",
+                            )
+                          }
+                        />
+                      )}
                     <div className="catalogue-removal">
                       {f.status === "excluded" ? (
                         <>
@@ -1799,43 +1913,16 @@ function App() {
                       A correction is remembered for future runs. Add a source
                       or explain what needs changing.
                     </p>
-                    {f.category === "Weapons" && (
-                      <div className="manual-classification">
-                        <label>
-                          Weapon classification
-                          <select
-                            aria-label="Weapon classification"
-                            disabled={working || busy}
-                            value={
-                              f.classification?.origin === "manual"
-                                ? f.classification.weaponType || ""
-                                : ""
-                            }
-                            onChange={(event) =>
-                              itemAction("classification", {
-                                weaponType: event.target.value || null,
-                                notes: correction || undefined,
-                              })
-                            }
-                          >
-                            <option value="">
-                              Use researched / raw classification
-                            </option>
-                            {weaponTypes.map((type) => (
-                              <option key={type} value={type}>
-                                {type}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <p className="muted small">
-                          Current: {catalogueGroup(f)} ·{" "}
-                          {f.classification?.origin || "raw data"}. Manual
-                          choices take priority and are saved in the overrides
-                          file.
-                        </p>
-                      </div>
-                    )}
+                    <ManualTypePicker
+                      family={f}
+                      disabled={
+                        working ||
+                        busy ||
+                        f.status === "excluded" ||
+                        Boolean(f.supersededBy)
+                      }
+                      change={manualTypeChange}
+                    />
                     <label>
                       Source page URL
                       <input
@@ -1999,7 +2086,7 @@ function App() {
         </main>
         <footer>
           <span>ONE FAMILY. EVERY DETAIL.</span>
-          <span>Borderlens workshop · 0.27.0</span>
+          <span>Borderlens workshop · 0.32.0</span>
         </footer>
       </section>
       <input

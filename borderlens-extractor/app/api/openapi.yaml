@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Borderlens local workshop
-  version: 0.27.0
+  version: 0.32.0
   description: Local-only catalogue processing. Disk-backed checkpoints; no hosted accounts or API-key billing.
 servers:
   - url: http://127.0.0.1:4317
@@ -261,7 +261,7 @@ paths:
       responses:
         "200":
           {
-            description: "Family with URL-matched catalogue-wide cached pages (reusedFrom identifies a previously saved article; logical item bindings remain independent), inheritedEvidence (URL, title, item-specific inclusionMode (auto/always/never, default auto), legacy alwaysInclude boolean, all contributing parent IDs/names and captured status), active sources plus excludedSources (restorable per-item URL exclusions), effective classification override (equipment category and/or weapon subtype; equipment overrides have a null weaponType), facts/evidence, per-provider research status/errors, sources, private researchAudit with full-source chunk readings and fact dispositions, evidenceFollowup (one optional saved-only request round, topics/matches/missing context and fallback status), sharedSourceSelection with kept/skipped tagged-fact decisions and index cache/fallback counts, stage history and last valid output. Final whole-document validation status, image metadata and savedRebuild availability/reason are included for built and unbuilt candidates. Website output is schema 8: canonical element enum, full-document consistency checks, relative image path or null, rich description/details, contextual stat ranges, grouped conditional dropChances and inline parts; empty note strings are omitted; provenance and coverage stay private. Final JSON includes the item revision counter. Viewing/exporting does not increment revision. Does not change the queue.",
+            description: "Family with URL-matched catalogue-wide cached pages (reusedFrom identifies a previously saved article; logical item bindings remain independent), inheritedEvidence (URL, title, item-specific inclusionMode (auto/always/never, default auto), legacy alwaysInclude boolean, all contributing parent IDs/names and captured status), active sources plus excludedSources (restorable per-item URL exclusions), nameDecision (private rename proof/result; uncertain names stay unchanged), family.rawName/nameOverride (saved name corrections; IDs and ZIP records unchanged), effective classification override (equipment category and/or weapon subtype; equipment overrides have a null weaponType; verification identifies URL-discovery proof or saved-source verification), facts/evidence, per-provider research status/errors, sources, private researchAudit with full-source chunk readings and fact dispositions, evidenceFollowup (one optional saved-only request round, topics/matches/missing context and fallback status), sharedSourceSelection with kept/skipped tagged-fact decisions and index cache/fallback counts, stage history and last valid output. Final whole-document validation status, image metadata and savedRebuild availability/reason are included for built and unbuilt candidates. Website output is schema 9: item-level dlc (canonical Base Game/expansion or null; extraction identity first, then item-specific sources), no game/series field, canonical element enum, full-document consistency checks, relative image path or null, rich description/details, contextual stat ranges, grouped conditional dropChances and inline parts; empty note strings are omitted; provenance and coverage stay private. Final JSON includes the item revision counter. extractedDlc is read-only origin inferred only from existing family identity-root DLC package records; Preview can use it before any build. Unknown origin stays null, acquisition DLC remains independent, and nonnull item origins require evidence claims. Viewing/exporting does not increment revision. Does not change the queue.",
           }
         "404": { description: "Family not found." }
   /api/items/{id}/action:
@@ -269,7 +269,7 @@ paths:
       - { name: id, in: path, required: true, schema: { type: string } }
     post:
       operationId: itemAction
-      description: "rebuild-saved uses saved pages and matching extracted facts without fetching; missing analysis is read from those saved pages. rebuild-fresh fetches and reads current sources, preserving old pages on failure. Busy rebuilds are deferred with their chosen mode. Legacy rebuild retains its prior behavior. discover starts URL-only processing for this item, preserves a paused build checkpoint, filters inherited article aliases from local URLs/matches and leaves JSON/build status/revision intact. Pause an active job first."
+      description: "rebuild-saved uses saved pages and matching extracted facts without fetching; missing analysis is read from those saved pages. rebuild-fresh fetches and reads current sources, preserving old pages on failure. Busy rebuilds are deferred with their chosen mode. Legacy rebuild retains its prior behavior. discover starts URL-only processing for this item, preserves a paused build checkpoint and filters inherited article aliases from local URLs/matches. Its existing agent call can verify an exact obtainable BL1 Needs review identity/type and persist a discovery classification, immediately updating navigation and inherited groups without fetching article HTML or building. Build checks those decisions against saved articles again. Raw extraction and existing JSON/revision are retained; changing a classification can invalidate an older build for the next requested rebuild. Pause an active job first."
       requestBody:
         required: true
         content:
@@ -339,6 +339,109 @@ paths:
           {
             description: "Action requires a paused worker, or saved-source rebuild has no saved pages.",
           }
+  /api/items/{id}/type:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: setManualItemType
+      description: "Set an authoritative manual equipment/weapon type, or null to remove it and restore research/game classification. No AI, fetching or build. Immediately update navigation/inheritance and existing JSON/draft/packet identity metadata, preserving wording, IDs, raw records and queues. Completed validated output remains ready; changed saved JSON increments revision. Persists in classification-overrides.json."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [type]
+              properties:
+                type:
+                  type: string
+                  nullable: true
+                  enum:
+                    [
+                      Combat rifles,
+                      Eridian weapons,
+                      Repeater pistols,
+                      Revolvers,
+                      Rocket launchers,
+                      Shotguns,
+                      SMGs,
+                      Sniper rifles,
+                      Shields,
+                      Class mods,
+                      Grenade mods,
+                      Artifacts,
+                      Other equipment,
+                      null,
+                    ]
+                notes: { type: string, maxLength: 10000 }
+      responses:
+        "200":
+          { description: "changed boolean and explanation; no work queued." }
+        "400": { description: Invalid type or request. }
+        "404": { description: Unknown item. }
+        "409":
+          {
+            description: "Active job, removed/retired/shared owner, or resulting saved JSON cannot validate.",
+          }
+  /api/items/{id}/sync:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: syncSavedItemIdentity
+      description: "Saved-only medium-effort type or name verification. Checks original definitions, allowed individual/inherited evidence and existing JSON as secondary context. Applies only high-confidence identity corrections, preserves manual type overrides, raw records, prose and queue state. Updates current saved JSON/drafts/packets and live navigation without builds or fetching. Name sync may explicitly correct metadata on manual entries while retaining their wording. Returns unchanged with local validation reasons when identity/type is uncertain; unrelated rarity/prefix observations remain private context notes. Multiple exact title/body records can jointly corroborate identity/type. generated JSON alone cannot prove identity. Concurrent project writes are rejected while syncing."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [target]
+              properties:
+                target: { type: string, enum: [type, name] }
+      responses:
+        "200":
+          {
+            description: "changed boolean and explanatory message; no build queued. Existing JSON metadata edits increment the item revision.",
+          }
+        "400": { description: Invalid request. }
+        "404": { description: Unknown item. }
+        "409":
+          {
+            description: "Busy worker, removed/retired entry, or metadata change cannot validate existing JSON.",
+          }
+  /api/items/{id}/duplicates:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    get:
+      operationId: findPossibleReviewDuplicates
+      description: Read-only lookup for active Needs review entries. Return up to 20 properly grouped candidates by names, aliases and extracted identity references with match reasons. Similarity is not proof of identical/obtainable items. No AI, fetching, merging, source transfer or project mutation.
+      responses:
+        "200":
+          {
+            description: "Original itemId, searched/total counts and possible matches.",
+          }
+        "400": { description: Item is not active in Needs review. }
+        "404": { description: Unknown family. }
+  /api/items/{id}/duplicates/remove:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: removeReviewDuplicateCandidate
+      description: Reversibly remove only this Needs review entry using existing removal behavior. Recheck its group at mutation time, rejecting an item that has since been classified. No target ID, merging or evidence transfer. Matched items remain unchanged.
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: false }
+      responses:
+        "200":
+          { description: Review item removed; restorable from Removed items. }
+        "409":
+          {
+            description: "Entry is no longer in Needs review or is currently processing.",
+          }
+        "404": { description: Unknown family. }
   /api/items/{id}/shared-source-mode:
     parameters:
       - { name: id, in: path, required: true, schema: { type: string } }

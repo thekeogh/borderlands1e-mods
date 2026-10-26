@@ -1,5 +1,41 @@
 # Changelog
 
+## Workshop app 0.32.0
+
+- Add an Item type dropdown at the top of every Preview sidebar, with all weapon types and Shields, Class mods, Grenade mods, Artifacts and Other equipment. Automatic restores research/game classification. Keep the existing Sync buttons.
+- Manual changes make no AI/network requests and start no builds. Persist authoritative overrides; update navigation, inheritance, existing JSON/draft metadata and export folders immediately while retaining prose, raw identity, readiness and queued checkpoints.
+- Use the same picker in Sources & evidence and the same metadata path for the legacy weapon-classification action. No compiler/public schema change or automatic rebuild.
+
+## Workshop app 0.31.1
+
+- Fix Sync name's nullable response root: return an object with a nullable decision. Validate agent schema roots locally before provider calls and clear only stale cooldowns caused by this specific caller-side schema bug.
+- Fix Sync type validation: related defining-part paths are valid identity evidence, exact raw property projections are checked structurally, and title/body/page citations can jointly establish identity and type. Keep unrelated rarity/prefix disagreements as private context; identity/type/availability conflicts still block.
+- Record precise validation rejection reasons and ignored redundant citations rather than displaying the agent's affirmative explanation as an unchanged reason. Prefix sync notices with the actual item's name.
+
+## Workshop app 0.31.0
+
+- Add Sync type / Sync name to every Preview sidebar. Check saved raw definitions, allowed direct/inherited evidence and existing JSON with one medium-effort agent call; never fetch sources or rebuild content.
+- Apply only high-confidence, quoted identity corrections; update live navigation, inheritance, existing JSON/draft/packet metadata and export folders/slugs while preserving prose, raw data and queue checkpoints. Keep completed validated entries ready; count saved metadata revisions. Unbuilt entries remain unbuilt.
+- Preserve manual type overrides; explicit name sync can update identity on manual entries. Show live progress and unchanged reasons. Lock concurrent project writes during verification. Compiler and item schema versions unchanged.
+
+## Workshop app 0.30.0 / compiler 0.11.0
+
+- Allow the writer to propose a canonical item name privately. Require exact archived naming quotes and compatible extracted identity; run a separate medium-effort verification only for supported proposals. Keep uncertain, mismatched, cut/prototype or failed proposals unchanged without halting the build.
+- Persist name corrections separately from the ZIP. Update navigation, Preview, compiled names and export slugs, retaining original names as aliases and stable IDs. Show the extracted name in Preview. Never merge entries or transfer evidence.
+- Internal schema 7; website schema remains 9. Retain old generated output/corrections and queue it for the next requested compiler rebuild; no automatic builds.
+
+## Workshop app 0.29.0 / compiler 0.10.0
+
+- Add canonical item-level DLC/origin to every equipment schema, source reader checklist, writer claims and final JSON. Prefer the family's own extracted DLC package; use explicit saved item-origin evidence otherwise. Keep unknown origin null and distinguish it from DLC drop locations.
+- Show DLC in Preview's sidebar, including extraction-derived origin before building. Label the game Borderlands; remove game/series metadata from item JSON.
+- Website schema 9 / internal schema 6. Retain old outputs and corrections; queue earlier compiler entries for the next requested rebuild. No automatic builds.
+
+## Workshop app 0.28.0
+
+- Add Find duplicates to Needs review previews: explained name/alias/extracted-title matches, read-only inspection and restorable removal of only the review entry. Recheck its group before removal; no merge, evidence transfer or build.
+- Verify exact obtainable BL1 identity/type during the existing URL-discovery call. Persist successful classifications separately, move navigation immediately and inherit new parent evidence. Leave ambiguous, cut/prototype and naming-modifier candidates in review. Build verifies discovery decisions from saved articles again.
+- Keep compiler/public schemas unchanged; no automatic rebuilds or additional discovery calls.
+
 ## Workshop app 0.27.0 / compiler 0.9.0
 
 - Let the writer request up to three specific missing topics alongside its best draft. Search existing saved text and cached fact indexes only; supply at most four short matches for one extra writing pass. No request or no match means no extra AI call.

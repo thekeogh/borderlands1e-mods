@@ -292,6 +292,18 @@ try {
     .getByRole("button", { name: "Bessie", exact: true })
     .click();
   await page.getByRole("heading", { name: /Bessie/ }).waitFor();
+  await expect(page.locator(".inspector")).toContainText(
+    "The Secret Armory of General Knoxx",
+  );
+  await expect(
+    page.locator(".inspector").getByText("Borderlands", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".inspector")).not.toContainText(
+    "Borderlands GOTY Enhanced",
+  );
+  await page.screenshot({
+    path: ".test-data/screenshots/item-dlc-preview.png",
+  });
   await page.getByRole("img", { name: "Bessie", exact: true }).waitFor();
   await page.getByRole("button", { name: /Coverage/ }).click();
 
@@ -333,13 +345,15 @@ try {
     .get("/api/items/" + ajax.id)
     .then((r) => r.json());
   assert.equal(detail.output.weaponType, "Combat rifles");
+  assert.equal(detail.output.dlc, "The Secret Armory of General Knoxx");
+  assert.equal(detail.websiteOutput.dlc, "The Secret Armory of General Knoxx");
+  assert(!("game" in detail.websiteOutput));
+  assert(!("game" in detail.output));
   await page
-    .getByRole("combobox", { name: "Weapon classification" })
+    .getByRole("combobox", { name: "Item type" })
     .selectOption("Shotguns");
   await page.locator(".group-toggle").filter({ hasText: "Shotguns" }).waitFor();
-  await page
-    .getByRole("combobox", { name: "Weapon classification" })
-    .selectOption("");
+  await page.getByRole("combobox", { name: "Item type" }).selectOption("");
   await page
     .locator(".group-toggle")
     .filter({ hasText: "Combat rifles" })
@@ -1153,6 +1167,234 @@ try {
   await page.screenshot({
     path: ".test-data/screenshots/saved-evidence-followup.png",
   });
+  const reviewFixture = await page.request
+    .post("/__test/review-tools")
+    .then((r) => r.json());
+  await page
+    .getByRole("textbox", { name: "Find an item" })
+    .fill("Browser Cyclone");
+  await page.locator('.item-row[data-family-id="browser-review"]').click();
+  await page.getByRole("button", { name: "Preview", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Find duplicates", exact: true })
+    .click();
+  await expect(page.locator(".duplicate-finder")).toContainText(
+    "1 possible match",
+  );
+  await page.getByRole("button", { name: "Inspect Browser Cyclone" }).click();
+  const duplicateDialog = page.getByRole("dialog", {
+    name: "Possible match: Browser Cyclone",
+  });
+  await expect(duplicateDialog).toContainText("Read-only inspection");
+  await expect(
+    duplicateDialog.getByText("ZIP only", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    duplicateDialog.getByRole("heading", { name: "Identity", exact: true }),
+  ).toBeVisible();
+  await expect(
+    duplicateDialog.getByRole("button", { name: /Remove/ }),
+  ).toHaveCount(0);
+  await page.screenshot({
+    path: ".test-data/screenshots/duplicate-inspection.png",
+  });
+  await page
+    .getByRole("button", { name: "Close duplicate inspection" })
+    .click();
+  await page.screenshot({
+    path: ".test-data/screenshots/duplicate-finder.png",
+  });
+  await page
+    .getByRole("button", { name: "Remove this Needs review item" })
+    .click();
+  await waitForState(
+    (state) =>
+      state.families.find((f: any) => f.id === "browser-review").status ===
+      "excluded",
+  );
+  assert.notEqual(
+    (
+      await page.request
+        .get(`/api/items/${reviewFixture.properId}`)
+        .then((r) => r.json())
+    ).family.status,
+    "excluded",
+  );
+  await page.request.post("/api/items/browser-review/action", {
+    data: { action: "restore" },
+  });
+  await page.reload();
+  await page
+    .getByRole("textbox", { name: "Find an item" })
+    .fill("Browser Cyclone");
+  await page.locator('.item-row[data-family-id="browser-review"]').click();
+  await page.getByLabel("Rebuild options", { exact: true }).click();
+  await page.getByRole("button", { name: /Fetch evidence URLs only/ }).click();
+  await waitForState(
+    (state) =>
+      state.run.status === "complete" &&
+      state.families.find((f: any) => f.id === "browser-review").classification
+        ?.weaponType === "SMGs",
+  );
+  const discoveredReview = await page.request
+    .get("/api/items/browser-review")
+    .then((r) => r.json());
+  assert(!discoveredReview.output);
+  assert(
+    discoveredReview.family.history.some((h: any) =>
+      h.message.includes("Verified during URL discovery"),
+    ),
+  );
+  await expect(page.locator(".duplicate-finder")).toHaveCount(0);
+  await page.screenshot({
+    path: ".test-data/screenshots/discovery-classification.png",
+  });
+  const naming = await page.request
+    .post("/__test/name-tools")
+    .then((r) => r.json());
+  await page.getByRole("textbox", { name: "Find an item" }).fill("Rifle");
+  await page.locator(`.item-row[data-family-id="${naming.id}"]`).click();
+  await page.getByRole("button", { name: "Preview", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Rebuild from saved sources", exact: true })
+    .click();
+  await waitForState(
+    (state) =>
+      state.run.status === "complete" &&
+      state.families.find((f: any) => f.id === naming.id).status === "done",
+  );
+  await expect(
+    page.getByRole("heading", { name: /^Eridian Rifle/, level: 1 }),
+  ).toBeVisible();
+  await expect(
+    page.locator(`.item-row[data-family-id="${naming.id}"]`),
+  ).toContainText("Eridian Rifle");
+  await expect(page.locator(".inspector")).toContainText("Extracted name");
+  const renamed = await page.request
+    .get(`/api/items/${naming.id}`)
+    .then((r) => r.json());
+  assert.equal(renamed.family.rawName, "Rifle");
+  assert.equal(renamed.websiteOutput.name, "Eridian Rifle");
+  assert.equal(renamed.websiteOutput.slug, "eridian-rifle");
+  assert(!("nameDecision" in renamed.websiteOutput));
+  const namedState = await page.request.get("/api/state").then((r) => r.json());
+  assert.equal(
+    namedState.families.find(
+      (f: any) =>
+        f.id !== naming.id &&
+        f.subtype === "Combat rifles" &&
+        f.name === "Rifle",
+    ).name,
+    "Rifle",
+  );
+  await page.screenshot({ path: ".test-data/screenshots/verified-name.png" });
+  const syncType = await page.request
+    .post("/__test/sync-type-tools")
+    .then((r) => r.json());
+  await page.getByRole("textbox", { name: "Find an item" }).fill("Ironclad");
+  await page.locator(`.item-row[data-family-id="${syncType.id}"]`).click();
+  await page.getByRole("button", { name: "Preview", exact: true }).click();
+  const syncRun = (await page.request.get("/api/state").then((r) => r.json()))
+    .run;
+  await page.getByRole("button", { name: "Sync type", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Sync type", exact: true }),
+  ).toBeDisabled();
+  await waitForState(
+    (state) =>
+      state.identitySync === null &&
+      state.families.find((f: any) => f.id === syncType.id).category ===
+        "Shields",
+  );
+  await expect(page.locator(".inspector")).toContainText("Shields");
+  const syncedShield = await page.request
+    .get(`/api/items/${syncType.id}`)
+    .then((r) => r.json());
+  assert.equal(Boolean(syncedShield.output), syncType.hadOutput);
+  if (syncType.hadOutput) {
+    assert.equal(syncedShield.output.category, "Shields");
+    assert.deepEqual(syncedShield.output.description, syncType.description);
+  }
+  assert.deepEqual(
+    (await page.request.get("/api/state").then((r) => r.json())).run,
+    syncRun,
+  );
+  await page.screenshot({ path: ".test-data/screenshots/sync-type.png" });
+  const syncName = await page.request
+    .post("/__test/sync-name-tools")
+    .then((r) => r.json());
+  await page.getByRole("textbox", { name: "Find an item" }).fill("Rifle");
+  await page.locator(`.item-row[data-family-id="${syncName.id}"]`).click();
+  await page.getByRole("button", { name: "Sync name", exact: true }).click();
+  await waitForState(
+    (state) =>
+      state.identitySync === null &&
+      state.families.find((f: any) => f.id === syncName.id).name ===
+        "Eridian Rifle",
+  );
+  await expect(
+    page.getByRole("heading", { name: /^Eridian Rifle/, level: 1 }),
+  ).toBeVisible();
+  const syncedName = await page.request
+    .get(`/api/items/${syncName.id}`)
+    .then((r) => r.json());
+  assert.equal(syncedName.websiteOutput.name, "Eridian Rifle");
+  assert.deepEqual(syncedName.output.description, syncName.description);
+  assert(syncedName.family.manualOutput);
+  await page.screenshot({ path: ".test-data/screenshots/sync-name.png" });
+  const manualCalls = await page.request
+    .get("/__test/ai-count")
+    .then((r) => r.json());
+  await page.getByRole("textbox", { name: "Find an item" }).fill("Ironclad");
+  await page.locator(`.item-row[data-family-id="${syncType.id}"]`).click();
+  const manualPicker = page.getByRole("combobox", {
+    name: "Item type",
+    exact: true,
+  });
+  await expect(manualPicker).toBeVisible();
+  const choices = await manualPicker
+    .locator("option")
+    .evaluateAll((options) =>
+      options.map((o) => (o as HTMLOptionElement).value),
+    );
+  for (const type of [
+    "Shields",
+    "Class mods",
+    "Grenade mods",
+    "Artifacts",
+    "SMGs",
+  ])
+    assert(choices.includes(type));
+  for (const type of ["Artifacts", "Class mods", "Grenade mods", "SMGs"]) {
+    await manualPicker.selectOption(type);
+    await waitForState(
+      (state) =>
+        state.families.find((f: any) => f.id === syncType.id).classification
+          ?.origin === "manual" &&
+        (type === "SMGs"
+          ? state.families.find((f: any) => f.id === syncType.id).classification
+              .weaponType === type
+          : state.families.find((f: any) => f.id === syncType.id).category ===
+            type),
+    );
+    await expect(manualPicker).toHaveValue(type);
+  }
+  await page.screenshot({ path: ".test-data/screenshots/manual-type.png" });
+  await manualPicker.selectOption("");
+  await waitForState(
+    (state) =>
+      state.families.find((f: any) => f.id === syncType.id).classification
+        ?.origin === "research" &&
+      state.families.find((f: any) => f.id === syncType.id).category ===
+        "Shields",
+  );
+  assert.deepEqual(
+    await page.request.get("/__test/ai-count").then((r) => r.json()),
+    manualCalls,
+  );
+  await expect(
+    page.getByRole("button", { name: "Sync type", exact: true }),
+  ).toBeVisible();
   assert.deepEqual(errors, []);
   console.log(
     "Browser: import, background selection, pause/resume, editor persistence, coverage, settings and fixed progress passed. 299 real capture candidates; character equipment grouped.",

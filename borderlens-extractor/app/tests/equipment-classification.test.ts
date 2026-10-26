@@ -118,11 +118,11 @@ test("saved category override moves sidebar/export metadata, survives reset/reim
     "Shields",
   );
   const e = PublicEntry.parse({
-    schemaVersion: "5",
-    compilerVersion: "0.9.0",
+    schemaVersion: "7",
+    compilerVersion: "0.11.0",
     id,
     name: f.name,
-    game: "borderlands-goty-enhanced",
+    dlc: "The Secret Armory of General Knoxx",
     category: f.category,
     weaponType: null,
     summary: "Original synthetic shield for catalogue metadata tests.",
@@ -143,7 +143,7 @@ test("saved category override moves sidebar/export metadata, survives reset/reim
     references: [],
   });
   s.put(id, "output", e);
-  s.put(id, "provenance", { compilerVersion: "0.9.0" });
+  s.put(id, "provenance", { compilerVersion: "0.11.0" });
   f.status = "done";
   f.stage = "complete";
   f.revision = 1;
@@ -171,11 +171,11 @@ test("saved category override moves sidebar/export metadata, survives reset/reim
 test("a completed equipment draft can be revalidated under its corrected category without an AI rebuild", async (t) => {
   const { s, f, page } = setup(t);
   const entry = PublicEntry.parse({
-    schemaVersion: "5",
-    compilerVersion: "0.9.0",
+    schemaVersion: "7",
+    compilerVersion: "0.11.0",
     id: f.id,
     name: f.name,
-    game: "borderlands-goty-enhanced",
+    dlc: "The Secret Armory of General Knoxx",
     category: "Other equipment",
     weaponType: null,
     summary: "An original synthetic fixture with equipment category metadata.",
@@ -199,7 +199,7 @@ test("a completed equipment draft can be revalidated under its corrected categor
     entry,
     partDefinitions: [],
     sourceUsage: [],
-    claims: ["summary", "description"].map((field) => ({
+    claims: ["summary", "description", "dlc"].map((field) => ({
       field,
       evidenceIds: [page.id],
       basis: "Synthetic fixture identity",

@@ -64,11 +64,11 @@ function ai(s: Store, wait?: () => Promise<void>): AI {
         p = buildPacket(s, f);
       return schema.parse({
         entry: {
-          schemaVersion: "5",
-          compilerVersion: "0.9.0",
+          schemaVersion: "7",
+          compilerVersion: "0.11.0",
           id: f.id,
           name: f.name,
-          game: "borderlands-goty-enhanced",
+          dlc: null,
           category: f.category,
           weaponType: "SMGs",
           summary: "A useful synthetic browser-import fixture weapon.",

@@ -1,3 +1,6 @@
+import { NameDecision, type NameOverride } from "./names.ts";
+import { ItemDLC } from "./content.ts";
+import { DiscoveryClassification } from "./discovery-classification.ts";
 import { EvidenceRequest } from "./evidence-requests.ts";
 import type { EvidenceScope } from "./evidence-scopes.ts";
 import { CATALOGUE_SCHEMA_VERSION, COMPILER_VERSION } from "./versions.ts";
@@ -64,7 +67,7 @@ export const PublicEntry = z
     compilerVersion: z.literal(COMPILER_VERSION),
     id: z.string(),
     name: z.string().min(1),
-    game: z.literal("borderlands-goty-enhanced"),
+    dlc: ItemDLC.default(null),
     category: Category,
     weaponType: z.string().nullable(),
     character: z.enum(["Roland", "Lilith", "Mordecai", "Brick"]).optional(),
@@ -147,6 +150,7 @@ export const PublicEntry = z
 export type PublicEntry = z.infer<typeof PublicEntry>;
 export const Draft = z
   .object({
+    nameDecision: NameDecision.nullable().optional(),
     evidenceRequests: z.array(EvidenceRequest).max(3).optional(),
     entry: PublicEntry,
     partDefinitions: z.array(PartDefinition),
@@ -154,6 +158,7 @@ export const Draft = z
       z
         .object({
           field: z.enum([
+            "dlc",
             "summary",
             "description",
             "details",
@@ -212,6 +217,7 @@ export type Draft = z.infer<typeof Draft>;
 // Model-facing structured outputs require every object property. The compiler
 // supplies the authoritative character; older saved/public entries may omit it.
 export const WriterDraft = Draft.extend({
+  nameDecision: NameDecision.nullable().default(null),
   evidenceRequests: Draft.shape.evidenceRequests.unwrap().default([]),
   entry: PublicEntry.extend({
     character: PublicEntry.shape.character.unwrap().nullable().default(null),
@@ -219,6 +225,7 @@ export const WriterDraft = Draft.extend({
 });
 export const SourceMatches = z
   .object({
+    classification: DiscoveryClassification.nullable().default(null),
     matches: z
       .array(
         z
@@ -253,6 +260,8 @@ export type Family = {
   };
   id: string;
   name: string;
+  rawName?: string;
+  nameOverride?: NameOverride;
   category: Category;
   subtype: string;
   rawCategory?: Category;
@@ -322,6 +331,7 @@ export type Packet = {
   evidence: Evidence[];
   warnings: string[];
   facts: {
+    dlc?: import("./content.ts").ItemDLC;
     redText: string | null;
     manufacturers: string[];
     rarities: string[];
@@ -365,6 +375,7 @@ export type Settings = {
   maxItems: number;
 };
 export type Project = {
+  identitySync?: import("./identity-sync.ts").IdentitySyncState | null;
   schemaVersion: 1;
   revision: number;
   families: Family[];

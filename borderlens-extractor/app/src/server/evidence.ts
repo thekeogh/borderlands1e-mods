@@ -1,3 +1,4 @@
+import { extractedContent } from "./content.ts";
 import {
   genericAdviceReason,
   UnclearPublicProse,
@@ -101,6 +102,7 @@ export function buildPacket(
         identityRefs.add(ref.toLowerCase());
   }
   const facts: Packet["facts"] = {
+    dlc: extractedContent(f, records).dlc,
     redText: null,
     manufacturers: [],
     rarities: [],
@@ -235,6 +237,8 @@ export class StatContextError extends Error {
 }
 export function validateDraft(draft: any, p: Packet) {
   acquisitionSources(draft.entry.sources);
+  if (p.facts.dlc && draft.entry.dlc !== p.facts.dlc)
+    throw new Error("Item DLC differs from its extracted identity package.");
   const statKeys = new Set<string>();
   for (const stat of draft.entry.stats) {
     if (
@@ -438,6 +442,7 @@ export function validateDraft(draft: any, p: Packet) {
   }
   const claimed = new Set(draft.claims.map((c: any) => c.field));
   const required = [
+    ...(draft.entry.dlc ? ["dlc"] : []),
     "summary",
     "description",
     ...(draft.entry.details?.length ? ["details"] : []),

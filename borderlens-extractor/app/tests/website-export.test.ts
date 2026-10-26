@@ -46,12 +46,12 @@ function add(
     f.id,
     "output",
     PublicEntry.parse({
-      schemaVersion: "5",
+      schemaVersion: "7",
       compilerVersion: COMPILER_VERSION,
       id: f.id,
       name,
       category,
-      game: "borderlands-goty-enhanced",
+      dlc: null,
       weaponType: category === "Weapons" ? "SMGs" : null,
       summary: "A useful synthetic entry for website export tests.",
       description: [
@@ -95,6 +95,8 @@ test("type folders mirror the website, apostrophes are removed, and archive cont
   for (const file of zip.getEntries()) {
     const item = WebsiteEntry.parse(JSON.parse(zip.readAsText(file)));
     assert.ok(!("references" in item));
+    assert.ok(!("game" in item));
+    assert.ok("dlc" in item);
     assert.ok(!("sourceUsage" in item));
     assert.ok(!("researchAudit" in item));
   }
@@ -256,7 +258,7 @@ test("item revision survives views/exports and saved edits cannot spoof the coun
     "compilerVersion",
     "revision",
   ]);
-  assert.equal(before.schemaVersion, "8");
+  assert.equal(before.schemaVersion, "9");
   assert.equal(before.revision, 3);
   for (let i = 0; i < 2; i++) {
     const zip = new AdmZip(websiteZip(s));

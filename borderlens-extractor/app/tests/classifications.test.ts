@@ -101,8 +101,8 @@ function ai(
         p = buildPacket(s, f);
       return schema.parse({
         entry: {
-          schemaVersion: "5",
-          compilerVersion: "0.9.0",
+          schemaVersion: "7",
+          compilerVersion: "0.11.0",
           description: [
             "An original fixture paragraph describing this item for players.",
           ],
@@ -111,7 +111,7 @@ function ai(
           parts: [],
           id: f.id,
           name: f.name,
-          game: "borderlands-goty-enhanced",
+          dlc: p.facts.dlc || null,
           category: "Weapons",
           weaponType: "SMGs",
           summary: "A synthetic reference entry for a classification test.",
@@ -127,6 +127,15 @@ function ai(
         },
         partDefinitions: [],
         claims: [
+          ...(p.facts.dlc
+            ? [
+                {
+                  field: "dlc",
+                  evidenceIds: [p.evidence[0].id],
+                  basis: "Captured DLC identity package.",
+                },
+              ]
+            : []),
           {
             field: "summary",
             evidenceIds: [p.evidence[0].id],

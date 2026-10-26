@@ -2378,7 +2378,7 @@ footer > span:first-child {
 .catalogue-removal {
   margin: 20px 0;
   padding-top: 16px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--line);
 }
 .catalogue-removal p {
   font-size: 12px;
@@ -3294,4 +3294,72 @@ footer > span:first-child {
   overflow-wrap: anywhere;
   line-height: 1.6;
   color: #788570;
+}
+
+.duplicate-finder {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #e0e7da;
+  font-size: 11px;
+  color: #7b8b74;
+}
+.duplicate-finder > p {
+  margin: 10px 0;
+  line-height: 1.6;
+}
+.duplicate-match {
+  margin: 12px 0;
+  padding: 10px;
+  background: #f0f4eb;
+  border: 1px solid #dfe7d7;
+  border-radius: 6px;
+}
+.duplicate-match > strong {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #566e4c;
+}
+.duplicate-match small {
+  display: block;
+  margin-top: 3px;
+}
+.duplicate-match ul {
+  padding-left: 15px;
+  line-height: 1.6;
+  margin: 7px 0;
+}
+.duplicate-inspector {
+  position: relative;
+  width: min(1050px, calc(100vw - 48px));
+  max-height: calc(100vh - 64px);
+  overflow: auto;
+  padding: 30px;
+  border-radius: 12px;
+  background: #f8faf5;
+  box-shadow: 0 20px 70px #14201044;
+}
+.duplicate-inspector > h2 {
+  padding-right: 30px;
+}
+.duplicate-inspector > p {
+  margin: 10px 0;
+  color: #7c8b76;
+  line-height: 1.6;
+}
+
+.identity-sync-controls {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.identity-sync-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.identity-sync-buttons .button {
+  font-size: 12px;
+  padding: 9px 12px;
 }

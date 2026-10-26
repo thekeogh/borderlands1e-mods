@@ -176,7 +176,7 @@ test("image API, manual selection and website ZIP agree while preserving queue a
     compilerVersion: COMPILER_VERSION,
     id: f.id,
     name: f.name,
-    game: "borderlands-goty-enhanced",
+    dlc: null,
     category: f.category,
     weaponType: "Sniper rifles",
     summary: "A precise rifle used for the image export fixture.",

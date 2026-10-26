@@ -12,6 +12,7 @@ Paths are relative to this folder (default configuration).
 | `.data/captures/`                     | Imported extractor ZIPs.                                                                                                                                                           |
 | `.data/sources/`                      | Saved Wiki/Lootlemon HTML, including Chrome captures.                                                                                                                              |
 | `.data/classification-overrides.json` | Item category and weapon-type overrides.                                                                                                                                           |
+| `.data/name-overrides.json`           | Verified canonical item names, original names and supporting proof.                                                                                                                |
 | `.data/image-overrides.json`          | Manual image selections.                                                                                                                                                           |
 | `.data/ai/`                           | Agent requests, responses, caches and logs.                                                                                                                                        |
 | `.data/ai/agent-failures.json`        | Last agent failures and fallback cooldowns.                                                                                                                                        |
@@ -21,6 +22,16 @@ Paths are relative to this folder (default configuration).
 | `src/shared/versions.ts`              | Schema and compiler versions.                                                                                                                                                      |
 
 **Export** downloads `borderlens-catalogue.zip`, containing final item `.json` files in type folders. Individual final JSON files are generated on export, not saved separately in the app folder.
+
+Needs review previews include **Find duplicates**: inspect possible matches and optionally remove only the review entry. Removal is restorable; nothing is merged or transferred.
+
+**Fetch evidence URLs only** can move a Needs review weapon into its verified type during discovery. It requires an exact obtainable BL1 identity; uncertain or prototype candidates stay in review. Overrides persist separately from the ZIP. Build checks discovery classifications against saved articles again; no build starts automatically.
+
+During Build, the writer can propose a better item name from saved evidence. The app checks exact quotes and compatible extracted identity, then runs one separate medium-effort verification for supported proposals only. Ambiguous/cut/prototype identities keep their names. Successful corrections update navigation, Preview, final JSON and export filenames; IDs, raw game data and other items remain unchanged. Original names stay searchable aliases and are shown in Preview. Name corrections persist in `.data/name-overrides.json` across restarts/imports/generated resets. Full project reset clears them. Naming never merges items or starts another build.
+
+Every item's **Preview** sidebar has an **Item type** dropdown. Select a weapon type or equipment category to apply a manual override immediately, with no AI calls, fetching or rebuild. **Automatic** removes that override and restores verified research/game classification. It updates navigation and existing JSON metadata, keeps descriptions and raw data, and persists across restarts. The same dropdown is available under Sources & evidence.
+
+**Sync type** and **Sync name** remain available. These check saved game data, individual/inherited evidence and existing JSON using the selected agent, without fetching or building. Strongly supported changes move navigation immediately and update existing JSON/draft metadata; wording and raw records remain intact. Completed entries stay ready, metadata edits increment their revision, and unbuilt items gain no generated JSON. Uncertain results report the specific validation reason. Rarity/prefix disagreements do not block an otherwise verified type; exact title and defining-body evidence can corroborate each other. Invalid redundant citations are recorded privately, and unsupported identity/type claims still remain unchanged. Manual type overrides take priority; explicit name sync can update a manually edited entry's name without rewriting it. Pause an active job first; syncing preserves the paused batch and starts no build.
 
 ## Start
 
@@ -41,6 +52,8 @@ Open **http://127.0.0.1:4317**.
 4. **Pause** saves the current step before stopping. **Resume** continues from that checkpoint, including after restarting the service.
 5. If it needs help, add a source URL, saved page HTML, or correction under **Sources & evidence**, then resume. Corrections are remembered.
 6. **Export** downloads completed item JSON files in type folders, ready for the website. Each file includes its full parts data; the ZIP contains no supporting files.
+
+Website JSON includes item-level `dlc`: `Base Game`, a canonical expansion name, or `null` when unverified. Origin comes first from the family’s own extracted DLC identity package, otherwise from explicit saved item-source evidence. Drop-location DLC remains separate. Preview shows DLC and labels the game simply Borderlands; exported JSON has no game/series field. Rebuild older entries to produce the current format.
 
 Website JSON groups each drop location with its conditional drop rates, including player counts when known. Stats distinguish card values from scoped or other conditional values. Empty note strings are omitted; unsupported level limits stay `null`. After a compiler upgrade, rebuild queued items to update their JSON; saved pages and previous output remain on disk.
 
@@ -180,7 +193,7 @@ Only completed current-schema entries are exported. Export’s count shows how m
 
 When a **Needs review** weapon has matching saved-page evidence, The selected agent verifies its released-game identity and type. A successful classification moves it into the right sidebar group immediately; selection and active processing stay on the same item.
 
-Corrections live in `.data/classification-overrides.json`. Priority: **manual correction → verified research → raw type**. Captures and item IDs remain untouched. You can set a manual type under **Sources & evidence → Weapon classification**; selecting **Use researched / raw classification** removes the manual choice.
+Corrections live in `.data/classification-overrides.json`. Priority: **manual correction → verified research → raw type**. Captures and item IDs remain untouched. Use **Preview → Item type** (or the same dropdown in Sources & evidence) for any weapon/equipment category; **Automatic** removes the manual choice.
 
 Overrides survive imports, restarts and **Restart generated work**. Keep this file in your workshop backup; it is excluded from website ZIPs. **Clear the entire project** clears them. Back up the file with your project. To restore it into another project using the same capture IDs, put it in that project's data folder and refresh. External file edits are loaded on refresh/poll. A changed type queues an existing completed entry for rebuilding so exported JSON can follow the new classification.
 

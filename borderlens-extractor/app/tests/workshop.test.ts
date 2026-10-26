@@ -59,8 +59,8 @@ function fixture(t: any) {
 function entry(f: Family): PublicEntry {
   return {
     details: [],
-    schemaVersion: "5",
-    compilerVersion: "0.9.0",
+    schemaVersion: "7",
+    compilerVersion: "0.11.0",
     description: [
       "An original fixture paragraph describing this item for players.",
     ],
@@ -69,7 +69,7 @@ function entry(f: Family): PublicEntry {
     parts: [],
     id: f.id,
     name: f.name,
-    game: "borderlands-goty-enhanced",
+    dlc: null,
     category: f.category,
     weaponType: f.subtype,
     summary: "A useful weapon family for exploring Pandora.",
@@ -364,7 +364,7 @@ test("local HTTP service protects origins, exports schema-valid JSON, fully rese
   assert.equal(JSON.parse(z.readAsText("weapons/hellfire.json")).id, f.id);
   assert.equal(
     JSON.parse(z.readAsText("weapons/hellfire.json")).schemaVersion,
-    "8",
+    "9",
   );
   writeFileSync(path.join(s.dir, "ai", "test-cache"), "cached");
   const reset = await fetch(base + "/api/reset", {

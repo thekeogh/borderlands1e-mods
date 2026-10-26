@@ -1,3 +1,4 @@
+import { agentOutputSchema } from "../shared/agent-schema.ts";
 import {
   effortForTask,
   GROK_MODEL,
@@ -110,7 +111,7 @@ export class CliRunner {
     const name = this.provider === "grok" ? "Grok" : "Codex";
     const effort = effortForTask(label);
     const effectiveModel = this.provider === "grok" ? GROK_MODEL : model;
-    const jsonSchema = z.toJSONSchema(schema, { target: "draft-7" });
+    const jsonSchema = agentOutputSchema(schema);
     const id = hash(
       JSON.stringify({
         provider: this.provider,

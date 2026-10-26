@@ -18,7 +18,7 @@ function fixture() {
     compilerVersion: COMPILER_VERSION,
     id: "fixture",
     name: "Fixture",
-    game: "borderlands-goty-enhanced",
+    dlc: null,
     category: "Weapons",
     weaponType: "Sniper rifles",
     summary: "A precise synthetic rifle used for final validation.",

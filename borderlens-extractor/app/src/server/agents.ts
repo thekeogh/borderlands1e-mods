@@ -1,3 +1,4 @@
+import { agentOutputSchema } from "../shared/agent-schema.ts";
 import path from "node:path";
 import { mkdirSync, existsSync, readFileSync } from "node:fs";
 import type { z } from "zod";
@@ -15,6 +16,10 @@ import type { AI } from "./worker.ts";
 type Failure = { message: string; at: string; until: number };
 export class AgentRouter implements AI {
   lastRun?: AgentRun;
+  private itemContext: string | null = null;
+  setItemContext(id: string | null) {
+    this.itemContext = id;
+  }
   private failures: Partial<Record<Agent, Failure>> = {};
   private file: string;
   readonly runners: Partial<Record<Agent, AI>>;
@@ -34,6 +39,18 @@ export class AgentRouter implements AI {
           ...(saved.codex ? { codex: saved.codex } : {}),
         };
       } catch {}
+    // A fixed caller-side nullable-root bug is not a provider outage/capacity limit.
+    let repaired = false;
+    for (const agent of ["grok", "codex"] as const)
+      if (
+        /Invalid schema[\s\S]*codex_output_schema[\s\S]*schema must be a JSON Schema[\s\S]*None/.test(
+          this.failures[agent]?.message || "",
+        )
+      ) {
+        delete this.failures[agent];
+        repaired = true;
+      }
+    if (repaired) atomic(this.file, JSON.stringify(this.failures));
     this.runners = runners || {
       grok: new GrokRunner(path.join(dir, "grok"), undefined, {
         timeoutMs: AGENT_TIMEOUT_MS,
@@ -83,13 +100,14 @@ export class AgentRouter implements AI {
     search: boolean,
     onProgress: (message: string) => void,
   ): Promise<T> {
+    agentOutputSchema(schema);
     const selected = this.store.state.settings.agent;
     const other: Agent = selected === "grok" ? "codex" : "grok";
     const order: Agent[] = [selected, other].filter((agent) =>
       Boolean(this.runners[agent]),
     );
     const family = this.store.state.families.find(
-      (f) => f.id === this.store.state.run.currentId,
+      (f) => f.id === (this.itemContext || this.store.state.run.currentId),
     );
     const notifySwitch = (message: string) => {
       if (family) {

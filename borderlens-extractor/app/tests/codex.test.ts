@@ -162,3 +162,33 @@ test("writer schema includes every structured-output key, including nullable cha
   assert.ok(PublicEntry.shape.character.safeParse(undefined).success);
   assert.ok(WriterDraft.shape.entry.shape.character.safeParse(null).success);
 });
+
+test("sync name uses an object-root schema for both nullable outcomes; invalid roots fail locally before any CLI call", async () => {
+  const { NameSyncResponse } = await import("../src/shared/identity-sync.ts");
+  const { agentOutputSchema } = await import("../src/shared/agent-schema.ts");
+  const json = agentOutputSchema(NameSyncResponse) as any;
+  assert.equal(json.type, "object");
+  assert(!json.anyOf);
+  assert.deepEqual(json.required, ["decision"]);
+  assert.deepEqual(NameSyncResponse.parse({ decision: null }), {
+    decision: null,
+  });
+  const dir = mkdtempSync(path.join(tmpdir(), "bad-root-"));
+  try {
+    const runner = new CodexRunner(dir, path.join(dir, "must-not-run"));
+    await assert.rejects(
+      runner.run(
+        "Sync item name",
+        "fixture",
+        z.object({ ok: z.boolean() }).nullable(),
+        "",
+        false,
+        () => {},
+      ),
+      /root must be an object/,
+    );
+    assert.deepEqual(readdirSync(dir), []);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

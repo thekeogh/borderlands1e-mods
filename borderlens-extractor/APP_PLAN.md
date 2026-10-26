@@ -2304,3 +2304,291 @@ TypeScript, local OpenAPI syntax and diff checks pass. These checks use syntheti
 agent outputs; real-model request relevance/quality remains for varied catalogue
 builds. Idle Node 22 service updated; current catalogue, 102 saved articles, modes
 and run/build checkpoints preserved. No live AI, fetch or build was started.
+
+
+### Workshop 0.28.0: review duplicates and discovery classification
+
+Needs review is the unresolved weapon navigation group, not every blocked item.
+Its Preview sidebar offers a local read-only duplicate lookup: exact normalized
+names, aliases, shared original roots/one-hop title definitions, and conservative
+extended-name matches. Common manufacturer graphs do not establish duplicates.
+Show up to 20 explained possibilities, never claim retail equivalence. Inspection
+keeps the original selected and presents the candidate's raw game data read-only.
+Only the original Needs review entry can be removed through this flow, using the
+existing restorable exclusion. The mutation rechecks the current group to reject
+stale results after classification. No merging, evidence transfer or automatic work.
+
+The existing web-enabled URL-discovery request can additionally return nullable
+private classification metadata. Require an obtainable, identity-verified BL1
+family, exact candidate root paths, no conflicts, and an inspected returned page
+quotation identifying its name/type. Reject shared naming-only roots, prototype/
+cut/test markers, other-game citations, exclusions/Never pages, and quotations
+contradicting already saved content. Do not fetch HTML or add an extra model call.
+Uncertain proposals remain in Needs review without failing URL discovery.
+
+Successful overrides persist in classification-overrides.json with verification
+'discovery', leaving raw roots/subtype, IDs, existing outputs and queue IDs intact.
+Navigation moves immediately; recompute parent inheritance and URL deduplication.
+History explains that saved articles will verify the identity during Build. Build
+rechecks discovery overrides using the existing archived-evidence classifier,
+upgrades them to 'saved_sources' on success or clears unsupported provisional
+research overrides on failure. Manual choices retain priority. Explicit game-only
+builds cannot establish saved-source proof. Compiler and public schemas unchanged.
+
+
+Verification for 0.28.0: 181 tests passed, four existing optional external-
+simulation tests skipped. Seven new tests cover read-only duplicate reasons,
+false-positive reference guards, review-only reversible API removal and stale-group
+protection, single-call URL discovery with no HTML fetching/builds, uncertain/cut/
+prototype/wrong-game/excluded evidence rejection, cached quotation validation,
+manual precedence, and saved-source Build confirmation/rollback/restart. Strict
+model-schema checks include the new nullable discovery classification structure.
+Browser smoke verifies read-only raw-data inspection, original-only removal and
+restore, then a discovery-only category move without output generation. Screenshots
+inspected. Build, TypeScript, OpenAPI syntax and diff checks pass. Synthetic agent
+responses verify flow/guards; real-model identity judgments require normal user
+runs. Idle Node 22 service updated; all 299 families, 21,671 raw rows, 1,209 artifact
+rows, 479 source rows, preferences and run/checkpoint data preserved. Only a read-
+only duplicate lookup was exercised live; no AI, fetch, build or removal started.
+
+
+### Workshop 0.29.0: item origin/content pack
+
+Final item JSON adds top-level nullable canonical dlc: Base Game or one of the
+four named BL1 expansions. Remove game/series metadata from both catalogue drafts
+and website JSON; the local compiler continues to target BL1 GOTY Enhanced.
+Acquisition sources retain their independent DLC values: a base-game item dropping
+from a DLC chest does not change origin. Unknown is null, never assumed Base Game.
+
+Read only this family's actual extracted identity-root records for DLC1–DLC4
+package prefixes. A unique known prefix supplies packet.facts.dlc; shared linked
+loot/part graphs, missing root records and contradictory root origins do not.
+Unprefixed gd_ paths alone do not prove Base Game. Existing extraction includes
+DLC3 title roots for Bessie/Ironclad; source research fills nonexplicit cases.
+
+Shared Zod schemas, individual/shared source field checklists, drafting instructions,
+claims and validation cover dlc for every equipment type. Writer must preserve a
+known extracted origin and cite every nonnull origin. Otherwise use explicit
+item-origin evidence with normal Lootlemon conflict priority, not ownership/equip
+conditions or unrelated inherited references. Edition-specific base-game additions
+remain Base Game. No game/series field is accepted in public drafts/documents.
+
+GET item includes read-only extractedDlc independently of generated packets, so
+Preview can show reliable raw origin before a build without populating its content.
+Preview prefers raw origin, then built origin, then Not established yet. Display
+Game as Borderlands. Website schema 9, catalogue schema 6, compiler 0.10.0 enqueue
+older generated entries through existing retained-output migration only; no builds
+start automatically and manual corrections/archives remain intact.
+
+
+Verification for 0.29.0: 185 tests passed; four existing optional external-
+simulation tests skipped. New origin tests cover all four DLC identity prefixes,
+missing/conflicting roots, shared loot/part isolation, required origin claims,
+raw-origin preservation, independent acquisition DLC and rejection of game fields.
+Updated fixtures and existing strict model-schema checks pass. Browser smoke checks
+Bessie's raw Knoxx origin before building, the Borderlands-only display label,
+and Ajax's built internal/final DLC without a game field; screenshot inspected.
+Build/TypeScript, OpenAPI syntax and diff checks pass. Synthetic agent outputs
+verify contracts/flow; source interpretation quality still depends on normal builds.
+Idle Node 22 workshop restarted with all 299 families, source/artifact/raw rows,
+preferences and queue unchanged (no existing compiled outputs in this project).
+Read-only live checks confirm Bessie/Ironclad Knoxx origins; HellFire remains raw-
+unknown pending explicit source evidence. No live fetches, AI calls or builds run.
+
+
+### Workshop 0.30.0: evidence-backed canonical names
+
+During normal nonmanual Build, WriterDraft can return nullable private nameDecision
+alongside an unchanged entry.name. The proposal contains canonical name, exact
+naming page citations, current root identities, availability/identity/conflict
+assessment and corroborating quotes for extracted type/manufacturer/element/
+character/unique defining part. No additional call for absent, unchanged or
+unsupported proposals. Source readers already retain identity information.
+
+Guard proposals against current allowed saved source text, excluded/Never pages,
+wrong-game URLs, missing/incorrect quotations, root mismatches, cut/prototype and
+shared naming-only identities. Independent corroboration must come from a cited
+naming page and match actual packet facts. Known weapon types require a matching
+type or defining-part proof. Expanding a generic name such as Rifle to Eridian
+Rifle is possible; unrelated replacement names require an exact defining-part
+identifier. Matching a word, image, URL, or copied identityPaths alone is no proof.
+
+Only supported proposals get a saved-evidence-only medium-effort Verify item name
+call. It compares the exact raw family, parts, DLC origin and edition. Recheck its
+result locally before persisting; uncertain or failed verification leaves the
+name intact and continues the original build. History and private nameDecision
+record the outcome. No web fetching, merging, evidence transfer or automatic builds.
+
+Names persist atomically in .data/name-overrides.json with original name, quotes,
+source IDs/hashes, corroboration, root identities, reason and verification time.
+Store applies names before sorting/classification; original/previous names become
+aliases and IDs/raw roots stay stable. Rebuild the packet and draft name following
+successful verification, preserving source/claim IDs. Names survive restart, import
+and generated reset. Full reset clears them. Changed externally edited corrections
+queue completed output for a subsequent requested rebuild, without changing queue
+IDs or rewriting retained output. Game data remains a ZIP-only original view.
+
+Preview shows canonical and extracted names with verification reason. Export slugs
+and final JSON use the corrected name, without exposing rename protocol/provenance.
+Compiler 0.11.0/internal schema 7 queue old generated content through the existing
+retained-output migration; public website schema remains 9. Manual reviewed output
+is preserved and is not automatically renamed by a model.
+
+
+Verification for 0.30.0: 189 tests passed; four existing optional external-
+simulation tests skipped. Four new tests cover exact quoted identity/type proof,
+rejection of a similarly named combat-rifle sibling, unsupported/uncertain names,
+no-call paths, medium-effort verification and failure continuation, persistence
+across restart/reimport/generated reset, full-reset clearing, raw-view/source/
+queue/ID preservation, and a complete AI-build flow through canonical JSON/slug/ZIP
+without public rename metadata. Strict model-schema checks include nameDecision.
+Focused naming/saved-evidence checks (13 passed) also verify the final root guard.
+Browser smoke builds the extracted Rifle candidate with synthetic proof, verifies
+its canonical heading/navigation, retained original name, JSON/slug and unchanged
+combat-rifle sibling; screenshot inspected. Synthetic verifier responses exercise
+the flow, not real-model certainty for the actual extracted Rifle identity.
+Build/TypeScript, OpenAPI syntax and diff checks pass. Idle Node 22 service updated;
+all 299 families, raw/artifact/source rows, settings and queue/checkpoint unchanged.
+No existing compiled outputs; name-overrides.json initialized empty. No live agent
+calls, evidence fetching, builds or renames were performed.
+
+
+### Workshop 0.31.0: saved-only identity sync controls
+
+Preview exposes Sync type and Sync name on every active item (disabled for removed/
+retired entries or an active worker). POST /api/items/:id/sync takes target type/name.
+One medium-effort saved-only agent call checks original defining game records,
+allowed direct/inherited evidence and existing output/draft as secondary context.
+Do not fetch pages, read all sources through the build pipeline, rewrite content,
+merge items or start a build. Generated JSON alone is not proof. Preserve manual
+type overrides. Explicit name sync may update metadata on a manual/game-only item
+without replacing the user's wording or changing those processing preferences.
+
+Type proposals require high confidence, obtainable exact identity, current root
+paths, no unresolved conflicts and exact supported type quotations or original
+family-defining raw facts. Reject fake/other-game/excluded citations and cut/prototype
+or naming-modifier identities. Name sync reuses existing quote/corroboration guards;
+it can repair stale JSON to an already verified canonical name with current proof.
+Uncertain or matching identities return a concise unchanged reason. Save decisions
+privately; history records results/failures without blocking the catalogue item.
+
+Apply confirmed classification/name overrides separately from the ZIP. Validate the
+resulting current-schema self-contained document before changing identity. Patch
+only existing output, draft/manualDraft and packet/validatedPacket identity fields;
+never manufacture JSON for an unbuilt item. Keep prose/other attributes and existing
+status/stage, update validated metadata and increment revision for changed output.
+Invalidate only selected-analysis cache keys for the next requested build. Public
+export reads the corrected category folder/name/slug. Older stored output keeps its
+schema and prior rebuild requirement. Stable IDs/roots/raw Game data stay unchanged.
+
+Expose transient identitySync progress in GET state (never persist it as a queue).
+Use a worker lock to reject builds/project writes while the metadata request is
+pending; allow agent selection. Progress must not alter run messages, queue IDs,
+paused build checkpoints or batch policy. Read-only inspection remains available.
+Clear the lock on success, uncertainty or error. Controls and category activity
+update through normal state events. App 0.31.0; no compiler/public schema bump.
+
+
+Verification for 0.31.0: 195 tests passed; four existing optional external-
+simulation tests skipped. Six new sync tests cover unbuilt moves/inheritance with
+no generated output/fetches, existing output/draft/manualDraft/packet metadata and
+revision updates without prose/readiness/queue/checkpoint changes, explicit naming
+of manual/game-only entries and repair to an already verified name, insufficient/
+fake/generated-only proof rejection, manual priority including a mid-call override,
+API progress/write locking, and invalid JSON/agent failure cleanup. Existing strict
+schema checks include TypeSyncDecision. Agent fallback logging tests cover explicit
+sync-item context without replacing the paused run's currentId. Nineteen focused
+sync/naming/saved-evidence checks pass after the final guards. Browser smoke uses
+both controls on imported candidates, verifies movement and saved metadata without
+new builds or rewritten descriptions, and preserves manual output; screenshots
+inspected. Build/TypeScript, OpenAPI syntax and diff checks pass. Synthetic agent
+responses establish flow/guards, not real-model classification accuracy. Idle Node
+22 service updated; all 299 families, raw/artifact/source rows, settings and run/
+checkpoint state unchanged. No live sync, model call, fetch or build was invoked.
+
+
+### Workshop 0.31.1: real sync failure corrections
+
+The saved Ironclad response established Shields correctly but was rejected by four
+coupled assumptions: every conflict was treated as a type conflict, every identity
+path had to be a literal root, raw property projections had to appear as contiguous
+wrapper JSON, and every citation separately had to state the type. Replay now checks
+actual original roots plus packet family-defining records, requires at least one
+original root, validates JSON projections against captured field values, and permits
+separate naming/type citations to corroborate the same exact identity. Invalid
+redundant citations are audited/omitted only when sufficient valid primary identity
+and type evidence remains. Do not accept fabricated fields or generic shared graph
+records as proof. Explicit availability contradictions still block.
+
+TypeSyncDecision adds default-empty contextNotes for non-type observations. Only
+identity/type/availability disagreements belong in conflicts. For older saved
+responses, clearly scoped rarity/prefix observations are retained as context; unknown
+or identity-related conflicts still block. Save typeSyncValidation with accepted
+proofs, context notes, ignored citations and an exact rejection reason. An unchanged
+banner reports the local rejection, not an affirmative model rationale. Item-name
+prefixes make it clear which selected item the result belongs to.
+
+Sync name now uses NameSyncResponse {decision: NameDecision|null}, so the schema
+root is always an object. Both the router and CLI runner reject unsupported roots
+before contacting providers. This follows the official Structured Outputs object-
+root requirement: https://developers.openai.com/api/docs/guides/structured-outputs.
+Remove only persisted cooldown failures matching the known nullable-root request
+error; keep genuine provider capacity/timeout failures. No compiler/public schema
+bump or automated rebuilds for these private manual-sync fixes.
+
+
+Verification for 0.31.1: 199 tests passed; four existing optional external-
+simulation tests skipped. New regressions cover object-root nullable name decisions,
+preflight rejection without invoking a CLI, removal of only the known caller-schema
+cooldown while retaining genuine provider failures, title/body property-subset
+corroboration, non-type conflict context and audited redundant citations. Browser
+smoke passes with the new NameSyncResponse envelope. TypeScript/build, local OpenAPI
+syntax and diff checks pass. Read-only replay of the real failed Ironclad response
+validates all five citations and retains both rarity/prefix notes as context.
+
+Idle Node 22 service updated; replayed that already saved Ironclad decision through
+the fixed sync code with no new model call. Ironclad moved to Shields. Then invoked
+the actual app's Sync type endpoint for Omega using saved evidence: Codex (medium)
+completed successfully and Omega moved to Shields. No source fetching or catalogue
+build ran; no item JSON was created. Both overrides persist separately from raw
+capture data. Verified all other 297 families, run/build checkpoint, settings and
+raw/source rows unchanged. Only the schema-error Codex cooldown was cleared.
+
+
+### Workshop 0.32.0: manual type picker
+
+Place Item type above the At a glance fields in every Preview sidebar; retain Sync
+type/name below. Group all eight player-facing weapon types separately from Shields,
+Class mods, Grenade mods, Artifacts and Other equipment. Automatic represents no
+manual override and restores research first, then original game category/subtype.
+Use the same control in Sources & evidence. Show a concise manual-priority/no-AI
+explanation. Disable during active work or for removed/retired/shared owners.
+
+POST /api/items/:id/type accepts a canonical type or null (plus optional reason).
+Derive category/weaponType as one consistent pair; persist in classification-
+overrides.json's manual entry. Reuse the validated identity-metadata update path,
+with no agent calls, fetching, synthesis or build queue changes. Patch existing
+JSON/draft/manualDraft/packet metadata and export folder/slug derivation immediately;
+never create output for unbuilt items. Preserve prose, raw roots/IDs, manual output,
+readiness and batch/checkpoint data; increment revision only when saved output
+metadata changes. Recompute applicable inherited groups after a category move.
+
+Clearing manual uses the retained rawCategory/rawSubtype plus research override,
+not the currently displayed manual category, so cross-category changes reverse
+correctly. Manual choices take priority over later automatic sync/build. Legacy
+weapon-only classification actions retain their input contract and delegate to this
+same metadata path. Invalid types/requests and active/removed entries are rejected.
+App 0.32.0; compiler/internal/public item schemas unchanged.
+
+
+Verification for 0.32.0: 202 tests passed; four existing optional external-
+simulation tests skipped. New tests cover all 13 manual choices, automatic fallback
+through research/raw after cross-category changes, completed/manual JSON and export
+metadata without prose/readiness/queue changes, unchanged-analysis cache preservation
+for same-type choices, input/worker/removal guards and equipment persistence across
+restart. Browser smoke selects multiple equipment categories and a weapon type,
+verifies live navigation/dropdown state, restores researched Shields with Automatic,
+checks the retained Sync button and asserts the agent invocation counter is unchanged.
+Screenshot inspected. Build/TypeScript, OpenAPI syntax and diff checks pass. Idle
+Node 22 service updated; all 299 families, raw/artifact/source rows, preferences and
+run/checkpoint state unchanged. No live type mutation, model call, fetch or build ran.

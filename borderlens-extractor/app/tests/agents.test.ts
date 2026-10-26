@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
@@ -192,4 +192,62 @@ test("fallback errors and cooldown skips persist in the item's History", async (
       .value,
   );
   assert.equal(saved.families[0].history.length, 2);
+  const other = {
+    ...structuredClone(f),
+    id: "sync-context-fixture",
+    history: [],
+  };
+  s.state.families.push(other);
+  router.setItemContext(other.id);
+  await router.run(
+    "Sync item type for fixture",
+    "saved evidence",
+    shape,
+    "",
+    false,
+    () => {},
+  );
+  router.setItemContext(null);
+  assert.equal(f.history.length, 2);
+  assert.equal(other.history.length, 1);
+  assert.equal(s.state.run.currentId, f.id);
+});
+
+test("fixed nullable-root schema errors do not keep Codex in provider cooldown; real failures are retained", async (t) => {
+  const s = setup(t),
+    file = path.join(s.dir, "ai", "agent-failures.json"),
+    at = new Date().toISOString(),
+    until = Date.now() + 600000;
+  writeFileSync(
+    file,
+    JSON.stringify({
+      codex: {
+        message:
+          "Invalid schema for response_format 'codex_output_schema': schema must be a JSON Schema of type object, got type None.",
+        at,
+        until,
+      },
+      grok: { message: "Real capacity failure", at, until },
+    }),
+  );
+  const router = new AgentRouter(s, {
+    codex: fake(async () => ({ ok: true })),
+    grok: fake(async () => ({ ok: true })),
+  });
+  const persisted = JSON.parse(readFileSync(file, "utf8"));
+  assert(!persisted.codex);
+  assert.equal(persisted.grok.message, "Real capacity failure");
+  const original = readFileSync(file, "utf8");
+  await assert.rejects(
+    router.run(
+      "Sync item name",
+      "bad schema",
+      shape.nullable(),
+      "",
+      false,
+      () => {},
+    ),
+    /root must be an object/,
+  );
+  assert.equal(readFileSync(file, "utf8"), original);
 });
