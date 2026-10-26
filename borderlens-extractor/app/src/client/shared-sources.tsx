@@ -1,3 +1,4 @@
+import { SourcePromote } from "./source-promote";
 import { SourceSite } from "./source-site";
 import React, { useEffect, useRef, useState } from "react";
 import { X, BookOpen, Plus, Trash2, ArrowUpRight } from "lucide-react";
@@ -41,6 +42,7 @@ export function SharedSources({
     [rows, setRows] = useState<Detail[]>([]),
     [url, setUrl] = useState(""),
     [error, setError] = useState(""),
+    [notice, setNotice] = useState(""),
     [working, setWorking] = useState(false);
   const dialog = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -95,6 +97,27 @@ export function SharedSources({
     } catch (e: any) {
       setError(e.message);
       return null;
+    } finally {
+      setWorking(false);
+    }
+  };
+  const promote = async (target: string) => {
+    if (!detail) return;
+    setWorking(true);
+    setError("");
+    setNotice("");
+    try {
+      const result = await call("/api/evidence/promote", {
+        ownerId: detail.family.id,
+        url: target,
+      });
+      await refresh();
+      onChange();
+      setNotice(
+        `Evidence moved to ${result.name}. It will be used on the next requested build.`,
+      );
+    } catch (error: any) {
+      setError(error.message);
     } finally {
       setWorking(false);
     }
@@ -155,6 +178,7 @@ export function SharedSources({
             : "Add a source to share evidence with this group."}{" "}
           Item-specific exclusions still take priority.
         </p>
+        {notice && <p role="status">{notice}</p>}
         {error && (
           <div role="alert" className="banner error">
             {error}
@@ -192,6 +216,11 @@ export function SharedSources({
                 <div>
                   <strong>{source?.title || target}</strong>
                   <SourceSite url={target} />
+                  <SourcePromote
+                    owner={detail.family}
+                    disabled={working}
+                    onMove={() => void promote(target)}
+                  />
                   <a
                     href={target}
                     target="_blank"
@@ -258,8 +287,8 @@ export function SharedSources({
           )}
         </div>
         <p className="muted">
-          Adding or changing evidence queues affected items for rebuilding. It
-          does not start a build.
+          Evidence changes are saved for the next requested build. They do not
+          start builds or add items to a running queue.
         </p>
       </section>
     </div>

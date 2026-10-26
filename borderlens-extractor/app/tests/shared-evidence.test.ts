@@ -215,7 +215,7 @@ test("Chrome capture updates all groups sharing an article; no synthetic group e
   assert.equal(s.sources(s.state.families[2].id).length, 1);
   assert.equal(s.state.families[2].status, "queued");
   assert(s.state.run.queue.every((id) => !id.startsWith("shared-")));
-  assert.equal(s.state.run.queue.length, 3);
+  assert.equal(s.state.run.queue.length, 1);
   assert.equal(s.state.families[3].status, "done");
 });
 test("URL-only discovery includes completed items, skips removed, continues failures, leaves JSON and stages untouched", async (t) => {
@@ -310,7 +310,7 @@ test("URL discovery pause/resume/restart preserves a separate build checkpoint a
     ticket = w.browserImports.create(group.id, url);
   w.browserImports.submit({ ...ticket, url, html: article });
   assert.equal(s.state.run.queue.length, 4);
-  assert(s.state.buildCheckpoint!.queue.includes(s.state.families[2].id));
+  assert(!s.state.buildCheckpoint!.queue.includes(s.state.families[2].id));
   assert.equal(s.state.run.index, 1);
   const restored = x.reopen(),
     newWorker = new Worker(restored, {

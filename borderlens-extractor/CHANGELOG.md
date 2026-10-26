@@ -1,5 +1,10 @@
 # Changelog
 
+## Workshop app 0.23.0
+
+- Add Move to parent on individual/shared evidence cards: promote exactly one tree level, retaining saved content and inheriting it across descendants. Everything has no further promotion. Duplicate parent URLs merge; individual exclusions remain intact.
+- Evidence changes invalidate drafts for the next requested build, retain outputs, and never append automatic rebuilds to active or paused queues. Protect affected items currently processing.
+
 ## Workshop app 0.22.1
 
 - Add coloured source-domain pills to individual and shared evidence cards, and the saved-source viewer. Wiki and Lootlemon have distinct colours; other sites show their domain. Source content and builds unchanged.

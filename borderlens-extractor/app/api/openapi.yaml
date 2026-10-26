@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Borderlens local workshop
-  version: 0.22.1
+  version: 0.23.0
   description: Local-only catalogue processing. Disk-backed checkpoints; no hosted accounts or API-key billing.
 servers:
   - url: http://127.0.0.1:4317
@@ -47,11 +47,35 @@ paths:
       responses:
         "200":
           {
-            description: Saved scope. URL-only binding does not fetch; HTML is cached once and inherited by matching items. Changes queue dependent builds without starting them. Remove detaches the URL from this scope.,
+            description: Saved scope. URL-only binding does not fetch; HTML is cached once and inherited by matching items. Changes invalidate dependent drafts for the next requested build without appending to active or paused queues. Remove detaches the URL from this scope.,
           }
         "400": { description: "Invalid scope, URL or HTML." }
         "409":
           { description: Affected item is currently processing; pause first. }
+  /api/evidence/promote:
+    post:
+      operationId: promoteEvidenceToParent
+      description: Move a directly attached evidence URL exactly one level up the displayed item/group hierarchy. Saved snapshots keep their IDs and content; matching parent URLs deduplicate. Descendants inherit the article, keeping individual exclusions. Output is retained and dependent drafts are invalidated for the next requested build. Never starts work or appends queue entries. Everything has no parent.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [ownerId, url]
+              properties:
+                ownerId: { type: string }
+                url: { type: string, format: uri }
+      responses:
+        "200":
+          description: Parent scope and name; source no longer directly attached to its former owner.
+        "400":
+          description: Invalid request, unsupported URL or Everything has no parent.
+        "404":
+          description: Unknown owner or evidence is not directly attached.
+        "409":
+          description: Restore removed owner or pause active affected processing first.
   /api/images:
     get:
       operationId: imageCoverage

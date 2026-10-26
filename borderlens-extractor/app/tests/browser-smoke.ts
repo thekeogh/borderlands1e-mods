@@ -985,6 +985,70 @@ try {
     path: ".test-data/screenshots/catalogue-cache-reuse.png",
     fullPage: true,
   });
+  const beforePromotion = await page.request
+    .get("/api/state")
+    .then((r) => r.json());
+  const cacheCard = page
+    .locator(".source-card")
+    .filter({ hasText: "Saved catalogue article fixture" });
+  await cacheCard
+    .getByRole("button", {
+      name: "Move evidence to Artifacts → Brick",
+      exact: true,
+    })
+    .click();
+  await expect(cacheCard).toHaveCount(0);
+  await expect(
+    page
+      .locator(".inherited-evidence-list")
+      .getByText("Saved catalogue article fixture", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Shared evidence", exact: true })
+    .click();
+  const promoteDialog = page.getByRole("dialog", {
+    name: "Shared evidence",
+    exact: true,
+  });
+  await promoteDialog
+    .getByRole("combobox", { name: "Evidence group" })
+    .selectOption({ label: "Artifacts → Brick" });
+  const sharedCacheCard = promoteDialog
+    .locator(".source-card")
+    .filter({ hasText: "Saved catalogue article fixture" });
+  await expect(sharedCacheCard).toBeVisible();
+  await page.screenshot({
+    path: ".test-data/screenshots/promote-evidence.png",
+  });
+  await sharedCacheCard
+    .getByRole("button", { name: "Move evidence to Artifacts", exact: true })
+    .click();
+  await expect(sharedCacheCard).toHaveCount(0);
+  await promoteDialog
+    .getByRole("combobox", { name: "Evidence group" })
+    .selectOption({ label: "Artifacts" });
+  await expect(sharedCacheCard).toBeVisible();
+  await sharedCacheCard
+    .getByRole("button", { name: "Move evidence to Everything", exact: true })
+    .click();
+  await promoteDialog
+    .getByRole("combobox", { name: "Evidence group" })
+    .selectOption({ label: "Everything" });
+  await expect(sharedCacheCard).toBeVisible();
+  await expect(sharedCacheCard.locator(".source-promote-button")).toHaveCount(
+    0,
+  );
+  await promoteDialog
+    .getByRole("button", { name: "Close shared evidence" })
+    .click();
+  const afterPromotion = await page.request
+    .get("/api/state")
+    .then((r) => r.json());
+  assert.deepEqual(afterPromotion.run, beforePromotion.run);
+  assert.deepEqual(
+    afterPromotion.buildCheckpoint,
+    beforePromotion.buildCheckpoint,
+  );
   assert.deepEqual(errors, []);
   console.log(
     "Browser: import, background selection, pause/resume, editor persistence, coverage, settings and fixed progress passed. 299 real capture candidates; character equipment grouped.",

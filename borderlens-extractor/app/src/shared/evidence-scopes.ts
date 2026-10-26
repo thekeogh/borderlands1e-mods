@@ -45,3 +45,27 @@ export function scopeOptions(): EvidenceScope[] {
     ),
   ];
 }
+
+/** Exactly one level above the displayed item/group in the catalogue tree. */
+export function evidenceParent(
+  f: Pick<
+    Family,
+    "category" | "character" | "evidenceScope" | "subtype" | "classification"
+  >,
+): EvidenceScope | null {
+  const scope = f.evidenceScope;
+  if (scope) {
+    if (scope.category === "Everything") return null;
+    return scope.group || scope.character
+      ? { category: scope.category }
+      : { category: "Everything" };
+  }
+  if (f.category === "Weapons")
+    return {
+      category: "Weapons",
+      group: catalogueGroup(f as Family) as EvidenceScope["group"],
+    };
+  if (["Class mods", "Artifacts"].includes(f.category) && f.character)
+    return { category: f.category, character: f.character };
+  return { category: f.category };
+}

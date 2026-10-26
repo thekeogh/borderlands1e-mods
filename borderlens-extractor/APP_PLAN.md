@@ -2060,3 +2060,38 @@ inputs or public schemas/compiler versions.
 Verification for 0.22.1: production build/TypeScript and browser smoke pass,
 including domain labels on saved shared and individual cards. Live dev server
 serves the new component; no backend restart or catalogue mutation required.
+
+
+### Promote evidence one tree level (workshop 0.23.0)
+
+Item and shared-source cards offer Move evidence to <immediate parent>, an up-arrow
+with an explicit destination tooltip. Items promote to their character/weapon
+subgroup when present, otherwise category; subgroups promote to category; categories
+promote to Everything, which has no move control. POST /api/evidence/promote takes
+ownerId and url; the server derives the destination, never accepts arbitrary scope
+jumps, rejects inherited-only/removed references and active affected consumers.
+
+Move the direct URL binding and any physically owned article snapshots to the
+parent, preserving source IDs/HTML/text/metadata and archive files. Borrowed global
+cache pages keep their physical owner. Deduplicate parent canonical URLs and clear
+a matching destination exclusion only; child/item exclusions remain independent.
+The former owner now inherits instead of keeping a direct card. No game extraction
+data, public schemas or compiler versions change.
+
+User clarification supersedes older automatic queue append behavior: evidence
+changes (add/capture/remove/restore/promote) may invalidate dependent drafts and
+mark outputs for review, but must never append work to an active/paused queue or
+start an agent/build. Existing explicitly selected remaining items still process
+with their effective evidence; already-completed/unselected items wait for the
+next requested build. Keep previous output and revision.
+
+Verification for 0.23.0: 153 tests passed; four existing optional external-
+simulation tests skipped. Five new promotion/API tests cover one-level hierarchy,
+canonical duplicates, pending/borrowed pages, archive/output preservation,
+independent exclusions, persistence, bad requests and active-consumer guards.
+Existing Chrome/shared tests now assert no queue expansion after evidence edits.
+Browser smoke promotes item → character → category → Everything, verifies inherited
+visibility and unchanged run/checkpoint, with a screenshot inspected. Build,
+TypeScript, OpenAPI syntax and diff checks pass. No external/model request was
+needed for this local source ownership change. Idle live Node 22 service restarted;
+all family/group/capture data and run/build checkpoints preserved.

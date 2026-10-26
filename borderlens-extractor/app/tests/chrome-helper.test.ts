@@ -237,7 +237,7 @@ test("helper endpoints keep same-origin protection and package only extension fi
   );
 });
 
-test("import of an already-processed item is added to a paused run for its next resume", (t) => {
+test("import of an already-processed item waits for a requested rebuild without extending a paused run", (t) => {
   const { store: s } = setup(t),
     w = new Worker(s),
     first = s.state.families[0],
@@ -251,7 +251,7 @@ test("import of an already-processed item is added to a paused run for its next 
   };
   const ticket = w.browserImports.create(first.id, url);
   assert.equal(w.browserImports.submit({ ...ticket, html }).status, "imported");
-  assert.deepEqual(s.state.run.queue, [first.id, second.id, first.id]);
+  assert.deepEqual(s.state.run.queue, [first.id, second.id]);
   assert.equal(s.state.run.status, "paused");
   assert.equal(s.state.run.currentId, second.id);
 });

@@ -130,7 +130,7 @@ Click **Chrome helper** in the toolbar. The app opens Chrome’s extensions page
 
 1. Keep the workshop tab open. On an item’s **Sources & evidence**, click **Open wiki in Chrome** (or open a URL entered in the correction form).
 2. Wait until the actual article is visible. Click the pinned extension → **Send page to Borderlens**.
-3. Return to the workshop. The page is cached, its status updates automatically, and the item is queued for rebuilding. Click **Rebuild this item**, or resume your existing run.
+3. Return to the workshop. The page is cached, its status updates automatically, and the changes are saved for your next requested build. Click **Rebuild from saved sources** to use them.
 
 No HTML copying or cookie sharing. It captures article content you explicitly send, not browser history or account fields. It makes no background wiki requests and does not solve access challenges. Imports received during processing wait for its next safe checkpoint. Each ticket is tied to one item/article and expires after 30 minutes; open the source again from the app if it expires. Capture does not automatically spend Codex allowance or start a new run.
 
@@ -138,7 +138,7 @@ The helper lives in `chrome-extension/`; the setup screen also offers a separate
 
 ## Remove a source
 
-In **Sources & evidence**, click the **X** on a saved source card. The article is excluded from this item’s future builds, discovery results and fetching—including fresh-source runs. The item is queued for rebuilding; **Rebuild from saved sources** updates its JSON using the remaining pages. Add a correct source first if none remain. Previous output stays inspectable but is not exported while queued.
+In **Sources & evidence**, click the **X** on a saved source card. The article is excluded from this item’s future builds, discovery results and fetching—including fresh-source runs. The change is saved for your next requested build; **Rebuild from saved sources** updates its JSON using the remaining pages. Add a correct source first if none remain. Previous output stays inspectable but is not exported while queued.
 
 Expand **Removed sources** to restore an article. Saved HTML is retained; exclusions survive restarts and generated-data resets and affect only this item. Pause before changing the current processing item’s sources. Manually edited JSON requires review and saving after its sources change.
 
@@ -223,3 +223,5 @@ Production build: `pnpm build`, then `pnpm start`. Optional `PORT`, `BORDERLENS_
 Author: **keogh**. Product context: [APP_PLAN.md](../APP_PLAN.md). Release history: [CHANGELOG.md](../CHANGELOG.md).
 
 Optional live subscription/fallback check: `pnpm exec tsx tests/live-agents.ts`. This sends a tiny test prompt and keeps diagnostics under `../temp/agents-live-*`.
+
+**Move evidence to parent** (up-arrow on an evidence card) shares the article one level higher: item → character/weapon group → category → Everything. Move again from its new shared group to go higher. Saved content is retained; duplicates merge. Evidence edits never start builds or add items to a running queue; affected entries use the changed evidence on your next requested build.

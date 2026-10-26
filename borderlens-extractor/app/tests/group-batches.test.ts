@@ -313,7 +313,6 @@ test("later evidence changes and explicit item actions cannot silently append ou
     character: "Roland",
   });
   const original = [...s.state.run.queue];
-  w.queueEvidenceRebuild(s.family("smg"));
   await assert.rejects(
     w.action("smg", "rebuild-fresh", {}),
     /outside its group/,

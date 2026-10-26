@@ -1,3 +1,4 @@
+import { SourcePromote } from "./source-promote";
 import { SourceSite } from "./source-site";
 import { GroupActions, type GroupAction } from "./group-actions";
 import { scopeLabel } from "../shared/evidence-scopes";
@@ -1617,6 +1618,22 @@ function App() {
                             <BookOpen size={18} />
                             <strong>{s.title}</strong>
                             <SourceSite url={s.url} />
+                            <SourcePromote
+                              owner={f}
+                              disabled={
+                                working || (busy && run.currentId === f.id)
+                              }
+                              onMove={() =>
+                                void act(
+                                  () =>
+                                    request("/api/evidence/promote", {
+                                      ownerId: f.id,
+                                      url: s.url,
+                                    }),
+                                  "Evidence moved to its parent. It will be used on the next requested build.",
+                                )
+                              }
+                            />
                             <a target="_blank" rel="noreferrer" href={s.url}>
                               <ArrowUpRight size={15} />
                             </a>
@@ -1953,7 +1970,7 @@ function App() {
         </main>
         <footer>
           <span>ONE FAMILY. EVERY DETAIL.</span>
-          <span>Borderlens workshop · 0.22.1</span>
+          <span>Borderlens workshop · 0.23.0</span>
         </footer>
       </section>
       <input

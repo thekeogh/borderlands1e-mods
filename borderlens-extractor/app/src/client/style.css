@@ -3184,3 +3184,23 @@ footer > span:first-child {
   border-color: #e9dcb0;
   color: #80651c;
 }
+
+.source-promote-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #dfe6d9;
+  border-radius: 5px;
+  background: #f5f8f2;
+  color: #59784e;
+  padding: 6px;
+  cursor: pointer;
+}
+.source-promote-button:hover:not(:disabled) {
+  background: #e8efe3;
+}
+.source-promote-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}

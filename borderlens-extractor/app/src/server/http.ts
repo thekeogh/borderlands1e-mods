@@ -111,6 +111,16 @@ export function api(store: Store, worker: Worker) {
     }
     res.json(scopeDetail(owner));
   });
+  app.post("/api/evidence/promote", (req, res) => {
+    const { ownerId, url } = z
+      .object({
+        ownerId: z.string().min(1).max(200),
+        url: z.string().url().max(4000),
+      })
+      .strict()
+      .parse(req.body);
+    res.json(worker.promoteSource(ownerId, url));
+  });
   app.get("/api/state", (_req, res) => {
     store.syncClassifications();
     res.json(store.state);

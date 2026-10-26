@@ -1,5 +1,7 @@
 import {
   EvidenceScope,
+  evidenceParent,
+  scopeLabel,
   scopeMatches,
   type EvidenceScope as GroupScope,
 } from "../shared/evidence-scopes.ts";
@@ -369,22 +371,78 @@ export class Worker {
         child.status = "blocked";
         child.issue = "Evidence changed. Review and save manually edited JSON.";
       }
-      this.queueEvidenceRebuild(child);
     }
     this.store.save();
   }
-  queueEvidenceRebuild(f: Family) {
-    const active = this.store.state.run;
-    const run =
-      active.mode === "discover" ? this.store.state.buildCheckpoint : active;
-    if (!run) return;
-    for (const child of this.store.scopeChildren(f))
-      if (
-        ["running", "pausing", "paused", "blocked"].includes(run.status) &&
-        (!run.scope || scopeMatches(run.scope, child)) &&
-        !run.queue.slice(run.index).includes(child.id)
+  promoteSource(ownerId: string, url: string) {
+    const owner = this.store.family(ownerId),
+      parentScope = evidenceParent(owner);
+    if (!parentScope) throw new HttpError(400, "Everything has no parent.");
+    if (owner.status === "excluded" || owner.supersededBy)
+      throw new HttpError(409, "Restore this item before moving its evidence.");
+    try {
+      sourceUrl(url);
+    } catch (error: any) {
+      throw new HttpError(400, error.message);
+    }
+    const key = sourceKey(url);
+    const owned = this.store
+      .rawSources(owner.id)
+      .filter((page) => sourceKey(page.url) === key);
+    if (
+      this.store.isSourceExcluded(owner.id, url) ||
+      (!owner.sourceUrls.some((candidate) => sourceKey(candidate) === key) &&
+        !owned.length)
+    )
+      throw new HttpError(
+        404,
+        "Choose evidence directly attached here; inherited evidence belongs to its shared group.",
+      );
+    // Validate before creating a scope or moving bindings. No active consumer may change mid-step.
+    if (
+      this.busy &&
+      this.store.state.run.currentId &&
+      scopeMatches(
+        parentScope,
+        this.store.family(this.store.state.run.currentId),
       )
-        run.queue.push(child.id);
+    )
+      throw new HttpError(
+        409,
+        "Pause processing before moving evidence used by the current item.",
+      );
+    const parent = this.store.ensureScope(parentScope);
+    if (!parent.sourceUrls.some((candidate) => sourceKey(candidate) === key))
+      parent.sourceUrls.push(url);
+    this.store.put(
+      parent.id,
+      "sourceExclusions",
+      this.store
+        .sourceExclusions(parent.id)
+        .filter((row) => sourceKey(row.url) !== key),
+    );
+    owner.sourceUrls = owner.sourceUrls.filter(
+      (candidate) => sourceKey(candidate) !== key,
+    );
+    // Move owned snapshots, preserving their IDs, HTML, timestamps and saved content.
+    // Borrowed catalogue pages retain their physical owner and are reused by URL.
+    for (const page of owned) {
+      page.familyId = parent.id;
+      this.store.db
+        .prepare("UPDATE sources SET family=?,value=? WHERE id=?")
+        .run(parent.id, JSON.stringify(page), page.id);
+    }
+    this.invalidate(parent, "evidence");
+    this.history(
+      owner,
+      "Moved evidence to " +
+        scopeLabel(parentScope) +
+        ": " +
+        url +
+        ". Used on the next requested build.",
+    );
+    this.store.save();
+    return { scope: parentScope, name: scopeLabel(parentScope) };
   }
   async loop() {
     if (this.busy || this.closed) return;
@@ -1327,7 +1385,7 @@ export class Worker {
             "Shared evidence changed. Review and save manually edited JSON.";
         }
       }
-      this.queueEvidenceRebuild(f);
+
       this.store.save();
       return;
     }
@@ -1569,17 +1627,21 @@ export class Worker {
           this.store.state.run.mode === "discover"
             ? this.store.state.buildCheckpoint
             : this.store.state.run;
-        if (run && !run.sourcePrepared.includes(f.id))
+        if (
+          run &&
+          run.queue.slice(run.index).includes(f.id) &&
+          !run.sourcePrepared.includes(f.id)
+        )
           run.sourcePrepared.push(f.id);
       }
-      this.queueEvidenceRebuild(f);
+
       this.history(
         f,
         action === "exclude-source"
           ? "Removed source from builds and automatic fetching: " +
               url +
-              ". Item queued for rebuilding; saved HTML retained."
-          : "Restored source: " + url + ". Item queued for rebuilding.",
+              ". Saved for the next requested build; HTML retained."
+          : "Restored source: " + url + ". Saved for the next requested build.",
       );
       return;
     }
@@ -1715,10 +1777,7 @@ export class Worker {
       if (typeof body.notes === "string") f.notes = body.notes;
       if (typeof body.gameOnly === "boolean") f.gameOnly = body.gameOnly;
       this.invalidate(f, "sources");
-      this.history(
-        f,
-        "Saved your correction. Resume continues from this item.",
-      );
+      this.history(f, "Saved your correction for the next requested build.");
       return;
     }
     if (action === "save-output") {
