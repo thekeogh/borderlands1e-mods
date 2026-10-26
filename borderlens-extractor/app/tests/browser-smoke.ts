@@ -118,6 +118,72 @@ try {
   );
   await page.getByLabel("Rebuild options", { exact: true }).click();
 
+  const hellfireRawFamily = before.families.find((family: any) =>
+    /^hellfire$/i.test(family.name),
+  );
+  const rawBeforeBuild = await page.request
+    .get(`/api/items/${hellfireRawFamily.id}/game-data`)
+    .then((r) => r.json());
+  assert.equal(
+    (
+      await page.request
+        .get(`/api/items/${hellfireRawFamily.id}`)
+        .then((r) => r.json())
+    ).output,
+    null,
+  );
+  await page.getByRole("button", { name: "Game data", exact: true }).click();
+  const gameView = page.getByRole("region", {
+    name: "Imported game data",
+    exact: true,
+  });
+  await expect(
+    gameView.getByRole("heading", { name: "HellFire", exact: true }),
+  ).toBeVisible();
+  await expect(
+    gameView.getByText("We don't need no water...", { exact: true }),
+  ).toBeVisible();
+  const native = gameView
+    .locator(".game-data-panel")
+    .filter({
+      has: page.getByRole("heading", {
+        name: "Native values & defining parts",
+        exact: true,
+      }),
+    });
+  await native
+    .locator(".game-data-record")
+    .filter({ hasText: "Incendiary" })
+    .first()
+    .locator(":scope > summary")
+    .click();
+  await expect(
+    native.getByText("Tech Level Increase", { exact: true }),
+  ).toBeVisible();
+  await expect(native.getByText("14", { exact: true })).toBeVisible();
+  await page
+    .getByRole("textbox", { name: "Search game definitions" })
+    .fill("TitleM_Maliwan1_HellFire");
+  await page
+    .getByRole("combobox", { name: "Filter game definitions" })
+    .selectOption("root");
+  await expect(
+    gameView.locator(".game-data-panel").last().locator(".game-data-record"),
+  ).toHaveCount(
+    rawBeforeBuild.definitions.filter(
+      (definition: any) => definition.role === "root",
+    ).length,
+  );
+  await page.screenshot({
+    path: ".test-data/screenshots/game-data-before-build.png",
+  });
+  await page.getByRole("button", { name: "Preview", exact: true }).click();
+  await page
+    .getByRole("heading", {
+      name: "A good entry starts with evidence.",
+      exact: true,
+    })
+    .waitFor();
   const hero = page.getByRole("img", { name: /Hellfire/i });
   await hero.waitFor();
   await page.waitForFunction(
@@ -148,6 +214,10 @@ try {
 
   await page.getByRole("button", { name: "Sources & evidence" }).click();
   await page.getByRole("heading", { name: "Help it move forward" }).waitFor();
+  const rawAfterBuild = await page.request
+    .get(`/api/items/${hellfireRawFamily.id}/game-data`)
+    .then((r) => r.json());
+  assert.deepEqual(rawAfterBuild, rawBeforeBuild);
   await page.getByRole("button", { name: "Final JSON" }).click();
   await page
     .getByRole("textbox", { name: "Edit final item JSON" })
@@ -568,12 +638,14 @@ try {
   await page.screenshot({ path: ".test-data/screenshots/shared-evidence.png" });
   await shared.getByRole("button", { name: "Close shared evidence" }).click();
   await page
-    .getByText(
-      "Shared from " +
-        sharedCategory +
-        " · remove here to exclude for this item only",
-    )
+    .getByRole("region", { name: "Inherited evidence", exact: true })
+    .getByRole("link", { name: "Shield overview fixture" })
     .waitFor();
+  await expect(
+    page
+      .locator("article.source-card")
+      .filter({ hasText: "Shield overview fixture" }),
+  ).toHaveCount(0);
   await page
     .getByRole("button", { name: "Shared evidence", exact: true })
     .click();
@@ -603,6 +675,19 @@ try {
   await expect(
     globalDialog.getByText(/Imported HTML · .*characters saved/),
   ).toBeVisible();
+  const pendingGlobalUrl =
+    "https://borderlands.fandom.com/wiki/Pending_elemental_fixture";
+  await globalDialog
+    .getByRole("textbox", { name: "Shared evidence URL" })
+    .fill(pendingGlobalUrl);
+  await globalDialog
+    .getByRole("button", { name: "Add source", exact: true })
+    .click();
+  await globalDialog
+    .getByText(
+      "Not captured yet · URL only. Open in Chrome to capture the article.",
+    )
+    .waitFor();
   await page.screenshot({ path: ".test-data/screenshots/global-evidence.png" });
   await globalDialog
     .getByRole("button", { name: "Close shared evidence" })
@@ -624,6 +709,51 @@ try {
       ),
     );
   }
+  const inheritedList = page.getByRole("region", {
+    name: "Inherited evidence",
+    exact: true,
+  });
+  await expect(
+    inheritedList.getByText("Universal elemental fixture", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    inheritedList.getByText("Pending elemental fixture", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    inheritedList.getByText("Awaiting capture", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator("article.source-card")
+      .filter({ hasText: "Universal elemental fixture" }),
+  ).toHaveCount(0);
+  await expect(
+    page
+      .locator("article.source-card")
+      .filter({ hasText: "Ironclad • BL1 – Pearlescent Shield | Lootlemon" }),
+  ).toHaveCount(1);
+  await page.getByLabel("Rebuild options", { exact: true }).click();
+  await page.getByRole("button", { name: /Fetch evidence URLs only/ }).click();
+  await waitForState(
+    (s) =>
+      s.run.mode === "discover" &&
+      s.run.status === "complete" &&
+      s.run.queue.length === 1 &&
+      s.run.queue[0] === shield.id,
+  );
+  const itemDiscovery = await page.request
+    .get(`/api/items/${shield.id}`)
+    .then((r) => r.json());
+  assert(
+    itemDiscovery.family.sourceUrls.includes(
+      "https://borderlands.fandom.com/wiki/Fixture_article",
+    ),
+  );
+  assert(!itemDiscovery.family.sourceUrls.includes(globalUrl));
+  assert(!itemDiscovery.family.sourceUrls.includes(pendingGlobalUrl));
+  await page.screenshot({
+    path: ".test-data/screenshots/item-discovery-inheritance.png",
+  });
   const beforeDiscovery = await page.request
     .get("/api/state")
     .then((r) => r.json());
@@ -631,7 +761,11 @@ try {
   await page.getByLabel("Batch source options", { exact: true }).click();
   await page.getByRole("button", { name: /Find evidence URLs only/ }).click();
   await waitForState(
-    (s) => s.run.mode === "discover" && s.run.status === "complete",
+    (s) =>
+      s.run.mode === "discover" &&
+      s.run.status === "complete" &&
+      s.run.queue.length === 2 &&
+      s.run.index === 2,
   );
   const afterDiscovery = await page.request
     .get("/api/state")
@@ -651,11 +785,12 @@ try {
     ]),
   );
   assert.equal(afterDiscovery.run.index, 2);
-  assert.equal(
-    afterDiscovery.families.filter(
-      (f: any) => f.urlDiscovery?.status === "complete",
-    ).length,
-    2,
+  assert(
+    afterDiscovery.run.queue.every(
+      (id: string) =>
+        afterDiscovery.families.find((family: any) => family.id === id)
+          .urlDiscovery?.status === "complete",
+    ),
   );
   assert.deepEqual(errors, []);
   console.log(

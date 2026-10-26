@@ -31,7 +31,10 @@ export function rawRefs(v: unknown): string[] {
   visit(v);
   return result;
 }
-export function buildPacket(store: Store, f: Family): Packet {
+export function buildPacket(
+  store: Pick<Store, "records" | "sources" | "get">,
+  f: Family,
+): Packet {
   const records = store.records;
   const chosen = new Map<string, Raw>();
   const queue = [...f.roots];

@@ -1841,3 +1841,98 @@ Browser smoke creates/captures Everything, verifies it on weapons, artifacts and
 class mods, and passes the existing group/discovery workflows. Production build,
 TypeScript and local OpenAPI syntax lint pass. No real global evidence was added
 on the user's behalf and no catalogue rebuild was triggered.
+
+
+### Per-item URL discovery and explicit inheritance (workshop 0.19.0)
+
+/api/items/:id/action accepts discover. Start a one-item discover Run, requiring
+an idle/paused worker and retaining the existing paused build checkpoint. Do not
+prepareRebuild or mutate item output/status/stage/revision. Global discovery uses
+the same method. Completion with inherited references alone is valid; genuine
+agent errors remain separate urlDiscovery errors. No article fetch/read/write or
+compilation occurs. The item rebuild dropdown exposes Fetch evidence URLs only;
+disable it during active work and require pause instead of interrupting a job.
+
+Store.inheritedEvidence(f) returns each active shared URL once with title, all
+parent owner IDs/names and captured boolean. It includes URL-only pending sources,
+honors group/item exclusions and never creates scopes or changes metadata. GET
+/api/items/:id returns inheritedEvidence for built and unbuilt items. Render it
+as a muted compact list in Sources & evidence, with Saved/Awaiting capture and
+parent-name links opening the correct shared manager. Keep full saved source
+cards and existing per-item removal controls.
+
+Discovery prompts list all inherited references, directing agents to find item
+pages separately and never re-add parent references. Backend canonical URL
+filtering removes inherited aliases from initial local URLs, saved-page candidates,
+coverage matches, previous/new matches and returned URLs; no reliance on prompting
+alone. Parent references do not satisfy discovery for an entire provider: still
+look for the individual item’s Wiki/Lootlemon pages. Keep raw captures intact;
+filtering ownership does not delete historical HTML. Provider reports may say
+inherited when only parent references exist. Local capture buttons filter all
+inherited links, avoiding new item-owned Chrome tickets for shared pages.
+
+After any completed discovery run, the top primary action returns to Start from
+saved/fresh sources, matching its actual action. Paused discovery still resumes
+from its checkpoint. Public schema/compiler constants remain unchanged because
+this is workflow/private evidence metadata, not a catalogue field change.
+
+
+Verification for 0.19.0: full suite 128 passed, four existing external-simulation
+tests skipped. New local API/worker tests cover one-item queue scope, inherited
+URL aliases excluded from URLs/matches, pending/captured state, multiple parent
+labels, no HTML fetching, inherited-only completion, busy-job rejection and
+unchanged output/status/stage/revision plus paused build preservation. Browser
+smoke exercises the item dropdown, per-item URL pass, compact inherited rows and
+subsequent batch discovery; screenshot inspected. Build/TypeScript, OpenAPI syntax
+and diff checks pass. No live source discovery or catalogue rebuild was started.
+
+
+Workshop 0.19.1: the compact inherited-evidence list is the only item-page
+presentation of shared articles. Filter white source cards by inheritedFrom and
+canonical inherited URL keys, including old locally captured copies of shared
+articles. Provider counts use the same item-only list; hide provider blocks with
+only inherited references and no individual URL targets. Keep individual page
+capture/view/remove controls. This is a UI filter only: Store.sources, readers,
+writer packets and evidence validation continue receiving all inherited sources.
+
+
+### ZIP-only Game data tab (workshop 0.20.0)
+
+Game data sits after Preview and is available before any research/build. Its lazy
+GET /api/items/:id/game-data endpoint reconstructs the family with discover(records)
+from the imported object map, never the mutable live Family. This excludes source
+classification overrides, notes/corrections, manual output, images and AI drafts.
+Call buildPacket through a minimal facade containing only raw records plus empty
+sources/get functions; this reuses the existing bounded game graph/fact rules
+without permitting source/artifact reads. buildPacket's parameter type is narrowed
+to its required Store methods; normal compilation behaviour stays unchanged.
+
+GameDataView contains raw-derived identity, ZIP names/versions/object counts,
+supported identity facts, and root/defining/related records. Each record has decoded
+properties for readable tables AND the exact original captured object. Preserve
+raw typed arrays/structs/references/flags in the original JSON. Do not interpret
+internal naming-level bounds as obtainable item levels, modifiers as finished
+damage, tech chance as ignition probability, or shared-context presence as valid
+compatibility/drop source. Show extraction/graph-bound warnings.
+
+The client renders identity/red text, capture context, expandable native values
+and a searchable/filterable definition browser with original JSON. Open records
+lazily to avoid rendering thousands of hidden properties. The tab fetches only by
+family ID, never run revision, and is stable before/after source capture, manual
+corrections and compilation. Server views are cached by capture IDs and raw-record
+count; reimport/reset rebuilds the raw-derived index. No packets/drafts/artifacts,
+item revisions or queue state are created/changed by viewing. Existing tabs keep
+their prior behaviour, including empty Preview/Final JSON before building. Public
+JSON schema/compiler versions stay unchanged; this is a private diagnostic view.
+
+
+Verification for 0.20.0: 133 tests pass, four existing external-simulation tests
+skipped. Five new tests cover ZIP-only facts and exact typed record preservation,
+no source/artifact storage access, no queue/Preview/output writes, immunity to
+notes/manual output/classification/name/root changes, identical results after
+service restart, changed ZIP/reset invalidation and real-capture Hellfire facts.
+Browser smoke inspects Game data before a build, opens its native tech values,
+filters/searches records, returns to the unchanged empty Preview and compares
+the full game-data response after building. Build/TypeScript, API syntax lint
+and diff checks pass. Native-value screenshot inspected. No live build or source
+research was initiated and existing user research/progress remains intact.

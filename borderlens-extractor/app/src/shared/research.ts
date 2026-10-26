@@ -13,7 +13,7 @@ export type ResearchReport = {
   discovered: ResearchProvider[];
   providers: {
     provider: ResearchProvider;
-    status: "saved" | "unavailable" | "not_found" | "urls_ready";
+    status: "saved" | "unavailable" | "not_found" | "urls_ready" | "inherited";
     urls: string[];
     message: string;
     checkedAt: string;
@@ -43,3 +43,11 @@ export function sourceKey(input: string): string {
     return input.trim();
   }
 }
+
+/** Effective shared references, including URLs not yet captured. */
+export type InheritedEvidence = {
+  url: string;
+  title: string;
+  parents: { id: string; name: string }[];
+  captured: boolean;
+};

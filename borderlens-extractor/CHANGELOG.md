@@ -1,5 +1,22 @@
 # Changelog
 
+## Workshop app 0.20.0
+
+- Add a Game data tab available before building: supported ZIP identity facts, red text, native values, defining parts and searchable linked definitions with original record JSON.
+- Reconstruct family identity from extracted records, isolating this view from source captures, classification overrides, corrections and generated output. Use a read-only lazy endpoint and cache by extraction identity.
+- Label internal rule values and shared context separately from finished stats/part compatibility. Preserve existing Preview and build behaviour; public item schemas remain unchanged.
+
+## Workshop app 0.19.1
+
+- Show shared sources only in the compact inherited-evidence list. White article cards and provider counts now represent item-specific evidence, with equivalent inherited URLs filtered too. Hide provider panels that contain only inherited references. Build evidence remains unchanged.
+
+## Workshop app 0.19.0
+
+- Add per-item **Fetch evidence URLs only** to the rebuild dropdown, preserving item JSON, revisions and paused build checkpoints.
+- Exclude inherited article URLs and aliases from locally saved discovery links/matches in item and batch workflows. Still search for individual pages on each provider; inherited-only references are valid when no individual page exists.
+- Add a compact inherited-evidence list to every item’s Sources tab, showing all contributing parent groups and Saved/Awaiting capture status. Parent links open shared evidence controls; item capture buttons omit inherited references.
+- Return the top primary button to Start from saved/fresh sources after URL discovery completes. Public item schemas remain unchanged.
+
 ## Workshop app 0.18.0
 
 - Add **Everything** shared evidence for the entire catalogue; the sidebar Shared evidence button opens this scope.

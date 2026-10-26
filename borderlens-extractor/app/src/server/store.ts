@@ -1,3 +1,4 @@
+import type { InheritedEvidence } from "../shared/research.ts";
 import {
   EvidenceScope,
   scopeLabel,
@@ -326,6 +327,42 @@ export class Store extends EventEmitter {
           .map((source) => [sourceKey(source.url), source]),
       ).values(),
     ];
+  }
+  inheritedEvidence(f: Family): InheritedEvidence[] {
+    if (f.evidenceScope) return [];
+    const entries = new Map<string, InheritedEvidence>(),
+      pages = new Map(
+        this.sources(f.id).map((page) => [sourceKey(page.url), page]),
+      );
+    for (const owner of this.sharedScopesFor(f))
+      for (const url of owner.sourceUrls) {
+        if (
+          this.isSourceExcluded(owner.id, url) ||
+          this.isSourceExcluded(f.id, url)
+        )
+          continue;
+        const key = sourceKey(url),
+          page = pages.get(key);
+        let entry = entries.get(key);
+        if (!entry) {
+          let title = url;
+          try {
+            title = decodeURIComponent(
+              new URL(url).pathname.split("/").pop() || url,
+            ).replaceAll("_", " ");
+          } catch {}
+          entry = {
+            url,
+            title: page?.title || title,
+            parents: [],
+            captured: !!page,
+          };
+          entries.set(key, entry);
+        }
+        if (!entry.parents.some((parent) => parent.id === owner.id))
+          entry.parents.push({ id: owner.id, name: owner.name });
+      }
+    return [...entries.values()];
   }
   effectiveSourceUrls(f: Family): string[] {
     const urls = [

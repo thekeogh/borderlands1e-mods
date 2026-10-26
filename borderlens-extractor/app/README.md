@@ -37,7 +37,7 @@ Open **http://127.0.0.1:4317**.
 
 1. Import the ZIP produced by Borderlens Extractor. Keep the archive intact.
 2. Select an item and **Rebuild from fresh sources** to try one first, or press **Start from saved sources** for the ordered catalogue queue.
-3. Inspect **Preview**, **Sources & evidence**, **History**, or **Final JSON** while it works. Selecting another item never interrupts processing.
+3. Inspect **Preview**, **Game data**, **Sources & evidence**, **History**, or **Final JSON** while it works. Selecting another item never interrupts processing.
 4. **Pause** saves the current step before stopping. **Resume** continues from that checkpoint, including after restarting the service.
 5. If it needs help, add a source URL, saved page HTML, or correction under **Sources & evidence**, then resume. Corrections are remembered.
 6. **Export** downloads completed item JSON files in type folders, ready for the website. Each file includes its full parts data; the ZIP contains no supporting files.
@@ -66,15 +66,25 @@ In **Preview**, click the red **Remove from catalogue** button on the right. The
 
 Verified item-specific BL1 Lootlemon shield/grenade pages can also correct entries initially grouped as **Other equipment**. Category overrides persist in `classification-overrides.json`; IDs and saved research stay intact. Corrected entries export under their actual category.
 
+## Game data
+
+The **Game data** tab is available immediately after ZIP import. It shows supported identity facts, red text, defining parts, native settings and searchable linked definitions. Expand a record for its original extracted fields.
+
+It reads only the imported extraction. Source captures, corrections and builds never alter this view. Native rule values are not final item stats or obtainable level ranges; related records can include alternatives and other families. Preview and Final JSON remain empty until you build an item.
+
 ## Shared evidence
 
 Click **Shared evidence** above the tree for **Everything**: articles shared with the entire catalogue. Use this for elemental mechanics or other universal references. Click the book beside a sidebar category or character for that group. Add a Wiki/Lootlemon URL, then capture it with **Open in Chrome** or import saved HTML. Category sources apply to every child; character and weapon-type sources apply only to that subgroup. Use the group selector for **Weapons** to cover all weapon types.
 
 Each shared-source card shows its saved text preview, capture method, date and character count. **Not captured yet** means only the URL is stored.
 
-Capture a shared article once. Each item uses all applicable levels together: **Everything → category → weapon type/character → individual sources**. All saved articles are read; relevant facts inform the entry. Duplicate URLs are merged. Item source cards show where inherited evidence came from; their X excludes it for that item only. Remove a URL in the shared panel to stop using it for that group. Re-adding the URL reuses its saved article. Changes queue affected items without starting a build.
+Capture a shared article once. Each item uses all applicable levels together: **Everything → category → weapon type/character → individual sources**. All saved articles are read; relevant facts inform the entry. Duplicate URLs are merged. The compact inherited-evidence list shows each shared article and its parent groups. White source cards and provider counts cover only item-specific evidence. Remove a URL in the shared panel to stop using it for that group. Re-adding the URL reuses its saved article. Changes queue affected items without starting a build.
 
 ## Find URLs first
+
+For one item, open its rebuild dropdown and select **Fetch evidence URLs only**. This finds links without fetching articles or rebuilding JSON. Pause an active job first; a paused build checkpoint is retained.
+
+Every item’s **Sources & evidence** tab lists inherited references with their parent groups and **Saved / Awaiting capture** status. Click a parent name to manage/capture that shared source. Discovery never copies these links onto the item, even if the agent returns the same article under an equivalent URL.
 
 Choose **Find evidence URLs only** from the top Start menu. It finds and stores Wiki/Lootlemon links across active items, including completed ones, without fetching article HTML or building JSON. Capture the pages in Chrome, then **Start from saved sources**. Failures are flagged and the queue continues; **Needs attention** includes discovery failures.
 

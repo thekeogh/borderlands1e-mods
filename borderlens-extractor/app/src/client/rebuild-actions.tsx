@@ -3,10 +3,12 @@ import { RotateCcw, ChevronDown } from "lucide-react";
 export function RebuildActions({
   saved,
   disabled,
+  discoveryDisabled,
   run,
 }: {
   saved?: { available: boolean; reason: string };
   disabled: boolean;
+  discoveryDisabled?: boolean;
   run: (action: string) => void;
 }) {
   const menu = useRef<HTMLDetailsElement>(null);
@@ -49,6 +51,20 @@ export function RebuildActions({
           <button disabled={disabled} onClick={() => choose("rebuild-fresh")}>
             <strong>Rebuild from fresh sources</strong>
             <span>Fetch sources again, read their facts, then rebuild.</span>
+          </button>
+          <button
+            disabled={disabled || discoveryDisabled}
+            title={
+              discoveryDisabled
+                ? "Pause the current job first."
+                : "Find item-specific links without fetching articles or rebuilding JSON."
+            }
+            onClick={() => choose("discover")}
+          >
+            <strong>Fetch evidence URLs only</strong>
+            <span>
+              Find this item’s links. Shared parent references stay inherited.
+            </span>
           </button>
         </div>
       </details>

@@ -597,3 +597,142 @@ test("global API queues all active items only, preserves outputs and rejects sub
     400,
   );
 });
+
+test("item URL discovery filters inherited aliases, retains parent ownership, exposes capture status and preserves build checkpoint/output", async (t) => {
+  const x = await serverFixture(t),
+    { s, w } = x,
+    [f, other] = s.state.families;
+  const global = s.ensureScope({ category: "Everything" }),
+    category = s.ensureScope({ category: "Class mods" }),
+    ancestorUrl = "https://borderlands.fandom.com/wiki/Corrosive_Damage",
+    pendingUrl = "https://borderlands.fandom.com/wiki/Shock_Damage";
+  const articleSource = w.research.save(global, ancestorUrl, article, true);
+  category.sourceUrls = [ancestorUrl];
+  global.sourceUrls.push(pendingUrl);
+  s.put(f.id, "output", { saved: "previous JSON" });
+  const before = { status: f.status, stage: f.stage, revision: f.revision };
+  Object.assign(s.state.run, {
+    status: "paused",
+    queue: [other.id],
+    index: 0,
+    currentId: other.id,
+    sourcePrepared: [other.id],
+  });
+  const checkpoint = structuredClone(s.state.run);
+  let prompts: string[] = [];
+  w.ai = {
+    run: async (_label: string, prompt: string) => {
+      prompts.push(prompt);
+      return {
+        matches: [
+          {
+            url: "https://borderlands.fandom.com/wiki/corrosive%20damage?oldid=42",
+            title: "Inherited alias",
+            gameEvidence: "BL1",
+            reason: "Fixture",
+          },
+          {
+            url: pendingUrl,
+            title: "Inherited pending",
+            gameEvidence: "BL1",
+            reason: "Fixture",
+          },
+          {
+            url: "https://www.lootlemon.com/class-mod/fixture-bl1",
+            title: "Individual page",
+            gameEvidence: "BL1",
+            reason: "Fixture",
+          },
+        ],
+        notFoundReason: "",
+      };
+    },
+  } as any;
+  w.research.fetchPage = async () => {
+    throw Error("URL-only action must not fetch article HTML");
+  };
+  assert.equal(
+    (await x.post(`/api/items/${f.id}/action`, { action: "discover" })).status,
+    200,
+  );
+  await idle(w);
+  assert.deepEqual(s.state.run.queue, [f.id]);
+  assert.equal(s.state.run.mode, "discover");
+  assert.equal(f.urlDiscovery?.status, "complete");
+  assert.deepEqual(s.state.buildCheckpoint, checkpoint);
+  assert.deepEqual(
+    { status: f.status, stage: f.stage, revision: f.revision },
+    before,
+  );
+  assert.deepEqual(s.get(f.id, "output"), { saved: "previous JSON" });
+  assert.deepEqual(f.sourceUrls, [
+    "https://www.lootlemon.com/class-mod/fixture-bl1",
+  ]);
+  assert.equal(s.get<any>(f.id, "matches").matches.length, 1);
+  assert.equal(s.rawSources(f.id).length, 0);
+  assert.equal(s.source(articleSource.id)?.familyId, global.id);
+  assert(
+    prompts[0].includes(ancestorUrl) &&
+      prompts[0].includes("Everything") &&
+      prompts[0].includes("Class mods"),
+  );
+  const detail = await x.get(`/api/items/${f.id}`);
+  assert.equal(detail.inheritedEvidence.length, 2);
+  const shared = detail.inheritedEvidence.find(
+    (row: any) => row.url === ancestorUrl,
+  );
+  assert.equal(shared.captured, true);
+  assert.deepEqual(
+    shared.parents.map((p: any) => p.name),
+    ["Everything", "Class mods"],
+  );
+  assert.equal(
+    detail.inheritedEvidence.find((row: any) => row.url === pendingUrl)
+      .captured,
+    false,
+  );
+});
+test("inherited-only discovery succeeds without copying shared links; active jobs refuse single-item discovery", async (t) => {
+  const x = await serverFixture(t),
+    { s, w } = x,
+    f = s.state.families[0],
+    global = s.ensureScope({ category: "Everything" });
+  global.sourceUrls = [url];
+  w.ai = {
+    run: async () => ({
+      matches: [
+        {
+          url,
+          title: "Shared overview",
+          gameEvidence: "BL1",
+          reason: "Fixture",
+        },
+      ],
+      notFoundReason: "No individual page available",
+    }),
+  } as any;
+  w.busy = true;
+  const original = structuredClone(s.state.run);
+  assert.equal(
+    (await x.post(`/api/items/${f.id}/action`, { action: "discover" })).status,
+    409,
+  );
+  assert.deepEqual(s.state.run, original);
+  w.busy = false;
+  assert.equal(
+    (await x.post(`/api/items/${f.id}/action`, { action: "discover" })).status,
+    200,
+  );
+  await idle(w);
+  assert.equal(f.urlDiscovery?.status, "complete");
+  assert.deepEqual(f.sourceUrls, []);
+  assert.equal(
+    s
+      .get<any>(f.id, "research")
+      .providers.find((row: any) => row.provider === "Wiki").status,
+    "inherited",
+  );
+  await w.action(f.id, "resolve", { url, html: article });
+  await w.action(f.id, "exclude-source", { sourceId: s.sources(f.id)[0].id });
+  assert.equal(s.inheritedEvidence(f).length, 0);
+});

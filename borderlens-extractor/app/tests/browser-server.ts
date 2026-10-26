@@ -22,6 +22,15 @@ const ai: AI = {
     if (_label.startsWith("Find missing sources"))
       return schema.parse({
         matches: [
+          ...s
+            .inheritedEvidence(s.family(s.state.run.currentId!))
+            .slice(0, 2)
+            .map((row) => ({
+              url: row.url,
+              title: row.title,
+              gameEvidence: "BL1 inherited fixture",
+              reason: "Deliberate duplicate to verify filtering",
+            })),
           {
             url: "https://borderlands.fandom.com/wiki/Fixture_article",
             title: "Fixture article",

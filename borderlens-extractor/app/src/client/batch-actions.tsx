@@ -42,9 +42,7 @@ export function BatchActions({
             ? "Pause"
             : checkpoint
               ? "Resume"
-              : run.mode === "discover"
-                ? "Find evidence URLs only"
-                : `Start from ${mode} sources`}
+              : `Start from ${mode} sources`}
       </button>
       <details ref={menu} className="rebuild-options batch-options">
         <summary

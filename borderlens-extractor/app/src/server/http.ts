@@ -1,3 +1,4 @@
+import { gameData } from "./game-data.ts";
 import { EvidenceScope } from "../shared/evidence-scopes.ts";
 import { sourceKey } from "../shared/research.ts";
 import { sourceUrl } from "./research.ts";
@@ -197,6 +198,10 @@ export function api(store: Store, worker: Worker) {
     store.save();
     res.json(store.images.match(f));
   });
+  app.get("/api/items/:id/game-data", (req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    res.json(gameData(store, req.params.id));
+  });
   app.get("/api/items/:id", (req, res) => {
     store.syncClassifications();
     const f = store.family(req.params.id);
@@ -215,6 +220,7 @@ export function api(store: Store, worker: Worker) {
       matches: store.get(f.id, "matches"),
       research: store.get(f.id, "research"),
       sources: store.sources(f.id),
+      inheritedEvidence: store.inheritedEvidence(f),
       excludedSources: store.sourceExclusions(f.id),
       parts: store.get(f.id, "parts") || [],
       researchAudit: store.get(f.id, "researchAudit"),
@@ -228,6 +234,7 @@ export function api(store: Store, worker: Worker) {
           "rebuild",
           "rebuild-saved",
           "rebuild-fresh",
+          "discover",
           "from",
           "refresh",
           "retry",

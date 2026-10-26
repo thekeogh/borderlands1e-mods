@@ -1,3 +1,6 @@
+import { GameDataTab } from "./game-data";
+import { InheritedEvidenceList } from "./inherited-evidence";
+import { sourceKey, type InheritedEvidence } from "../shared/research";
 import { SharedSources } from "./shared-sources";
 import type { EvidenceScope } from "../shared/evidence-scopes";
 import { familyTreePath, revealTreePath, stepTree } from "./tree-navigation";
@@ -76,6 +79,7 @@ type Detail = {
   family: Family;
   packet: Packet | null;
   sources: Source[];
+  inheritedEvidence?: InheritedEvidence[];
   excludedSources?: ExcludedSource[];
   output: PublicEntry | null;
   draft: Draft | null;
@@ -395,6 +399,13 @@ function App() {
   const activePath = busy && current ? familyTreePath(current) : [];
   const f = detail?.family.id === selected ? detail.family : null,
     output = f ? detail?.output : null;
+  const inheritedKeys = new Set(
+    (detail?.inheritedEvidence || []).map((source) => sourceKey(source.url)),
+  );
+  const itemSources = (detail?.sources || []).filter(
+    (source) =>
+      !source.inheritedFrom && !inheritedKeys.has(sourceKey(source.url)),
+  );
   const setSetting = (patch: Record<string, unknown>) =>
     act(() => request("/api/settings", patch, "PATCH"), "Settings saved.");
   return (
@@ -1062,6 +1073,7 @@ function App() {
                 <div className="item-actions">
                   <RebuildActions
                     saved={detail?.savedRebuild}
+                    discoveryDisabled={busy}
                     disabled={working || f.status === "excluded"}
                     run={(action) => void itemAction(action)}
                   />
@@ -1100,6 +1112,7 @@ function App() {
               <div className="tabs">
                 {[
                   ["preview", "Preview", BookOpen],
+                  ["game-data", "Game data", Layers],
                   ["sources", "Sources & evidence", Database],
                   ["history", "History", Clock],
                   ["json", "Final JSON", FileJson],
@@ -1132,7 +1145,9 @@ function App() {
                   </div>
                 </div>
               )}
-              {tab === "preview" ? (
+              {tab === "game-data" ? (
+                <GameDataTab familyId={f.id} />
+              ) : tab === "preview" ? (
                 <div className="preview-grid">
                   <section className="item-preview">
                     <div className="section-label">
@@ -1441,12 +1456,20 @@ function App() {
                         <RefreshCw size={13} /> Refresh sources
                       </button>
                     </div>
+                    <InheritedEvidenceList
+                      items={detail?.inheritedEvidence || []}
+                      manage={(id) => {
+                        const scope = state.sharedScopes?.find(
+                          (scope) => scope.id === id,
+                        )?.evidenceScope;
+                        if (scope) setSharedScope(scope);
+                      }}
+                    />
                     <div className="research-status">
                       {researchProviders.map((provider) => {
-                        const count =
-                          detail?.sources.filter(
-                            (s) => providerForUrl(s.url) === provider,
-                          ).length || 0;
+                        const count = itemSources.filter(
+                          (s) => providerForUrl(s.url) === provider,
+                        ).length;
                         const row = detail?.research?.providers.find(
                           (row) => row.provider === provider,
                         );
@@ -1457,7 +1480,21 @@ function App() {
                               (url) => providerForUrl(url) === provider,
                             ),
                           ]),
-                        ];
+                        ].filter(
+                          (url) =>
+                            !detail?.inheritedEvidence?.some(
+                              (source) =>
+                                sourceKey(source.url) === sourceKey(url),
+                            ),
+                        );
+                        if (
+                          !count &&
+                          !targets.length &&
+                          detail?.inheritedEvidence?.some(
+                            (source) => providerForUrl(source.url) === provider,
+                          )
+                        )
+                          return null;
                         return (
                           <div
                             key={provider}
@@ -1469,7 +1506,9 @@ function App() {
                                 ? `${count} saved`
                                 : row?.status === "unavailable"
                                   ? "Unavailable"
-                                  : "Not saved"}
+                                  : row?.status === "inherited"
+                                    ? "Inherited"
+                                    : "Not saved"}
                             </strong>
                             <p>
                               {count
@@ -1506,8 +1545,8 @@ function App() {
                         );
                       })}
                     </div>
-                    {detail?.sources.length ? (
-                      detail.sources.map((s) => (
+                    {itemSources.length ? (
+                      itemSources.map((s) => (
                         <article className="source-card" key={s.id}>
                           <div>
                             <BookOpen size={18} />
@@ -1535,12 +1574,6 @@ function App() {
                               <X size={15} />
                             </button>
                           </div>
-                          {s.inheritedFrom && (
-                            <small className="inherited-source">
-                              Shared from {s.inheritedFrom.name} · remove here
-                              to exclude for this item only
-                            </small>
-                          )}
                           <small>
                             {new Date(s.fetchedAt).toLocaleString()} ·{" "}
                             {s.captureMethod === "chrome"
@@ -1564,8 +1597,9 @@ function App() {
                       ))
                     ) : (
                       <div className="panel-empty">
-                        No pages saved yet. Research runs automatically when
-                        this item reaches that step.
+                        No item-specific pages saved yet.
+                        {!!detail?.inheritedEvidence?.length &&
+                          " Shared evidence above is still available to the build."}
                       </div>
                     )}
                     {!!detail?.excludedSources?.length && (
@@ -1847,7 +1881,7 @@ function App() {
         </main>
         <footer>
           <span>ONE FAMILY. EVERY DETAIL.</span>
-          <span>Borderlens workshop · 0.18.0</span>
+          <span>Borderlens workshop · 0.20.0</span>
         </footer>
       </section>
       <input

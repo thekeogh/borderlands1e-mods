@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Borderlens local workshop
-  version: 0.18.0
+  version: 0.20.0
   description: Local-only catalogue processing. Disk-backed checkpoints; no hosted accounts or API-key billing.
 servers:
   - url: http://127.0.0.1:4317
@@ -219,6 +219,16 @@ paths:
             description: "Invalid format, checksum, path or archive. Existing data retained.",
           }
         "409": { description: "Pause the worker before changing evidence." }
+  /api/items/{id}/game-data:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    get:
+      operationId: getImportedGameData
+      description: Read-only ZIP snapshot identified from original extracted records. Excludes saved sources, compiled output, user corrections and classification/image overrides. Stable across builds; changes when extraction changes. No model calls or queue/artifact writes.
+      responses:
+        "200":
+          description: Raw family identity; capture names/versions/counts; supported identity facts; root/defining/related records with decoded properties and exact original record objects; extraction warnings. Linked context is bounded and never establishes final roll ranges or part compatibility.
+        "404": { description: Family not found in imported game records. }
   /api/items/{id}:
     parameters:
       - { name: id, in: path, required: true, schema: { type: string } }
@@ -227,7 +237,7 @@ paths:
       responses:
         "200":
           {
-            description: "Family with active sources plus excludedSources (restorable per-item URL exclusions), effective classification override (equipment category and/or weapon subtype; equipment overrides have a null weaponType), facts/evidence, per-provider research status/errors, sources, private researchAudit with full-source chunk readings and fact dispositions, stage history and last valid output. Final whole-document validation status, image metadata and savedRebuild availability/reason are included for built and unbuilt candidates. Website output is schema 8: canonical element enum, full-document consistency checks, relative image path or null, rich description/details, contextual stat ranges, grouped conditional dropChances and inline parts; empty note strings are omitted; provenance and coverage stay private. Final JSON includes the item revision counter. Viewing/exporting does not increment revision. Does not change the queue.",
+            description: "Family with inheritedEvidence (URL, title, all contributing parent IDs/names and captured status), active sources plus excludedSources (restorable per-item URL exclusions), effective classification override (equipment category and/or weapon subtype; equipment overrides have a null weaponType), facts/evidence, per-provider research status/errors, sources, private researchAudit with full-source chunk readings and fact dispositions, stage history and last valid output. Final whole-document validation status, image metadata and savedRebuild availability/reason are included for built and unbuilt candidates. Website output is schema 8: canonical element enum, full-document consistency checks, relative image path or null, rich description/details, contextual stat ranges, grouped conditional dropChances and inline parts; empty note strings are omitted; provenance and coverage stay private. Final JSON includes the item revision counter. Viewing/exporting does not increment revision. Does not change the queue.",
           }
         "404": { description: "Family not found." }
   /api/items/{id}/action:
@@ -235,7 +245,7 @@ paths:
       - { name: id, in: path, required: true, schema: { type: string } }
     post:
       operationId: itemAction
-      description: "rebuild-saved uses saved pages and matching extracted facts without fetching; missing analysis is read from those saved pages. rebuild-fresh fetches and reads current sources, preserving old pages on failure. Busy rebuilds are deferred with their chosen mode. Legacy rebuild retains its prior behavior."
+      description: "rebuild-saved uses saved pages and matching extracted facts without fetching; missing analysis is read from those saved pages. rebuild-fresh fetches and reads current sources, preserving old pages on failure. Busy rebuilds are deferred with their chosen mode. Legacy rebuild retains its prior behavior. discover starts URL-only processing for this item, preserves a paused build checkpoint, filters inherited article aliases from local URLs/matches and leaves JSON/build status/revision intact. Pause an active job first."
       requestBody:
         required: true
         content:
@@ -252,6 +262,7 @@ paths:
                         rebuild,
                         rebuild-saved,
                         rebuild-fresh,
+                        discover,
                         from,
                         refresh,
                         retry,
