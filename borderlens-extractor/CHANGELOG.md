@@ -1,5 +1,11 @@
 # Changelog
 
+## Workshop app 0.33.0
+
+- Add Edit item name in Preview: reveal a free-text field with Save/Cancel. Update navigation, existing JSON/drafts and export slugs without AI or rebuilding.
+- Persist authoritative manual names across builds, syncs, restarts, imports and generated resets. Preserve raw identity, source aliases, image matches, prose and readiness. Only another manual edit replaces the lock.
+- Keep original names searchable. No compiler or public schema change.
+
 ## Workshop app 0.32.0
 
 - Add an Item type dropdown at the top of every Preview sidebar, with all weapon types and Shields, Class mods, Grenade mods, Artifacts and Other equipment. Automatic restores research/game classification. Keep the existing Sync buttons.

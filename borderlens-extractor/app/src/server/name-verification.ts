@@ -27,6 +27,7 @@ export function checkedName(
   d: NameDecision,
   explicit = false,
 ) {
+  if (store.names.data.entries[f.id]?.origin === "manual") return null;
   if (
     (!explicit && d.name === f.name) ||
     !d.identityVerified ||
@@ -148,6 +149,15 @@ export async function verifyAndApplyName(
   ai: AI,
   progress: (message: string) => void,
 ) {
+  if (store.names.data.entries[f.id]?.origin === "manual") {
+    if (proposal && proposal.name !== f.name)
+      store.put(f.id, "nameDecision", {
+        status: "kept",
+        reason: "Your manual item name is locked and cannot be replaced by AI.",
+        proposal,
+      });
+    return false;
+  }
   if (!proposal || proposal.name === f.name) return false;
   store.put(f.id, "nameDecision", { status: "proposed", proposal });
   if (!checkedName(store, f, p, proposal)) {
@@ -232,15 +242,19 @@ export function applyNameDecision(
   const evidence = checkedName(store, f, p, decision, explicit);
   if (!evidence) return false;
   const previous = f.name;
-  store.names.set(f.id, {
-    name: decision.name,
-    originalName: f.rawName || previous,
-    reason: decision.reason,
-    identityPaths: decision.identityPaths,
-    corroboration: decision.corroboration,
-    evidence,
-    verifiedAt: new Date().toISOString(),
-  });
+  if (
+    !store.names.set(f.id, {
+      origin: "research",
+      name: decision.name,
+      originalName: f.rawName || previous,
+      reason: decision.reason,
+      identityPaths: decision.identityPaths,
+      corroboration: decision.corroboration,
+      evidence,
+      verifiedAt: new Date().toISOString(),
+    })
+  )
+    return false;
   store.save();
   store.put(f.id, "nameDecision", {
     status: "renamed",

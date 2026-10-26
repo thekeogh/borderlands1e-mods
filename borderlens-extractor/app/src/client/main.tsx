@@ -1,3 +1,4 @@
+import { ManualNameEditor } from "./manual-name";
 import { ManualTypePicker } from "./manual-type";
 import { DuplicateFinder } from "./duplicate-finder";
 import { EvidenceFollowupSummary } from "./evidence-followup";
@@ -392,7 +393,7 @@ function App() {
       continue;
     if (
       query &&
-      !`${f.name} ${f.subtype} ${f.character || ""}`
+      !`${f.name} ${f.aliases.join(" ")} ${f.rawName || ""} ${f.subtype} ${f.character || ""}`
         .toLowerCase()
         .includes(query.toLowerCase())
     )
@@ -418,6 +419,16 @@ function App() {
       const result = await request(`/api/items/${f.id}/type`, { type });
       setNotice(f.name + ": " + result.message);
     });
+  };
+  const manualNameChange = async (name: string) => {
+    if (!f) return false;
+    let saved = false;
+    await act(async () => {
+      const result = await request(`/api/items/${f.id}/name`, { name });
+      saved = true;
+      setNotice(result.message);
+    });
+    return saved;
   };
   const inheritedKeys = new Set(
     (detail?.inheritedEvidence || []).map((source) => sourceKey(source.url)),
@@ -1433,14 +1444,29 @@ function App() {
                     />
                     <dl>
                       <dt>Item family</dt>
-                      <dd>{f.name}</dd>
+                      <dd>
+                        {f.name}
+                        <ManualNameEditor
+                          key={f.id}
+                          family={f}
+                          disabled={
+                            working ||
+                            busy ||
+                            f.status === "excluded" ||
+                            Boolean(f.supersededBy)
+                          }
+                          save={manualNameChange}
+                        />
+                      </dd>
                       {f.nameOverride && (
                         <>
                           <dt>Extracted name</dt>
                           <dd>{f.rawName}</dd>
-                          <dt>Name verified</dt>
+                          <dt>Name source</dt>
                           <dd title={f.nameOverride.reason}>
-                            From saved evidence
+                            {f.nameOverride.origin === "manual"
+                              ? "Your manual override (locked)"
+                              : "Verified saved evidence"}
                           </dd>
                         </>
                       )}
@@ -2086,7 +2112,7 @@ function App() {
         </main>
         <footer>
           <span>ONE FAMILY. EVERY DETAIL.</span>
-          <span>Borderlens workshop · 0.32.0</span>
+          <span>Borderlens workshop · 0.33.0</span>
         </footer>
       </section>
       <input

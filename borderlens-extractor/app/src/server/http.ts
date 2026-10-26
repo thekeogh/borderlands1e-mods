@@ -1,3 +1,4 @@
+import { ManualItemName } from "../shared/names.ts";
 import { ManualType } from "../shared/manual-type.ts";
 import { extractedContent } from "./content.ts";
 import { findDuplicates } from "./duplicates.ts";
@@ -222,6 +223,13 @@ export function api(store: Store, worker: Worker) {
     f.updatedAt = now();
     store.save();
     res.json(store.images.match(f));
+  });
+  app.post("/api/items/:id/name", (req, res) => {
+    const { name } = z
+      .object({ name: ManualItemName })
+      .strict()
+      .parse(req.body);
+    res.json(worker.setManualName(req.params.id, name));
   });
   app.post("/api/items/:id/type", (req, res) => {
     const { type, notes } = z

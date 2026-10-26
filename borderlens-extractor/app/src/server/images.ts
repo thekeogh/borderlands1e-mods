@@ -71,8 +71,17 @@ export class Images {
     this.stamp = JSON.stringify([stamps.sort(), this.entries]);
   }
   match(
-    f: Pick<Family, "id" | "name" | "category" | "aliases" | "character">,
+    f: Pick<Family, "id" | "name" | "category" | "aliases" | "character"> &
+      Partial<Pick<Family, "nameOverride" | "rawName">>,
   ): ImageMatch {
+    if (f.nameOverride?.origin === "manual")
+      f = {
+        ...f,
+        name: f.nameOverride.identityName || f.nameOverride.originalName,
+        aliases: f.nameOverride.identityAliases || [
+          f.nameOverride.originalName,
+        ],
+      };
     if (Object.hasOwn(this.entries, f.id)) {
       const image = this.entries[f.id];
       return {

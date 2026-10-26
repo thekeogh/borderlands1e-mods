@@ -4,7 +4,7 @@ import {
   NameSyncResponse,
   type IdentitySyncResult,
 } from "../shared/identity-sync.ts";
-import { NameDecision } from "../shared/names.ts";
+import { NameDecision, ManualItemName } from "../shared/names.ts";
 import {
   PublicEntry,
   type Family,
@@ -370,6 +370,13 @@ export async function syncIdentity(
   ai: AI,
   progress: (message: string) => void,
 ): Promise<IdentitySyncResult> {
+  store.syncClassifications();
+  if (target === "name" && store.names.data.entries[f.id]?.origin === "manual")
+    return {
+      changed: false,
+      message:
+        "Your manual name is locked. Use Edit item name to change it; AI cannot replace it.",
+    };
   const p = buildPacket(store, { ...f, gameOnly: false });
   const data = context(store, f, p);
   const rules =
@@ -573,5 +580,61 @@ export function applyManualType(
           catalogueGroup(f) +
           "."
         : "Manual type saved: " + selection + ". No AI or build started.",
+  };
+}
+
+export function applyManualName(
+  store: Store,
+  f: Family,
+  input: string,
+): IdentitySyncResult {
+  const name = ManualItemName.parse(input);
+  const old = store.names.data.entries[f.id];
+  if (
+    old?.origin === "manual" &&
+    old.name === name &&
+    store.get<any>(f.id, "output")?.name === name
+  )
+    return {
+      changed: false,
+      message: "Your manual name is already saved and locked.",
+    };
+  const group = catalogueGroup(f);
+  const weaponType =
+    f.category === "Weapons"
+      ? f.classification?.weaponType ||
+        (weaponTypes.includes(group as any)
+          ? group
+          : store.get<any>(f.id, "output")?.weaponType || null)
+      : null;
+  applyMetadata(store, f, { name, category: f.category, weaponType }, () => {
+    store.names.set(f.id, {
+      origin: "manual",
+      identityName:
+        old?.origin === "manual"
+          ? old.identityName || f.rawName || f.name
+          : f.name,
+      identityAliases:
+        old?.origin === "manual"
+          ? old.identityAliases || [f.rawName || f.name]
+          : [...new Set([...(f.aliases || []), f.rawName || f.name])],
+      name,
+      originalName: f.rawName || f.name,
+      reason:
+        "Item name explicitly set by the user; manual names take priority over all automatic naming.",
+      verifiedAt: new Date().toISOString(),
+      identityPaths: [...f.roots],
+      evidence: [],
+      corroboration: [],
+    });
+    store.save();
+    return true;
+  });
+  return {
+    changed: true,
+    message:
+      "Manual name saved: " +
+      name +
+      ". It stays locked against AI and game data.",
   };
 }

@@ -3363,3 +3363,38 @@ footer > span:first-child {
   font-size: 12px;
   padding: 9px 12px;
 }
+
+.manual-name-link {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.manual-name-form {
+  margin-top: 10px;
+}
+.manual-name-form label {
+  display: block;
+  font-size: 12px;
+}
+.manual-name-form input {
+  width: 100%;
+  margin-top: 6px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: white;
+}
+.manual-name-form p {
+  margin: 8px 0;
+}
+.manual-name-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.manual-name-actions .button {
+  padding: 8px 12px;
+  font-size: 12px;
+}

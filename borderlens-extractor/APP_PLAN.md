@@ -2592,3 +2592,31 @@ checks the retained Sync button and asserts the agent invocation counter is unch
 Screenshot inspected. Build/TypeScript, OpenAPI syntax and diff checks pass. Idle
 Node 22 service updated; all 299 families, raw/artifact/source rows, preferences and
 run/checkpoint state unchanged. No live type mutation, model call, fetch or build ran.
+
+
+### Manual item names (app 0.33.0)
+
+Preview sidebar Edit item name reveals a compact free-text Save/Cancel form.
+POST /api/items/:id/name accepts one trimmed, single-line name (1–160 characters).
+Persist origin=manual in name-overrides.json; older entries default to research.
+Storage, automatic verification, explicit sync and writer validation all respect
+the lock. A later manual edit may replace it; generated resets/imports retain it.
+Full project reset deliberately clears the project including overrides.
+
+Reuse the validated metadata update path for output, drafts and packets, JSON
+name/slug and live navigation. Preserve stable IDs, raw extraction, prose, readiness
+and queued checkpoints; count changed saved output revisions. Unbuilt items stay
+unbuilt. Never call an agent, fetch sources or start a build when saving a name.
+Freeze the original canonical identity/aliases privately for source analysis and
+automatic image matching, so cosmetic labels do not identify a different item.
+Raw Game data remains original. Public schema/compiler unchanged; no mass requeue.
+
+Verification for 0.33.0: 207 tests passed; four optional external simulations
+skipped. New tests cover manual priority over storage, build and explicit sync,
+restart/reimport/generated reset persistence, output/draft/packet/export metadata,
+quote escaping, input and concurrency guards, future writer name clamping, and
+original image matching after cosmetic renames. Browser Save/Cancel, immediate
+title/navigation updates, retained alias search and no-agent lock checks pass;
+screenshot inspected. TypeScript/build, OpenAPI syntax and diff checks pass.
+Idle Node 22 service updated; all 299 families, raw/artifact/source rows and
+run/settings unchanged. No live name mutation, agent call, fetch or build ran.

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Borderlens local workshop
-  version: 0.32.0
+  version: 0.33.0
   description: Local-only catalogue processing. Disk-backed checkpoints; no hosted accounts or API-key billing.
 servers:
   - url: http://127.0.0.1:4317
@@ -338,6 +338,39 @@ paths:
         "409":
           {
             description: "Action requires a paused worker, or saved-source rebuild has no saved pages.",
+          }
+  /api/items/{id}/name:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: setManualItemName
+      description: "Save an authoritative manual display name with permanent priority over research and extraction. No AI, fetching or builds. Updates navigation, Preview, existing JSON/draft/packet names and export slugs while preserving raw identity, aliases, prose, readiness and queues. Persists manual origin in name-overrides.json. AI/Sync name cannot replace it; subsequent manual edits can. Unbuilt items gain no generated JSON."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [name]
+              properties:
+                name:
+                  {
+                    type: string,
+                    minLength: 1,
+                    maxLength: 160,
+                    description: Trimmed single-line display name.,
+                  }
+      responses:
+        "200":
+          {
+            description: "changed boolean and explanatory message; no work queued.",
+          }
+        "400": { description: Invalid/empty/multiline name or request. }
+        "404": { description: Unknown item. }
+        "409":
+          {
+            description: "Active job, removed/retired/shared owner, or saved JSON cannot validate.",
           }
   /api/items/{id}/type:
     parameters:

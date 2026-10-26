@@ -29,8 +29,15 @@ export class Names {
   }
   set(id: string, value: Override) {
     this.reload();
-    this.data.entries[id] = NameOverride.parse(value);
+    const parsed = NameOverride.parse(value);
+    if (
+      this.data.entries[id]?.origin === "manual" &&
+      parsed.origin !== "manual"
+    )
+      return false;
+    this.data.entries[id] = parsed;
     this.persist();
+    return true;
   }
   clear() {
     this.data = { schemaVersion: 1, entries: {} };

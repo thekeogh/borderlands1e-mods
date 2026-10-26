@@ -1395,6 +1395,60 @@ try {
   await expect(
     page.getByRole("button", { name: "Sync type", exact: true }),
   ).toBeVisible();
+  const nameCalls = await page.request
+    .get("/__test/ai-count")
+    .then((r) => r.json());
+  await page
+    .getByRole("button", { name: "Edit item name", exact: true })
+    .click();
+  const manualNameInput = page.getByRole("textbox", {
+    name: "Item name",
+    exact: true,
+  });
+  await expect(manualNameInput).toHaveValue("Ironclad");
+  await manualNameInput.fill("Discard this edit");
+  await page
+    .locator(".manual-name-form")
+    .getByRole("button", { name: "Cancel", exact: true })
+    .click();
+  await expect(manualNameInput).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Edit item name", exact: true })
+    .click();
+  await manualNameInput.fill('My "keeper" shield');
+  await page.getByRole("button", { name: "Save name", exact: true }).click();
+  await waitForState(
+    (state) =>
+      state.families.find((f: any) => f.id === syncType.id).name ===
+      'My "keeper" shield',
+  );
+  await expect(page.locator(".manual-name-form")).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: /My "keeper" shield/, level: 1 }),
+  ).toBeVisible();
+  await expect(
+    page.locator(`.item-row[data-family-id="${syncType.id}"]`),
+  ).toContainText('My "keeper" shield');
+  await expect(page.locator(".inspector")).toContainText(
+    "Your manual override (locked)",
+  );
+  await page.getByRole("button", { name: "Sync name", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Sync name", exact: true }),
+  ).toBeEnabled();
+  assert.deepEqual(
+    await page.request.get("/__test/ai-count").then((r) => r.json()),
+    nameCalls,
+  );
+  const manuallyNamed = await page.request
+    .get(`/api/items/${syncType.id}`)
+    .then((r) => r.json());
+  assert.equal(manuallyNamed.family.nameOverride.origin, "manual");
+  if (manuallyNamed.websiteOutput) {
+    assert.equal(manuallyNamed.websiteOutput.name, 'My "keeper" shield');
+    assert.equal(manuallyNamed.websiteOutput.slug, "my-keeper-shield");
+  }
+  await page.screenshot({ path: ".test-data/screenshots/manual-name.png" });
   assert.deepEqual(errors, []);
   console.log(
     "Browser: import, background selection, pause/resume, editor persistence, coverage, settings and fixed progress passed. 299 real capture candidates; character equipment grouped.",

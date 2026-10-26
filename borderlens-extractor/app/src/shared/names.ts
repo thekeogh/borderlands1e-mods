@@ -36,9 +36,21 @@ export const NameDecision = z
   })
   .strict();
 export type NameDecision = z.infer<typeof NameDecision>;
+export const ManualItemName = z
+  .string()
+  .trim()
+  .min(1)
+  .max(160)
+  .refine(
+    (value) => !/[\u0000-\u001f\u007f]/.test(value),
+    "Enter a single-line item name.",
+  );
 export const NameOverride = z
   .object({
-    corroboration: NameDecision.shape.corroboration,
+    origin: z.enum(["manual", "research"]).default("research"),
+    identityName: z.string().optional(),
+    identityAliases: z.array(z.string()).optional(),
+    corroboration: z.array(NameDecision.shape.corroboration.element),
     name: z.string().trim().min(1).max(160),
     originalName: z.string(),
     reason: z.string(),
@@ -55,7 +67,11 @@ export const NameOverride = z
     ),
     identityPaths: z.array(z.string()),
   })
-  .strict();
+  .strict()
+  .refine(
+    (value) => value.origin === "manual" || value.corroboration.length > 0,
+    "Research names need corroborating evidence.",
+  );
 export type NameOverride = z.infer<typeof NameOverride>;
 export const NameFile = z
   .object({
