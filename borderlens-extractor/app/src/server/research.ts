@@ -36,6 +36,7 @@ export class Research {
   robots = new Map<string, string>();
   last = 0;
   sharedAttempts = new Map<string, string>();
+  refreshed = new Set<string>();
   constructor(
     public store: Store,
     public fetcher: typeof fetch = fetch,
@@ -132,21 +133,19 @@ export class Research {
       throw new Error(
         "This source was removed; restore it before importing again.",
       );
-    if (f.evidenceScope) {
-      if (
-        !f.sourceUrls.some(
-          (candidate) => sourceKey(candidate) === sourceKey(url),
-        )
-      )
-        f.sourceUrls.push(url);
-      const cached = this.store.sharedCached(url);
-      if (cached?.hash === hash(html)) {
-        cached.fetchedAt = now();
-        this.store.db
-          .prepare("UPDATE sources SET value=? WHERE id=?")
-          .run(JSON.stringify(cached), cached.id);
-        return cached;
-      }
+    if (
+      !f.sourceUrls.some((candidate) => sourceKey(candidate) === sourceKey(url))
+    )
+      f.sourceUrls.push(url);
+    const cached = this.store.cachedSource(url);
+    if (cached?.hash === hash(html)) {
+      cached.fetchedAt = now();
+      cached.imported = imported;
+      delete cached.captureMethod;
+      this.store.db
+        .prepare("UPDATE sources SET value=? WHERE id=?")
+        .run(JSON.stringify(cached), cached.id);
+      return cached;
     }
     const parsed = this.parse(html);
     if (parsed.text.length < 60)
@@ -174,30 +173,34 @@ export class Research {
       throw new Error(
         "This source was removed from this item; restore it before fetching again.",
       );
-    const owner = this.store.sourceOwner(f, url);
-    const existing = this.store
-      .sources(owner.id)
-      .find((s) => sourceKey(s.url) === sourceKey(url));
+    const owner = this.store.sourceOwner(f, url),
+      existing = this.store.cachedSource(url),
+      run = this.store.state.run;
+    const attempt =
+      run.startedAt && ["running", "pausing"].includes(run.status)
+        ? run.startedAt + "|" + sourceKey(url)
+        : null;
     if (
       existing &&
       (!refresh ||
-        (owner.evidenceScope &&
-          this.store.state.run.startedAt &&
-          existing.fetchedAt >= this.store.state.run.startedAt))
-    )
+        (attempt &&
+          (this.refreshed.has(attempt) || existing.fetchedAt > run.startedAt!)))
+    ) {
+      if (
+        !owner.sourceUrls.some(
+          (candidate) => sourceKey(candidate) === sourceKey(url),
+        )
+      )
+        owner.sourceUrls.push(url);
       return existing;
-    const run = this.store.state.run;
-    const attempt =
-      owner.evidenceScope &&
-      run.startedAt &&
-      ["running", "pausing"].includes(run.status)
-        ? run.startedAt + "|" + sourceKey(url)
-        : null;
+    }
     if (attempt && this.sharedAttempts.has(attempt))
       throw new Error(this.sharedAttempts.get(attempt)!);
     try {
       const fetched = await this.fetchText(url);
-      return this.save(owner, fetched.url, fetched.text);
+      const source = this.save(owner, fetched.url, fetched.text);
+      if (attempt) this.refreshed.add(attempt);
+      return source;
     } catch (error: any) {
       if (attempt) this.sharedAttempts.set(attempt, error.message);
       throw error;

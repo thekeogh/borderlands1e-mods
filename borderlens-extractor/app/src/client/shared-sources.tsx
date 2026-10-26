@@ -1,3 +1,4 @@
+import { SourceSite } from "./source-site";
 import React, { useEffect, useRef, useState } from "react";
 import { X, BookOpen, Plus, Trash2, ArrowUpRight } from "lucide-react";
 import {
@@ -190,6 +191,7 @@ export function SharedSources({
               <article className="source-card" key={target}>
                 <div>
                   <strong>{source?.title || target}</strong>
+                  <SourceSite url={target} />
                   <a
                     href={target}
                     target="_blank"

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Borderlens local workshop
-  version: 0.20.0
+  version: 0.22.1
   description: Local-only catalogue processing. Disk-backed checkpoints; no hosted accounts or API-key billing.
 servers:
   - url: http://127.0.0.1:4317
@@ -237,7 +237,7 @@ paths:
       responses:
         "200":
           {
-            description: "Family with inheritedEvidence (URL, title, all contributing parent IDs/names and captured status), active sources plus excludedSources (restorable per-item URL exclusions), effective classification override (equipment category and/or weapon subtype; equipment overrides have a null weaponType), facts/evidence, per-provider research status/errors, sources, private researchAudit with full-source chunk readings and fact dispositions, stage history and last valid output. Final whole-document validation status, image metadata and savedRebuild availability/reason are included for built and unbuilt candidates. Website output is schema 8: canonical element enum, full-document consistency checks, relative image path or null, rich description/details, contextual stat ranges, grouped conditional dropChances and inline parts; empty note strings are omitted; provenance and coverage stay private. Final JSON includes the item revision counter. Viewing/exporting does not increment revision. Does not change the queue.",
+            description: "Family with URL-matched catalogue-wide cached pages (reusedFrom identifies a previously saved article; logical item bindings remain independent), inheritedEvidence (URL, title, all contributing parent IDs/names and captured status), active sources plus excludedSources (restorable per-item URL exclusions), effective classification override (equipment category and/or weapon subtype; equipment overrides have a null weaponType), facts/evidence, per-provider research status/errors, sources, private researchAudit with full-source chunk readings and fact dispositions, stage history and last valid output. Final whole-document validation status, image metadata and savedRebuild availability/reason are included for built and unbuilt candidates. Website output is schema 8: canonical element enum, full-document consistency checks, relative image path or null, rich description/details, contextual stat ranges, grouped conditional dropChances and inline parts; empty note strings are omitted; provenance and coverage stay private. Final JSON includes the item revision counter. Viewing/exporting does not increment revision. Does not change the queue.",
           }
         "404": { description: "Family not found." }
   /api/items/{id}/action:
@@ -282,7 +282,7 @@ paths:
                 sourceId:
                   {
                     type: string,
-                    description: Saved source ID; required for exclude-source or restore-source.,
+                    description: Saved/excluded source ID; exclude-source may instead take an existing unsaved evidence URL in url.,
                   }
                 gameOnly: { type: boolean }
                 output: { type: object }
@@ -304,7 +304,7 @@ paths:
       responses:
         "200":
           {
-            description: "Action checkpointed. exclude-source/restore-source take sourceId; they invalidate source-dependent drafts, keep HTML, and suppress automatic fetching until restored. Changing the currently processing item requires pause. No model call is started. Remove/exclude hides an item from normal navigation, batches and exports while retaining its data. Restore returns it without starting a build. The currently processing item must be paused before removal; other items can be removed during a batch. Rebuilds queue behind active work; selection never triggers action.",
+            description: "Action checkpointed. exclude-source/restore-source take sourceId; exclude-source also accepts url for an unsaved item evidence link and creates a restorable exclusion without fetching the page; they invalidate source-dependent drafts, keep HTML, and suppress automatic fetching until restored. Changing the currently processing item requires pause. No model call is started. Remove/exclude hides an item from normal navigation, batches and exports while retaining its data. Restore returns it without starting a build. The currently processing item must be paused before removal; other items can be removed during a batch. Rebuilds queue behind active work; selection never triggers action.",
           }
         "400":
           {
@@ -314,6 +314,45 @@ paths:
         "409":
           {
             description: "Action requires a paused worker, or saved-source rebuild has no saved pages.",
+          }
+  /api/groups/run:
+    post:
+      operationId: startGroupBatch
+      description: Start a batch of all active descendants matching this scope, ignoring sidebar filters. Rebuilds include completed children. Removed/retired entries are skipped. Uses the same ordered queue, run-size limit, pause/resume and failure continuation as global batches; scope and rebuild policy survive restart. Saved mode reuses captured sources and fetches only for children without any. Inherited evidence remains effective. URL-only mode preserves outputs and a paused build checkpoint. Does not create a shared-evidence owner.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scope, action]
+              properties:
+                scope:
+                  type: object
+                  required: [category]
+                  properties:
+                    category: { type: string }
+                    group:
+                      {
+                        type: string,
+                        description: Weapon type when category is Weapons.,
+                      }
+                    character:
+                      { type: string, enum: [Roland, Lilith, Mordecai, Brick] }
+                action:
+                  {
+                    type: string,
+                    enum: [rebuild-saved, rebuild-fresh, discover],
+                  }
+      responses:
+        "200":
+          {
+            description: Scoped run created; group rebuild includes completed entries exactly once.,
+          }
+        "400": { description: Invalid scope or action. }
+        "409":
+          {
+            description: Pause active processing before starting another batch.,
           }
   /api/run:
     post:

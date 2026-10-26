@@ -117,10 +117,12 @@ test("source X API retains HTML, invalidates stale work, scopes removal per item
   assert.equal(s.sources(f.id).length, 2);
   assert.equal(s.sourceExclusions(f.id).length, 0);
   assert.equal(w.busy, false);
-  assert.equal(
-    (await action("exclude-source", s.sources(other.id)[0].id)).status,
-    404,
+  const unrelated = new Research(s).save(
+    other,
+    "https://borderlands.fandom.com/wiki/Unrelated_fixture",
+    "<h1>Unrelated fixture</h1><p>This separate article is not linked to the current item and cannot be removed through its source controls.</p>",
   );
+  assert.equal((await action("exclude-source", unrelated.id)).status, 404);
   assert.equal((await action("exclude-source", bad.id)).status, 200);
   await new Promise<void>((r) => server.close(() => r()));
   const reopened = x.reopen();
@@ -243,5 +245,157 @@ test("generated reset keeps exclusions and manual output requires review after i
   );
   assert.equal(res.status, 200);
   assert.equal(s.isSourceExcluded(f.id, bad.url), true);
-  assert.equal(s.allSources(f.id).length, 2);
+  assert.equal(
+    new Set(s.allSources(f.id).map((source) => sourceKey(source.url))).size,
+    2,
+  );
+});
+
+test("pending evidence URL can be excluded before capture, restored, and kept out of rediscovery and old Chrome tickets", async (t) => {
+  const x = fixture(t),
+    { s, f, other } = x,
+    w = new Worker(s, {} as any),
+    pending = "https://www.lootlemon.com/class/brick#_0000000_0000000_0000000";
+  f.sourceUrls.push(pending);
+  other.sourceUrls.push(pending);
+  s.put(f.id, "matches", {
+    matches: [
+      {
+        url: pending,
+        title: "Brick skill calculator",
+        gameEvidence: "BL1",
+        reason: "Fixture",
+      },
+    ],
+    notFoundReason: null,
+  });
+  s.put(f.id, "research", {
+    discovered: ["Lootlemon"],
+    providers: [
+      {
+        provider: "Lootlemon",
+        status: "urls_ready",
+        urls: [pending],
+        message: "URL only",
+        checkedAt: new Date().toISOString(),
+      },
+    ],
+  });
+  s.save();
+  const ticket = w.browserImports.create(f.id, pending),
+    savedSourceIds = s.sources(f.id).map((source) => source.id),
+    server = api(s, w).listen(0, "127.0.0.1");
+  await new Promise<void>((resolve) => server.once("listening", resolve));
+  t.after(() => {
+    server.closeAllConnections();
+    server.close();
+  });
+  const base = `http://127.0.0.1:${(server.address() as any).port}`,
+    action = (body: unknown) =>
+      fetch(base + `/api/items/${f.id}/action`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+  assert.equal(
+    (await action({ action: "exclude-source", url: pending })).status,
+    200,
+  );
+  assert(!f.sourceUrls.includes(pending));
+  assert.equal(
+    s.isSourceExcluded(f.id, "https://lootlemon.com/class/brick"),
+    true,
+  );
+  assert.deepEqual(
+    s.sources(f.id).map((source) => source.id),
+    savedSourceIds,
+  );
+  assert(other.sourceUrls.includes(pending));
+  const excluded = s
+    .sourceExclusions(f.id)
+    .find((row) => sourceKey(row.url) === sourceKey(pending))!;
+  assert.match(excluded.sourceId, /^url:/);
+  assert.equal(excluded.title, "Brick skill calculator");
+  assert.equal(s.get(f.id, "research"), null);
+  assert.throws(
+    () => w.browserImports.create(f.id, pending),
+    /Restore it first/,
+  );
+  const result = w.browserImports.submit({
+    ...ticket,
+    url: pending,
+    html: "<h1>Brick calculator fixture</h1><p>This synthetic capture was opened before its pending source URL was removed from this item.</p>",
+  });
+  assert.equal(result.status, "failed");
+  w.ai = {
+    run: async () => ({
+      matches: [
+        {
+          url: "https://lootlemon.com/class/brick",
+          title: "Brick",
+          gameEvidence: "BL1",
+          reason: "Excluded alias fixture",
+        },
+      ],
+      notFoundReason: null,
+    }),
+  } as any;
+  await w.discoverSourceUrls(f, true);
+  assert(!f.sourceUrls.some((url) => sourceKey(url) === sourceKey(pending)));
+  assert(
+    !s
+      .get<any>(f.id, "matches")
+      .matches.some((row: any) => sourceKey(row.url) === sourceKey(pending)),
+  );
+  assert.equal(
+    (await action({ action: "restore-source", sourceId: excluded.sourceId }))
+      .status,
+    200,
+  );
+  assert.equal(s.isSourceExcluded(f.id, pending), false);
+  assert(f.sourceUrls.includes(pending));
+  assert.equal(
+    (
+      await action({
+        action: "exclude-source",
+        url: "https://lootlemon.com/class/brick",
+      })
+    ).status,
+    200,
+  );
+  await new Promise<void>((resolve) => server.close(() => resolve()));
+  assert.equal(x.reopen().isSourceExcluded(f.id, pending), true);
+});
+test("pending removal rejects unknown URLs and protects active items without fetching anything", async (t) => {
+  const { s, f, other } = fixture(t),
+    w = new Worker(s, {} as any),
+    pending = "https://www.lootlemon.com/class/brick";
+  other.sourceUrls.push(pending);
+  await assert.rejects(
+    w.action(f.id, "exclude-source", { url: pending }),
+    /not found for this item/,
+  );
+  await assert.rejects(
+    w.action(f.id, "exclude-source", {
+      url: "https://example.com/not-allowed",
+    }),
+    /HTTPS wiki or Lootlemon/,
+  );
+  await assert.rejects(
+    w.action(f.id, "exclude-source", {}),
+    /saved source or an evidence URL/,
+  );
+  assert.equal(s.sourceExclusions(f.id).length, 0);
+  f.sourceUrls.push(pending);
+  s.state.run.currentId = f.id;
+  w.busy = true;
+  await assert.rejects(
+    w.action(f.id, "exclude-source", { url: pending }),
+    /Pause processing/,
+  );
+  assert(f.sourceUrls.includes(pending));
+  w.busy = false;
+  await w.action(f.id, "exclude-source", { url: pending });
+  assert.equal(s.isSourceExcluded(f.id, pending), true);
+  assert.equal(w.busy, false);
 });

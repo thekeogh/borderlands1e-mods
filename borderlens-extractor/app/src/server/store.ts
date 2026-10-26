@@ -45,6 +45,7 @@ export const stable = (v: unknown): string =>
       : x,
   );
 export class Store extends EventEmitter {
+  private articleIndex?: { changes: string; pages: Map<string, Source> };
   classifications: Classifications;
   images: Images;
   db: DatabaseSync;
@@ -301,15 +302,84 @@ export class Store extends EventEmitter {
         )
       : [owner];
   }
+  cachedSource(url: string): Source | undefined {
+    const changes =
+      String(
+        (this.db.prepare("SELECT total_changes() AS n").get() as { n: number })
+          .n,
+      ) +
+      ":" +
+      String(
+        (
+          this.db.prepare("PRAGMA data_version").get() as {
+            data_version: number;
+          }
+        ).data_version,
+      );
+    if (!this.articleIndex || this.articleIndex.changes !== changes) {
+      const pages = new Map<string, Source>();
+      for (const row of this.db
+        .prepare("SELECT value FROM sources ORDER BY rowid")
+        .all() as { value: string }[]) {
+        const source = JSON.parse(row.value) as Source,
+          key = sourceKey(source.url),
+          previous = pages.get(key);
+        if (
+          !source.error &&
+          (!previous || (source.fetchedAt || "") >= (previous.fetchedAt || ""))
+        )
+          pages.set(key, source);
+      }
+      this.articleIndex = { changes, pages };
+    }
+    const source = this.articleIndex.pages.get(sourceKey(url));
+    return source ? this.hydrateSource(source) : undefined;
+  }
   sharedCached(url: string): Source | undefined {
-    return (
+    return this.cachedSource(url);
+  }
+  private hydrateSource(source: Source): Source {
+    const file = path.join(this.dir, "sources", source.filename);
+    if (source.contentVersion !== 2 && existsSync(file)) {
+      const parsed = parseSource(readFileSync(file, "utf8"));
+      source.contentVersion = 2;
+      source.sections = parsed.sections;
+      source.tables = parsed.tables;
       this.db
-        .prepare("SELECT value FROM sources WHERE family LIKE 'shared-%'")
-        .all() as { value: string }[]
-    )
-      .map((row) => JSON.parse(row.value) as Source)
-      .filter((source) => sourceKey(source.url) === sourceKey(url))
-      .sort((a, b) => (b.fetchedAt || "").localeCompare(a.fetchedAt || ""))[0];
+        .prepare("UPDATE sources SET value=? WHERE id=?")
+        .run(JSON.stringify(source), source.id);
+    }
+    return source;
+  }
+  sourceConsumers(url: string): Family[] {
+    const key = sourceKey(url),
+      physical = new Set(
+        (
+          this.db.prepare("SELECT family,value FROM sources").all() as {
+            family: string;
+            value: string;
+          }[]
+        )
+          .filter(
+            (row) => sourceKey((JSON.parse(row.value) as Source).url) === key,
+          )
+          .map((row) => row.family),
+      );
+    return this.state.families.filter(
+      (f) =>
+        f.status !== "excluded" &&
+        !f.supersededBy &&
+        !this.isSourceExcluded(f.id, url) &&
+        (f.sourceUrls.some((candidate) => sourceKey(candidate) === key) ||
+          physical.has(f.id) ||
+          this.sharedScopesFor(f).some(
+            (owner) =>
+              !this.isSourceExcluded(owner.id, url) &&
+              owner.sourceUrls.some(
+                (candidate) => sourceKey(candidate) === key,
+              ),
+          )),
+    );
   }
   scopeSources(owner: Family): Source[] {
     const raw = this.rawSources(owner.id).filter((source) =>
@@ -416,29 +486,41 @@ export class Store extends EventEmitter {
             })),
         )
       : [];
-    // Keep all candidates; sources() chooses the newest capture per article.
-    return [...inherited, ...this.rawSources(family)];
+    const owned = this.rawSources(family);
+    const referenced = f
+      ? [...new Set([...f.sourceUrls, ...owned.map((source) => source.url)])]
+          .map((url) => this.cachedSource(url))
+          .filter(Boolean)
+          .map((source) => {
+            const page = source as Source;
+            if (page.familyId === f.id) return page;
+            const owner =
+              this.state.families.find((owner) => owner.id === page.familyId) ||
+              this.state.sharedScopes?.find(
+                (owner) => owner.id === page.familyId,
+              );
+            return {
+              ...page,
+              reusedFrom: {
+                id: page.familyId,
+                name: owner
+                  ? [owner.name, owner.character].filter(Boolean).join(" · ")
+                  : "another item",
+              },
+            };
+          })
+      : [];
+    // A matching URL is a binding to the newest stored article, not another HTML copy.
+    return [...inherited, ...owned, ...referenced];
   }
   rawSources(family: string): Source[] {
     return (
       this.db
         .prepare("SELECT value FROM sources WHERE family=?")
         .all(family) as { value: string }[]
-    ).map((r) => {
-      const source = JSON.parse(r.value) as Source;
-      const file = path.join(this.dir, "sources", source.filename);
-      if (source.contentVersion !== 2 && existsSync(file)) {
-        const parsed = parseSource(readFileSync(file, "utf8"));
-        source.contentVersion = 2;
-        source.sections = parsed.sections;
-        source.tables = parsed.tables;
-        this.db
-          .prepare("UPDATE sources SET value=? WHERE id=?")
-          .run(JSON.stringify(source), source.id);
-      }
-      return source;
-    });
+    ).map((row) => this.hydrateSource(JSON.parse(row.value) as Source));
   }
+
   source(id: string): Source | undefined {
     const r = this.db
       .prepare("SELECT value FROM sources WHERE id=?")

@@ -1,3 +1,4 @@
+import { SourceSite } from "./source-site";
 import { useEffect, useRef, useState } from "react";
 import { X, Copy, ArrowUpRight, BookOpen } from "lucide-react";
 import type { Source } from "../shared/models";
@@ -115,6 +116,7 @@ export function SourceViewer({
             <BookOpen size={13} /> SAVED SOURCE SNAPSHOT
           </div>
           <h2 id="source-viewer-title">{source.title}</h2>
+          <SourceSite url={source.url} />
           <a href={source.url} target="_blank" rel="noreferrer">
             {source.url} <ArrowUpRight size={12} />
           </a>

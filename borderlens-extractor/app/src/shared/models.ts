@@ -286,6 +286,7 @@ export type Capture = {
 };
 export type Source = {
   inheritedFrom?: { id: string; name: string };
+  reusedFrom?: { id: string; name: string };
   id: string;
   familyId: string;
   url: string;
@@ -338,6 +339,8 @@ export type CoverageEntry = {
 export type BatchSourceMode = "saved" | "fresh" | "auto";
 export type Run = {
   mode?: "build" | "discover";
+  scope?: EvidenceScope;
+  rebuildAll?: boolean;
   continueOnError?: boolean;
   sourceMode: BatchSourceMode;
   sourcePrepared: string[];

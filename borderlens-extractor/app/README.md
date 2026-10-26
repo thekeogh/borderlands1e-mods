@@ -44,6 +44,8 @@ Open **http://127.0.0.1:4317**.
 
 Website JSON groups each drop location with its conditional drop rates, including player counts when known. Stats distinguish card values from scoped or other conditional values. Empty note strings are omitted; unsupported level limits stay `null`. After a compiler upgrade, rebuild queued items to update their JSON; saved pages and previous output remain on disk.
 
+Articles are cached across the whole catalogue by URL. If an item or shared group references a page already captured elsewhere, it immediately uses that saved content; no second Chrome capture is needed. Reused individual articles are labelled. Exclusions and AI fact interpretation remain specific to each item. Fresh-source batches refresh a matching article once per run.
+
 **Rebuild from saved sources** reuses saved pages and their extracted facts, then writes and validates again. Switching agents does not repeat complete source analysis. Newly added or changed saved pages are read if needed; nothing is fetched.
 
 **Rebuild from fresh sources** fetches current pages, reads their facts again, then rebuilds. Blocked refreshes keep the saved pages; capture the blocked article in Chrome and resume. Both options are in the dropdown beside the rebuild button. Saved sources is the default when pages exist.
@@ -59,6 +61,10 @@ Completed items pass source checks and a final whole-document check for JSON syn
 **Current item** clears sidebar search/status filters, opens its category/character path and scrolls to the item. The sidebar collapse/expand controls work one level per click: collapse deepest groups first, expand parents first. Spinners mark the active category and character group even when collapsed.
 
 Category and character-group badges show **completed / needs attention / total**. Hover for waiting and processing counts. Counts follow the current search/filter.
+
+## Remove an evidence URL
+
+Click the **X** beside a pending article’s Chrome button to remove a wrong link before capture. It is excluded from future discovery for that item. **Removed sources → Restore** brings the link back. Existing saved-source cards retain their X controls too. No Chrome extension update is needed.
 
 ## Remove an item
 
@@ -79,6 +85,12 @@ Click **Shared evidence** above the tree for **Everything**: articles shared wit
 Each shared-source card shows its saved text preview, capture method, date and character count. **Not captured yet** means only the URL is stored.
 
 Capture a shared article once. Each item uses all applicable levels together: **Everything → category → weapon type/character → individual sources**. All saved articles are read; relevant facts inform the entry. Duplicate URLs are merged. The compact inherited-evidence list shows each shared article and its parent groups. White source cards and provider counts cover only item-specific evidence. Remove a URL in the shared panel to stop using it for that group. Re-adding the URL reuses its saved article. Changes queue affected items without starting a build.
+
+## Group batches
+
+Click **⋯** beside any sidebar category or character for **Rebuild from saved sources**, **Rebuild from fresh sources**, or **Fetch evidence URLs only**. It processes every active child in that group, including completed items; sidebar filters do not narrow the batch. Removed items are skipped. The configured run-size limit still applies.
+
+Pause an active job before starting another group. Progress shows the selected group; pause/resume and restart retain that group’s queue. Failed children are marked for attention and the batch continues. Saved mode fetches sources only for children with none. Parent evidence is inherited as usual.
 
 ## Find URLs first
 

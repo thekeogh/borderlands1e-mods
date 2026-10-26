@@ -1,3 +1,6 @@
+import { SourceSite } from "./source-site";
+import { GroupActions, type GroupAction } from "./group-actions";
+import { scopeLabel } from "../shared/evidence-scopes";
 import { GameDataTab } from "./game-data";
 import { InheritedEvidenceList } from "./inherited-evidence";
 import { sourceKey, type InheritedEvidence } from "../shared/research";
@@ -406,6 +409,8 @@ function App() {
     (source) =>
       !source.inheritedFrom && !inheritedKeys.has(sourceKey(source.url)),
   );
+  const runGroup = (scope: EvidenceScope, action: GroupAction) =>
+    void act(() => request("/api/groups/run", { scope, action }));
   const setSetting = (patch: Record<string, unknown>) =>
     act(() => request("/api/settings", patch, "PATCH"), "Settings saved.");
   return (
@@ -562,6 +567,16 @@ function App() {
               >
                 <BookOpen size={13} />
               </button>
+              <GroupActions
+                scope={
+                  items[0].category === "Weapons"
+                    ? { category: "Weapons", group: group as any }
+                    : { category: items[0].category }
+                }
+                families={state.families}
+                busy={busy || working}
+                run={runGroup}
+              />
               {!collapsed[group] &&
                 (() => {
                   const renderItem = (item: Family) => (
@@ -645,6 +660,17 @@ function App() {
                           >
                             <BookOpen size={13} />
                           </button>
+                        )}
+                        {character !== "Needs review" && (
+                          <GroupActions
+                            scope={{
+                              category: items[0].category,
+                              character: character as any,
+                            }}
+                            families={state.families}
+                            busy={busy || working}
+                            run={runGroup}
+                          />
                         )}
                         {!collapsed[key] && children.map(renderItem)}
                       </div>
@@ -761,6 +787,11 @@ function App() {
                         ? "Ready when you are"
                         : "Your catalogue, one item at a time"}
               </strong>
+              {run.scope && (
+                <span className="run-scope" aria-label="Batch group">
+                  {scopeLabel(run.scope)}
+                </span>
+              )}
               <span>
                 {run.queue.length
                   ? `${Math.min(run.index + (busy ? 1 : 0), run.queue.length)} / ${run.queue.length}`
@@ -1490,9 +1521,13 @@ function App() {
                         if (
                           !count &&
                           !targets.length &&
-                          detail?.inheritedEvidence?.some(
+                          (detail?.inheritedEvidence?.some(
                             (source) => providerForUrl(source.url) === provider,
-                          )
+                          ) ||
+                            detail?.excludedSources?.some(
+                              (source) =>
+                                providerForUrl(source.url) === provider,
+                            ))
                         )
                           return null;
                         return (
@@ -1517,20 +1552,50 @@ function App() {
                                   "Rebuild this item to seek this source. If blocked, import saved page HTML with its original URL."}
                             </p>
                             <div className="browser-import-buttons">
-                              {targets.slice(0, 3).map((url, index) => (
-                                <button
+                              {targets.map((url, index) => (
+                                <span
+                                  className="evidence-url-actions"
                                   key={url}
-                                  className="button secondary"
-                                  disabled={chromeHelper.opening}
-                                  onClick={() =>
-                                    chromeHelper.openPage(f.id, url)
-                                  }
                                 >
-                                  <Chrome size={13} />
-                                  {index === 0
-                                    ? `Open ${provider === "Wiki" ? "wiki" : "Lootlemon"} in Chrome`
-                                    : "Open additional article"}
-                                </button>
+                                  <button
+                                    className="button secondary"
+                                    disabled={chromeHelper.opening}
+                                    onClick={() =>
+                                      chromeHelper.openPage(f.id, url)
+                                    }
+                                  >
+                                    <Chrome size={13} />
+                                    {index === 0
+                                      ? `Open ${provider === "Wiki" ? "wiki" : "Lootlemon"} in Chrome`
+                                      : "Open additional article"}
+                                  </button>
+                                  {!itemSources.some(
+                                    (source) =>
+                                      sourceKey(source.url) === sourceKey(url),
+                                  ) && (
+                                    <button
+                                      className="pending-source-remove"
+                                      aria-label={"Remove evidence URL: " + url}
+                                      title="Remove this URL and exclude it from future discovery"
+                                      disabled={
+                                        working ||
+                                        (busy && run.currentId === f.id)
+                                      }
+                                      onClick={() =>
+                                        void act(
+                                          () =>
+                                            request(
+                                              "/api/items/" + f.id + "/action",
+                                              { action: "exclude-source", url },
+                                            ),
+                                          "Evidence URL removed. Restore it from Removed sources if needed.",
+                                        )
+                                      }
+                                    >
+                                      <X size={15} />
+                                    </button>
+                                  )}
+                                </span>
                               ))}
                               {!targets.length && (
                                 <button
@@ -1551,6 +1616,7 @@ function App() {
                           <div>
                             <BookOpen size={18} />
                             <strong>{s.title}</strong>
+                            <SourceSite url={s.url} />
                             <a target="_blank" rel="noreferrer" href={s.url}>
                               <ArrowUpRight size={15} />
                             </a>
@@ -1574,6 +1640,12 @@ function App() {
                               <X size={15} />
                             </button>
                           </div>
+                          {s.reusedFrom && (
+                            <small className="source-reused">
+                              Reused saved article · saved for{" "}
+                              {s.reusedFrom.name}
+                            </small>
+                          )}
                           <small>
                             {new Date(s.fetchedAt).toLocaleString()} ·{" "}
                             {s.captureMethod === "chrome"
@@ -1881,7 +1953,7 @@ function App() {
         </main>
         <footer>
           <span>ONE FAMILY. EVERY DETAIL.</span>
-          <span>Borderlens workshop · 0.20.0</span>
+          <span>Borderlens workshop · 0.22.1</span>
         </footer>
       </section>
       <input

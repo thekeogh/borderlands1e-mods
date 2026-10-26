@@ -83,7 +83,7 @@ const ai: AI = {
           "A browser test description backed by captured family definitions.",
         manufacturers: [],
         rarities: [],
-        elements: [],
+        elements: f.element ? [f.element] : [],
         redText: p.facts.redText,
         specialEffects: [],
         levels: { minimum: null, maximum: null, notes: "" },
@@ -96,6 +96,7 @@ const ai: AI = {
         "summary",
         "description",
         ...(p.facts.redText ? ["redText"] : []),
+        ...(f.element ? ["elements"] : []),
       ].map((field) => ({
         field,
         evidenceIds: [p.evidence[0].id],

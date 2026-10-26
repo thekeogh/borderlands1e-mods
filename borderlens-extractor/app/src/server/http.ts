@@ -260,6 +260,32 @@ export function api(store: Store, worker: Worker) {
     await worker.action(req.params.id, body.action, body);
     res.json({ ok: true });
   });
+  app.post("/api/groups/run", (req, res) => {
+    const { scope, action } = z
+      .object({
+        scope: EvidenceScope,
+        action: z.enum(["rebuild-saved", "rebuild-fresh", "discover"]),
+      })
+      .strict()
+      .parse(req.body);
+    if (worker.busy)
+      throw new HttpError(
+        409,
+        "Pause the current job before starting a group batch.",
+      );
+    worker.start(
+      undefined,
+      undefined,
+      action === "discover"
+        ? "auto"
+        : action === "rebuild-fresh"
+          ? "fresh"
+          : "saved",
+      action === "discover" ? "discover" : "build",
+      scope,
+    );
+    res.json(store.state.run);
+  });
   app.post("/api/run", (req, res) => {
     const { action, sourceMode } = z
       .object({

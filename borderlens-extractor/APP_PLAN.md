@@ -1936,3 +1936,127 @@ filters/searches records, returns to the unchanged empty Preview and compares
 the full game-data response after building. Build/TypeScript, API syntax lint
 and diff checks pass. Native-value screenshot inspected. No live build or source
 research was initiated and existing user research/progress remains intact.
+
+
+### Scoped category and character batches (workshop 0.21.0)
+
+Each sidebar parent gets a sibling three-dot GroupActions button beside its
+shared-evidence book button. The portal menu uses fixed viewport positioning to
+avoid sidebar clipping, supports Escape/outside dismissal and arrow-key focus,
+and exposes the same three item actions: saved rebuild, fresh rebuild, URL-only.
+Count all active descendants from full project state, independently of search or
+status filters. Removed/retired items are excluded. Pause an active job before
+starting a new scoped run. Keep current accordion/selection behaviour unchanged.
+
+POST /api/groups/run accepts {scope:EvidenceScope, action:rebuild-saved|
+rebuild-fresh|discover}. Do not create synthetic shared-evidence owners merely
+to run a batch. Worker.start accepts an optional scope, selects matching actual
+Family IDs and uses existing run-size limits/ordering/failure continuation.
+Run.scope persists the selected category/type/character; Run.rebuildAll marks
+explicit group rebuilds so already-completed children are prepared/rebuilt once
+when first encountered. sourcePrepared prevents duplicate initialization after
+pause/restart. Global Start keeps its existing unfinished-only policy.
+
+Saved group mode reuses available saved/inherited pages and fetches sources for
+uncached children, matching the global saved policy. Fresh mode prepares every
+child for fresh fetching/reading. URL-only includes completed children, mutates
+only discovery metadata and preserves a paused build checkpoint. Existing
+source/alias inheritance rules apply in all group modes. Scoped runs use the
+regular progress bar, with a visible scope chip; existing path spinners continue
+showing current work even when groups are collapsed.
+
+The queue is a snapshot of matching children at start, so an item reclassified
+during its build finishes normally. Later source-change/capture/restoration
+append operations are constrained by the active/saved run scope. Explicit outside
+item rebuilds/range changes during a scoped run require pause rather than silently
+expanding it. User-restored children within the group may join its queue. No public
+item/schema/compiler changes or automatic live catalogue rebuild are needed.
+
+
+Verification for 0.21.0: full suite 140 passed, four existing external-simulation
+tests skipped. Seven new queue/API tests cover category and character membership,
+completed-child rebuilds, cache/fresh routing and inherited pages, merged weapon
+types, failure continuation, unchanged URL-only outputs, paused build preservation,
+restart/sourcePrepared recovery, outside-scope append guards, active-job rejection
+and all endpoint actions. Browser smoke exercises category URL-only processing
+under a narrowed search, then character URL-only/saved/fresh batches, including
+completed-child reruns. Removed candidates stay excluded; progress scope labels
+and popup count/actions are verified and screenshot inspected. Production build,
+TypeScript, local OpenAPI syntax and diff checks pass. No live group batch or model
+run was initiated; existing catalogue, sources and checkpoints are preserved.
+
+
+### Unsaved evidence URL removal (workshop 0.21.1)
+
+Pending individual URLs have an X beside their Open in Chrome buttons. Use the
+existing exclude-source action with url instead of sourceId when no saved page
+exists. Validate that the URL is allowed and belongs to this item's sourceUrls,
+source matches/provider report, saved pages or prior exclusions. Store a stable
+url:<hash> exclusion ID and saved candidate title; no capture is needed. Match
+URL aliases using sourceKey, preserve other items' references, and retain saved
+HTML. Existing source invalidation/manual-review/in-flight guards still apply.
+
+Removed sources exposes restoration through the same ID-based action. Discovery,
+fresh fetching, manual/Chrome imports and old pending tickets honor the existing
+URL exclusion checks; removing an unsaved link must not let it reappear on retry.
+If a provider has no individual saved pages or active URL targets after removal,
+hide its empty warning while keeping the Removed sources shelf. Captured pages
+still use their white-card X. Shared references remain managed through parents.
+The Chrome extension capture selector is unchanged; this release implements the
+user-authorized removal option for pages outside its supported article layout.
+
+
+Verification for 0.21.1: 142 tests passed, four existing external-simulation tests
+skipped. New tests cover pending URL exclusions without saved page IDs, ownership
+validation, canonical aliases, unchanged saved pages/other-item references, stale
+Chrome ticket rejection, rediscovery suppression, restoration, persistence and
+active-call guards. Browser smoke removes/restores an unsaved URL and continues
+item/global/scoped workflows. Build/TypeScript, OpenAPI syntax and diff checks pass.
+No actual source was removed on the user's behalf; no Chrome extension update is
+needed for this app-only removal workflow.
+
+
+### Catalogue-wide article reuse (workshop 0.22.0)
+
+Cache complete source pages by canonical sourceKey URL across individual items and
+shared scopes. Only explicit item URLs, existing owned captures and applicable
+parent bindings may resolve this cache; never attach unrelated articles. Choose
+the latest saved snapshot, preserve HTML/text/sections/tables and capture metadata,
+and retain historical source rows. Identical saves reuse the stored article.
+Resolve existing pending references immediately without discovery/build; show a
+muted reused-from note on individual cards. Public item JSON remains unchanged.
+
+Keep URL exclusions independent per consumer. Removed origin references do not
+delete archived content used elsewhere. Source-reading cache keys remain per
+family and current content, so borrowing a page never borrows another item's fact
+interpretation. Explicit Chrome/manual refresh invalidates referencing consumers,
+retains outputs/manual review and respects scoped queue guards. Automatic fresh
+refresh invalidates remaining selected consumers only; do not expand a requested
+batch to already-completed/unselected entries. Fetch each URL once per active run,
+with new explicit fresh runs still able to refetch. No schema/compiler bump or
+automatic live build is needed.
+
+Verification for 0.22.0: 148 tests passed; four optional external-simulation
+tests skipped in the standard run. Six new cache tests cover full article reuse,
+URL aliases, restart, no duplicate HTML/unrelated attachment, independent
+exclusions/restoration, separate AI readings, latest recapture, fresh per-run
+fetching and read-only GET behavior. Browser smoke verifies immediate reused
+content/cards after an item-only URL binding, plus existing scoped batch flows.
+Production build, TypeScript, local OpenAPI syntax and diff checks pass. Existing
+Postman research simulation: 39 targeted tests passed with no skips, 25 real HTTP
+requests recorded against the local stand-in. No live external/model build was
+started. Idle local service restarted on Node 22; run/checkpoint, all 299 families,
+captures and 22 shared scopes unchanged. Read-only live item GET confirms reuse.
+
+
+### Evidence site labels (workshop 0.22.1)
+
+Individual/shared evidence cards and the saved-source viewer display a coloured
+pill derived solely from the source URL hostname. Distinguish Fandom Wiki and
+Lootlemon colours; retain the actual domain label, with a neutral fallback for
+other sites. This display-only change does not alter source data, queues, AI
+inputs or public schemas/compiler versions.
+
+Verification for 0.22.1: production build/TypeScript and browser smoke pass,
+including domain labels on saved shared and individual cards. Live dev server
+serves the new component; no backend restart or catalogue mutation required.

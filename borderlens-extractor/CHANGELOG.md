@@ -1,5 +1,26 @@
 # Changelog
 
+## Workshop app 0.22.1
+
+- Add coloured source-domain pills to individual and shared evidence cards, and the saved-source viewer. Wiki and Lootlemon have distinct colours; other sites show their domain. Source content and builds unchanged.
+
+## Workshop app 0.22.0
+
+- Reuse saved Wiki/Lootlemon articles across the catalogue by matching canonical URLs, including URL-only references and shared evidence. Show matching pages as saved immediately and label reused individual articles.
+- Keep exclusions and AI fact interpretation per item; do not attach unrelated cached pages. Identical captures reuse stored HTML. Explicit refreshes update matching references while retaining previous output.
+- Refresh each shared URL once per batch; automatic refreshes stay within the selected remaining queue. No public schema/compiler changes.
+
+## Workshop app 0.21.1
+
+- Add an X beside unsaved evidence URL capture buttons. Remove links before capture, suppress aliases in future discovery and restore them from Removed sources.
+- Support URL-based exclusions without a saved page ID; preserve existing captures and reject stale Chrome tickets for removed URLs. Hide empty provider warnings after their last URL is removed.
+
+## Workshop app 0.21.0
+
+- Add a three-dot batch menu beside each sidebar category/weapon group and character subgroup, with saved-source rebuild, fresh-source rebuild and URL-only discovery. Show the full descendant count independently of sidebar filters.
+- Persist scope and rebuild-all policy in the existing queue. Group rebuilds include completed children exactly once, skip removed/retired candidates, continue failures and retain the selected group across pause/resume/restart.
+- Keep later source-change/restoration queue additions inside the selected scope; require pause before explicit work outside an active group. Show the group in the progress bar. Public item schemas remain unchanged.
+
 ## Workshop app 0.20.0
 
 - Add a Game data tab available before building: supported ZIP identity facts, red text, native values, defining parts and searchable linked definitions with original record JSON.

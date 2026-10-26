@@ -1,3 +1,8 @@
+import {
+  EvidenceScope,
+  scopeMatches,
+  type EvidenceScope as GroupScope,
+} from "../shared/evidence-scopes.ts";
 import { sourceKey } from "../shared/research.ts";
 import { equipmentCategoryCandidate } from "./equipment-classification.ts";
 import { assembleWebsiteEntry } from "./final-entry.ts";
@@ -165,10 +170,25 @@ export class Worker {
     only?: string,
     sourceMode: BatchSourceMode = "auto",
     task: "build" | "discover" = "build",
+    scope?: GroupScope,
   ) {
+    if (scope) scope = EvidenceScope.parse(scope);
     const s = this.store.state,
       r = s.run;
     if (this.busy) {
+      if (scope)
+        throw new HttpError(
+          409,
+          "Pause the current job before starting a group batch.",
+        );
+      if (
+        r.scope &&
+        (from || (only && !scopeMatches(r.scope, this.store.family(only))))
+      )
+        throw new HttpError(
+          409,
+          "Pause the group batch before starting work outside its selected range.",
+        );
       if (task === "discover")
         throw new HttpError(
           409,
@@ -199,7 +219,9 @@ export class Worker {
     )
       s.buildCheckpoint = structuredClone(r);
     if (task === "build") delete s.buildCheckpoint;
-    let families = s.families;
+    let families = scope
+      ? s.families.filter((family) => scopeMatches(scope!, family))
+      : s.families;
     if (from) {
       const i = families.findIndex((f) => f.id === from);
       if (i < 0) throw new HttpError(404, "Item not found.");
@@ -215,13 +237,15 @@ export class Worker {
         (f) =>
           !f.supersededBy &&
           f.status !== "excluded" &&
-          (task === "discover" || only || f.status !== "done"),
+          (task === "discover" || only || scope || f.status !== "done"),
       )
       .slice(0, s.settings.maxItems)
       .map((f) => f.id);
     if (!queue.length) {
       s.run = {
         ...r,
+        scope,
+        rebuildAll: !!scope && task === "build",
         mode: task,
         sourceMode,
         status: "complete",
@@ -238,8 +262,9 @@ export class Worker {
       return;
     }
     s.run = {
+      ...(scope ? { scope, rebuildAll: task === "build" } : {}),
       mode: task,
-      continueOnError: !only,
+      continueOnError: scope ? true : !only,
       sourceMode,
       sourcePrepared: [],
       status: "running",
@@ -272,7 +297,13 @@ export class Worker {
     if (this.busy) return;
     const r = this.store.state.run;
     if (!r.queue.length) {
-      this.start(undefined, undefined, r.sourceMode, r.mode || "build");
+      this.start(
+        undefined,
+        undefined,
+        r.sourceMode,
+        r.mode || "build",
+        r.scope,
+      );
       return;
     }
     r.status = "running";
@@ -300,29 +331,33 @@ export class Worker {
   sharedArticleIsBusy(url: string) {
     return (
       this.busy &&
-      (this.store.state.sharedScopes || []).some(
-        (owner) =>
-          owner.sourceUrls.some(
-            (candidate) => sourceKey(candidate) === sourceKey(url),
-          ) && this.evidenceOwnerIsBusy(owner),
-      )
+      this.store
+        .sourceConsumers(url)
+        .some((child) => child.id === this.store.state.run.currentId)
     );
   }
-  sharedArticleChanged(owner: Family, url: string, skipId?: string) {
-    const owners = owner.evidenceScope
-      ? (this.store.state.sharedScopes || []).filter((scope) =>
-          scope.sourceUrls.some(
-            (candidate) => sourceKey(candidate) === sourceKey(url),
-          ),
-        )
-      : [owner];
+  sharedArticleChanged(
+    owner: Family,
+    url: string,
+    skipId?: string,
+    queuedOnly = false,
+  ) {
     const children = new Map(
-      owners
-        .flatMap((scope) => this.store.scopeChildren(scope))
-        .map((child) => [child.id, child]),
+      [
+        ...this.store.sourceConsumers(url),
+        ...this.store.scopeChildren(owner),
+      ].map((child) => [child.id, child]),
     );
     for (const child of children.values()) {
-      if (child.id === skipId) continue;
+      if (child.id === skipId || this.store.isSourceExcluded(child.id, url))
+        continue;
+      if (
+        queuedOnly &&
+        !this.store.state.run.queue
+          .slice(this.store.state.run.index)
+          .includes(child.id)
+      )
+        continue;
       this.invalidate(child, "sources");
       this.store.forget(child.id, [
         "sourceLedger",
@@ -346,6 +381,7 @@ export class Worker {
     for (const child of this.store.scopeChildren(f))
       if (
         ["running", "pausing", "paused", "blocked"].includes(run.status) &&
+        (!run.scope || scopeMatches(run.scope, child)) &&
         !run.queue.slice(run.index).includes(child.id)
       )
         run.queue.push(child.id);
@@ -418,7 +454,11 @@ export class Worker {
           const at = this.store.state.families.findIndex((f) => f.id === id);
           r.queue = this.store.state.families
             .slice(at)
-            .filter((f) => !["done", "excluded"].includes(f.status))
+            .filter(
+              (f) =>
+                !["done", "excluded"].includes(f.status) &&
+                (!r.scope || scopeMatches(r.scope, f)),
+            )
             .slice(0, this.store.state.settings.maxItems)
             .map((f) => f.id);
           r.index = 0;
@@ -465,7 +505,11 @@ export class Worker {
           }
         }
         const f = this.store.family(r.queue[r.index]);
-        if (f.status === "excluded" || f.status === "done") {
+        if (
+          f.status === "excluded" ||
+          (f.status === "done" &&
+            !(r.rebuildAll && !r.sourcePrepared.includes(f.id)))
+        ) {
           r.index++;
           this.store.save();
           continue;
@@ -1019,7 +1063,7 @@ export class Worker {
       ).values(),
     ];
     const saved = this.store
-      .rawSources(f.id)
+      .sources(f.id)
       .filter((source) => isLocal(source.url));
     const report = this.store.get<ResearchReport>(f.id, "research") || {
       discovered: [],
@@ -1081,7 +1125,12 @@ export class Worker {
     if (force)
       for (const provider of researchProviders) {
         const targets = urls.filter((url) => providerForUrl(url) === provider),
-          pages = saved.filter((page) => providerForUrl(page.url) === provider),
+          pages = this.store
+            .sources(f.id)
+            .filter(
+              (page) =>
+                isLocal(page.url) && providerForUrl(page.url) === provider,
+            ),
           shared = inherited.filter(
             (row) => providerForUrl(row.url) === provider,
           );
@@ -1181,10 +1230,14 @@ export class Worker {
             const previousShared = this.store.sharedCached(url);
             const updated = await this.research.fetchPage(f, url, refresh);
             if (previousShared && updated.hash !== previousShared.hash) {
-              const owner = this.store.state.sharedScopes?.find(
-                (owner) => owner.id === updated.familyId,
-              );
-              if (owner) this.sharedArticleChanged(owner, url, f.id);
+              const owner =
+                this.store.state.sharedScopes?.find(
+                  (owner) => owner.id === updated.familyId,
+                ) ||
+                this.store.state.families.find(
+                  (owner) => owner.id === updated.familyId,
+                );
+              if (owner) this.sharedArticleChanged(owner, url, f.id, true);
             }
             if (refresh)
               for (const old of this.store.rawSources(f.id))
@@ -1373,6 +1426,7 @@ export class Worker {
         if (
           f.status !== "done" &&
           ["running", "pausing", "paused", "blocked"].includes(run.status) &&
+          (!run.scope || scopeMatches(run.scope, f)) &&
           !run.queue.slice(run.index).includes(f.id)
         )
           run.queue.push(f.id);
@@ -1420,24 +1474,55 @@ export class Worker {
           409,
           "Pause processing before changing sources used by the current item.",
         );
-      if (!body.sourceId) throw new HttpError(400, "Choose a saved source.");
+      if (!body.sourceId && !body.url)
+        throw new HttpError(400, "Choose a saved source or an evidence URL.");
+      if (body.url) {
+        try {
+          sourceUrl(body.url);
+        } catch (error: any) {
+          throw new HttpError(400, error.message);
+        }
+      }
+      const matches = this.store.get<any>(f.id, "matches")?.matches || [];
+      const report = this.store.get<ResearchReport>(f.id, "research");
       const source = this.store
         .allSources(f.id)
-        .find((s) => s.id === body.sourceId);
+        .find((source) =>
+          body.sourceId
+            ? source.id === body.sourceId
+            : sourceKey(source.url) === sourceKey(body.url),
+        );
       const exclusions = this.store.sourceExclusions(f.id);
-      const previous = exclusions.find((s) => s.sourceId === body.sourceId);
-      if (!source && !previous)
-        throw new HttpError(404, "Source not found for this item.");
-      const url = source?.url || previous!.url,
+      const previous = exclusions.find((row) =>
+        body.sourceId
+          ? row.sourceId === body.sourceId
+          : sourceKey(row.url) === sourceKey(body.url),
+      );
+      const pending =
+        body.url &&
+        [
+          ...f.sourceUrls,
+          ...matches.map((row: any) => row.url),
+          ...(report?.providers.flatMap((row) => row.urls) || []),
+        ].some((url) => sourceKey(url) === sourceKey(body.url));
+      if (!source && !previous && !pending)
+        throw new HttpError(404, "Source URL not found for this item.");
+      const url = source?.url || previous?.url || body.url,
         key = sourceKey(url);
+      const pendingMatch = matches.find(
+        (row: any) => sourceKey(row.url) === key,
+      );
+      const sourceId =
+        source?.id || previous?.sourceId || "url:" + hash(key).slice(0, 20);
       if (action === "exclude-source") {
         if (this.store.isSourceExcluded(f.id, url)) return;
         this.store.put(f.id, "sourceExclusions", [
           ...exclusions,
           {
-            sourceId: source!.id,
+            sourceId,
             url,
-            title: source!.title,
+            title:
+              source?.title || previous?.title || pendingMatch?.title || url,
             excludedAt: now(),
           },
         ]);
@@ -1457,7 +1542,8 @@ export class Worker {
           f.sourceUrls.push(url);
       }
       this.store.put(f.id, "sourceChange:" + now(), {
-        sourceId: body.sourceId,
+        sourceId,
+        url,
         action,
         draft: this.store.get(f.id, "draft"),
         audit: this.store.get(f.id, "researchAudit"),
@@ -1515,6 +1601,14 @@ export class Worker {
       }
       const since = now();
       if (this.busy) {
+        if (
+          this.store.state.run.scope &&
+          !scopeMatches(this.store.state.run.scope!, f)
+        )
+          throw new HttpError(
+            409,
+            "Pause the group batch before rebuilding an item outside its group.",
+          );
         if (!this.store.state.run.deferred.includes(id))
           this.store.state.run.deferred.push(id);
         this.store.put(id, "pendingRebuild", { mode, since });
@@ -1615,7 +1709,8 @@ export class Worker {
             400,
             "A source URL is required with imported HTML.",
           );
-        this.research.save(f, body.url, body.html, true);
+        const captured = this.research.save(f, body.url, body.html, true);
+        this.sharedArticleChanged(f, captured.url, f.id);
       }
       if (typeof body.notes === "string") f.notes = body.notes;
       if (typeof body.gameOnly === "boolean") f.gameOnly = body.gameOnly;

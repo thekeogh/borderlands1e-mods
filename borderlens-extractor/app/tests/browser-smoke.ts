@@ -143,14 +143,12 @@ try {
   await expect(
     gameView.getByText("We don't need no water...", { exact: true }),
   ).toBeVisible();
-  const native = gameView
-    .locator(".game-data-panel")
-    .filter({
-      has: page.getByRole("heading", {
-        name: "Native values & defining parts",
-        exact: true,
-      }),
-    });
+  const native = gameView.locator(".game-data-panel").filter({
+    has: page.getByRole("heading", {
+      name: "Native values & defining parts",
+      exact: true,
+    }),
+  });
   await native
     .locator(".game-data-record")
     .filter({ hasText: "Incendiary" })
@@ -675,6 +673,9 @@ try {
   await expect(
     globalDialog.getByText(/Imported HTML · .*characters saved/),
   ).toBeVisible();
+  await expect(globalDialog.locator(".source-site").first()).toHaveText(
+    "borderlands.fandom.com",
+  );
   const pendingGlobalUrl =
     "https://borderlands.fandom.com/wiki/Pending_elemental_fixture";
   await globalDialog
@@ -751,6 +752,41 @@ try {
   );
   assert(!itemDiscovery.family.sourceUrls.includes(globalUrl));
   assert(!itemDiscovery.family.sourceUrls.includes(pendingGlobalUrl));
+  const pendingItemUrl = "https://borderlands.fandom.com/wiki/Fixture_article";
+  await page
+    .getByRole("button", {
+      name: "Remove evidence URL: " + pendingItemUrl,
+      exact: true,
+    })
+    .click();
+  await waitForState(
+    (s) =>
+      !s.families
+        .find((family: any) => family.id === shield.id)
+        .sourceUrls.includes(pendingItemUrl),
+  );
+  await expect(
+    page.getByRole("button", {
+      name: "Remove evidence URL: " + pendingItemUrl,
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  const pendingRemoved = page.locator(".removed-sources");
+  if ((await pendingRemoved.getAttribute("open")) === null)
+    await pendingRemoved.locator("summary").click();
+  await pendingRemoved
+    .getByRole("button", {
+      name: "Restore source: Fixture article",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "Remove evidence URL: " + pendingItemUrl,
+      exact: true,
+    })
+    .waitFor();
+
   await page.screenshot({
     path: ".test-data/screenshots/item-discovery-inheritance.png",
   });
@@ -792,6 +828,163 @@ try {
           .urlDiscovery?.status === "complete",
     ),
   );
+  // Group actions use all active descendants, regardless of the filtered tree.
+  const groupSnapshot = await page.request
+    .get("/api/state")
+    .then((r) => r.json());
+  const artifactIds = groupSnapshot.families
+    .filter(
+      (f: any) =>
+        f.category === "Artifacts" &&
+        f.status !== "excluded" &&
+        !f.supersededBy,
+    )
+    .map((f: any) => f.id);
+  const expectedBrickIds = groupSnapshot.families
+    .filter((f: any) => artifactIds.includes(f.id) && f.character === "Brick")
+    .map((f: any) => f.id);
+  await page.request.patch("/api/settings", { data: { maxItems: 10000 } });
+  await page
+    .getByRole("textbox", { name: "Find an item" })
+    .fill("Corrosive Artifact");
+  await page
+    .getByRole("button", { name: "Batch actions for Artifacts", exact: true })
+    .click();
+  const categoryMenu = page.getByRole("menu", {
+    name: "Batch actions for Artifacts",
+    exact: true,
+  });
+  await expect(
+    categoryMenu.getByText(`${artifactIds.length} items`, { exact: true }),
+  ).toBeVisible();
+  await categoryMenu
+    .getByRole("menuitem", { name: /Fetch evidence URLs only/ })
+    .click();
+  await waitForState(
+    (s) =>
+      s.run.scope?.category === "Artifacts" &&
+      !s.run.scope.character &&
+      s.run.status === "complete" &&
+      s.run.queue.length === artifactIds.length,
+  );
+  let scoped = await page.request.get("/api/state").then((r) => r.json());
+  assert(
+    scoped.run.queue.every(
+      (id: string) =>
+        scoped.families.find((f: any) => f.id === id).category === "Artifacts",
+    ),
+  );
+  await page.getByRole("textbox", { name: "Find an item" }).fill("Artifact");
+  const artifactGroup = page.locator(".tree-group").filter({
+    has: page
+      .locator(":scope > .group-toggle")
+      .filter({ hasText: "Artifacts" }),
+  });
+  const artifactToggle = artifactGroup.locator(":scope > .group-toggle");
+  if ((await artifactToggle.getAttribute("aria-expanded")) === "false")
+    await artifactToggle.click();
+  await page
+    .getByRole("button", {
+      name: "Batch actions for Artifacts → Brick",
+      exact: true,
+    })
+    .click();
+  const characterMenu = page.getByRole("menu", {
+    name: "Batch actions for Artifacts → Brick",
+    exact: true,
+  });
+  await expect(
+    characterMenu.getByText(`${expectedBrickIds.length} items`, {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.screenshot({ path: ".test-data/screenshots/group-actions.png" });
+  await characterMenu
+    .getByRole("menuitem", { name: /Fetch evidence URLs only/ })
+    .click();
+  await waitForState(
+    (s) =>
+      s.run.scope?.character === "Brick" &&
+      s.run.status === "complete" &&
+      s.run.queue.length === expectedBrickIds.length,
+  );
+  scoped = await page.request.get("/api/state").then((r) => r.json());
+  const brickIds = scoped.run.queue;
+  for (const action of [
+    "Rebuild from saved sources",
+    "Rebuild from fresh sources",
+  ]) {
+    await page
+      .getByRole("button", {
+        name: "Batch actions for Artifacts → Brick",
+        exact: true,
+      })
+      .click();
+    await page
+      .getByRole("menu", {
+        name: "Batch actions for Artifacts → Brick",
+        exact: true,
+      })
+      .getByRole("menuitem", { name: new RegExp("^" + action) })
+      .click();
+    await waitForState(
+      (s) =>
+        s.run.mode === "build" &&
+        s.run.scope?.character === "Brick" &&
+        s.run.status === "complete" &&
+        s.run.queue.length === expectedBrickIds.length &&
+        s.run.queue.every(
+          (id: string) =>
+            s.families.find((f: any) => f.id === id).status === "done",
+        ),
+    );
+    scoped = await page.request.get("/api/state").then((r) => r.json());
+    assert.deepEqual(scoped.run.queue, brickIds);
+  }
+  await expect(page.getByLabel("Batch group", { exact: true })).toHaveText(
+    "Artifacts → Brick",
+  );
+  // Existing captures are reused across item references without another build.
+  const cacheUrl =
+    "https://borderlands.fandom.com/wiki/Catalogue_Cache_Fixture";
+  const cacheAlias =
+    "https://borderlands.fandom.com/wiki/Catalogue%20Cache%20Fixture#Notes";
+  for (const [id, body] of [
+    [
+      brickIds[0],
+      {
+        url: cacheUrl,
+        html: "<main><h1>Saved catalogue article fixture</h1><p>This is the original saved content for a catalogue-wide article, reused only by items explicitly referencing the same page.</p></main>",
+      },
+    ],
+    [brickIds[1], { url: cacheAlias }],
+  ] as const) {
+    const response = await page.request.post(`/api/items/${id}/action`, {
+      data: { action: "resolve", ...body },
+    });
+    assert.equal(response.ok(), true, await response.text());
+  }
+  await page.locator(`.item-row[data-family-id="${brickIds[1]}"]`).click();
+  await page.getByRole("button", { name: /^Sources & evidence/ }).click();
+  await expect(
+    page.getByText("Saved catalogue article fixture", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator(".source-card")
+      .filter({ hasText: "Saved catalogue article fixture" })
+      .locator(".source-site"),
+  ).toHaveText("borderlands.fandom.com");
+  await expect(page.locator(".source-reused")).toContainText(
+    "Reused saved article",
+  );
+  await expect(
+    page.getByText("This is the original saved content", { exact: false }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: ".test-data/screenshots/catalogue-cache-reuse.png",
+    fullPage: true,
+  });
   assert.deepEqual(errors, []);
   console.log(
     "Browser: import, background selection, pause/resume, editor persistence, coverage, settings and fixed progress passed. 299 real capture candidates; character equipment grouped.",
