@@ -1,6 +1,6 @@
 import { gameData } from "./game-data.ts";
 import { EvidenceScope } from "../shared/evidence-scopes.ts";
-import { sourceKey } from "../shared/research.ts";
+import { sourceKey, sourceInclusionModes } from "../shared/research.ts";
 import { sourceUrl } from "./research.ts";
 import { savedSourceCache } from "./source-cache.ts";
 import { ImagePath } from "../shared/images.ts";
@@ -234,8 +234,21 @@ export function api(store: Store, worker: Worker) {
       excludedSources: store.sourceExclusions(f.id),
       parts: store.get(f.id, "parts") || [],
       researchAudit: store.get(f.id, "researchAudit"),
+      sharedSourceSelection: store.get(f.id, "sharedSourceSelection"),
+      evidenceFollowup: store.get(f.id, "evidenceFollowup"),
       classification: store.classifications.data.entries[f.id] || null,
     });
+  });
+  app.post("/api/items/:id/shared-source-mode", (req, res) => {
+    const { url, mode } = z
+      .object({
+        url: z.string().url().max(4000),
+        mode: z.enum(sourceInclusionModes),
+      })
+      .strict()
+      .parse(req.body);
+    worker.setSharedSourceMode(req.params.id, url, mode);
+    res.json({ ok: true });
   });
   app.post("/api/items/:id/action", async (req, res) => {
     const body = z

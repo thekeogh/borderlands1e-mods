@@ -7,7 +7,7 @@ export function emptySourceReading(
     facts: [],
     fields: [...commonFields, ...statChecklist[category]].map((name) => ({
       name,
-      status: "not_found",
+      status: "not_found" as const,
       reason: "Synthetic source fixture; source extraction tested separately.",
     })),
     proposedFields: [],

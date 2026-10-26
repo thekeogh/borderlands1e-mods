@@ -63,7 +63,7 @@ function output(s: Store, name: string) {
     "output",
     PublicEntry.parse({
       schemaVersion: "5",
-      compilerVersion: "0.7.0",
+      compilerVersion: "0.9.0",
       id: f.id,
       name: f.name,
       game: "borderlands-goty-enhanced",

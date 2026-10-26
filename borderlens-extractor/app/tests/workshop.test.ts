@@ -60,7 +60,7 @@ function entry(f: Family): PublicEntry {
   return {
     details: [],
     schemaVersion: "5",
-    compilerVersion: "0.7.0",
+    compilerVersion: "0.9.0",
     description: [
       "An original fixture paragraph describing this item for players.",
     ],

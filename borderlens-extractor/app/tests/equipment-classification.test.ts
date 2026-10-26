@@ -119,7 +119,7 @@ test("saved category override moves sidebar/export metadata, survives reset/reim
   );
   const e = PublicEntry.parse({
     schemaVersion: "5",
-    compilerVersion: "0.7.0",
+    compilerVersion: "0.9.0",
     id,
     name: f.name,
     game: "borderlands-goty-enhanced",
@@ -143,7 +143,7 @@ test("saved category override moves sidebar/export metadata, survives reset/reim
     references: [],
   });
   s.put(id, "output", e);
-  s.put(id, "provenance", { compilerVersion: "0.7.0" });
+  s.put(id, "provenance", { compilerVersion: "0.9.0" });
   f.status = "done";
   f.stage = "complete";
   f.revision = 1;
@@ -172,7 +172,7 @@ test("a completed equipment draft can be revalidated under its corrected categor
   const { s, f, page } = setup(t);
   const entry = PublicEntry.parse({
     schemaVersion: "5",
-    compilerVersion: "0.7.0",
+    compilerVersion: "0.9.0",
     id: f.id,
     name: f.name,
     game: "borderlands-goty-enhanced",

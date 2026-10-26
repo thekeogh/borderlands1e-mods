@@ -944,6 +944,21 @@ try {
   await expect(page.getByLabel("Batch group", { exact: true })).toHaveText(
     "Artifacts → Brick",
   );
+  await page.locator(`.item-row[data-family-id="${brickIds[1]}"]`).click();
+  await page.getByRole("button", { name: /^Sources & evidence/ }).click();
+  const sharedSummary = page.locator(".shared-research-summary");
+  await expect(sharedSummary).toBeVisible();
+  await sharedSummary.locator("summary").click();
+  await expect(sharedSummary).toContainText(
+    "General and uncertain facts stay included",
+  );
+  const sharedDetail = await page.request
+    .get(`/api/items/${brickIds[1]}`)
+    .then((r) => r.json());
+  assert(sharedDetail.sharedSourceSelection.cachedChunks > 0);
+  await page.screenshot({
+    path: ".test-data/screenshots/shared-source-analysis.png",
+  });
   // Existing captures are reused across item references without another build.
   const cacheUrl =
     "https://borderlands.fandom.com/wiki/Catalogue_Cache_Fixture";
@@ -1049,6 +1064,95 @@ try {
     afterPromotion.buildCheckpoint,
     beforePromotion.buildCheckpoint,
   );
+  const inclusionRegion = page.getByRole("region", {
+    name: "Inherited evidence",
+  });
+  const inclusion = inclusionRegion.getByRole("combobox", {
+    name: "Evidence mode: Saved catalogue article fixture",
+    exact: true,
+  });
+  await expect(inclusion).toHaveValue("auto");
+  await inclusion.selectOption("always");
+  await expect(inclusion).toHaveValue("always");
+  await expect(inclusion).toBeEnabled();
+
+  const inclusionDetail = await page.request
+    .get(`/api/items/${brickIds[1]}`)
+    .then((r) => r.json());
+  assert(
+    inclusionDetail.inheritedEvidence.find(
+      (row: any) => row.title === "Saved catalogue article fixture",
+    ).alwaysInclude,
+  );
+  const otherInclusion = await page.request
+    .get(`/api/items/${brickIds[0]}`)
+    .then((r) => r.json());
+  assert(
+    !otherInclusion.inheritedEvidence.find(
+      (row: any) => row.title === "Saved catalogue article fixture",
+    ).alwaysInclude,
+  );
+  await page.screenshot({
+    path: ".test-data/screenshots/inherited-inclusion.png",
+  });
+  await inclusion.selectOption("never");
+  await expect(inclusion).toBeEnabled();
+  await expect(inclusion).toHaveValue("never");
+  const neverDetail = await page.request
+    .get(`/api/items/${brickIds[1]}`)
+    .then((r) => r.json());
+  assert.equal(
+    neverDetail.inheritedEvidence.find(
+      (row: any) => row.title === "Saved catalogue article fixture",
+    ).inclusionMode,
+    "never",
+  );
+  assert(
+    !neverDetail.sources.some(
+      (row: any) => row.title === "Saved catalogue article fixture",
+    ),
+  );
+  await page.screenshot({ path: ".test-data/screenshots/inherited-never.png" });
+  await inclusion.selectOption("auto");
+  await expect(inclusion).toBeEnabled();
+  await expect(inclusion).toHaveValue("auto");
+  const afterInclusion = await page.request
+    .get("/api/state")
+    .then((r) => r.json());
+  assert.deepEqual(afterInclusion.run, afterPromotion.run);
+  assert.deepEqual(
+    afterInclusion.buildCheckpoint,
+    afterPromotion.buildCheckpoint,
+  );
+  await page.request.post(`/api/items/${brickIds[1]}/action`, {
+    data: { action: "resolve", notes: "browser-followup-fixture" },
+  });
+  await page
+    .getByRole("button", { name: "Rebuild from saved sources", exact: true })
+    .click();
+  await waitForState(
+    (state) =>
+      state.run.status === "complete" &&
+      state.families.find((item: any) => item.id === brickIds[1]).status ===
+        "done",
+  );
+  const followupSummary = page.locator(".evidence-followup-summary");
+  await expect(followupSummary).toBeVisible();
+  await followupSummary.locator("summary").click();
+  await expect(followupSummary).toContainText("Original catalogue context");
+  await expect(followupSummary).toContainText("One optional request round");
+  await expect(followupSummary.locator(".source-site").first()).toHaveText(
+    "borderlands.fandom.com",
+  );
+  const followed = await page.request
+    .get(`/api/items/${brickIds[1]}`)
+    .then((r) => r.json());
+  assert.equal(followed.evidenceFollowup.status, "supplied");
+  assert(followed.evidenceFollowup.matches.length > 0);
+  assert(!("evidenceRequests" in followed.websiteOutput));
+  await page.screenshot({
+    path: ".test-data/screenshots/saved-evidence-followup.png",
+  });
   assert.deepEqual(errors, []);
   console.log(
     "Browser: import, background selection, pause/resume, editor persistence, coverage, settings and fixed progress passed. 299 real capture candidates; character equipment grouped.",

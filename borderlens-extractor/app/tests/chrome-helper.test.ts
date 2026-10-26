@@ -65,7 +65,7 @@ function ai(s: Store, wait?: () => Promise<void>): AI {
       return schema.parse({
         entry: {
           schemaVersion: "5",
-          compilerVersion: "0.7.0",
+          compilerVersion: "0.9.0",
           id: f.id,
           name: f.name,
           game: "borderlands-goty-enhanced",

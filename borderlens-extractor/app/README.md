@@ -6,19 +6,19 @@ A local workspace for turning BL1 Enhanced extractions into readable item-family
 
 Paths are relative to this folder (default configuration).
 
-| Path                                  | Contents                                                                                                                                     |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.data/workshop.sqlite`               | Built item JSON, drafts, extracted records, source facts, corrections, shared evidence groups, removed items/sources, progress and settings. |
-| `.data/captures/`                     | Imported extractor ZIPs.                                                                                                                     |
-| `.data/sources/`                      | Saved Wiki/Lootlemon HTML, including Chrome captures.                                                                                        |
-| `.data/classification-overrides.json` | Item category and weapon-type overrides.                                                                                                     |
-| `.data/image-overrides.json`          | Manual image selections.                                                                                                                     |
-| `.data/ai/`                           | Agent requests, responses, caches and logs.                                                                                                  |
-| `.data/ai/agent-failures.json`        | Last agent failures and fallback cooldowns.                                                                                                  |
-| `img/borderlands/`                    | Item images, organised by type.                                                                                                              |
-| `src/shared/models.ts`                | Internal item and writer Zod schemas.                                                                                                        |
-| `src/shared/website.ts`               | Final website JSON Zod schema.                                                                                                               |
-| `src/shared/versions.ts`              | Schema and compiler versions.                                                                                                                |
+| Path                                  | Contents                                                                                                                                                                           |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.data/workshop.sqlite`               | Built item JSON, drafts, extracted records, source facts, additional evidence requests/matches, corrections, shared evidence groups, removed items/sources, progress and settings. |
+| `.data/captures/`                     | Imported extractor ZIPs.                                                                                                                                                           |
+| `.data/sources/`                      | Saved Wiki/Lootlemon HTML, including Chrome captures.                                                                                                                              |
+| `.data/classification-overrides.json` | Item category and weapon-type overrides.                                                                                                                                           |
+| `.data/image-overrides.json`          | Manual image selections.                                                                                                                                                           |
+| `.data/ai/`                           | Agent requests, responses, caches and logs.                                                                                                                                        |
+| `.data/ai/agent-failures.json`        | Last agent failures and fallback cooldowns.                                                                                                                                        |
+| `img/borderlands/`                    | Item images, organised by type.                                                                                                                                                    |
+| `src/shared/models.ts`                | Internal item and writer Zod schemas.                                                                                                                                              |
+| `src/shared/website.ts`               | Final website JSON Zod schema.                                                                                                                                                     |
+| `src/shared/versions.ts`              | Schema and compiler versions.                                                                                                                                                      |
 
 **Export** downloads `borderlens-catalogue.zip`, containing final item `.json` files in type folders. Individual final JSON files are generated on export, not saved separately in the app folder.
 
@@ -44,11 +44,11 @@ Open **http://127.0.0.1:4317**.
 
 Website JSON groups each drop location with its conditional drop rates, including player counts when known. Stats distinguish card values from scoped or other conditional values. Empty note strings are omitted; unsupported level limits stay `null`. After a compiler upgrade, rebuild queued items to update their JSON; saved pages and previous output remain on disk.
 
-Articles are cached across the whole catalogue by URL. If an item or shared group references a page already captured elsewhere, it immediately uses that saved content; no second Chrome capture is needed. Reused individual articles are labelled. Exclusions and AI fact interpretation remain specific to each item. Fresh-source batches refresh a matching article once per run.
+Articles are cached across the whole catalogue by URL. If an item or shared group references a page already captured elsewhere, it immediately uses that saved content; no second Chrome capture is needed. Reused individual articles are labelled. Exclusions and selection of applicable facts remain specific to each item. Shared article analysis is reused across items. Fresh-source batches refresh a matching article once per run.
 
 **Rebuild from saved sources** reuses saved pages and their extracted facts, then writes and validates again. Switching agents does not repeat complete source analysis. Newly added or changed saved pages are read if needed; nothing is fetched.
 
-**Rebuild from fresh sources** fetches current pages, reads their facts again, then rebuilds. Blocked refreshes keep the saved pages; capture the blocked article in Chrome and resume. Both options are in the dropdown beside the rebuild button. Saved sources is the default when pages exist.
+**Rebuild from fresh sources** fetches current pages, reads item-specific facts again, then rebuilds. Unchanged shared articles reuse their indexed facts. Blocked refreshes keep the saved pages; capture the blocked article in Chrome and resume. Both options are in the dropdown beside the rebuild button. Saved sources is the default when pages exist.
 
 The top Start dropdown offers the same two source choices for the batch. **Start from saved sources** uses each item's saved pages/facts and fetches sources for items with no saved pages. **Start from fresh sources** refreshes sources for each item. Both process unfinished items, skipping completed and excluded entries. If an item fails, it gets a red cross and the batch continues. Use **Needs attention** afterward to correct and retry failures. Individual rebuilds stop on errors. **Pause/Resume** keeps the selected mode and saved step; starting a new batch restarts unfinished work.
 
@@ -154,7 +154,7 @@ The compiler stores schema **5** internally; **Final JSON** and website exports 
 
 **Source priority:** Lootlemon wins direct contradictions with the Wiki about the same item and conditions. Complementary Wiki facts are still included. Rejected claims and the reason stay in the private source audit. Different editions, roll ranges and conditions remain separate.
 
-Every saved article is read in full, in cached chunks when necessary. First builds take longer; subsequent builds reuse readings unless source content, corrections, model or compiler version changes. The selected agent extracts facts using a category-specific checklist, then writes one entry from all source ledgers plus game evidence. Every extracted fact must be used or explicitly accounted for; missing numeric ranges fail validation. **Sources & evidence → Compilation coverage** shows the private audit.
+Individual articles are read for the item. Shared articles are indexed in full once, with quoted facts tagged by category, character, skill, element, weapon type and item. Unchanged shared indexes survive restarts and fresh-source builds; changed content, model/agent configuration or compiler policy triggers new analysis. Item-specific sources are read first, then only confidently unrelated shared facts are omitted before writing. General rules, uncertain interactions and unknown applicability stay included. Skill/element filters need quoted complete item lists; failed indexing falls back to full item-specific reading. The writer uses all selected facts plus game evidence; selected numeric ranges remain validated. Expand **Last shared-source analysis** in Sources & evidence for kept/skipped decisions and cache counts. Complete original articles remain saved. **Sources & evidence → Compilation coverage** shows the private audit.
 
 Each agent must rewrite all human-readable content in its own language, including descriptions, effects, notes, variants, acquisition text and parts. Copied passages fail validation. Names and exact red flavour text are retained. Research limitations remain in evidence rather than padded public descriptions. Saved HTML is reusable, with headings and tables preserved for future schema improvements.
 
@@ -225,3 +225,7 @@ Author: **keogh**. Product context: [APP_PLAN.md](../APP_PLAN.md). Release histo
 Optional live subscription/fallback check: `pnpm exec tsx tests/live-agents.ts`. This sends a tiny test prompt and keeps diagnostics under `../temp/agents-live-*`.
 
 **Move evidence to parent** (up-arrow on an evidence card) shares the article one level higher: item → character/weapon group → category → Everything. Move again from its new shared group to go higher. Saved content is retained; duplicates merge. Evidence edits never start builds or add items to a running queue; affected entries use the changed evidence on your next requested build.
+
+On an item's **Sources & evidence** tab, each inherited source has **Auto / Always include / Never include**. Auto (default) selects relevant facts and retains uncertain ones. Always include sends every indexed fact to the writer, which can still omit irrelevant information from final JSON. Never include skips that source before fetching, classification, source reading and writing for this item. The article remains saved and visible; other items can still use it. Choices apply on the next requested build and survive restarts/generated resets. Changing a mode never starts a build. Shared category controls have no inclusion dropdowns.
+
+**Additional saved evidence:** while drafting, the agent can request up to three specific missing topics. The workshop searches saved articles and cached fact indexes, then supplies at most four short matches for **one** extra writing pass. No request or no match costs no extra writing call. No new scraping occurs. Never include and removed sources remain excluded. If the extra pass fails, the original draft continues. Sources & evidence shows the requests, exact saved excerpts and any misses. Answers are reused across retries/restarts until their inputs or saved sources change; retrieved pages are not permanently attached to the item. Compiler 0.9.0 adds this step; existing output stays retained until you request a rebuild.

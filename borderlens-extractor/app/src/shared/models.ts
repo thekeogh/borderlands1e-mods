@@ -1,3 +1,4 @@
+import { EvidenceRequest } from "./evidence-requests.ts";
 import type { EvidenceScope } from "./evidence-scopes.ts";
 import { CATALOGUE_SCHEMA_VERSION, COMPILER_VERSION } from "./versions.ts";
 import type { EffectiveClassification } from "./classification.ts";
@@ -146,6 +147,7 @@ export const PublicEntry = z
 export type PublicEntry = z.infer<typeof PublicEntry>;
 export const Draft = z
   .object({
+    evidenceRequests: z.array(EvidenceRequest).max(3).optional(),
     entry: PublicEntry,
     partDefinitions: z.array(PartDefinition),
     claims: z.array(
@@ -210,6 +212,7 @@ export type Draft = z.infer<typeof Draft>;
 // Model-facing structured outputs require every object property. The compiler
 // supplies the authoritative character; older saved/public entries may omit it.
 export const WriterDraft = Draft.extend({
+  evidenceRequests: Draft.shape.evidenceRequests.unwrap().default([]),
   entry: PublicEntry.extend({
     character: PublicEntry.shape.character.unwrap().nullable().default(null),
   }),

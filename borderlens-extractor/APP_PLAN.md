@@ -2095,3 +2095,212 @@ visibility and unchanged run/checkpoint, with a screenshot inspected. Build,
 TypeScript, OpenAPI syntax and diff checks pass. No external/model request was
 needed for this local source ownership change. Idle live Node 22 service restarted;
 all family/group/capture data and run/build checkpoints preserved.
+
+
+### Shared source indexing and conservative relevance (workshop 0.24.0, compiler 0.8.0)
+
+Read item-specific sources first using the existing full chunk reader. Optional
+private SourceReading.applicability groups contain quoted complete boosted-skill
+and obtainable-element lists for the exact item. Missing/incomplete profiles
+never justify exclusion. Complete profiles require original quotes naming all
+members and item identity in the title or quote; manual corrections retain
+potential skill/element interactions.
+
+For URLs bound to applicable shared ancestors, index the full stored article and
+structured content independently of any current family. Store checked quoted
+facts with scope tags (certainty; category/character/weapon type/item/skill/element)
+in SQLite artifacts under _sharedSources/sharedSourceIndex:*. Cache key includes
+canonical URL, title, content/hash, chunk, compiler/policy and model/agent config.
+Do not include the family, per-item corrections or fresh-run timestamp in this key.
+Fresh source fetching still runs, but unchanged shared content is not re-analysed
+for each descendant or fresh batch. Changed pages invalidate their own indexes.
+
+Scope dimensions are AND restrictions, entries within a dimension are OR. Empty
+selectors mean unknown/general. Retain facts with missing or uncertain tags. Only
+exclude positively conflicting known category/character/item/weapon targets or
+skills/elements outside complete quoted item sets. Unknown identity, unknown
+elements (including Any), cross-category interactions and ambiguous synergies
+remain for the writer to assess. Never select by page title alone, truncate facts,
+reuse another item's ledger or inherit another family's properties by association.
+Unproven selectors absent from page context are downgraded to uncertain.
+
+Keep original pages/HTML/sections/tables unchanged. Selected facts form the normal
+per-item ledger and exact sourceUsage/stat validation; omit fully irrelevant
+pages from writer input, but retain every page/chunk in private ledger accounting.
+Keep all chosen numeric values unchanged. Generic proposed-field examples stay in
+the index, rather than leaking unrelated examples to the writer. Invalid shared
+extraction gets one repair, then falls back to the existing full per-item reader.
+No source deletion, queue extension or automatic live build is triggered.
+
+GET item exposes private sharedSourceSelection: kept/skipped counts, per-fact
+reasons, cached/new/fallback chunk counts. Sources tab renders an expandable last-
+analysis summary. Never add these provenance/selection fields to website JSON.
+Saved ledger reuse checks the selection-policy version as well as page content
+and packet identity. Compiler 0.8.0 upgrades generated entries through the existing
+retained-output mechanism; public item/schema versions stay unchanged.
+
+Verification for 0.24.0: 160 tests passed; four existing optional external-
+simulation checks skipped. Seven new tests cover cross-item/restart/fresh cache
+reuse, changed-content/agent invalidation, direct-before-shared profiles, selective
+skill/category/character/item/element/weapon routing, retained general/uncertain
+facts, incomplete/unknown profiles, correction safety, fallback on bad quotes,
+late full chunks, numeric preservation, omitted irrelevant writer pages and saved
+ledger policy guards. Browser smoke verifies persisted cache reuse and the new
+expandable summary while preserving item/group/batch flows. Production build,
+TypeScript, local OpenAPI syntax and diff checks pass. Tests use synthetic agent
+responses to establish plumbing and selection invariants; actual model extraction
+quality and latency remain to be assessed on varied user builds. Idle live Node 22
+service updated with 299 families, 22 scopes, 72 saved article rows and run/build
+checkpoints unchanged. No live AI, source fetch or automatic build was initiated.
+
+
+### Per-item inherited evidence inclusion (workshop 0.25.0)
+
+Each inherited URL row on an individual item's Sources tab has a checkbox. Default
+unchecked is labelled Auto, never excluded/ignored: normal conservative relevance
+selection applies. Checked is labelled Always include: bypass sharedFactDecision
+for this URL and forward every indexed fact to synthesis. The writer still decides
+what belongs in the final JSON; forced availability is not mandatory public use.
+No corresponding control appears on a category/shared owner.
+
+POST /api/items/:id/shared-source-mode takes url and mode auto|always. Validate
+actual inherited membership, individual owner, active-call and removal guards.
+Store canonical keys as alwaysIncludeSources in the item's SQLite artifacts,
+independent of shared parents and other items. Return alwaysInclude on inherited
+rows. Preserve flags across restart/generated reset/import IDs and source recapture;
+full project reset clears them. Changes invalidate only the item's selected ledger
+and draft, keep prior output/revision and all shared indexes, flag manual JSON
+for review and never start work or extend queues/checkpoints.
+
+Keep inclusion settings in a separate sourceLedgerInclusion snapshot so saved-
+ledger reuse cannot ignore a changed preference. Forced facts carry private
+relevance metadata recording the normal automatic decision; source-cache validation
+compares their plain facts independently of this metadata. Strict stat accounting
+remains for automatically relevant facts; a forced, positively unrelated numerical
+fact may be accounted for as irrelevant rather than contaminating the public item.
+Original quotes/numeric values, copy checks and other validation remain active.
+The shared index itself is unchanged and reused. Public schemas/compiler remain
+unchanged; only explicitly toggled items need their facts selected again.
+
+Verification for 0.25.0: 163 tests passed, four existing optional external-
+simulation checks skipped. New tests verify Auto defaults, per-item/canonical-URL
+isolation, Always → Auto filtering, reused indexes, current-policy saved ledgers,
+retained outputs/revisions, unchanged run/checkpoints, restart/generated-reset
+persistence, pending sources, API validation/active guards and strict relevant
+stat accounting with forced-but-unrelated numeric facts allowed to be unused.
+Browser smoke verifies checkbox defaults, immediate checked-state feedback, saved
+server state, isolation from a sibling, Auto restoration and unchanged queues.
+Screenshot inspected; build/TypeScript, OpenAPI syntax and diff checks pass.
+Idle live Node 22 service updated; catalogue/source/checkpoint data unchanged,
+all preferences still default Auto and no live build or AI request started.
+
+
+### Three-way inherited-source control (workshop 0.26.0)
+
+Supersedes the checkbox in 0.25.0. Item rows use a compact dropdown: Auto / Always
+include / Never include. Auto remains default, existing alwaysIncludeSources flags
+map to Always without migration. Store Never canonical URL keys separately under
+neverIncludeSources; expose inclusionMode while retaining the old alwaysInclude
+boolean for compatible clients. Optimistic pending selection rolls back on errors,
+and controls remain disabled for current processing/saves. Never is muted red.
+
+Never is an explicit item-only exclusion from effective fetch URLs, active saved
+source packets, classification, reader and writer input. The shared reference
+remains visible, with its real archive capture status and a mode control for
+restoration. Do not delete article HTML, shared indexes, parent bindings or sibling
+preferences. Canonical aliases and a duplicate local binding cannot bypass Never.
+Preferences are scoped to active inheritance: if the URL ceases to be shared with
+this item, its stored flag is dormant rather than silently suppressing an unrelated
+future direct binding; reinstating the same inherited URL restores its preference.
+
+The existing mode endpoint accepts auto|always|never and removes mutually exclusive
+flags when switching. Invalidate the item's selected ledger/draft, retain output
+and revision, preserve both queues/checkpoints and never invoke AI/start a build.
+Keep existing classification/navigation stable, but strip Never citations from
+classification metadata sent to the writer, so saved source quotes cannot leak
+into the prompt. Manual overrides remain intact. Shared HTML refresh invalidation skips Never consumers.
+
+sourceLedgerInclusion now includes never:<canonical URL> markers alongside legacy
+Always keys. Auto/Always caches remain compatible; a Never switch cannot reuse the
+old full ledger. Complete project reset clears preferences; generated reset keeps
+them. Public item schemas/compiler and default Auto behaviour remain unchanged.
+
+Verification for 0.26.0: 165 tests passed, four existing optional external-
+simulation checks skipped. New Never tests cover zero shared-reader calls for the
+excluded item, omitted packet/writer input, blocked fetching, duplicate local URL
+bindings/aliases, retained saved/pending references, sibling/parent isolation,
+shared index reuse after restoring Auto, restart/generated-reset persistence and
+unchanged queues. Targeted source/classification checks also pass. Browser smoke
+exercises all three dropdown values, saved backend state, sibling isolation,
+visible Never references, restored Auto and unchanged run/checkpoint. Compact
+dropdown layout screenshot inspected; build/TypeScript, OpenAPI syntax and diff
+checks pass. Idle live service updated with all sources, existing mode preferences,
+family/group data and run/build checkpoints preserved. No live AI/build started.
+
+
+### Optional requests for additional saved evidence (workshop 0.27.0 / compiler 0.9.0)
+
+WriterDraft adds private evidenceRequests (up to 3 topic/terms/reason objects). The
+writer still returns its best complete draft with existing data. No request means
+no added AI call. When requested, run a local read-only search over saved articles
+and current cached shared fact indexes; never scrape, fetch or call AI to search
+or analyse another whole page. Cap results at 4 matches overall, 2 per request and
+1,200 characters per quote. Rank distinctive terms, matching titles and indexed
+facts. Retain exact quotes and numeric objects; raw unindexed matches are labelled
+partial saved passages. Prefer labelled BL1 sections in mixed-game pages and skip
+known other-game article identities. Related skill/item stats remain context in
+details, not automatic family stat ranges.
+
+Filter the library BEFORE searching: Never is absolute for follow-ups even for a
+dormant inherited preference; respect item removals and applicable ancestor source
+exclusions, except an explicit permitted binding under another applicable parent.
+Never restore hidden references or bypass a source removal by its canonical alias.
+Unrelated malformed archive rows are skipped. Never mutate raw captures, source
+URLs, hierarchy bindings, overrides or sibling preferences through retrieval.
+
+If matches exist, perform one extra writing pass with the full selected evidence
+plus those facts/passages; further requests are ignored. No matches or lookup
+errors retain the first draft; a failed extra writer also falls back to that draft
+and its ORIGINAL packet/ledger, not an orphaned augmented evidence set. A later
+requested rebuild can reuse the already-found context in its normal writer call
+without starting another request round. Preserve
+manual-entry and explicit game-only behavior.
+
+Persist evidenceFollowup with input/library/config fingerprint, requests, exact
+matches, missing topics, round-used state and status. Reuse successful context on
+validation retries/restart without another search round; new captures, preference
+changes or different writing inputs invalidate the key. Validate source IDs, hashes,
+quotes and exclusions again before publication, so recapture cannot silently
+publish stale retrieved text. No arbitrary page attachment or automatic builds.
+
+Canonical sourceLedger remains the full per-item source-reading cache. Separate
+workingSourceLedger and draft packet hold supplemental, cited context; normal
+claim mapping, numeric/copy checks and exact sourceUsage accounting include it.
+Retrieved evidence can be explicitly irrelevant without forcing unrelated stats
+into the item. Invalidation clears the working ledger; keep canonical caches and
+previous output. Every supplemental fact points to the actual saved source ID.
+
+GET item and private researchAudit expose evidenceFollowup. Sources tab renders a
+compact expandable summary with topic/reason, source/domain, exact excerpt, misses
+and fallback status. Nothing from the request protocol/provenance enters website
+JSON; public item schemas stay unchanged. Compiler 0.9.0 queues old generated output
+through the existing retained-output mechanism, without starting builds.
+
+Model-facing WriterDraft defaults evidenceRequests to []; source-reading
+applicability and shared tags also have explicit unknown defaults so every model
+object property is required by strict structured-output providers. Canonical stored
+readings/drafts still accept missing historical optional fields.
+
+Verification for 0.27.0: 174 tests passed, four existing optional external-
+simulation checks skipped. Nine new tests cover grounded one-round lookup and
+publication, no-request/no-match paths without extra calls, extra-pass failure
+fallback and later normal-call recovery, Never/item/parent exclusion guards,
+indexed numerical context, bounded late-text search, other-game exclusion, retry/
+restart reuse, recapture invalidation, strict model-schema requirements and explicit
+game-only behavior. Browser smoke runs a real workshop rebuild with a synthetic
+writer requesting context, verifies the saved matches/protocol-free website JSON,
+and renders the request/topic/domain/excerpt summary. Screenshot inspected. Build,
+TypeScript, local OpenAPI syntax and diff checks pass. These checks use synthetic
+agent outputs; real-model request relevance/quality remains for varied catalogue
+builds. Idle Node 22 service updated; current catalogue, 102 saved articles, modes
+and run/build checkpoints preserved. No live AI, fetch or build was started.

@@ -50,4 +50,9 @@ export type InheritedEvidence = {
   title: string;
   parents: { id: string; name: string }[];
   captured: boolean;
+  alwaysInclude?: boolean;
+  inclusionMode?: SourceInclusionMode;
 };
+
+export const sourceInclusionModes = ["auto", "always", "never"] as const;
+export type SourceInclusionMode = (typeof sourceInclusionModes)[number];

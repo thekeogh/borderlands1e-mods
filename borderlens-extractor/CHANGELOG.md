@@ -1,5 +1,29 @@
 # Changelog
 
+## Workshop app 0.27.0 / compiler 0.9.0
+
+- Let the writer request up to three specific missing topics alongside its best draft. Search existing saved text and cached fact indexes only; supply at most four short matches for one extra writing pass. No request or no match means no extra AI call.
+- Respect Never include, per-item and applicable parent exclusions; keep retrieved context private to the draft without attaching sources or changing shared bindings. Preserve exact quotes, numeric facts and normal evidence validation.
+- Persist answered rounds for retry/restart, invalidate changed source snapshots, and retain the original draft if lookup or the extra writer fails. Show requests, saved excerpts, misses and fallback status in Sources & evidence. Public website JSON schema stays unchanged.
+- Make model-facing evidence-request and source applicability/tag fields explicit with safe defaults for strict structured-output schemas, retaining compatibility with older stored readings.
+
+## Workshop app 0.26.0
+
+- Replace inherited-source checkboxes with Auto / Always include / Never include dropdowns. Preserve existing Always choices; Auto stays the default.
+- Never skips the inherited URL before per-item fetching, classification, source reading and writer input, including canonical aliases and duplicate direct bindings. Keep the saved reference visible, shared archives/indexes intact, and sibling items unchanged.
+- Persist modes through restart/generated reset; restore use with Auto or Always. Mode changes retain output/revisions and never start builds or extend queues.
+
+## Workshop app 0.25.0
+
+- Add an item-only checkbox beside each inherited source: unchecked Auto (default) uses relevance selection; checked Always include sends every indexed fact from that source to the writer. This never forces irrelevant facts into the published JSON.
+- Persist choices per item/canonical URL across restarts and generated resets. Changes invalidate only that item’s selected facts/draft, retaining output and shared indexes without fetching, invoking AI or extending queues. Category/shared-source controls stay unchanged.
+
+## Workshop app 0.24.0 / compiler 0.8.0
+
+- Index unchanged shared articles once across items, with quoted facts tagged by category, character, weapon type, item, skill and element. Reuse persisted indexes across restarts; re-index changed content or analysis configuration.
+- Read item-specific evidence first, then omit only confidently unrelated shared facts before writing. Require quoted complete item skill/element lists for those filters; keep general rules, uncertain interactions and unknown applicability. Failed indexing falls back to full item-specific reading.
+- Add a shared-analysis summary with kept/skipped reasons and cache/fallback counts. Preserve complete original articles, per-item exclusions, source accounting and all selected numeric facts. Public JSON schema stays unchanged; older outputs are retained for the next requested compiler rebuild.
+
 ## Workshop app 0.23.0
 
 - Add Move to parent on individual/shared evidence cards: promote exactly one tree level, retaining saved content and inheriting it across descendants. Everything has no further promotion. Duplicate parent URLs merge; individual exclusions remain intact.

@@ -169,6 +169,10 @@ export class Research {
     return s;
   }
   async fetchPage(f: Family, url: string, refresh = false) {
+    if (this.store.sourceNeverIncluded(f.id, url))
+      throw new Error(
+        "This inherited source is set to Never include for this item.",
+      );
     if (this.store.isSourceExcluded(f.id, url))
       throw new Error(
         "This source was removed from this item; restore it before fetching again.",

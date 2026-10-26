@@ -179,7 +179,7 @@ test("view stays identical after source capture, shared evidence, overrides, man
   s.put(f.id, "packet", { facts: { redText: "Generated packet text" } });
   s.put(f.id, "output", {
     schemaVersion: "5",
-    compilerVersion: "0.7.0",
+    compilerVersion: "0.9.0",
     summary: "Generated output",
   });
   f.name = "Corrected name";

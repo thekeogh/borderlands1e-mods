@@ -1,3 +1,5 @@
+import { EvidenceFollowupSummary } from "./evidence-followup";
+import { SharedResearchSummary } from "./shared-research-summary";
 import { SourcePromote } from "./source-promote";
 import { SourceSite } from "./source-site";
 import { GroupActions, type GroupAction } from "./group-actions";
@@ -79,6 +81,8 @@ type Detail = {
   websiteOutput: import("../shared/website").WebsiteEntry | null;
   parts: import("../shared/models").PartDefinition[];
   researchAudit: any;
+  evidenceFollowup?: import("../server/saved-evidence").EvidenceFollowup;
+  sharedSourceSelection?: import("../server/shared-source-index").SharedSelection;
   research: ResearchReport | null;
   family: Family;
   packet: Packet | null;
@@ -1490,12 +1494,37 @@ function App() {
                     </div>
                     <InheritedEvidenceList
                       items={detail?.inheritedEvidence || []}
+                      disabled={working || (busy && run.currentId === f.id)}
+                      key={f.id}
+                      setMode={(url, mode) => {
+                        let saved = false;
+                        return act(
+                          async () => {
+                            await request(
+                              `/api/items/${f.id}/shared-source-mode`,
+                              { url, mode },
+                            );
+                            saved = true;
+                          },
+                          mode === "never"
+                            ? "Source set to Never include for this item’s next build."
+                            : mode === "always"
+                              ? "Source set to Always include for this item’s next build."
+                              : "Source set to Auto. The app will select relevant facts on the next build.",
+                        ).then(() => saved);
+                      }}
                       manage={(id) => {
                         const scope = state.sharedScopes?.find(
                           (scope) => scope.id === id,
                         )?.evidenceScope;
                         if (scope) setSharedScope(scope);
                       }}
+                    />
+                    <EvidenceFollowupSummary
+                      report={detail?.evidenceFollowup}
+                    />
+                    <SharedResearchSummary
+                      selection={detail?.sharedSourceSelection}
                     />
                     <div className="research-status">
                       {researchProviders.map((provider) => {
@@ -1970,7 +1999,7 @@ function App() {
         </main>
         <footer>
           <span>ONE FAMILY. EVERY DETAIL.</span>
-          <span>Borderlens workshop · 0.23.0</span>
+          <span>Borderlens workshop · 0.27.0</span>
         </footer>
       </section>
       <input

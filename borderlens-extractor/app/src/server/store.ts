@@ -1,4 +1,7 @@
-import type { InheritedEvidence } from "../shared/research.ts";
+import type {
+  InheritedEvidence,
+  SourceInclusionMode,
+} from "../shared/research.ts";
 import {
   EvidenceScope,
   scopeLabel,
@@ -302,6 +305,40 @@ export class Store extends EventEmitter {
         )
       : [owner];
   }
+  storedArticles(): Source[] {
+    const pages = new Map<string, Source>();
+    for (const row of this.db
+      .prepare("SELECT value FROM sources ORDER BY rowid")
+      .all() as { value: string }[]) {
+      let source: Source;
+      try {
+        source = JSON.parse(row.value) as Source;
+      } catch {
+        continue;
+      }
+      if (
+        !source ||
+        ![
+          source.id,
+          source.url,
+          source.title,
+          source.hash,
+          source.text,
+          source.filename,
+        ].every((value) => typeof value === "string")
+      )
+        continue;
+      const key = sourceKey(source.url),
+        previous = pages.get(key);
+      if (
+        !source.error &&
+        source.text &&
+        (!previous || (source.fetchedAt || "") >= (previous.fetchedAt || ""))
+      )
+        pages.set(key, source);
+    }
+    return [...pages.values()];
+  }
   cachedSource(url: string): Source | undefined {
     const changes =
       String(
@@ -370,6 +407,7 @@ export class Store extends EventEmitter {
         f.status !== "excluded" &&
         !f.supersededBy &&
         !this.isSourceExcluded(f.id, url) &&
+        !this.sourceNeverIncluded(f.id, url) &&
         (f.sourceUrls.some((candidate) => sourceKey(candidate) === key) ||
           physical.has(f.id) ||
           this.sharedScopesFor(f).some(
@@ -398,6 +436,52 @@ export class Store extends EventEmitter {
       ).values(),
     ];
   }
+  alwaysIncludedSources(family: string): string[] {
+    return [
+      ...new Set(
+        (this.get<string[]>(family, "alwaysIncludeSources") || []).map(
+          sourceKey,
+        ),
+      ),
+    ].sort();
+  }
+  neverIncludedSources(family: string): string[] {
+    return [
+      ...new Set(
+        (this.get<string[]>(family, "neverIncludeSources") || []).map(
+          sourceKey,
+        ),
+      ),
+    ].sort();
+  }
+  sourceInclusionMode(family: string, url: string): SourceInclusionMode {
+    const key = sourceKey(url);
+    if (this.neverIncludedSources(family).includes(key)) return "never";
+    return this.alwaysIncludedSources(family).includes(key) ? "always" : "auto";
+  }
+  sourceInclusionSnapshot(family: string): string[] {
+    return [
+      ...this.alwaysIncludedSources(family),
+      ...this.neverIncludedSources(family).map((key) => "never:" + key),
+    ].sort();
+  }
+  sourceNeverIncluded(family: string, url: string) {
+    if (this.sourceInclusionMode(family, url) !== "never") return false;
+    const f = this.state.families.find((f) => f.id === family);
+    return (
+      !!f &&
+      this.sharedScopesFor(f).some(
+        (owner) =>
+          !this.isSourceExcluded(owner.id, url) &&
+          owner.sourceUrls.some(
+            (candidate) => sourceKey(candidate) === sourceKey(url),
+          ),
+      )
+    );
+  }
+  sourceAlwaysIncluded(family: string, url: string) {
+    return this.sourceInclusionMode(family, url) === "always";
+  }
   inheritedEvidence(f: Family): InheritedEvidence[] {
     if (f.evidenceScope) return [];
     const entries = new Map<string, InheritedEvidence>(),
@@ -412,7 +496,11 @@ export class Store extends EventEmitter {
         )
           continue;
         const key = sourceKey(url),
-          page = pages.get(key);
+          page =
+            pages.get(key) ||
+            (this.sourceNeverIncluded(f.id, url)
+              ? this.cachedSource(url)
+              : undefined);
         let entry = entries.get(key);
         if (!entry) {
           let title = url;
@@ -426,6 +514,8 @@ export class Store extends EventEmitter {
             title: page?.title || title,
             parents: [],
             captured: !!page,
+            alwaysInclude: this.sourceAlwaysIncluded(f.id, url),
+            inclusionMode: this.sourceInclusionMode(f.id, url),
           };
           entries.set(key, entry);
         }
@@ -444,7 +534,11 @@ export class Store extends EventEmitter {
     return [
       ...new Map(
         urls
-          .filter((url) => !this.isSourceExcluded(f.id, url))
+          .filter(
+            (url) =>
+              !this.isSourceExcluded(f.id, url) &&
+              !this.sourceNeverIncluded(f.id, url),
+          )
           .map((url) => [sourceKey(url), url]),
       ).values(),
     ];
@@ -466,7 +560,11 @@ export class Store extends EventEmitter {
     return [
       ...new Map(
         pages
-          .filter((source) => !this.isSourceExcluded(family, source.url))
+          .filter(
+            (source) =>
+              !this.isSourceExcluded(family, source.url) &&
+              !this.sourceNeverIncluded(family, source.url),
+          )
           .sort((a, b) => (a.fetchedAt || "").localeCompare(b.fetchedAt || ""))
           .map((source) => [sourceKey(source.url), source]),
       ).values(),

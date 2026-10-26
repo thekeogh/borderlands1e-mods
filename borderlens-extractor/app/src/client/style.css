@@ -3204,3 +3204,94 @@ footer > span:first-child {
   opacity: 0.45;
   cursor: default;
 }
+
+.shared-research-summary {
+  border: 1px solid #dfe6d9;
+  background: #f7f9f4;
+  border-radius: 6px;
+  padding: 14px;
+  margin: 14px 0;
+  color: #61745b;
+  font-size: 12px;
+}
+.shared-research-summary summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.shared-research-summary p {
+  line-height: 1.6;
+}
+.shared-fact-decision {
+  padding: 9px 0;
+  border-top: 1px solid #e7ecdf;
+}
+.shared-fact-decision small {
+  display: block;
+  margin-top: 4px;
+  color: #829076;
+}
+
+.inherited-evidence-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 0 auto;
+  min-width: 112px;
+  color: #87967f;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.inherited-evidence-mode.is-always {
+  color: #456f3a;
+  font-weight: 600;
+}
+.inherited-evidence-mode + .inherited-evidence-capture {
+  margin-left: 0;
+  min-width: 84px;
+  text-align: right;
+}
+
+.inherited-evidence-mode select {
+  width: 132px;
+  margin: 0;
+  padding: 5px 24px 5px 8px;
+  border: 1px solid #dce4d5;
+  border-radius: 5px;
+  background-color: #f8faf5;
+  color: #718169;
+  font: inherit;
+  cursor: pointer;
+}
+.inherited-evidence-mode.is-always select {
+  color: #456f3a;
+  border-color: #bbcdb0;
+}
+.inherited-evidence-mode.is-never select {
+  color: #a35d53;
+  border-color: #ddc4bd;
+  background-color: #fcf5f2;
+}
+.inherited-evidence-mode select:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
+.inherited-evidence-row {
+  align-items: center;
+}
+
+.evidence-followup-summary a {
+  color: #59784e;
+}
+.evidence-followup-summary blockquote {
+  margin: 9px 0 0;
+  padding: 8px 11px;
+  border-left: 2px solid #c9d6be;
+  background: #fff;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+  color: #788570;
+}

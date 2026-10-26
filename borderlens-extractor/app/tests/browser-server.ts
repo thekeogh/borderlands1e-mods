@@ -67,7 +67,7 @@ const ai: AI = {
     return schema.parse({
       entry: {
         schemaVersion: "5",
-        compilerVersion: "0.7.0",
+        compilerVersion: "0.9.0",
         description: [
           "An original fixture paragraph describing this item for players.",
         ],
@@ -92,6 +92,34 @@ const ai: AI = {
         notes: [],
       },
       partDefinitions: [],
+      evidenceRequests:
+        f.notes.includes("browser-followup-fixture") &&
+        !_prompt.includes('"retrieval":{"topic":')
+          ? [
+              {
+                topic: "Original catalogue context",
+                terms: ["original", "catalogue"],
+                reason:
+                  "Check whether more original catalogue context was saved.",
+              },
+            ]
+          : [],
+      sourceUsage: w
+        .compilationLedger(f)
+        .flatMap((page) =>
+          page.chunks.flatMap((chunk) =>
+            chunk.facts
+              .filter((fact) => fact.retrieval)
+              .map((fact) => ({
+                factId: fact.id,
+                disposition: "irrelevant",
+                fields: [],
+                duplicateOf: null,
+                reason:
+                  "Synthetic browser draft does not need this supplementary passage.",
+              })),
+          ),
+        ),
       claims: [
         "summary",
         "description",

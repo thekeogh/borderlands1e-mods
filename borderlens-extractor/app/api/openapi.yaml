@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Borderlens local workshop
-  version: 0.23.0
+  version: 0.27.0
   description: Local-only catalogue processing. Disk-backed checkpoints; no hosted accounts or API-key billing.
 servers:
   - url: http://127.0.0.1:4317
@@ -261,7 +261,7 @@ paths:
       responses:
         "200":
           {
-            description: "Family with URL-matched catalogue-wide cached pages (reusedFrom identifies a previously saved article; logical item bindings remain independent), inheritedEvidence (URL, title, all contributing parent IDs/names and captured status), active sources plus excludedSources (restorable per-item URL exclusions), effective classification override (equipment category and/or weapon subtype; equipment overrides have a null weaponType), facts/evidence, per-provider research status/errors, sources, private researchAudit with full-source chunk readings and fact dispositions, stage history and last valid output. Final whole-document validation status, image metadata and savedRebuild availability/reason are included for built and unbuilt candidates. Website output is schema 8: canonical element enum, full-document consistency checks, relative image path or null, rich description/details, contextual stat ranges, grouped conditional dropChances and inline parts; empty note strings are omitted; provenance and coverage stay private. Final JSON includes the item revision counter. Viewing/exporting does not increment revision. Does not change the queue.",
+            description: "Family with URL-matched catalogue-wide cached pages (reusedFrom identifies a previously saved article; logical item bindings remain independent), inheritedEvidence (URL, title, item-specific inclusionMode (auto/always/never, default auto), legacy alwaysInclude boolean, all contributing parent IDs/names and captured status), active sources plus excludedSources (restorable per-item URL exclusions), effective classification override (equipment category and/or weapon subtype; equipment overrides have a null weaponType), facts/evidence, per-provider research status/errors, sources, private researchAudit with full-source chunk readings and fact dispositions, evidenceFollowup (one optional saved-only request round, topics/matches/missing context and fallback status), sharedSourceSelection with kept/skipped tagged-fact decisions and index cache/fallback counts, stage history and last valid output. Final whole-document validation status, image metadata and savedRebuild availability/reason are included for built and unbuilt candidates. Website output is schema 8: canonical element enum, full-document consistency checks, relative image path or null, rich description/details, contextual stat ranges, grouped conditional dropChances and inline parts; empty note strings are omitted; provenance and coverage stay private. Final JSON includes the item revision counter. Viewing/exporting does not increment revision. Does not change the queue.",
           }
         "404": { description: "Family not found." }
   /api/items/{id}/action:
@@ -338,6 +338,34 @@ paths:
         "409":
           {
             description: "Action requires a paused worker, or saved-source rebuild has no saved pages.",
+          }
+  /api/items/{id}/shared-source-mode:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: setItemSharedSourceMode
+      description: Set per-item inclusion for an inherited URL. Auto (default) uses relevance selection; always sends all indexed facts without requiring them in final JSON; never excludes this inherited URL before item source fetching, classification, reading and writing. The reference remains visible and restorable through this mode selector; shared archives and sibling items remain intact. Setting a mode never fetches, invokes AI or appends queue work. Invalidates only this item's selected ledger/draft; retains output, shared indexes and other items' preferences. Canonical URL aliases share the preference, which survives restart and generated-work reset.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [url, mode]
+              properties:
+                url: { type: string, format: uri }
+                mode: { type: string, enum: [auto, always, never] }
+      responses:
+        "200": { description: Preference saved; no build started. }
+        "400":
+          {
+            description: Invalid request or category/shared owner instead of individual item.,
+          }
+        "404": { description: Unknown item or URL not inherited by it. }
+        "409":
+          {
+            description: Restore excluded item or pause current affected processing first.,
           }
   /api/groups/run:
     post:
