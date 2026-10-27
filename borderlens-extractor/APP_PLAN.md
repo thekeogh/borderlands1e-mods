@@ -2620,3 +2620,433 @@ title/navigation updates, retained alias search and no-agent lock checks pass;
 screenshot inspected. TypeScript/build, OpenAPI syntax and diff checks pass.
 Idle Node 22 service updated; all 299 families, raw/artifact/source rows and
 run/settings unchanged. No live name mutation, agent call, fetch or build ran.
+
+
+### Manual inherited-evidence controls and blocked requests (app 0.34.0)
+
+Each individual item's Inherited evidence header offers Set all Auto / Always
+include / Never include. POST shared-source-modes accepts only mode, validates
+item/busy/removal guards, applies to all current inherited URL keys (saved and
+uncaptured), and invalidates selected inputs once. Direct sources, sibling modes,
+shared indexes, last output and batch/checkpoints remain intact. No build starts.
+Auto relevance behavior and shared index key are unchanged. A stored Never choice
+remains authoritative if its original shared binding moves; canonical aliases
+share the choice. Effective fetching, reading, packet creation, sync and optional
+context retrieval must filter before model calls, even without an existing index.
+The first permitted consumer may index once; later permitted consumers reuse it.
+
+After an explicit writer request, match Never articles locally against distinctive
+request terms using saved titles/URLs/passages. No blocked text/index facts or
+notice data are supplied to AI. Persist minimal topic/reason/title/URL matches
+with request time and a stable request ID in evidenceRequestNotice. Display above
+the item's tabs' content, including Preview, with Review evidence and Dismiss
+notice. Dismiss records dismissedAt by exact notice ID; stale dismissals cannot
+clear a newer alert. Repeated handling of the same request cannot resurrect it;
+a new build request can create a new alert. Retain notices through restart and
+generated-work reset, privately excluded from website JSON and model prompts.
+Unattended builds keep their best allowed draft; no approval/resume interaction.
+No catalogue schema/compiler bump or mass requeue: optional controls/notification,
+with original Auto compilation unchanged.
+
+Verification for 0.34.0: 210 tests passed, four existing optional external
+simulations skipped. Added regression coverage for bulk API validation, busy
+guards, saved/uncaptured references, direct/sibling isolation, unchanged paused
+queues/checkpoints/output, zero first-index calls for Never, first-permitted
+indexing and subsequent reuse, moved-binding exclusions, blocked request alerts,
+restart persistence, stale/duplicate dismissals and no extra writer pass. Existing
+source exclusion, shared index, saved-cache and requested-context suites pass.
+Browser bulk mode changes and blocked-request build/refresh/dismiss flows pass;
+screenshots inspected. TypeScript/build, OpenAPI syntax and diff checks pass.
+All test builds used isolated synthetic fixtures; no live provider calls or
+catalogue mutations. No workshop service was listening on 4317; left stopped.
+
+
+### Actual AI evidence telemetry (app 0.35.0)
+
+Pass an optional private input manifest beside each AI.run request. Construct
+source manifests by inspecting the same final source arrays/objects serialized
+into the prompt: read/index chunks (one actual page), filtered sourceWritingPacket
+for primary/follow-up writing, bounded classification/sync/name pages and exact
+repair facts. Prose-only and URL discovery requests carry zero archived sources.
+No inclusion-toggle counts or bibliography URL guesses. Keep prompts/schema/cache
+keys identical; telemetry is never sent to the model. Source modes are captured
+at submission time and canonical URL aliases are deduplicated per call.
+
+CliRunner emits after successful subprocess spawn or validated answer-cache hit;
+AgentRouter associates this with the actual item/agent and final input manifest.
+Authentication/root-schema/cooldown skips do not count as submitted. Failed
+submissions and explicit fallback/retry spawns count separately; cached responses
+count zero sends. This is auditable local CLI input, not remote delivery proof,
+provider token billing or internal CLI reconnect retries. Saved direct/shared
+analysis hits and full saved-ledger reuse are separately recorded with chunk
+counts; reused facts still cost input when supplied in a new writing request.
+
+Project.evidenceStats stores the current/last item session and source-only event
+metadata, never prompts/source bodies. Live progress shows unique sources, sends,
+request counts, latest writing payload size and cache reuse. Expand for per-call
+source names, Direct/Auto/Always include and reading/indexing/writing/check/repair
+phases. Retain through completion until next item. Finish on completion/failure;
+append immutable private snapshots to per-item evidenceStatsHistory. Item detail
+API returns this separately from rolling family.history; History renders all
+snapshots without a retention cap. No retroactive estimates for previous builds.
+No compiler/public schema bump or automatic requeue: observational metadata only.
+
+
+Verification for 0.35.0: 215 tests passed, four optional external simulations
+skipped. New tests cover final payload filtering (not mode/bibliography counts),
+source identity checks against the final prompt, actual local CLI spawn/cache
+behavior, failed submissions, cooldown skips, provider fallback duplicates,
+shared reading manifests, first-index/cache reuse and permanent History after
+rolling-log truncation/restart. Browser live counts/source lists and saved History
+checks pass; screenshots inspected. TypeScript/build, OpenAPI syntax and diff
+checks pass. No additional model requests, live catalogue edits or schema changes.
+The live Corrosive Artifact build was running, so its service was left untouched;
+restart after that job to enable telemetry. Earlier calls have no retroactive stats.
+
+
+### Pasted text evidence (app 0.36.0)
+
+Sources sidebar Add text evidence has an optional Source / name label and plain
+textarea. POST /api/items/:id/text-evidence accepts strict label (trimmed, up to
+160 characters) and text (trimmed ends only, 1–100000 characters). Save a unique
+manualText=true Source plus .data/sources/manual-UUID.txt; preserve literal
+markup, whitespace inside the passage and line breaks without HTML parsing.
+No full source URL, browser capture, model call or automatic build. Enforce
+item/current-processing/metadata-sync/removal guards. Invalidate only this item's
+selected inputs; retain last output, batch queue/checkpoint and sibling data.
+Manual output follows the existing explicit evidence-review safeguard.
+
+Use a private manual.borderlens.invalid identifier for internal page identity,
+cache/fact keys and claims; never fetch or offer it as an external link. Discovery
+URLs/effective-fetch sets omit it. Restore via sourceId must not add it to fetch
+URLs. Website refresh preserves manual rows/files. Read excerpts via the normal
+source ledger and sourceUsage path, including exact quotation validation and
+source telemetry. Writer guidance for opted-in excerpts explains partial scope,
+private labels and nullable acquisition URLs; no schema/compiler bump or mass
+requeue for existing entries. Public cleanup nulls internal acquisition URLs.
+
+Render Manual text pills on cards/viewers, preserve line breaks, and show exact
+stored text/file views. Optional label remains a private UI reference, not proof:
+use a generic label in model identity/evidence packets. Support standard source
+remove/restore and generated-reset persistence. Manual library retrieval stays
+within its owning item; never borrow another item's excerpt. Shared promotion is
+not offered for this new item-only feature. Raw extracted Game data stays intact.
+
+Verification for 0.36.0: 218 tests passed; four optional external simulations
+skipped. Added tests for strict inputs, exact text/file/hash preservation, private
+labels, item/active/removal guards, no AI/fetch/start or queue/output changes,
+normal reader/fact/stat manifests, no cross-item library reuse, public URL cleanup,
+remove/restore, refresh/restart/generated-reset persistence. Browser paste/add,
+manual badge, exact full-text/file viewer, remove/restore and reload pass;
+screenshots inspected. TypeScript/build, OpenAPI syntax and diff checks pass.
+All mutations/model runs used isolated fixtures; live catalogue/service left
+untouched. Restart app to enable the new endpoint. Excerpts supplement existing
+sources; users can set the original page to Never include to replace its input.
+
+
+### Shared manual excerpts (app 0.37.0)
+
+Supersedes 0.36's item-only restriction: user-authored compilations may be promoted
+exactly one parent at a time with the existing Move evidence action. Permit a
+manual local URL only when an actual manualText source row is owned at the supplied
+item/shared scope. Reject spoofed IDs, borrowed/inherited moves, affected active
+items and promotion above Everything. Move source ownership, retain UUID/hash/file/
+text/timestamp/private label and deduplicate parent bindings. Invalidate dependent
+inputs only; preserve outputs, run queue/checkpoint and all inclusion/exclusion
+preferences. No AI, fetch or build starts.
+
+Applicable descendants inherit the entry through the same scope matching and
+Auto/Always/Never source paths. Saved-library lookup permits manual text owned by
+this item or its explicitly bound ancestor scopes, never unrelated item/scope
+compilations. Shared indexing reads only selected pasted text and uses a generic
+manual title; the user's UI label is not naming/scope proof. Reuse the same
+content/model/agent cache key after ownership moves and across allowed children.
+Never sources remain blocked before all analysis/writing/request passes.
+
+Show move controls on manual item and shared cards. Inherited manual titles open
+their owner group, never an external URL. Shared manual cards show full text and
+remove/restore; hide browser capture/HTML replacement/external-link actions.
+Allow shared-source restore only for an existing scope-owned manual record;
+new arbitrary local URLs and HTML replacement remain rejected. No public schema
+change, prompt change for existing website sources or mass requeue.
+
+Verification for 0.37.0: 220 tests passed; four optional external simulations
+skipped. New tests cover item/character/category/Everything promotion, exact
+text/ID/file/label preservation, scoped library reuse, Never preferences through
+ownership moves, one reusable shared index, no AI/queue/output changes, spoofed
+local URL rejection and shared remove/restore. Browser item promotion, inherited
+manual navigation, parent full text, further promotion and remove/restore pass;
+screenshot inspected. TypeScript/build, OpenAPI syntax and diff checks pass.
+All mutations/models were isolated fixtures; live service/catalogue untouched.
+
+
+### Manual evidence visual identity (app 0.38.0)
+
+UI-only: a reusable purple NotebookPen marker, Manual text badge, tinted surface
+and left border distinguish manual excerpts without changing their user label.
+Apply across item/shared cards, inherited rows, source snapshot headers, removed
+items, requested-context results, blocked-request alerts and live/permanent
+evidence statistics. Preserve inclusion-mode colors and controls independently
+of manual-source tint. Keep Auto/Always/Never, parent movement, stored text, index
+caches and queue behavior unchanged. No schema/compiler bump or automatic work.
+
+Verification for 0.38.0: TypeScript/production build and full browser smoke pass;
+manual card/row markers survive exclusion-mode changes, promotion and restore.
+Inspected inherited Never row and shared full-text screenshots: purple notebook,
+badge, tint and border remain distinct while inclusion controls stay unchanged.
+No backend behavior/model/data changes; no additional unit tests for this visual
+change. Diff check passes. Live service and catalogue data left untouched.
+
+
+### Stored evidence sizes (app 0.39.0)
+
+SourceSize uses TextEncoder UTF-8 bytes from exact stored source.text; B/KB/MB are
+decimal display units with exact byte count in accessible label/tooltip. Read-only
+inheritedEvidence.textBytes exposes the same value, null when no capture exists,
+including known captures set to Never. No body size guesses from character count,
+HTML file sizes, toggle counts or model token estimates. Optional field supports
+older response shapes. Compute on read, not persisted stale metadata.
+
+Show in inherited rows, direct/shared website/manual cards, source snapshot viewer
+and live manual paste form. Unknown sizes display Size unavailable. Guides are
+Small <8000, Medium <32000, Large <96000 and Very large otherwise. These are
+explicit document-size heuristics, never provider/context limits. Large entries
+suggest a focused manual excerpt. Explain that actual AI inputs include selected
+facts, structured context and instructions and are measured separately in stats.
+No source content, mode, hierarchy, cache keys or queue changes; no compiler/public
+schema bump or automatic rebuilds.
+
+Verification for 0.39.0: 222 tests passed; four optional external simulations
+skipped. Added exact ASCII/accent/combining-mark/emoji/line-break UTF-8 checks,
+decimal display/guide boundaries, known Never-source byte metadata and pending
+null sizes. Browser checks assert exact manual sizes on direct/shared/inherited
+entries alongside existing inclusion/promotion/restore behavior; screenshots
+inspected. TypeScript/build, OpenAPI syntax and diff checks pass. Local fixtures
+only; live catalogue/service untouched. Restart app to expose inherited textBytes
+from the updated backend. No model calls, content edits or automatic rebuilds.
+
+
+### Inherited-list row scanning (app 0.40.0)
+
+UI-only, inherited list only: alternate standard-source row fills, counting only
+standard rows; purple manual rows are excluded from striping. Highlight hover and
+focus-within in green or purple according to source type. Fade Never include rows
+to 58% opacity using their actual mode selector state, including pending updates;
+restore full contrast on hover/focus without disabling controls. Keep purple
+identity independent of the inclusion mode and respect reduced-motion preference.
+No source/parent/mode/cache/queue/schema/compiler changes or automatic work.
+
+Verification for 0.40.0: TypeScript/production build and full browser smoke pass.
+Browser checks verify alternating nonmanual fills, hover on both stripe colors,
+Never opacity on standard/manual rows, keyboard-focus contrast restoration and
+existing inclusion/promotion/restore/no-agent behavior. Inspected muted purple
+row and striped-list screenshot. Diff check passes. No unit tests added for this
+CSS-only change; no live catalogue settings, backend or model changes.
+
+
+### Cancel processing queue (app 0.41.0)
+
+POST /api/run action=cancel applies to global/scoped/single-item build and URL
+discovery runs. A paused/blocked queue clears immediately. An active queue sets
+run.cancelRequested and displays Cancelling while the current operation settles.
+AgentRouter cancellation is sticky until the loop finishes; CliRunner terminates
+the active process group with existing TERM/KILL cleanup, or prevents launch after
+a pending auth check. Never fail over, add an outage cooldown, mark the item failed
+or retry source/verification extraction on user cancellation. Model-free HTTP work
+may finish first; check cancellation before subsequent source fetches/queue items.
+
+Finalization clears active/deferred/pendingFrom queues, pendingRebuild instructions
+and the saved build checkpoint; return idle with the last chosen saved/fresh mode.
+Retain source snapshots, raw data, drafts/partial work, output, corrections,
+manual overrides, revisions and agent caches. Keep interrupted item stage, return
+running items to queued, preserve existing blocked issues, and persist cancelled
+evidence statistics. Resume on idle is rejected rather than accidentally starting
+a new queue. Cancellation survives restart as idle, not a recoverable Resume.
+
+Cancel run is a separate quiet danger button beside the existing split control;
+no confirmation modal. While stopping, disable re-entry/start/pause and show live
+progress. Metadata sync is separate and rejects queue cancellation. No compiler/
+public schema bump or automatic rebuilds.
+
+Verification for 0.41.0: 225 tests passed, 4 optional external tests skipped;
+production build, OpenAPI lint and diff check passed. Cancellation tests exercise
+paused/discovery/checkpoint clearing, local agent process termination without
+fallback/cooldown, preserved saved JSON/drafts, fresh runs after cancellation and
+persisted cancellation recovery. Browser smoke passes on Node 22; inspected
+Pause/Resume + Cancel and returned-idle screenshots. An initial Node 26 browser
+run failed an earlier image-refresh assertion; Node 22 completed the full suite.
+Isolated fixtures only; no real model calls, live cancellation or catalogue edits.
+No service was listening on workshop port 4317 at final verification; restart the
+app to load this release.
+
+### Edit manual text evidence (app 0.42.0)
+
+Pencil control on item-specific and shared manual cards opens an inline label/text
+editor with Save/Cancel and size preview. POST /api/items/:id/text-evidence/:sourceId
+accepts the existing strict plain-text input; verifies direct active ownership and
+blocks affected running consumers. Retains stable IDs, URLs, binding, inclusion
+modes, output and queues; replaces text snapshot/hash and invalidates affected
+analysis/drafts for the next requested build. Shared edits apply to descendants.
+No model/fetch/automatic build, compiler or public schema change.
+
+Verification: item/shared browser edit, cancel, label change, text change and
+inheritance checks pass; inspected both inline editors. Production build and
+strict local API tests pass. OpenAPI parses and request/response shape checked;
+Postman lint was unavailable (401 fetching its ruleset), no remote publication.
+Regression run exposed an existing incomplete source-reading fixture on Node 22;
+added its required inputHash. Increased isolated CLI-start fixture allowance to
+10 seconds after a 3-second startup timeout under concurrent browser testing.
+All verification uses local fixtures; no real AI calls or live evidence edits.
+Final regression run: 226 passed, 4 optional skipped, zero failures.
+
+### Cancel control visibility (app 0.42.1)
+
+Replace the small square stop icon with a 16px circled X. Remove quiet-button
+styling that overrode the danger color; use a pale red surface, red text/border
+and explicit hover/focus treatment. No cancellation behavior/data/API changes.
+Verification: production build/diff check passed; isolated rendered React control checked for visible red border/text, circled X and hover background; screenshot inspected. No live run touched.
+
+### Inherited evidence ordering (app 0.42.2)
+
+Sort display only: Always include, Auto, Never include; case-insensitive natural
+alphabetical titles within each group, URL tie-breaker. Copy the input array;
+retain all source identities, modes and purple note styling. Never rows fade to
+45% (was 58%) and still regain full opacity on hover/keyboard focus. Saving a mode
+change updates its group from current server data. No API/data/build changes.
+Verification: production build and diff check pass. Isolated rendered component verifies all three groups, case-insensitive alphabetical order, input-array preservation, purple manual row identity and Never opacity/hover/focus. Screenshot inspected; no live settings changed.
+
+### Item evidence totals (app 0.43.0)
+
+Item heading only: included stored UTF-8 text total for dedicated + Always include,
+separate muted Auto potential-extra total. Reuse size thresholds, deduplicate
+canonical URLs, exclude Never sources, flag missing sizes as unknown additions.
+No inherited/direct double count. Game-only items identify that saved sources are
+excluded. Tooltip/label distinguish document totals from actual transmitted facts,
+cache/token usage, instructions/game data. Display-only; no queue/API/model changes.
+Verification: four focused size tests pass, including UTF-8, mode separation, deduplication, missing sizes and legacy modes. Production build/diff check pass; isolated item-heading render verifies separate included/Auto figures and inspected layout. No live sources, settings or runs changed.
+
+### Always include availability, not mandatory usage (app 0.43.1 / compiler 0.11.1)
+
+Forced shared fact relevance.automaticIncluded is a retrieval hint, not proof of
+item applicability. Permit explicitly reasoned irrelevant dispositions for forced
+numeric facts irrespective of that hint; do not force Berserk base stats onto an
+artifact. Require nonblank exclusion reasons, retain exact-once accounting,
+used-stat value/citation checks and strict protection of direct catalogue stats.
+Update writer instructions accordingly. No evidence selection/mode/Never changes,
+no automatic runs. Compiler bump invalidates older generated outputs/caches via
+existing version policy while preserving saved evidence and prior outputs.
+Verification: 228 tests pass, 4 optional skips; 27 focused source-reading/usage
+regressions pass, including broad automatic-match forced exclusions, nonblank
+reasons, used-stat value enforcement and direct-stat protection. Production build
+and diff check pass. Read-only replay of the saved Brick Corrosive Artifact draft
+now passes validateSourceUsage unchanged. No live model calls, evidence edits,
+queue changes or service restart during verification.
+
+### Box inherited evidence by mode (app 0.43.2)
+
+Nonempty modes have labelled/count boxes, ordered Always include, Auto, Never
+include, with gaps and existing alphabetical order inside. Use brighter green
+standard rows for Always, blue for Auto; preserve purple manual colors and 45%
+Never opacity with hover/focus restoration. Labels stay fully visible. No data,
+mode, AI, queue, API or compiler changes.
+Verification: production build/diff check pass; isolated rendered component verifies three labelled regions, ordering, purple identity, unchanged input data and Never fade/hover/focus. Inspected grouped-list screenshot. No live settings or model calls.
+
+### Selective Chrome capture (app 0.44.0 / extension 1.1.0 / compiler 0.11.2)
+
+Toolbar popup explicitly injects selection.js with existing activeTab+scripting;
+no persistent wiki content script or broad new permissions. Shadow DOM floating
+panel captures Ctrl-pointer drags, commits on pointerup/Control release, supports
+resize corners, move by label, remove/clear and Fit content. Document-coordinate
+boxes survive scrolling; navigation/refresh/close discard unsent state. Page title
+is retained. Geometry checks flag clipped text, partial tables and empty boxes;
+red/green reflect structural completeness only. Partial sends require preview
+acknowledgement; empty sends disabled. Preview/count/UTF-8 size are local.
+
+Build selected HTML from intersecting visible text ranges, union across boxes,
+with safe structural tags only. Preserve table row/cell scaffolding, colspan and
+rowspan, blank unselected cells to prevent column shift. Exclude controls,
+editable forms, active content/nav/known ads; no screenshots/cookies/page scripts.
+Send via authenticated extension background -> existing local workshop bridge ->
+ticket API. Selected-content markers are HTML metadata; validate bounded counts,
+store private selectedContent and label item/shared/inherited/viewer UI. Propagate
+excerpt context to readers/writer: omissions never establish absence, partial
+headers/units cannot be inferred. No automatic builds from captures.
+
+Selected excerpts do not become global complete-page cache entries: keep them
+attached to physical owner/promoted scope; prefer them over subsequent global
+full-page captures and retain them on fresh source refresh. Re-capture replaces
+that owner’s URL content. Full-page cache behavior remains for ordinary articles.
+Zip includes selection.js; helper version 1.1.0, app 0.44.0. Compiler bump applies
+existing stale-output/cache policy; preserve saved outputs/evidence and queues.
+
+Limits: DOM text only (not images/canvas/cross-origin frames); heuristic geometry
+on dynamic/reflowing pages, bounded to 30 boxes. Green cannot establish semantic
+completeness. Send recomputes selected content and asks for re-review if changed.
+
+Verification: 231 tests pass, 4 optional external skips; production build and diff
+check pass. Real MV3 Chromium fixture tests popup-disabled initial send, empty
+form-only selection rejection, Ctrl draw/release, live red/green state, explicit
+partial acknowledgement, resize, label drag, Fit table, overlapping-box dedup,
+remove, document scroll anchoring, background/local bridge and saved metadata,
+selected headings/tables and omission of unselected/private/script content. App
+source badge verified; green/red screenshots inspected. Focused cache/short-text
+checks confirm scoped excerpts, stable refresh, promoted inheritance, Never size
+metadata and archive inclusion of selection.js. OpenAPI parses; shipped extension
+permissions unchanged. Browser pages are synthetic fixtures; no live catalogue,
+real model calls, browsing profile or running service changed. Live Wiki/Lootlemon
+layout behavior remains for user testing after extension reload.
+
+### Source URL capture discoverability (app 0.44.1)
+
+Keep the correction sidebar’s Chrome-capture control visible even with an empty
+URL; disable until nonblank input, while opening, or item removed. Trim the URL
+before the existing ticket/extension handoff; tooltip explains empty state.
+Label clarifies Chrome capture. No API/extension/build/queue behavior change.
+Verification: production build/diff pass. Real MV3 Chrome fixture verifies empty URL link visible/disabled, populated URL enabled, then opens the article through that link and completes selective capture/local save. No live catalogue or extension installation changes.
+
+### Chrome capture with manual evidence (app 0.44.2)
+
+After saving, BrowserImports.flush compared all old raw URLs through strict
+articleKey validation. Manual local URLs consequently threw after the website
+capture had been written, preventing provider/history/invalidation bookkeeping
+and falsely reporting failure. Compare old/new sourceKey identities instead;
+retain strict ticket/current website validation before save. Manual sources remain
+untouched; only previous records for the same website URL are replaced. No Chrome
+extension/input changes, compiler bump or automatic live-data repair.
+Verification: 8 capture tests, production build and diff check pass. Regression reproduces website replacement alongside manual evidence, then verifies imported status, retained manual text, single replacement website record, provider saved status/history and unchanged queue. Read-only live inspection confirmed the four-box capture already exists alongside a manual entry; no live data changed.
+
+### Recapture external evidence (app 0.45.0)
+
+Recapture controls on item external cards, shared saved external cards, captured
+inherited rows and source viewers. Reuse Chrome helper openPage with exact URL
+and displayed owner (item; shared scope; first displayed inherited parent). Viewer
+closes when launching so refreshed evidence is visible afterward. Manual text has
+no Recapture. Uncaptured shared URLs retain Open in Chrome. Old content stays
+until a replacement is sent; existing ticket import replaces owner+URL content,
+updates size/sections/tables/selection metadata and preserves other sources/modes.
+No automatic build, extension change, API behavior or compiler/schema change.
+Verification: production build/diff pass. Real MV3 browser test clicks item Recapture, saves a smaller selection, verifies one URL record and removal of previous table/text; promotes it, recaptures from inherited row and verifies replacement at the shared owner. Manual card has no Recapture; queue and fake AI call count unchanged. Screenshot inspected. No live data or extension changes.
+
+### Return to evidence and persistent close preference (app 0.46.0 / helper 1.2.0)
+
+Retain owner/URL/app-tab navigation context after accepted captures while dropping
+consumed tokens. Back to workshop routes FOCUS_SOURCE through the trusted local
+bridge, selects item Sources & evidence or the owning shared scope, waits for the
+URL-labelled card/row, scrolls/focuses and highlights it for 6.5 seconds. Prefer
+actual cards over provider URL controls; queued imports can fall back to research.
+Acknowledge navigation before tab activation/optional close. No build/queue edits.
+
+Checkbox in popup and panel uses chrome.storage.local with false default; live
+onChanged listeners keep both in sync, and choice persists across reload/restart.
+Read preference on return, close only completed/accepted capture tabs whose current
+URL still matches, never workshop/unsent/other pages; no close on focus failure.
+Consumed jobs keep no tokens, return context expires after a day. Existing capture
+permissions and HTTP contract unchanged; internal bridge adds FOCUS_SOURCE.
+Verification: 232 tests pass, 4 optional skips; production build/diff pass.
+Real MV3 browser checks returning from Preview opens Sources & evidence with the
+item card in viewport/highlighted; default false retains source. Enabling the
+checkbox persists into subsequent popup/panel instances, completed returns close
+exact external tabs, and shared returns anchor the owning group. Popup return
+before sending retains the unsent tab even with preference true. Consumed job
+records contain no tokens. Queue and AI-call counter unchanged. Local synthetic
+fixture only; no live tabs, settings, project data or model calls touched.

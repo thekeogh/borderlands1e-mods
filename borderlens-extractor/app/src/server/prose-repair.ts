@@ -1,3 +1,4 @@
+import { evidenceInput } from "../shared/evidence-stats.ts";
 import { z } from "zod";
 import type { Draft } from "../shared/models.ts";
 import type { AI } from "./worker.ts";
@@ -76,6 +77,7 @@ export async function rewriteCopiedProse(
     model,
     false,
     progress,
+    evidenceInput("repair", {}),
   );
   passage.set(rewritten.text);
   return true;
@@ -98,6 +100,7 @@ export async function rewriteUnclearProse(
     model,
     false,
     progress,
+    evidenceInput("repair", {}),
   );
   slot.set(result.text);
   return true;

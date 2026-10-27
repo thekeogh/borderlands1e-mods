@@ -297,6 +297,8 @@ export type Capture = {
   manifest: Record<string, unknown>;
 };
 export type Source = {
+  manualText?: boolean;
+  selectedContent?: { boxes: number; warnings: number };
   inheritedFrom?: { id: string; name: string };
   reusedFrom?: { id: string; name: string };
   id: string;
@@ -351,6 +353,7 @@ export type CoverageEntry = {
 };
 export type BatchSourceMode = "saved" | "fresh" | "auto";
 export type Run = {
+  cancelRequested?: boolean;
   mode?: "build" | "discover";
   scope?: EvidenceScope;
   rebuildAll?: boolean;
@@ -375,6 +378,7 @@ export type Settings = {
   maxItems: number;
 };
 export type Project = {
+  evidenceStats?: import("./evidence-stats.ts").EvidenceStats;
   identitySync?: import("./identity-sync.ts").IdentitySyncState | null;
   schemaVersion: 1;
   revision: number;

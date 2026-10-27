@@ -1,3 +1,4 @@
+import { isManualTextUrl } from "../shared/manual-evidence.ts";
 import { sourceKey } from "../shared/research.ts";
 import { parseSource } from "./source-content.ts";
 import { load } from "cheerio";
@@ -148,7 +149,7 @@ export class Research {
       return cached;
     }
     const parsed = this.parse(html);
-    if (parsed.text.length < 60)
+    if (parsed.text.length < (parsed.selectedContent ? 1 : 60))
       throw new Error("Source has too little readable content.");
     const id = "page:" + hash(f.id + "|" + url + "|" + html).slice(0, 20);
     const s: Source = {
@@ -160,6 +161,9 @@ export class Research {
       hash: hash(html),
       text: parsed.text,
       contentVersion: 2,
+      ...(parsed.selectedContent
+        ? { selectedContent: parsed.selectedContent }
+        : {}),
       sections: parsed.sections,
       tables: parsed.tables,
       filename: id.replace(":", "-") + ".html",
@@ -169,6 +173,8 @@ export class Research {
     return s;
   }
   async fetchPage(f: Family, url: string, refresh = false) {
+    if (isManualTextUrl(url))
+      throw new Error("Manual text evidence is local and cannot be fetched.");
     if (this.store.sourceNeverIncluded(f.id, url))
       throw new Error(
         "This inherited source is set to Never include for this item.",
@@ -177,6 +183,14 @@ export class Research {
       throw new Error(
         "This source was removed from this item; restore it before fetching again.",
       );
+    // Explicit excerpts survive website refresh, just like manual text evidence.
+    const selected = this.store
+      .sources(f.id)
+      .find(
+        (source) =>
+          source.selectedContent && sourceKey(source.url) === sourceKey(url),
+      );
+    if (selected) return selected;
     const owner = this.store.sourceOwner(f, url),
       existing = this.store.cachedSource(url),
       run = this.store.state.run;

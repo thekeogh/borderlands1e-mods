@@ -9,46 +9,6 @@ async function request(type, payload = {}) {
     throw new Error(response?.error || "The Chrome helper did not respond.");
   return response;
 }
-// Self-contained: Chrome serializes this function into the user-invoked active tab.
-function captureArticle() {
-  const url = new URL(location.href);
-  if (
-    url.protocol !== "https:" ||
-    !["borderlands.fandom.com", "www.lootlemon.com", "lootlemon.com"].includes(
-      url.hostname,
-    )
-  )
-    throw new Error("Open the requested wiki or Lootlemon article.");
-  const article =
-    url.hostname === "borderlands.fandom.com"
-      ? document.querySelector(".mw-parser-output")
-      : document.querySelector("main");
-  if (!article || article.textContent.trim().length < 60)
-    throw new Error(
-      "The article has not loaded yet. Finish any browser prompts and reopen this helper when the article is visible.",
-    );
-  const clone = article.cloneNode(true);
-  clone
-    .querySelectorAll(
-      'script,style,iframe,noscript,form,input,textarea,button,nav,header,footer,[contenteditable="true"],.advertisement,.ad-slot,.ad-container',
-    )
-    .forEach((node) => node.remove());
-  const page = document.implementation.createHTMLDocument(document.title);
-  page.documentElement.lang = document.documentElement.lang || "en";
-  const main = page.createElement("main");
-  const heading = page.createElement("h1");
-  heading.textContent =
-    document
-      .querySelector("#firstHeading,.page-header__title,h1")
-      ?.textContent?.trim() || document.title;
-  main.append(heading, clone);
-  page.body.append(main);
-  url.hash = "";
-  return {
-    url: url.href,
-    html: "<!doctype html>" + page.documentElement.outerHTML,
-  };
-}
 async function init() {
   try {
     target = await request("TARGET");
@@ -59,9 +19,27 @@ async function init() {
       return;
     }
     title.textContent = target.job.name;
+    back.textContent = "Back to workshop";
+    if (target.job.completed) {
+      message.textContent =
+        "Capture saved. Return to its Sources & evidence entry in the workshop.";
+      back.textContent = "Back to workshop";
+      return;
+    }
     message.textContent =
-      "When the article has finished loading, send its visible content to this item. Your workshop will save it automatically.";
+      "Select just the content you need on the page. Hold Ctrl and drag boxes, then preview and send from the floating panel.";
     send.hidden = false;
+    send.disabled = true;
+    document.querySelector("#select").hidden = false;
+    try {
+      const status = await chrome.tabs.sendMessage(target.tab.id, {
+        type: "SELECTION_STATUS",
+      });
+      if (status?.count) {
+        message.textContent = `Saved ${status.count} boxes · ${(status.bytes / 1000).toFixed(1)} KB selected text. Continue editing or send from the panel.`;
+        send.disabled = status.warnings > 0;
+      }
+    } catch {}
   } catch (error) {
     title.textContent = "Unable to connect";
     message.textContent = error.message;
@@ -75,7 +53,7 @@ send.addEventListener("click", async () => {
   try {
     const results = await chrome.scripting.executeScript({
       target: { tabId: target.tab.id },
-      func: captureArticle,
+      func: () => globalThis.__borderlensSelection?.capture(),
     });
     const capture = results[0]?.result;
     if (!capture)
@@ -90,28 +68,57 @@ send.addEventListener("click", async () => {
       "Saved in Borderlens. Return to the workshop to rebuild this item.";
     message.className = "success";
     send.hidden = true;
-    back.textContent = "Return to workshop";
+    back.textContent = "Back to workshop";
   } catch (error) {
     message.textContent = error.message;
     message.className = "error";
   } finally {
     send.disabled = false;
-    send.textContent = "Send page to Borderlens";
+    send.textContent = "Send selections to Borderlens";
+  }
+});
+document.querySelector("#select").addEventListener("click", async () => {
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: target.tab.id },
+      files: ["selection.js"],
+    });
+    window.close();
+  } catch (error) {
+    message.textContent = error.message;
+    message.className = "error";
   }
 });
 back.addEventListener("click", async () => {
   try {
-    const tabId = target?.appTabId || target?.job?.appTabId;
-    if (tabId) await chrome.tabs.update(tabId, { active: true });
+    if (target?.job)
+      await request("OPEN_WORKSHOP", {
+        tabId: target.tab?.id || target.job.tabId,
+      });
     else
       await chrome.tabs.create({
         url: target?.appUrl || "http://127.0.0.1:4317",
       });
     window.close();
-  } catch {
-    await chrome.tabs.create({
-      url: target?.appUrl || "http://127.0.0.1:4317",
-    });
+  } catch (error) {
+    message.textContent = error.message;
+    message.className = "error";
   }
+});
+const closePreference = document.querySelector("#close-source-tab");
+chrome.storage.local.get({ closeSourceTab: false }).then((value) => {
+  closePreference.checked = value.closeSourceTab;
+  closePreference.disabled = false;
+});
+closePreference.addEventListener("change", async () => {
+  try {
+    await chrome.storage.local.set({ closeSourceTab: closePreference.checked });
+  } catch (error) {
+    message.textContent = error.message;
+  }
+});
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.closeSourceTab)
+    closePreference.checked = !!changes.closeSourceTab.newValue;
 });
 init();

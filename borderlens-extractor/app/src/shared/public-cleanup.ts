@@ -1,3 +1,4 @@
+import { isManualTextUrl } from "./manual-evidence.ts";
 import type { PublicEntry } from "./models.ts";
 /** Remove only notes that repeat their structured value; never rewrite human prose. */
 export function redundantStatNote(stat: PublicEntry["stats"][number]) {
@@ -25,6 +26,13 @@ export function redundantStatNote(stat: PublicEntry["stats"][number]) {
 export function cleanPublicEntry(entry: PublicEntry): PublicEntry {
   return {
     ...entry,
+    ...(entry.sources?.some((source) => isManualTextUrl(source.url))
+      ? {
+          sources: entry.sources.map((source) =>
+            isManualTextUrl(source.url) ? { ...source, url: null } : source,
+          ),
+        }
+      : {}),
     stats: entry.stats.map((stat) => ({
       ...stat,
       notes: redundantStatNote(stat) ? "" : stat.notes,

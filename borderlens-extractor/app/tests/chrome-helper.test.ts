@@ -65,7 +65,7 @@ function ai(s: Store, wait?: () => Promise<void>): AI {
       return schema.parse({
         entry: {
           schemaVersion: "7",
-          compilerVersion: "0.11.0",
+          compilerVersion: "0.11.2",
           id: f.id,
           name: f.name,
           dlc: null,
@@ -224,7 +224,8 @@ test("helper endpoints keep same-origin protection and package only extension fi
       ).arrayBuffer(),
     ),
   );
-  assert.equal(archive.getEntries().length, 7);
+  assert.equal(archive.getEntries().length, 8);
+  assert.ok(archive.getEntry("borderlens-chrome-helper/selection.js"));
   assert.ok(archive.getEntry("borderlens-chrome-helper/manifest.json"));
   const manifest = JSON.parse(
     archive.readAsText("borderlens-chrome-helper/manifest.json"),
@@ -254,4 +255,90 @@ test("import of an already-processed item waits for a requested rebuild without 
   assert.deepEqual(s.state.run.queue, [first.id, second.id]);
   assert.equal(s.state.run.status, "paused");
   assert.equal(s.state.run.currentId, second.id);
+});
+
+test("selected page excerpts preserve metadata/short text, replace a page and never start a build", (t) => {
+  const { store: s } = setup(t),
+    w = new Worker(s),
+    f = s.state.families[0];
+  const run = structuredClone(s.state.run);
+  w.research.save(f, url, html, true);
+  const ticket = w.browserImports.create(f.id, url);
+  const selected =
+    '<!doctype html><html><head><meta name="borderlens-capture" content="selected"><meta name="borderlens-selection-count" content="2"><meta name="borderlens-selection-warnings" content="1"></head><body><main><h1>Fixture</h1><p>Damage +25%.</p></main></body></html>';
+  const result = w.browserImports.submit({ ...ticket, html: selected });
+  assert.equal(result.status, "imported");
+  const source = s.sources(f.id)[0];
+  assert.deepEqual(source.selectedContent, { boxes: 2, warnings: 1 });
+  assert.equal(source.captureMethod, "chrome");
+  assert.match(source.text, /Damage \+25%/);
+  assert.equal(s.sources(f.id).length, 1);
+  assert.ok(!source.text.includes("synthetic browser-capture"));
+  assert.deepEqual(s.state.run, run);
+  assert.deepEqual(
+    (buildPacket(s, f).evidence.find((e) => e.id === source.id)?.value as any)
+      .selectedContent,
+    { boxes: 2, warnings: 1 },
+  );
+});
+
+test("selected excerpts stay bound to their item or promoted parent and cannot be replaced by global full-page reuse", async (t) => {
+  const { store: s } = setup(t),
+    w = new Worker(s),
+    [first, second] = s.state.families;
+  const ticket = w.browserImports.create(first.id, url);
+  const selected =
+    '<html><head><meta name="borderlens-capture" content="selected"><meta name="borderlens-selection-count" content="1"><meta name="borderlens-selection-warnings" content="0"></head><body><main><p>Chosen excerpt only.</p></main></body></html>';
+  w.browserImports.submit({ ...ticket, html: selected });
+  const excerpt = s.sources(first.id)[0];
+  second.sourceUrls.push(url);
+  assert.equal(s.sources(second.id).length, 0);
+  w.research.save(second, url, html, true);
+  assert.deepEqual(s.sources(first.id)[0].selectedContent, {
+    boxes: 1,
+    warnings: 0,
+  });
+  assert.equal(s.sources(first.id)[0].id, excerpt.id);
+  assert.equal((await w.research.fetchPage(first, url, true)).id, excerpt.id);
+  w.promoteSource(first.id, url);
+  const inherited = s.sources(first.id).find((page) => page.selectedContent);
+  assert.ok(inherited?.inheritedFrom);
+  w.setSharedSourceMode(first.id, url, "never");
+  assert.equal(
+    s.inheritedEvidence(first).find((row) => row.url === url)?.textBytes,
+    new TextEncoder().encode(excerpt.text).byteLength,
+  );
+});
+
+test("Chrome capture completes bookkeeping alongside manual text and replaces only the same website", (t) => {
+  const { store: s } = setup(t),
+    w = new Worker(s),
+    f = s.state.families[0];
+  const manual = w.addTextEvidence(f.id, {
+    label: "Corrosive Crystal Harvest",
+    text: "My manually collected mission facts.",
+  });
+  const previous = w.research.save(f, url, html, true);
+  const ticket = w.browserImports.create(f.id, url),
+    run = structuredClone(s.state.run);
+  const selected =
+    '<html><head><meta name="borderlens-capture" content="selected"><meta name="borderlens-selection-count" content="4"><meta name="borderlens-selection-warnings" content="0"></head><body><main><p>Updated chosen website content.</p></main></body></html>';
+  const result = w.browserImports.submit({ ...ticket, html: selected });
+  assert.equal(result.status, "imported");
+  assert.ok(!result.message.includes("HTTPS"));
+  assert.equal(
+    s.rawSources(f.id).find((source) => source.id === manual.id)?.text,
+    manual.text,
+  );
+  assert.equal(
+    s.rawSources(f.id).find((source) => source.id === previous.id),
+    undefined,
+  );
+  assert.equal(
+    s.rawSources(f.id).filter((source) => source.url === url).length,
+    1,
+  );
+  assert.equal(s.get<any>(f.id, "research").providers[0].status, "saved");
+  assert.ok(f.history.some((h) => h.message.includes("article from Chrome")));
+  assert.deepEqual(s.state.run, run);
 });

@@ -1,3 +1,4 @@
+import { recordEvidenceEvent } from "../src/server/evidence-stats.ts";
 import { emptySourceReading } from "./source-fixture.ts";
 // Isolated browser-test server. Fake drafting is never part of the application.
 import express from "express";
@@ -32,8 +33,21 @@ const ai: AI = {
     version: "browser fixture",
     message: "Test fixture only",
   }),
-  run: async (_label, _prompt, schema, _model, _web, progress) => {
+  run: async (_label, _prompt, schema, _model, _web, progress, input) => {
     agentCallCount++;
+    const context = w.identitySync?.familyId || s.state.run.currentId;
+    if (context)
+      recordEvidenceEvent(
+        s,
+        s.family(context),
+        input || { phase: "other", sources: [] },
+        {
+          kind: "submitted",
+          label: _label,
+          agent: "codex",
+          promptCharacters: _prompt.length,
+        },
+      );
     if (_label.startsWith("Sync item")) {
       const f = s.family(w.identitySync!.familyId);
       progress("Reading saved identity proof…");
@@ -157,7 +171,7 @@ const ai: AI = {
         : null,
       entry: {
         schemaVersion: "7",
-        compilerVersion: "0.11.0",
+        compilerVersion: "0.11.2",
         description: [
           "An original fixture paragraph describing this item for players.",
         ],

@@ -1,3 +1,6 @@
+import { isRunCancelled } from "../shared/run-cancellation.ts";
+import { evidenceInput } from "../shared/evidence-stats.ts";
+import { analysisCacheHit } from "./evidence-stats.ts";
 import { sourceKey } from "../shared/research.ts";
 import {
   SHARED_READING_POLICY,
@@ -159,6 +162,7 @@ export const WriterSourceReading = SourceReading.extend({
 });
 
 export type SourceLedger = {
+  selectedContent?: { boxes: number; warnings: number };
   sourceId: string;
   url: string;
   hash: string;
@@ -237,6 +241,9 @@ export async function readSources(
   for (const [sourceIndex, source] of sources.entries()) {
     // Text is complete; structured sections/tables provide additional labelled context.
     const content =
+      (source.selectedContent
+        ? "USER-SELECTED PAGE EXCERPT: Only selected areas were captured. Missing content is not proof of absence. Partial tables/text may require caution.\n"
+        : "") +
       source.text +
       "\n\nSTORED SECTIONS AND TABLES\n" +
       JSON.stringify({
@@ -245,6 +252,9 @@ export async function readSources(
       });
     const chunks = sourceChunks(content);
     const page: SourceLedger = {
+      ...(source.selectedContent
+        ? { selectedContent: source.selectedContent }
+        : {}),
       sourceId: source.id,
       url: source.url,
       hash: source.hash,
@@ -278,6 +288,7 @@ export async function readSources(
         `Read source page ${sourceIndex + 1} of ${sources.length}, part ${index + 1}/${chunks.length}: ${source.title}`,
       );
       let reading: SourceReading | undefined;
+      let usedSharedIndex = false;
       const forcedFacts: NonNullable<
         SourceLedger["chunks"][number]["facts"][number]["relevance"]
       >[] = [];
@@ -290,8 +301,11 @@ export async function readSources(
           progress,
         );
         if (shared) {
-          if (shared.cached) selection.cachedChunks++;
-          else selection.indexedChunks++;
+          usedSharedIndex = true;
+          if (shared.cached) {
+            selection.cachedChunks++;
+            analysisCacheHit(store, f, source);
+          } else selection.indexedChunks++;
           const facts: SourceReading["facts"] = [];
           const forced = store.sourceAlwaysIncluded(f.id, source.url);
           for (const [at, fact] of shared.reading.facts.entries()) {
@@ -344,6 +358,7 @@ export async function readSources(
         } else selection.fallbackChunks++;
       }
       reading ||= store.get<SourceReading>(f.id, key) || undefined;
+      if (reading && !usedSharedIndex) analysisCacheHit(store, f, source);
       if (!reading) {
         let feedback = "";
         for (let attempt = 0; attempt < 3; attempt++) {
@@ -357,6 +372,12 @@ export async function readSources(
               progress(
                 `Read source page ${sourceIndex + 1} of ${sources.length} · extraction attempt ${attempt + 1}/3 · part ${index + 1}/${chunks.length} — ${message}`,
               ),
+            evidenceInput("read", {
+              sourceId: source.id,
+              url: source.url,
+              title: source.title,
+              text,
+            }),
           );
           try {
             reading = SourceReading.parse(reading);
@@ -419,6 +440,7 @@ export async function readSources(
             store.put(f.id, key, reading);
             break;
           } catch (error: any) {
+            if (isRunCancelled(error)) throw error;
             if (attempt === 2) throw error;
             feedback = String(error.message);
             progress(`Repairing source extraction: ${feedback}`);
@@ -531,6 +553,10 @@ export function validateSourceUsage(
   for (const row of usages) {
     const fact = facts.find((fact) => fact.id === row.factId);
     if (!fact) throw new Error("Source usage cites an unknown fact.");
+    if (row.disposition === "irrelevant" && !row.reason.trim())
+      throw new Error(
+        `Irrelevant source fact ${row.factId} needs an item-specific exclusion reason.`,
+      );
     if (fact.excludedReason && row.disposition !== "irrelevant")
       throw new Error(
         "Non-catalogue content must be excluded: " + fact.excludedReason,
@@ -705,6 +731,7 @@ export function validateSourceUsage(
     else if (
       row.disposition === "irrelevant" &&
       !fact.excludedReason &&
+      !fact.relevance?.forced &&
       fact.relevance?.automaticIncluded !== false &&
       !fact.retrieval &&
       fact.field === "stats" &&
@@ -729,6 +756,9 @@ export function sourceWritingPacket(packet: Packet, ledger: SourceLedger[]) {
     .map((page) => ({
       sourceId: page.sourceId,
       url: page.url,
+      ...(page.selectedContent
+        ? { selectedContent: page.selectedContent }
+        : {}),
       chunks: page.chunks.map((chunk) => ({
         index: chunk.index,
         facts: chunk.facts,

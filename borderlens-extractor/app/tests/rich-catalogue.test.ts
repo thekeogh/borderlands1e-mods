@@ -904,3 +904,24 @@ test("whole-document errors cannot promote a draft; malformed submitted JSON get
   assert.equal(response.status, 400);
   assert.deepEqual(store.get(f.id, "output"), old);
 });
+
+test("selection metadata must be bounded; ordinary full-page parsing remains unmarked", () => {
+  const page = (boxes: string, warnings: string) =>
+    `<html><head><meta name="borderlens-capture" content="selected"><meta name="borderlens-selection-count" content="${boxes}"><meta name="borderlens-selection-warnings" content="${warnings}"></head><body><main><p>Only selected text.</p></main></body></html>`;
+  assert.deepEqual(parseSource(page("1", "0")).selectedContent, {
+    boxes: 1,
+    warnings: 0,
+  });
+  for (const [count, warnings] of [
+    ["0", "0"],
+    ["31", "0"],
+    ["2", "3"],
+    ["1.5", "0"],
+    ["x", "0"],
+  ])
+    assert.equal(parseSource(page(count, warnings)).selectedContent, undefined);
+  assert.equal(
+    parseSource("<main><p>Ordinary full article.</p></main>").selectedContent,
+    undefined,
+  );
+});

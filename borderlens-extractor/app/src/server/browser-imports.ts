@@ -2,6 +2,7 @@ import { randomBytes, timingSafeEqual } from "node:crypto";
 import { Store, HttpError, hash } from "./store.ts";
 import type { Worker } from "./worker.ts";
 import { sourceUrl } from "./research.ts";
+import { sourceKey } from "../shared/research.ts";
 import { providerForUrl, type ResearchReport, now } from "../shared/models.ts";
 type Job = {
   id: string;
@@ -121,7 +122,7 @@ export class BrowserImports {
       );
     const parsed = this.worker.research.parse(input.html);
     if (
-      parsed.text.length < 60 ||
+      parsed.text.length < (parsed.selectedContent ? 1 : 60) ||
       /^(just a moment|access denied|attention required)/i.test(parsed.title)
     )
       throw new HttpError(
@@ -166,7 +167,7 @@ export class BrowserImports {
         for (const old of this.store.rawSources(f.id))
           if (
             old.id !== source.id &&
-            articleKey(old.url) === articleKey(source.url)
+            sourceKey(old.url) === sourceKey(source.url)
           )
             this.store.db.prepare("DELETE FROM sources WHERE id=?").run(old.id);
         if (!f.sourceUrls.includes(source.url))

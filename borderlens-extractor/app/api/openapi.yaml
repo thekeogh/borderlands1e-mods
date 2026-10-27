@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Borderlens local workshop
-  version: 0.33.0
+  version: 0.46.0
   description: Local-only catalogue processing. Disk-backed checkpoints; no hosted accounts or API-key billing.
 servers:
   - url: http://127.0.0.1:4317
@@ -55,7 +55,7 @@ paths:
   /api/evidence/promote:
     post:
       operationId: promoteEvidenceToParent
-      description: Move a directly attached evidence URL exactly one level up the displayed item/group hierarchy. Saved snapshots keep their IDs and content; matching parent URLs deduplicate. Descendants inherit the article, keeping individual exclusions. Output is retained and dependent drafts are invalidated for the next requested build. Never starts work or appends queue entries. Everything has no parent.
+      description: Move a directly attached website article or saved manual text entry exactly one level up the displayed item/group hierarchy. Saved snapshots keep their IDs and content; matching parent URLs deduplicate. Descendants inherit the article, keeping individual exclusions. Output is retained and dependent drafts are invalidated for the next requested build. Never starts work or appends queue entries. Manual text must be a real owned saved record; arbitrary local IDs are rejected. Shared manual text uses the existing Auto/Always/Never filtering, index cache and per-item exclusions. Its private label is not sent as a factual title; no fetching or build starts. Everything has no parent.
       requestBody:
         required: true
         content:
@@ -148,7 +148,7 @@ paths:
       responses:
         "200":
           {
-            description: Helper extension source ZIP; separate from website catalogue export.,
+            description: Helper extension source ZIP including the on-page selection script; separate from website catalogue export.,
           }
   /api/chrome-helper/jobs:
     post:
@@ -173,6 +173,7 @@ paths:
   /api/chrome-helper/capture:
     post:
       operationId: receiveChromeCapture
+      description: Accept ticket-bound sanitized HTML. Extension 1.1.0 can capture only Ctrl-drag selected regions. Bounded HTML meta markers identify selectedContent (boxes 1–30, warnings 0–boxes); selected excerpts may be shorter than full articles. Retain headings/tables where selected. Excerpt metadata stays private in source records/ledgers; missing content is not proof of absence. Selected excerpts stay with their item/promoted scope and survive refresh, excluded from the global complete-page cache. No automatic build.
       requestBody:
         required: true
         content:
@@ -211,7 +212,7 @@ paths:
       responses:
         "200":
           {
-            description: "Queue, families, settings, captures and recent activity. Active run messages include build attempt, subprocess elapsed time, time since last output and the bounded timeout; process liveness does not prove service progress. No raw capture blobs.",
+            description: "Queue, families, settings, captures, recent activity and optional evidenceStats (last/current item, timestamped source manifests per actual CLI submission, reading/indexing/writing/verify/repair phases, source mode captured at send time, local response-cache and analysis-cache reuse). Stats persist until the next item; permanent completed/failed snapshots are returned in item evidenceStatsHistory. Source manifests derive from the same final structured values serialized into prompts, not inclusion switches. CLI submission counts exclude cache hits, auth failures and cooldown skips; explicit retries/fallback submissions count again. This measures submitted evidence, not provider token usage or internal retries. No prompt bodies are stored in these stats. Active run messages include build attempt, subprocess elapsed time, time since last output and the bounded timeout; process liveness does not prove service progress. No raw capture blobs.",
           }
   /api/events:
     get:
@@ -261,7 +262,7 @@ paths:
       responses:
         "200":
           {
-            description: "Family with URL-matched catalogue-wide cached pages (reusedFrom identifies a previously saved article; logical item bindings remain independent), inheritedEvidence (URL, title, item-specific inclusionMode (auto/always/never, default auto), legacy alwaysInclude boolean, all contributing parent IDs/names and captured status), active sources plus excludedSources (restorable per-item URL exclusions), nameDecision (private rename proof/result; uncertain names stay unchanged), family.rawName/nameOverride (saved name corrections; IDs and ZIP records unchanged), effective classification override (equipment category and/or weapon subtype; equipment overrides have a null weaponType; verification identifies URL-discovery proof or saved-source verification), facts/evidence, per-provider research status/errors, sources, private researchAudit with full-source chunk readings and fact dispositions, evidenceFollowup (one optional saved-only request round, topics/matches/missing context and fallback status), sharedSourceSelection with kept/skipped tagged-fact decisions and index cache/fallback counts, stage history and last valid output. Final whole-document validation status, image metadata and savedRebuild availability/reason are included for built and unbuilt candidates. Website output is schema 9: item-level dlc (canonical Base Game/expansion or null; extraction identity first, then item-specific sources), no game/series field, canonical element enum, full-document consistency checks, relative image path or null, rich description/details, contextual stat ranges, grouped conditional dropChances and inline parts; empty note strings are omitted; provenance and coverage stay private. Final JSON includes the item revision counter. extractedDlc is read-only origin inferred only from existing family identity-root DLC package records; Preview can use it before any build. Unknown origin stays null, acquisition DLC remains independent, and nonnull item origins require evidence claims. Viewing/exporting does not increment revision. Does not change the queue.",
+            description: "Family with URL-matched catalogue-wide cached pages (reusedFrom identifies a previously saved article; logical item bindings remain independent), inheritedEvidence (URL, title, textBytes as exact stored-text UTF-8 bytes or null when uncaptured; no HTML/metadata/prompt bytes, item-specific inclusionMode (auto/always/never, default auto), legacy alwaysInclude boolean, all contributing parent IDs/names and captured status), active sources plus excludedSources (restorable per-item URL exclusions), nameDecision (private rename proof/result; uncertain names stay unchanged), family.rawName/nameOverride (saved name corrections; IDs and ZIP records unchanged), effective classification override (equipment category and/or weapon subtype; equipment overrides have a null weaponType; verification identifies URL-discovery proof or saved-source verification), facts/evidence, per-provider research status/errors, sources (manualText=true marks pasted excerpts, label kept in title, exact text and private non-fetchable local URL), private researchAudit with full-source chunk readings and fact dispositions, evidenceFollowup (one optional saved-only request round, topics/matches/missing context, blocked-source matches and fallback status), evidenceRequestNotice (persistent private blocked-request alert with id, requestedAt, topic/reason/source title/URL and optional dismissedAt), evidenceStatsHistory (permanent per-item build/sync summaries with timestamp, outcome and exact source manifests for CLI submissions, response-cache hits and saved-analysis reuse; separate from rolling family.history), sharedSourceSelection with kept/skipped tagged-fact decisions and index cache/fallback counts, stage history and last valid output. Final whole-document validation status, image metadata and savedRebuild availability/reason are included for built and unbuilt candidates. Website output is schema 9: item-level dlc (canonical Base Game/expansion or null; extraction identity first, then item-specific sources), no game/series field, canonical element enum, full-document consistency checks, relative image path or null, rich description/details, contextual stat ranges, grouped conditional dropChances and inline parts; empty note strings are omitted; provenance and coverage stay private. Final JSON includes the item revision counter. extractedDlc is read-only origin inferred only from existing family identity-root DLC package records; Preview can use it before any build. Unknown origin stays null, acquisition DLC remains independent, and nonnull item origins require evidence claims. Viewing/exporting does not increment revision. Does not change the queue.",
           }
         "404": { description: "Family not found." }
   /api/items/{id}/action:
@@ -475,6 +476,112 @@ paths:
             description: "Entry is no longer in Needs review or is currently processing.",
           }
         "404": { description: Unknown family. }
+  /api/items/{id}/text-evidence:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: addManualTextEvidence
+      description: Save a plain-text excerpt for this individual item, with an optional private display label. Text is stored verbatim except leading/trailing whitespace; HTML is never parsed or executed. Creates an independent manualText source record and local .txt snapshot. No URL, fetch, AI call or automatic build. Invalidate only the item's current analysis/draft; preserve last output, sibling items and run/checkpoints. Source enters the normal full-text reading/claims/validation and stats paths on the next requested build. Label is not factual proof. Local identifiers never become public acquisition URLs. Excerpts survive website refresh, fresh rebuilds, restart and generated-work reset. Remove/restore by sourceId uses existing source actions. Library retrieval uses only the owning item or explicitly applicable promoted shared scopes, never unrelated excerpts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [text]
+              properties:
+                label: { type: string, maxLength: 160 }
+                text: { type: string, minLength: 1, maxLength: 100000 }
+      responses:
+        "201":
+          {
+            description: Manual source record returned in source; no work started.,
+          }
+        "400":
+          { description: "Invalid body, blank text or category/shared owner." }
+        "404": { description: Unknown item. }
+        "409":
+          {
+            description: Restore item or pause affected processing/metadata sync first.,
+          }
+  /api/items/{id}/text-evidence/{sourceId}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+      - { name: sourceId, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: editManualTextEvidence
+      description: Edit the label and plain text of an owned manual entry, including shared scopes. Keeps source ID, URL, binding, inclusion modes and output; replaces snapshot/hash and invalidates affected analysis for the next requested build. No AI, fetch or automatic queue changes. Inherited entries must be edited in their owning shared group. Reject removed entries and active affected consumers.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [text]
+              properties:
+                label: { type: string, maxLength: 160 }
+                text: { type: string, minLength: 1, maxLength: 100000 }
+      responses:
+        "200": { description: Updated manual record returned in source. }
+        "400": { description: Invalid or blank input. }
+        "404":
+          { description: Unknown owner or manual source not attached here. }
+        "409":
+          { description: Restore entry or pause affected processing first. }
+  /api/items/{id}/shared-source-modes:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: setAllInheritedEvidenceModes
+      description: Atomically apply Auto, Always include or Never include to every currently inherited reference on this individual item, including uncaptured sources. One invalidation, no AI, fetch or build. Retain outputs, shared indexes, sibling settings and queue/checkpoints. Never stays authoritative even if its binding later moves; blocked text and facts never reach first-read indexing, synthesis, sync or requested follow-ups. Auto selection is unchanged.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [mode]
+              properties:
+                mode: { type: string, enum: [auto, always, never] }
+      responses:
+        "200":
+          description: Preferences saved; number of changed references returned. No work started.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, changed]
+                properties:
+                  ok: { type: boolean }
+                  changed: { type: integer, minimum: 0 }
+        "400":
+          { description: Invalid mode/body or shared group instead of item. }
+        "404": { description: Unknown item. }
+        "409": { description: Restore item or pause affected processing first. }
+  /api/items/{id}/evidence-request-notice/dismiss:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: dismissBlockedEvidenceRequestNotice
+      description: Dismiss the current persistent blocked-evidence request alert by its exact id. Does not change source modes, drafts, status, output, queue or build checkpoint. A retry of the same request does not resurrect the notice; a new request may create a new alert. Alerts remain private and are excluded from AI prompts/public JSON. Matching excluded articles happens locally only after AI requests a topic; excluded text never leaves the app. Builds continue without waiting for approval.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [id]
+              properties:
+                id: { type: string, minLength: 1, maxLength: 100 }
+      responses:
+        "200": { description: Notice dismissal persisted. }
+        "400": { description: Invalid body or shared group. }
+        "404": { description: Unknown item. }
+        "409": { description: Notice changed or metadata sync active. }
   /api/items/{id}/shared-source-mode:
     parameters:
       - { name: id, in: path, required: true, schema: { type: string } }
@@ -556,7 +663,8 @@ paths:
                 action:
                   {
                     type: string,
-                    enum: [start, pause, resume, discover, resume-build],
+                    enum:
+                      [start, pause, resume, discover, resume-build, cancel],
                   }
                 sourceMode:
                   type: string
@@ -565,7 +673,7 @@ paths:
       responses:
         "200":
           {
-            description: "Run state and per-item source initialization saved. Discover finds URLs for all active items including completed entries; it never fetches article HTML, reads source facts or builds JSON. Failed URL discovery is recorded separately and continues. A paused build checkpoint is retained for resume-build. Build runs skip completed/excluded items; pause/resume preserves sourceMode and checkpoints. Batch item failures are saved as blocked and processing continues; successful entries remain available. Single-item rebuilds stop on errors.",
+            description: "Run state and per-item source initialization saved. Discover finds URLs for all active items including completed entries; it never fetches article HTML, reads source facts or builds JSON. Failed URL discovery is recorded separately and continues. A paused build checkpoint is retained for resume-build. Build runs skip completed/excluded items; pause/resume preserves sourceMode and checkpoints. Cancel clears the active/paused single-item or batch queue, deferred starts and saved build checkpoint, preserving captured sources, drafts, output, corrections, revisions and agent caches. Active cancellation sets cancelRequested while stopping the current agent process group; it does not fail over or add provider cooldowns, and finalizes idle after the step settles. In-flight HTTP work may finish before cancellation settles; no subsequent queue item starts. Cancellation survives interrupted service restart. Cancelled telemetry remains in History. Idle Resume is rejected; choose Start for a new run. Batch item failures are saved as blocked and processing continues; successful entries remain available. Single-item rebuilds stop on errors.",
           }
         "400": { description: "Invalid action or source mode." }
         "409":

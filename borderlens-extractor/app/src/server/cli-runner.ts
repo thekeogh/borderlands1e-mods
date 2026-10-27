@@ -1,3 +1,5 @@
+import { RunCancelledError } from "../shared/run-cancellation.ts";
+import type { EvidenceInput } from "../shared/evidence-stats.ts";
 import { agentOutputSchema } from "../shared/agent-schema.ts";
 import {
   effortForTask,
@@ -14,6 +16,15 @@ import { hash, atomic } from "./store.ts";
 const exec = promisify(execFile);
 export class CliRunner {
   lastRun?: AgentRun;
+  private cancellationRequested = false;
+  private activeCancel?: () => void;
+  cancelCurrent() {
+    this.cancellationRequested = true;
+    this.activeCancel?.();
+  }
+  resetCancellation() {
+    this.cancellationRequested = false;
+  }
   constructor(
     public dir: string,
     public binary: string,
@@ -107,7 +118,9 @@ export class CliRunner {
     model: string,
     search: boolean,
     onProgress: (m: string) => void,
+    input?: EvidenceInput,
   ): Promise<T> {
+    if (this.cancellationRequested) throw new RunCancelledError();
     const name = this.provider === "grok" ? "Grok" : "Codex";
     const effort = effortForTask(label);
     const effectiveModel = this.provider === "grok" ? GROK_MODEL : model;
@@ -138,12 +151,14 @@ export class CliRunner {
       try {
         const cached = schema.parse(JSON.parse(readFileSync(output, "utf8")));
         this.lastRun.cached = true;
+        input?.onEvent?.("response-cache");
         return cached;
       } catch {
         /* Do not reuse incomplete output. */
       }
     }
     const status = await this.status();
+    if (this.cancellationRequested) throw new RunCancelledError();
     if (this.provider === "grok" ? !status.ready : !status.chatgpt)
       throw new Error(status.message + " No API-key fallback is enabled.");
     atomic(path.join(dir, "input.txt"), prompt);
@@ -210,6 +225,7 @@ export class CliRunner {
         stdio: ["pipe", "pipe", "pipe"],
         detached: process.platform !== "win32",
       });
+      child.once("spawn", () => input?.onEvent?.("submitted"));
       let buffer = "",
         err = "",
         done = false;
@@ -276,6 +292,8 @@ export class CliRunner {
         }, 3000);
         killTimer.unref();
       };
+      this.activeCancel = () => terminate(new RunCancelledError());
+      if (this.cancellationRequested) this.activeCancel();
       const timer = setTimeout(
         () =>
           terminate(
@@ -286,6 +304,8 @@ export class CliRunner {
       const settle = (error?: Error) => {
         if (done) return;
         done = true;
+        this.activeCancel = undefined;
+        if (terminationError) stop("SIGKILL");
         clearTimeout(timer);
         if (killTimer) clearTimeout(killTimer);
         if (heartbeat) clearInterval(heartbeat);
@@ -386,6 +406,7 @@ export class CliRunner {
       child.stdin.on("error", () => {});
       child.stdin.end(this.provider === "grok" ? "" : prompt);
     });
+    if (this.cancellationRequested) throw new RunCancelledError();
     if (!existsSync(output))
       throw new Error(`${name} finished without a structured result.`);
     const parsed = schema.parse(JSON.parse(readFileSync(output, "utf8")));

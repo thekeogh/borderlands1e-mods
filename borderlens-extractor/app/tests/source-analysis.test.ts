@@ -33,6 +33,7 @@ test("each saved source is independently read and checkpointed; changed content 
   const f = {
     id: "fixture",
     name: "Volcano",
+    inputHash: "fixture-input",
     category: "Weapons",
     notes: "",
   } as Family;

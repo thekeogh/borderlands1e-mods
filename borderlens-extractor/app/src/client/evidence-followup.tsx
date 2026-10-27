@@ -1,3 +1,5 @@
+import { ManualEvidenceIcon } from "./manual-evidence-icon";
+import { isManualTextUrl } from "../shared/manual-evidence";
 import type { EvidenceFollowup } from "../server/saved-evidence";
 import { SourceSite } from "./source-site";
 export function EvidenceFollowupSummary({
@@ -35,10 +37,21 @@ export function EvidenceFollowupSummary({
         </p>
       )}
       {report.matches.map((match, index) => (
-        <div className="shared-fact-decision" key={index}>
-          <a href={match.url} target="_blank" rel="noreferrer">
-            {match.title} ↗
-          </a>{" "}
+        <div
+          className={
+            "shared-fact-decision" +
+            (isManualTextUrl(match.url) ? " manual-evidence-surface" : "")
+          }
+          key={index}
+        >
+          {isManualTextUrl(match.url) && <ManualEvidenceIcon size={15} />}
+          {isManualTextUrl(match.url) ? (
+            <strong>{match.title}</strong>
+          ) : (
+            <a href={match.url} target="_blank" rel="noreferrer">
+              {match.title} ↗
+            </a>
+          )}{" "}
           <SourceSite url={match.url} />
           <small>
             {match.topic} ·{" "}

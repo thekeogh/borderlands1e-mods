@@ -1,3 +1,4 @@
+import { evidenceInput } from "../shared/evidence-stats.ts";
 import { ManualType } from "../shared/manual-type.ts";
 import {
   TypeSyncDecision,
@@ -75,7 +76,12 @@ function context(store: Store, f: Family, p: Packet) {
           : "")
       ).slice(0, Math.max(0, budget));
       budget -= text.length;
-      return { id: s.id, url: s.url, title: s.title, text };
+      return {
+        id: s.id,
+        url: s.url,
+        title: s.manualText ? "Pasted text evidence" : s.title,
+        text,
+      };
     }),
   };
 }
@@ -397,6 +403,7 @@ export async function syncIdentity(
       store.state.settings.model,
       false,
       progress,
+      evidenceInput("verify", data),
     );
     store.syncClassifications();
     if (store.classifications.data.entries[f.id]?.manual)
@@ -455,6 +462,7 @@ export async function syncIdentity(
     store.state.settings.model,
     false,
     progress,
+    evidenceInput("verify", data),
   );
   let d = response.decision;
   const existing = store.get<any>(f.id, "output");

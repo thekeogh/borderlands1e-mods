@@ -573,7 +573,28 @@ test("forced input does not force unrelated numerical facts into final JSON; rel
   } as any;
   const packet = { evidence: [{ id: "page:test", kind: "page" }] } as any;
   assert.doesNotThrow(() => validateSourceUsage(draft, ledger, packet));
+  // A broad automatic match is only a retrieval hint; synthesis can reject
+  // this base-skill/other-character stat even when the source was forced.
   numerical.relevance.automaticIncluded = true;
+  assert.doesNotThrow(() => validateSourceUsage(draft, ledger, packet));
+  draft.sourceUsage[0].disposition = "used";
+  draft.sourceUsage[0].fields = ["stats"];
+  draft.claims = [
+    { field: "stats", evidenceIds: ["page:test"], basis: "Explicit range" },
+  ];
+  assert.throws(
+    () => validateSourceUsage(draft, ledger, packet),
+    /omitted or changed/,
+  );
+  draft.sourceUsage[0].disposition = "irrelevant";
+  draft.sourceUsage[0].fields = [];
+  draft.sourceUsage[0].reason = "   ";
+  assert.throws(
+    () => validateSourceUsage(draft, ledger, packet),
+    /exclusion reason/,
+  );
+  draft.sourceUsage[0].reason = "Base skill stat, not an artifact bonus.";
+  delete (numerical as any).relevance;
   assert.throws(
     () => validateSourceUsage(draft, ledger, packet),
     /stat cannot be silently discarded/,
@@ -598,6 +619,7 @@ test("Never skips shared content before AI, packet assembly and fetching while p
   assert.equal(reference.inclusionMode, "never");
   assert.equal(reference.captured, true);
   assert.equal(reference.title, original.title);
+  assert.equal(reference.textBytes, Buffer.byteLength(original.text, "utf8"));
   assert(!s.sources(first.id).some((page) => page.id === original.id));
   assert(
     !s
@@ -683,6 +705,7 @@ test("Never for a pending source is visible, persists through generated reset an
     .find((row) => row.url === pending)!;
   assert.equal(reference.inclusionMode, "never");
   assert.equal(reference.captured, false);
+  assert.equal(reference.textBytes, null);
   assert.deepEqual(s.state.run, before);
   assert.deepEqual(s.state.buildCheckpoint, checkpoint);
   const reset = await fetch(base + "/api/reset", {
@@ -693,4 +716,97 @@ test("Never for a pending source is visible, persists through generated reset an
   assert.equal(reset.status, 200);
   assert.equal(s.sourceNeverIncluded(first.id, pending), true);
   assert.equal(s.sourceNeverIncluded(second.id, pending), false);
+});
+
+test("bulk modes apply to saved and uncaptured inherited sources only, preserving siblings, cache, output and paused work", async (t) => {
+  const { api } = await import("../src/server/http.ts");
+  const { s, w, owner, ai, calls } = fixture(t);
+  const [first, second] = s.state.families;
+  const pending = "https://borderlands.fandom.com/wiki/Uncaptured_Bulk_Fixture";
+  owner.sourceUrls.push(pending);
+  Object.assign(s.state.run, {
+    status: "paused",
+    queue: [second.id],
+    index: 0,
+    currentId: null,
+  });
+  s.state.buildCheckpoint = structuredClone(s.state.run);
+  const run = structuredClone(s.state.run),
+    checkpoint = structuredClone(s.state.buildCheckpoint);
+  s.put(first.id, "output", { retained: "untouched prose" });
+  const server = api(s, w).listen(0, "127.0.0.1");
+  await new Promise<void>((r) => server.once("listening", r));
+  t.after(() => {
+    server.closeAllConnections();
+    server.close();
+  });
+  const base = `http://127.0.0.1:${(server.address() as any).port}`;
+  const post = (id: string, mode: string, extra = {}) =>
+    fetch(`${base}/api/items/${id}/shared-source-modes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode, ...extra }),
+    });
+  assert.equal((await post(first.id, "wrong")).status, 400);
+  assert.equal((await post(first.id, "never", { url })).status, 400);
+  assert.equal((await post(owner.id, "never")).status, 400);
+  w.busy = true;
+  s.state.run.currentId = first.id;
+  assert.equal((await post(first.id, "never")).status, 409);
+  w.busy = false;
+  s.state.run.currentId = null;
+  const response = await post(first.id, "never");
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).changed, 2);
+  assert(s.inheritedEvidence(first).every((r) => r.inclusionMode === "never"));
+  assert(s.inheritedEvidence(second).every((r) => r.inclusionMode === "auto"));
+  assert.equal((await (await post(first.id, "never")).json()).changed, 0);
+  await readSources(s, ai, first, () => {}, "first-ever-build");
+  assert.equal(calls.shared, 0); // No first-read indexing, including uncaptured Never references.
+  assert(calls.prompts.every((prompt) => !prompt.includes(sharedText)));
+  await readSources(s, ai, second, () => {}, "second-build");
+  assert.equal(calls.shared, 1); // First permitted consumer pays for the shared index.
+  await post(first.id, "always");
+  assert(s.inheritedEvidence(first).every((r) => r.inclusionMode === "always"));
+  await readSources(s, ai, first, () => {}, "third-build");
+  assert.equal(calls.shared, 1); // Shared analysis is reused once permitted.
+  await post(first.id, "auto");
+  assert(s.inheritedEvidence(first).every((r) => r.inclusionMode === "auto"));
+  assert.deepEqual(s.get(first.id, "output"), { retained: "untouched prose" });
+  assert.deepEqual(s.state.run, run);
+  assert.deepEqual(s.state.buildCheckpoint, checkpoint);
+  assert.equal(
+    s.sourceInclusionMode(first.id, s.rawSources(first.id)[0].url),
+    "auto",
+  );
+});
+
+test("source-reader telemetry describes only actual allowed payloads before dispatch, including first-time indexes and cache reuse", async (t) => {
+  const x = fixture(t),
+    { s, w, ai } = x;
+  const f = s.state.families[0];
+  const seen: any[] = [];
+  const originalRun = ai.run;
+  ai.run = async (...args: any[]) => {
+    seen.push({ label: args[0], prompt: args[1], input: args[6] });
+    return originalRun(...args);
+  };
+  w.setSharedSourceMode(f.id, url, "always");
+  const secondUrl = "https://borderlands.fandom.com/wiki/Shared_Second";
+  w.research.save(x.owner, secondUrl, sharedHtml, true);
+  const blocked = "https://borderlands.fandom.com/wiki/Shared_Blocked";
+  w.research.save(x.owner, blocked, sharedHtml, true);
+  w.setSharedSourceMode(f.id, blocked, "never");
+  await readSources(s, ai, f, () => {}, "first-run");
+  assert.equal(seen.filter((e) => e.input.phase === "index").length, 2);
+  assert(seen.every((e) => e.input.sources.length === 1));
+  assert(seen.every((e) => e.input.sources[0].url !== blocked));
+  for (const event of seen)
+    assert(event.prompt.includes(event.input.sources[0].url));
+  seen.length = 0;
+  await readSources(s, ai, f, () => {}, "fresh-two");
+  assert.equal(seen.filter((e) => e.input.phase === "index").length, 0);
+  assert(
+    s.state.evidenceStats?.events.some((e) => e.kind === "analysis-cache"),
+  );
 });

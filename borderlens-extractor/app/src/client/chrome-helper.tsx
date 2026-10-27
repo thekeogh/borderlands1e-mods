@@ -54,6 +54,7 @@ export function helperMessage(type: string, payload?: unknown): Promise<any> {
 }
 export function useChromeHelper(callbacks: {
   saved: (message: string) => void;
+  focusSource?: (target: { familyId: string; url: string }) => Promise<void>;
   error: (message: string) => void;
 }) {
   const current = useRef(callbacks);
@@ -91,6 +92,42 @@ export function useChromeHelper(callbacks: {
     const timer = setInterval(ping, 5000);
     const listener = async (event: MessageEvent) => {
       const data = event.data;
+      if (
+        event.source === window &&
+        event.origin === location.origin &&
+        data?.source === "borderlens-chrome-helper" &&
+        data.type === "FOCUS_SOURCE" &&
+        typeof data.captureId === "string"
+      ) {
+        let response;
+        try {
+          if (
+            typeof data.familyId !== "string" ||
+            typeof data.url !== "string" ||
+            !current.current.focusSource
+          )
+            throw new Error(
+              "Reload the workshop to enable return-to-evidence navigation.",
+            );
+          await current.current.focusSource({
+            familyId: data.familyId,
+            url: data.url,
+          });
+          response = { ok: true };
+        } catch (error: any) {
+          response = { ok: false, error: error.message };
+        }
+        window.postMessage(
+          {
+            source: "borderlens-workshop",
+            type: "CAPTURE_RESULT",
+            captureId: data.captureId,
+            response,
+          },
+          location.origin,
+        );
+        return;
+      }
       if (
         event.source !== window ||
         event.origin !== location.origin ||
@@ -141,7 +178,7 @@ export function useChromeHelper(callbacks: {
       const ticket = await api("/api/chrome-helper/jobs", { familyId, url });
       await helperMessage("OPEN_SOURCE", ticket);
       current.current.saved(
-        "Article opened in Chrome. When it is visible, click Borderlens Page Capture → Send page to Borderlens.",
+        "Article opened in Chrome. When it is visible, click Borderlens Page Capture → Select content on page, then Ctrl-drag and send your selections.",
       );
     } catch (error: any) {
       current.current.error(error.message);
@@ -281,7 +318,9 @@ export function ChromeHelperSetup({
           <p>
             On an item’s Sources & evidence tab, click{" "}
             <b>Open wiki in Chrome</b>. Once loaded, click the extension icon →{" "}
-            <b>Send page to Borderlens</b>. Return here to rebuild the item.
+            <b>Select content on page</b>. Hold Ctrl and drag boxes, check the
+            preview, then send from the floating panel. Return here to rebuild
+            the item.
           </p>
           <small>
             Keep this workshop tab open. Imports received during processing are

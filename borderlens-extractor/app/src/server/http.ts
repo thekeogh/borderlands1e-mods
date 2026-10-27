@@ -1,3 +1,6 @@
+import { ManualTextInput, isManualTextUrl } from "../shared/manual-evidence.ts";
+import type { EvidenceStats } from "../shared/evidence-stats.ts";
+import type { EvidenceRequestNotice } from "../shared/evidence-notice.ts";
 import { ManualItemName } from "../shared/names.ts";
 import { ManualType } from "../shared/manual-type.ts";
 import { extractedContent } from "./content.ts";
@@ -14,7 +17,7 @@ import { weaponTypes } from "../shared/taxonomy.ts";
 import express from "express";
 import multer from "multer";
 import { z } from "zod";
-import { Store, HttpError, hash } from "./store.ts";
+import { Store, HttpError, hash, stable } from "./store.ts";
 import { Worker } from "./worker.ts";
 import { compareCoverage } from "./research.ts";
 import { importZip } from "./importer.ts";
@@ -72,10 +75,31 @@ export function api(store: Store, worker: Worker) {
     if (body.html && !body.url)
       throw new HttpError(400, "HTML requires its original article URL.");
     if (body.url) {
-      try {
-        sourceUrl(body.url);
-      } catch (error: any) {
-        throw new HttpError(400, error.message);
+      if (isManualTextUrl(body.url)) {
+        const existing = (store.state.sharedScopes || []).find(
+          (owner) => stable(owner.evidenceScope) === stable(body.scope),
+        );
+        if (
+          body.html ||
+          !existing ||
+          !store
+            .rawSources(existing.id)
+            .some(
+              (source) =>
+                source.manualText &&
+                sourceKey(source.url) === sourceKey(body.url!),
+            )
+        )
+          throw new HttpError(
+            400,
+            "Manual text can only be moved from its saved entry or removed here.",
+          );
+      } else {
+        try {
+          sourceUrl(body.url);
+        } catch (error: any) {
+          throw new HttpError(400, error.message);
+        }
       }
     }
     if (body.html && worker.research.parse(body.html).text.length < 60)
@@ -286,8 +310,52 @@ export function api(store: Store, worker: Worker) {
       nameDecision: store.get(f.id, "nameDecision"),
       sharedSourceSelection: store.get(f.id, "sharedSourceSelection"),
       evidenceFollowup: store.get(f.id, "evidenceFollowup"),
+      evidenceRequestNotice: store.get(f.id, "evidenceRequestNotice"),
+      evidenceStatsHistory:
+        store.get<EvidenceStats[]>(f.id, "evidenceStatsHistory") || [],
       classification: store.classifications.data.entries[f.id] || null,
     });
+  });
+  app.post("/api/items/:id/text-evidence", (req, res) => {
+    const body = ManualTextInput.parse(req.body);
+    const source = worker.addTextEvidence(req.params.id, body);
+    res.status(201).json({ source });
+  });
+  app.post("/api/items/:id/text-evidence/:sourceId", (req, res) => {
+    const source = worker.editTextEvidence(
+      req.params.id,
+      req.params.sourceId,
+      req.body,
+    );
+    res.json({ source });
+  });
+  app.post("/api/items/:id/shared-source-modes", (req, res) => {
+    const { mode } = z
+      .object({ mode: z.enum(sourceInclusionModes) })
+      .strict()
+      .parse(req.body);
+    const changed = worker.setAllSharedSourceModes(req.params.id, mode);
+    res.json({ ok: true, changed });
+  });
+  app.post("/api/items/:id/evidence-request-notice/dismiss", (req, res) => {
+    const { id } = z
+      .object({ id: z.string().min(1).max(100) })
+      .strict()
+      .parse(req.body);
+    const f = store.family(req.params.id);
+    if (f.evidenceScope) throw new HttpError(400, "Choose an individual item.");
+    const notice = store.get<EvidenceRequestNotice>(
+      f.id,
+      "evidenceRequestNotice",
+    );
+    if (!notice || notice.id !== id)
+      throw new HttpError(409, "This notice changed. Refresh the item.");
+    store.put(f.id, "evidenceRequestNotice", {
+      ...notice,
+      dismissedAt: notice.dismissedAt || now(),
+    });
+    store.save();
+    res.json({ ok: true });
   });
   app.post("/api/items/:id/shared-source-mode", (req, res) => {
     const { url, mode } = z
@@ -365,6 +433,7 @@ export function api(store: Store, worker: Worker) {
         action: z.enum([
           "start",
           "pause",
+          "cancel",
           "resume",
           "discover",
           "resume-build",
@@ -382,7 +451,8 @@ export function api(store: Store, worker: Worker) {
         409,
         "Pause the current run before starting a new batch.",
       );
-    if (action === "pause") worker.pause();
+    if (action === "cancel") worker.cancelRun();
+    else if (action === "pause") worker.pause();
     else if (action === "resume") worker.resume();
     else if (action === "resume-build") worker.resumeBuild();
     else if (action === "discover")

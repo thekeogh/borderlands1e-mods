@@ -48,7 +48,8 @@ async function handle(message, sender) {
     const tab = await chrome.tabs.create({ url: job.url });
     const { jobs = {} } = await chrome.storage.session.get("jobs");
     for (const [id, row] of Object.entries(jobs))
-      if (row.expiresAt < Date.now()) delete jobs[id];
+      if ((row.completed ? row.returnUntil : row.expiresAt) < Date.now())
+        delete jobs[id];
     jobs[tab.id] = {
       ...job,
       appTabId: sender.tab.id,
@@ -58,10 +59,58 @@ async function handle(message, sender) {
     await chrome.storage.session.set({ jobs });
     return { ok: true, tabId: tab.id };
   }
-  if (sender.url !== chrome.runtime.getURL("popup.html"))
+  const fromSelection =
+    sender.url !== chrome.runtime.getURL("popup.html") &&
+    ["DELIVER_SELECTION", "OPEN_WORKSHOP"].includes(message.type) &&
+    sender.tab?.id &&
+    sender.id === chrome.runtime.id;
+  if (fromSelection) sourceKey(sender.url);
+  if (!fromSelection && sender.url !== chrome.runtime.getURL("popup.html"))
     throw new Error("Use the Borderlens extension popup.");
   const { jobs = {}, lastAppUrl = "http://127.0.0.1:4317" } =
     await chrome.storage.session.get(["jobs", "lastAppUrl"]);
+  if (message.type === "OPEN_WORKSHOP") {
+    const sourceTabId = fromSelection ? sender.tab.id : message.tabId;
+    const job = jobs[sourceTabId];
+    if (!job || (job.completed && job.returnUntil < Date.now()))
+      throw new Error("Open this source from Borderlens again.");
+    // Ask the live workshop to navigate before activating it or closing anything.
+    const appTab = await chrome.tabs.get(job.appTabId);
+    if (localOrigin(appTab.url) !== job.appOrigin)
+      throw new Error(
+        "The workshop tab changed. Reopen this source from Borderlens.",
+      );
+    const response = await chrome.tabs.sendMessage(job.appTabId, {
+      type: "FOCUS_SOURCE",
+      captureId: crypto.randomUUID(),
+      familyId: job.familyId,
+      url: job.url,
+    });
+    if (!response?.ok)
+      throw new Error(
+        response?.error ||
+          "The workshop could not open this evidence. The source tab was kept open.",
+      );
+    await chrome.tabs.update(job.appTabId, { active: true });
+    await chrome.windows.update(appTab.windowId, { focused: true });
+    const { closeSourceTab = false } =
+      await chrome.storage.local.get("closeSourceTab");
+    let closed = false;
+    if (closeSourceTab && job.completed && sourceTabId !== job.appTabId) {
+      const source = await chrome.tabs.get(sourceTabId);
+      // Never close a tab that has since navigated to a different page.
+      if (sourceKey(source.url) === sourceKey(job.url)) {
+        await chrome.tabs.remove(sourceTabId);
+        const current = (await chrome.storage.session.get("jobs")).jobs || {};
+        delete current[sourceTabId];
+        await chrome.storage.session.set({ jobs: current });
+        closed = true;
+      }
+    }
+    return { ok: true, closed };
+  }
+  if (message.type === "DELIVER_SELECTION")
+    message = { ...message, type: "DELIVER", tabId: sender.tab.id };
   if (message.type === "TARGET") {
     let [tab] = await chrome.tabs.query({
       active: true,
@@ -70,7 +119,11 @@ async function handle(message, sender) {
     // Also support opening the helper as a standalone extension page.
     if (tab?.url === chrome.runtime.getURL("popup.html")) {
       const pending = Object.values(jobs)
-        .filter((job) => job.expiresAt > Date.now())
+        .filter(
+          (job) =>
+            job.expiresAt > Date.now() ||
+            (job.completed && job.returnUntil > Date.now()),
+        )
         .at(-1);
       if (pending) {
         try {
@@ -81,7 +134,12 @@ async function handle(message, sender) {
     const job = jobs[tab?.id];
     return {
       ok: true,
-      job: job?.expiresAt > Date.now() ? job : null,
+      job:
+        job &&
+        (job.expiresAt > Date.now() ||
+          (job.completed && job.returnUntil > Date.now()))
+          ? job
+          : null,
       tab: tab ? { id: tab.id, url: tab.url } : null,
       appUrl: lastAppUrl,
     };
@@ -114,7 +172,18 @@ async function handle(message, sender) {
         throw new Error(
           response?.error || "The workshop could not save this page.",
         );
-      delete jobs[message.tabId];
+      // Retain navigation context, but discard the consumed capture token.
+      jobs[message.tabId] = {
+        appTabId: job.appTabId,
+        appOrigin: job.appOrigin,
+        familyId: job.familyId,
+        url: job.url,
+        name: job.name,
+        tabId: message.tabId,
+        completed: true,
+        expiresAt: 0,
+        returnUntil: Date.now() + 24 * 60 * 60 * 1000,
+      };
       await chrome.storage.session.set({ jobs });
       return { ...response, appTabId: job.appTabId, appUrl: job.appOrigin };
     } catch (error) {

@@ -1,3 +1,5 @@
+import { isRunCancelled } from "../shared/run-cancellation.ts";
+import { evidenceInput } from "../shared/evidence-stats.ts";
 import { NameDecision } from "../shared/names.ts";
 import type { Family, Packet } from "../shared/models.ts";
 import { catalogueGroup } from "../shared/taxonomy.ts";
@@ -168,6 +170,19 @@ export async function verifyAndApplyName(
     });
     return false;
   }
+  const pages = store
+    .sources(f.id)
+    .filter((s) =>
+      [...proposal.evidence, ...proposal.corroboration].some(
+        (e) => e.id === s.id,
+      ),
+    )
+    .map((s) => ({
+      id: s.id,
+      url: s.url,
+      title: s.manualText ? "Pasted text evidence" : s.title,
+      text: s.text.slice(0, 24000),
+    }));
   try {
     const decision = await ai.run(
       "Verify item name for " + f.name,
@@ -187,25 +202,14 @@ export async function verifyAndApplyName(
             (e) =>
               e.kind === "game" && (e.value as any)?.role === "family-defining",
           ),
-          pages: store
-            .sources(f.id)
-            .filter((s) =>
-              [...proposal.evidence, ...proposal.corroboration].some(
-                (e) => e.id === s.id,
-              ),
-            )
-            .map((s) => ({
-              id: s.id,
-              url: s.url,
-              title: s.title,
-              text: s.text.slice(0, 24000),
-            })),
+          pages,
         },
       )}`,
       NameDecision,
       store.state.settings.model,
       false,
       progress,
+      evidenceInput("verify", pages),
     );
     const evidence =
       decision.name === proposal.name
@@ -222,6 +226,7 @@ export async function verifyAndApplyName(
     }
     return applyNameDecision(store, f, p, decision);
   } catch (error: any) {
+    if (isRunCancelled(error)) throw error;
     store.put(f.id, "nameDecision", {
       status: "kept",
       reason: String(error.message || error),

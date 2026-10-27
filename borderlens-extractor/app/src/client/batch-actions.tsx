@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Play, Pause, ChevronDown } from "lucide-react";
+import { Play, Pause, ChevronDown, CircleX } from "lucide-react";
 import type { Run } from "../shared/models";
 export function BatchActions({
   run,
@@ -13,7 +13,8 @@ export function BatchActions({
   busy: boolean;
   disabled: boolean;
   action: (
-    action: "start" | "pause" | "resume" | "discover" | "resume-build",
+    action:
+      "start" | "pause" | "resume" | "discover" | "resume-build" | "cancel",
     sourceMode?: "saved" | "fresh",
   ) => void;
 }) {
@@ -36,13 +37,15 @@ export function BatchActions({
         }
       >
         {busy ? <Pause size={16} /> : <Play size={16} fill="currentColor" />}
-        {run.status === "pausing"
-          ? "Pausing…"
-          : busy
-            ? "Pause"
-            : checkpoint
-              ? "Resume"
-              : `Start from ${mode} sources`}
+        {run.cancelRequested
+          ? "Stopping…"
+          : run.status === "pausing"
+            ? "Pausing…"
+            : busy
+              ? "Pause"
+              : checkpoint
+                ? "Resume"
+                : `Start from ${mode} sources`}
       </button>
       <details ref={menu} className="rebuild-options batch-options">
         <summary
@@ -104,6 +107,19 @@ export function BatchActions({
           )}
         </div>
       </details>
+      {(run.queue.length > 0 || savedBuild) &&
+        (busy || checkpoint || savedBuild) && (
+          <button
+            type="button"
+            className="button cancel-run-button"
+            disabled={disabled || run.cancelRequested}
+            onClick={() => action("cancel")}
+            title="Cancel this queue. Keep saved sources, drafts and completed JSON."
+          >
+            <CircleX size={16} />
+            {run.cancelRequested ? "Cancelling…" : "Cancel run"}
+          </button>
+        )}
     </div>
   );
 }

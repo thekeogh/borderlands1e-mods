@@ -1,3 +1,6 @@
+import { SourceRecapture } from "./source-recapture";
+import { SourceSize } from "./source-size";
+import { ManualEvidenceIcon } from "./manual-evidence-icon";
 import { SourceSite } from "./source-site";
 import { useEffect, useRef, useState } from "react";
 import { X, Copy, ArrowUpRight, BookOpen } from "lucide-react";
@@ -6,9 +9,11 @@ type Tab = "text" | "structured" | "record" | "html";
 export function SourceViewer({
   source,
   onClose,
+  recapture,
 }: {
   source: Source;
   onClose: () => void;
+  recapture?: () => unknown | Promise<unknown>;
 }) {
   const [tab, setTab] = useState<Tab>("text"),
     [html, setHtml] = useState<string | null>(null),
@@ -99,7 +104,9 @@ export function SourceViewer({
     >
       <section
         ref={dialog}
-        className="source-viewer"
+        className={
+          "source-viewer" + (source.manualText ? " is-manual-text" : "")
+        }
         role="dialog"
         aria-modal="true"
         aria-labelledby="source-viewer-title"
@@ -113,13 +120,38 @@ export function SourceViewer({
             <X size={20} />
           </button>
           <div className="eyebrow">
-            <BookOpen size={13} /> SAVED SOURCE SNAPSHOT
+            {source.manualText ? (
+              <ManualEvidenceIcon size={15} />
+            ) : (
+              <BookOpen size={13} />
+            )}{" "}
+            {source.manualText
+              ? "MANUAL TEXT SNAPSHOT"
+              : "SAVED SOURCE SNAPSHOT"}
           </div>
           <h2 id="source-viewer-title">{source.title}</h2>
           <SourceSite url={source.url} />
-          <a href={source.url} target="_blank" rel="noreferrer">
-            {source.url} <ArrowUpRight size={12} />
-          </a>
+          {source?.selectedContent && (
+            <span
+              className="selected-content-badge"
+              title="Only user-selected areas were captured; this is not the complete article."
+            >
+              Selected page content · {source.selectedContent.boxes} boxes
+              {source.selectedContent.warnings > 0 ? " · partial" : ""}
+            </span>
+          )}
+          {!source.manualText && (
+            <a href={source.url} target="_blank" rel="noreferrer">
+              {source.url} <ArrowUpRight size={12} />
+            </a>
+          )}
+          {!source.manualText && recapture && (
+            <SourceRecapture
+              url={source.url}
+              title={source.title}
+              run={recapture}
+            />
+          )}
           <p>
             Exact stored content. Display formatting only; no AI rewriting or
             live website fetch.
@@ -127,13 +159,16 @@ export function SourceViewer({
           <div className="source-viewer-meta">
             <span>{new Date(source.fetchedAt).toLocaleString()}</span>
             <span>
-              {source.captureMethod === "chrome"
-                ? "Captured in Chrome"
-                : source.imported
-                  ? "Imported HTML"
-                  : "Fetched & cached"}
+              {source.manualText
+                ? "Manually added text"
+                : source.captureMethod === "chrome"
+                  ? "Captured in Chrome"
+                  : source.imported
+                    ? "Imported HTML"
+                    : "Fetched & cached"}
             </span>
             <span>{source.text.length.toLocaleString()} characters</span>
+            <SourceSize text={source.text} />
           </div>
           <details>
             <summary>Source identity & checksum</summary>
@@ -157,7 +192,7 @@ export function SourceViewer({
               ["text", "Full text"],
               ["structured", "Sections & tables"],
               ["record", "Source record"],
-              ["html", "Stored HTML"],
+              ["html", source.manualText ? "Stored text file" : "Stored HTML"],
             ] as const
           ).map(([id, label]) => (
             <button

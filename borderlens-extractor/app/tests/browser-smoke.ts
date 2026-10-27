@@ -1127,9 +1127,33 @@ try {
     ),
   );
   await page.screenshot({ path: ".test-data/screenshots/inherited-never.png" });
-  await inclusion.selectOption("auto");
-  await expect(inclusion).toBeEnabled();
-  await expect(inclusion).toHaveValue("auto");
+  const bulkMode = page.getByRole("combobox", {
+    name: "Set all inherited evidence",
+    exact: true,
+  });
+  const bulkAgentBefore = await page.request
+    .get("/__test/ai-count")
+    .then((r) => r.json());
+  for (const mode of ["always", "never", "auto"]) {
+    await bulkMode.selectOption(mode);
+    await expect
+      .poll(async () => {
+        const data = await page.request
+          .get(`/api/items/${brickIds[1]}`)
+          .then((r) => r.json());
+        return data.inheritedEvidence.every(
+          (row: any) => row.inclusionMode === mode,
+        );
+      })
+      .toBe(true);
+    await expect(bulkMode).toBeEnabled();
+    await expect(inclusion).toHaveValue(mode);
+  }
+  assert.deepEqual(
+    await page.request.get("/__test/ai-count").then((r) => r.json()),
+    bulkAgentBefore,
+  );
+  await page.screenshot({ path: ".test-data/screenshots/inherited-bulk.png" });
   const afterInclusion = await page.request
     .get("/api/state")
     .then((r) => r.json());
@@ -1164,9 +1188,79 @@ try {
   assert.equal(followed.evidenceFollowup.status, "supplied");
   assert(followed.evidenceFollowup.matches.length > 0);
   assert(!("evidenceRequests" in followed.websiteOutput));
+  await expect(page.locator(".runbar .evidence-stats")).toBeVisible();
+  await page.locator(".runbar .evidence-stats > summary").click();
+  await expect(page.locator(".runbar .evidence-stats")).toContainText(
+    "Latest writing payload:",
+  );
+  await expect(page.locator(".runbar .evidence-stats")).toContainText(
+    "Saved catalogue article fixture",
+  );
+  const measured = (await page.request.get("/api/state").then((r) => r.json()))
+    .evidenceStats;
+  assert.equal(measured.familyId, brickIds[1]);
+  assert(measured.finishedAt);
+  assert(
+    measured.events.some(
+      (event: any) => event.phase === "write" && event.sources.length > 0,
+    ),
+  );
+  assert.equal(followed.evidenceStatsHistory.at(-1).id, measured.id);
+  await page.screenshot({
+    path: ".test-data/screenshots/evidence-stats-progress.png",
+  });
+  await page.getByRole("button", { name: "History", exact: true }).click();
+  await expect(
+    page.locator(".history-list .evidence-stats").first(),
+  ).toBeVisible();
+  await page.locator(".history-list .evidence-stats > summary").first().click();
+  await expect(
+    page.locator(".history-list .evidence-stats").first(),
+  ).toContainText("Saved catalogue article fixture");
+  await page.screenshot({
+    path: ".test-data/screenshots/evidence-stats-history.png",
+  });
+  await page.getByRole("button", { name: /Sources & evidence/ }).click();
+
   await page.screenshot({
     path: ".test-data/screenshots/saved-evidence-followup.png",
   });
+  await inclusion.selectOption("never");
+  await expect(inclusion).toBeEnabled();
+  await page
+    .getByRole("button", { name: "Rebuild from saved sources", exact: true })
+    .click();
+  await waitForState(
+    (state) =>
+      state.run.status === "complete" &&
+      state.families.find((item: any) => item.id === brickIds[1]).status ===
+        "done",
+  );
+  const blockedAlert = page.getByRole("region", {
+    name: "Requested evidence excluded",
+  });
+  await expect(blockedAlert).toBeVisible();
+  await expect(blockedAlert).toContainText("Original catalogue context");
+  await expect(blockedAlert).toContainText("Saved catalogue article fixture");
+  await page.reload();
+  await expect(blockedAlert).toBeVisible();
+  await page.screenshot({
+    path: ".test-data/screenshots/blocked-evidence-request.png",
+  });
+  await blockedAlert.getByRole("button", { name: "Dismiss notice" }).click();
+  await expect(blockedAlert).toHaveCount(0);
+  await page.reload();
+  await expect(blockedAlert).toHaveCount(0);
+  const dismissedDetail = await page.request
+    .get(`/api/items/${brickIds[1]}`)
+    .then((r) => r.json());
+  assert(dismissedDetail.evidenceRequestNotice.dismissedAt);
+  assert.equal(
+    dismissedDetail.inheritedEvidence.find(
+      (row: any) => row.title === "Saved catalogue article fixture",
+    ).inclusionMode,
+    "never",
+  );
   const reviewFixture = await page.request
     .post("/__test/review-tools")
     .then((r) => r.json());
@@ -1449,6 +1543,363 @@ try {
     assert.equal(manuallyNamed.websiteOutput.slug, "my-keeper-shield");
   }
   await page.screenshot({ path: ".test-data/screenshots/manual-name.png" });
+  await page.getByRole("button", { name: /Sources & evidence/ }).click();
+  const manualForm = page.getByRole("form", { name: "Add text evidence" });
+  await expect(manualForm).toBeVisible();
+  const pasted =
+    "Corrosive punches add elemental damage.\n\nSelected paragraph only: +25% damage; literal <b>text</b> stays plain.";
+  await manualForm
+    .getByRole("textbox", { name: "Text evidence label" })
+    .fill("Selected Berserk passage");
+  await manualForm
+    .getByRole("textbox", { name: "Pasted evidence text" })
+    .fill(pasted);
+  const manualBefore = await page.request
+    .get("/__test/ai-count")
+    .then((r) => r.json());
+  const runBeforeText = await page.request
+    .get("/api/state")
+    .then((r) => r.json());
+  await manualForm
+    .getByRole("button", { name: "Add text evidence", exact: true })
+    .click();
+  const manualCard = page.locator(".source-card").filter({
+    has: page.getByText("Selected Berserk passage", { exact: true }),
+  });
+  await expect(manualCard).toBeVisible();
+  await expect(manualCard).toHaveClass(/is-manual-text/);
+  await expect(manualCard.locator(".manual-evidence-icon")).toHaveCount(1);
+  await expect(manualCard.locator(".source-site")).toHaveText("Manual text");
+  await expect(manualCard.locator(".source-size")).toContainText(
+    `${Buffer.byteLength(pasted, "utf8")} B`,
+  );
+  await expect(manualCard.locator(".source-size")).toContainText("Small");
+  await expect(manualCard).toContainText("Manually added text");
+  const editManual = manualCard.getByRole("button", {
+    name: "Edit manual evidence: Selected Berserk passage",
+  });
+  await editManual.click();
+  await manualCard
+    .getByRole("textbox", { name: "Edit evidence text" })
+    .fill("Unsaved change");
+  await manualCard.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(manualCard.locator(".manual-evidence-text")).toHaveText(pasted);
+  await editManual.click();
+  await expect(
+    manualCard.getByRole("textbox", { name: "Edit evidence text" }),
+  ).toHaveValue(pasted);
+  await manualCard
+    .getByRole("textbox", { name: "Edit evidence label" })
+    .fill("Renamed excerpt");
+  await page.screenshot({
+    path: ".test-data/screenshots/edit-manual-item.png",
+  });
+  await manualCard
+    .getByRole("button", { name: "Save changes", exact: true })
+    .click();
+  const renamedManualCard = page
+    .locator(".source-card")
+    .filter({ hasText: "Renamed excerpt" });
+  await expect(renamedManualCard).toBeVisible();
+  await renamedManualCard
+    .getByRole("button", { name: "Edit manual evidence: Renamed excerpt" })
+    .click();
+  await renamedManualCard
+    .getByRole("textbox", { name: "Edit evidence label" })
+    .fill("Selected Berserk passage");
+  await renamedManualCard
+    .getByRole("button", { name: "Save changes", exact: true })
+    .click();
+  await expect(manualCard).toBeVisible();
+
+  await expect(
+    manualCard.locator('a[href*="manual.borderlens.invalid"]'),
+  ).toHaveCount(0);
+  await expect(
+    manualForm.getByRole("textbox", { name: "Pasted evidence text" }),
+  ).toHaveValue("");
+  await manualCard
+    .getByRole("button", { name: "Show more: Selected Berserk passage" })
+    .click();
+  const manualDialog = page.getByRole("dialog", {
+    name: "Selected Berserk passage",
+  });
+  await expect(manualDialog.locator(".stored-source-text")).toHaveText(pasted);
+  await manualDialog.getByRole("tab", { name: "Stored text file" }).click();
+  await expect(manualDialog.locator(".stored-source-html")).toHaveText(pasted);
+  await page.screenshot({
+    path: ".test-data/screenshots/manual-text-viewer.png",
+  });
+  await manualDialog
+    .getByRole("button", { name: "Close source viewer" })
+    .click();
+  await manualCard
+    .getByRole("button", { name: "Remove source: Selected Berserk passage" })
+    .click();
+  await expect(manualCard).toHaveCount(0);
+  await page.locator(".removed-sources > summary").click();
+  await page
+    .getByRole("button", { name: "Restore source: Selected Berserk passage" })
+    .click();
+  await expect(manualCard).toBeVisible();
+  const afterText = await page.request
+    .get(`/api/items/${syncType.id}`)
+    .then((r) => r.json());
+  const storedText = afterText.sources.find((source: any) => source.manualText);
+  assert.equal(storedText.text, pasted);
+  const runAfterText = await page.request
+    .get("/api/state")
+    .then((r) => r.json());
+  assert.deepEqual(runAfterText.run, runBeforeText.run);
+  assert.deepEqual(
+    await page.request.get("/__test/ai-count").then((r) => r.json()),
+    manualBefore,
+  );
+  await page.screenshot({
+    path: ".test-data/screenshots/manual-text-evidence.png",
+  });
+  await page.reload();
+  await page.getByRole("button", { name: /Sources & evidence/ }).click();
+  await expect(manualCard).toBeVisible();
+  const beforePromote = await page.request
+    .get("/api/state")
+    .then((r) => r.json());
+  await manualCard
+    .getByRole("button", { name: "Move evidence to Shields", exact: true })
+    .click();
+  await expect(manualCard).toHaveCount(0);
+  const inheritedManual = page.getByRole("button", {
+    name: /Selected Berserk passage.*Manual text/,
+  });
+  await expect(inheritedManual).toBeVisible();
+  const plainRows = page.locator(
+    ".inherited-evidence-row:not(.is-manual-text)",
+  );
+  await page.getByRole("textbox", { name: "Find an item" }).focus();
+  await page.mouse.move(10, 10);
+  const backgrounds = await plainRows.evaluateAll((rows) =>
+    rows.map((row) => getComputedStyle(row).backgroundColor),
+  );
+  assert(backgrounds.length >= 2);
+  assert.notEqual(backgrounds[0], backgrounds[1]);
+  for (const index of [0, 1]) {
+    await plainRows.nth(index).hover();
+    await expect
+      .poll(() =>
+        plainRows
+          .nth(index)
+          .evaluate((row) => getComputedStyle(row).backgroundColor),
+      )
+      .not.toBe(backgrounds[index]);
+  }
+  const standardMode = plainRows.first().getByRole("combobox");
+  await standardMode.selectOption("never");
+  await expect(standardMode).toBeEnabled();
+  await page.getByRole("textbox", { name: "Find an item" }).focus();
+  await page.mouse.move(10, 10);
+  await expect
+    .poll(() =>
+      plainRows.first().evaluate((row) => getComputedStyle(row).opacity),
+    )
+    .toBe("0.45");
+  await standardMode.focus();
+  await expect
+    .poll(() =>
+      plainRows.first().evaluate((row) => getComputedStyle(row).opacity),
+    )
+    .toBe("1");
+  await standardMode.selectOption("auto");
+  await expect(standardMode).toBeEnabled();
+  const inheritedManualRow = inheritedManual.locator("..");
+  await expect(inheritedManualRow).toHaveClass(/is-manual-text/);
+  await expect(inheritedManualRow.locator(".source-size")).toContainText(
+    `${Buffer.byteLength(pasted, "utf8")} B`,
+  );
+  await expect(inheritedManual.locator(".manual-evidence-icon")).toHaveCount(1);
+  const manualMode = inheritedManualRow.getByRole("combobox", {
+    name: "Evidence mode: Selected Berserk passage",
+  });
+  await manualMode.selectOption("never");
+  await expect(manualMode).toBeEnabled();
+  await expect(manualMode).toHaveValue("never");
+  await expect(inheritedManualRow).toHaveClass(/manual-evidence-surface/);
+  await page.getByRole("textbox", { name: "Find an item" }).focus();
+  await page.mouse.move(10, 10);
+  await expect
+    .poll(() =>
+      inheritedManualRow.evaluate((row) => getComputedStyle(row).opacity),
+    )
+    .toBe("0.45");
+  await inheritedManualRow.hover();
+  await expect
+    .poll(() =>
+      inheritedManualRow.evaluate((row) => getComputedStyle(row).opacity),
+    )
+    .toBe("1");
+  await manualMode.focus();
+  await page.mouse.move(10, 10);
+  await expect
+    .poll(() =>
+      inheritedManualRow.evaluate((row) => getComputedStyle(row).opacity),
+    )
+    .toBe("1");
+  await page.getByRole("textbox", { name: "Find an item" }).focus();
+  await inheritedManualRow.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() =>
+      inheritedManualRow.evaluate((row) => getComputedStyle(row).opacity),
+    )
+    .toBe("0.45");
+  await page.screenshot({
+    path: ".test-data/screenshots/manual-highlighted-inherited.png",
+  });
+  await manualMode.selectOption("auto");
+  await expect(manualMode).toBeEnabled();
+  await inheritedManual.click();
+  const sharedManualDialog = page.getByRole("dialog", {
+    name: "Shared evidence",
+  });
+  const sharedManualCard = sharedManualDialog
+    .locator(".source-card")
+    .filter({ hasText: "Selected Berserk passage" });
+  await expect(sharedManualCard).toHaveClass(/is-manual-text/);
+  await expect(sharedManualCard.locator(".source-size")).toContainText("Small");
+  await expect(sharedManualCard.locator(".manual-evidence-icon")).toHaveCount(
+    1,
+  );
+  await expect(sharedManualCard.locator(".source-site")).toHaveText(
+    "Manual text",
+  );
+  await expect(
+    sharedManualCard.getByRole("button", {
+      name: "Open in Chrome",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await sharedManualCard
+    .getByRole("button", {
+      name: "Edit manual evidence: Selected Berserk passage",
+    })
+    .click();
+  await sharedManualCard
+    .getByRole("textbox", { name: "Edit evidence text" })
+    .fill(pasted + "\nShared update.");
+  await page.screenshot({
+    path: ".test-data/screenshots/edit-manual-shared.png",
+  });
+  await sharedManualCard
+    .getByRole("button", { name: "Save changes", exact: true })
+    .click();
+  await expect(sharedManualCard.locator(".shared-captured-text")).toContainText(
+    "Shared update.",
+  );
+  await sharedManualCard
+    .getByRole("button", {
+      name: "Edit manual evidence: Selected Berserk passage",
+    })
+    .click();
+  await sharedManualCard
+    .getByRole("textbox", { name: "Edit evidence text" })
+    .fill(pasted);
+  await sharedManualCard
+    .getByRole("button", { name: "Save changes", exact: true })
+    .click();
+  await expect(
+    sharedManualCard.locator(".manual-evidence-edit-form"),
+  ).toHaveCount(0);
+  await sharedManualCard.locator(".manual-shared-text > summary").click();
+  await expect(sharedManualCard.locator(".stored-source-text")).toHaveText(
+    pasted,
+  );
+  await page.screenshot({
+    path: ".test-data/screenshots/shared-manual-evidence.png",
+  });
+  await sharedManualCard
+    .getByRole("button", { name: "Move evidence to Everything", exact: true })
+    .click();
+  await sharedManualDialog
+    .getByRole("combobox", { name: "Evidence group" })
+    .selectOption("Everything");
+  await expect(sharedManualCard).toBeVisible();
+  await expect(
+    sharedManualCard.getByRole("button", { name: /Move evidence/ }),
+  ).toHaveCount(0);
+  await sharedManualCard
+    .getByRole("button", { name: /Remove shared source/ })
+    .click();
+  await expect(sharedManualCard).toHaveCount(0);
+  await sharedManualDialog.locator(".removed-manual-shared > summary").click();
+  await sharedManualDialog
+    .getByRole("button", {
+      name: "Restore shared manual entry: Selected Berserk passage",
+    })
+    .click();
+  await expect(sharedManualCard).toBeVisible();
+  await sharedManualDialog
+    .getByRole("button", { name: "Close shared evidence" })
+    .click();
+  const afterPromote = await page.request
+    .get("/api/state")
+    .then((r) => r.json());
+  assert.deepEqual(afterPromote.run, beforePromote.run);
+  assert.deepEqual(
+    await page.request.get("/__test/ai-count").then((r) => r.json()),
+    manualBefore,
+  );
+  // Cancellation discards only the queue, for paused and active single-item builds.
+  await page
+    .getByRole("button", { name: "Rebuild from saved sources", exact: true })
+    .click();
+  await waitForState((state) => state.run.status === "running");
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await waitForState((state) => state.run.status === "paused");
+  await expect(
+    page.getByRole("button", { name: "Resume", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Cancel run", exact: true }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: ".test-data/screenshots/cancel-paused-run.png",
+  });
+  const beforeCancel = await page.request
+    .get(`/api/items/${syncType.id}`)
+    .then((r) => r.json());
+  await page.getByRole("button", { name: "Cancel run", exact: true }).click();
+  await waitForState(
+    (state) =>
+      state.run.status === "idle" &&
+      state.run.queue.length === 0 &&
+      !state.buildCheckpoint,
+  );
+  await expect(
+    page.getByRole("button", { name: "Resume", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Start from saved sources", exact: true }),
+  ).toBeVisible();
+  const afterCancel = await page.request
+    .get(`/api/items/${syncType.id}`)
+    .then((r) => r.json());
+  assert.deepEqual(afterCancel.output, beforeCancel.output);
+  assert.deepEqual(afterCancel.sources, beforeCancel.sources);
+  await page
+    .getByRole("button", { name: "Rebuild from saved sources", exact: true })
+    .click();
+  await waitForState((state) => state.run.status === "running");
+  await page.getByRole("button", { name: "Cancel run", exact: true }).click();
+  await waitForState(
+    (state) => state.run.status === "idle" && state.run.queue.length === 0,
+  );
+  await expect(
+    page.getByRole("button", { name: "Cancel run", exact: true }),
+  ).toHaveCount(0);
+  assert.equal(
+    (await page.request.get(`/api/items/${syncType.id}`).then((r) => r.json()))
+      .family.issue,
+    null,
+  );
+  await page.screenshot({ path: ".test-data/screenshots/cancelled-run.png" });
   assert.deepEqual(errors, []);
   console.log(
     "Browser: import, background selection, pause/resume, editor persistence, coverage, settings and fixed progress passed. 299 real capture candidates; character equipment grouped.",

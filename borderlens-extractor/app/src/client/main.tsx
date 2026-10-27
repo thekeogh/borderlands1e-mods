@@ -1,3 +1,14 @@
+import { SourceRecapture } from "./source-recapture";
+import { EvidenceSizeSummary } from "./evidence-size-summary";
+import { ManualEvidenceEdit } from "./manual-evidence-edit";
+import { SourceSize } from "./source-size";
+import { ManualEvidenceIcon } from "./manual-evidence-icon";
+import { ManualEvidenceForm } from "./manual-evidence";
+import { isManualTextUrl } from "../shared/manual-evidence";
+import type { EvidenceStats } from "../shared/evidence-stats";
+import { EvidenceStatsSummary } from "./evidence-stats";
+import type { EvidenceRequestNotice } from "../shared/evidence-notice";
+import { EvidenceRequestAlert } from "./evidence-request-alert";
 import { ManualNameEditor } from "./manual-name";
 import { ManualTypePicker } from "./manual-type";
 import { DuplicateFinder } from "./duplicate-finder";
@@ -81,6 +92,8 @@ type Detail = {
   websiteOutput: import("../shared/website").WebsiteEntry | null;
   parts: import("../shared/models").PartDefinition[];
   researchAudit: any;
+  evidenceStatsHistory?: EvidenceStats[];
+  evidenceRequestNotice?: EvidenceRequestNotice | null;
   evidenceFollowup?: import("../server/saved-evidence").EvidenceFollowup;
   sharedSourceSelection?: import("../server/shared-source-index").SharedSelection;
   research: ResearchReport | null;
@@ -152,6 +165,7 @@ function App() {
     [connected, setConnected] = useState(true),
     [settingsOpen, setSettingsOpen] = useState(false),
     [sharedScope, setSharedScope] = useState<EvidenceScope | null>(null),
+    [returnSourceId, setReturnSourceId] = useState(0),
     [viewedSource, setViewedSource] = useState<Source | null>(null),
     [agents, setAgents] = useState<any>(null),
     [correction, setCorrection] = useState(""),
@@ -213,6 +227,59 @@ function App() {
     setImages(library);
   };
   const chromeHelper = useChromeHelper({
+    focusSource: async ({ familyId, url }) => {
+      const target = await request<Detail>(
+        `/api/items/${encodeURIComponent(familyId)}`,
+      );
+      setView("catalogue");
+      setTab("sources");
+      setViewedSource(null);
+      setSettingsOpen(false);
+      setReturnSourceId((id) => id + 1);
+      if (target.family.evidenceScope)
+        setSharedScope(target.family.evidenceScope);
+      else {
+        setSharedScope(null);
+        setQuery("");
+        setFilter(target.family.status === "excluded" ? "excluded" : "all");
+        select(target.family.id);
+        setDetail(target);
+        setTab("sources");
+      }
+      await refresh();
+      // Wait for the item or shared dialog to render, then scroll/focus the exact URL.
+      for (let attempt = 0; attempt < 50; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, 80));
+        const root = target.family.evidenceScope
+          ? document.querySelector(".shared-source-modal")
+          : document.querySelector(".sources-layout, .sources-grid");
+        if (!root) continue;
+        const candidates = [
+          ...root.querySelectorAll<HTMLElement>("[data-source-url]"),
+        ];
+        const matches = candidates.filter(
+          (row) => sourceKey(row.dataset.sourceUrl || "") === sourceKey(url),
+        );
+        const element =
+          matches.find((row) =>
+            row.matches(".source-card, .inherited-evidence-row"),
+          ) || matches[0];
+        if (!element) continue;
+        element.scrollIntoView({ block: "center", behavior: "auto" });
+        element.tabIndex = -1;
+        element.focus({ preventScroll: true });
+        element.classList.add("source-return-highlight");
+        setTimeout(
+          () => element.classList.remove("source-return-highlight"),
+          6500,
+        );
+        return;
+      }
+      // A queued import may not have produced its evidence card yet.
+      document
+        .querySelector(".research-status, .shared-source-modal")
+        ?.scrollIntoView({ block: "start", behavior: "auto" });
+    },
     saved: (message) => {
       setNotice(message);
       void refresh();
@@ -805,17 +872,19 @@ function App() {
               <strong>
                 {state.identitySync
                   ? "Checking item " + state.identitySync.target
-                  : busy
-                    ? run.mode === "discover"
-                      ? "Finding evidence URLs"
-                      : "Building your catalogue"
-                    : run.status === "blocked"
-                      ? "A little input needed"
-                      : run.status === "complete"
-                        ? "This run is complete"
-                        : run.status === "paused"
-                          ? "Ready when you are"
-                          : "Your catalogue, one item at a time"}
+                  : run.cancelRequested
+                    ? "Cancelling run"
+                    : busy
+                      ? run.mode === "discover"
+                        ? "Finding evidence URLs"
+                        : "Building your catalogue"
+                      : run.status === "blocked"
+                        ? "A little input needed"
+                        : run.status === "complete"
+                          ? "This run is complete"
+                          : run.status === "paused"
+                            ? "Ready when you are"
+                            : "Your catalogue, one item at a time"}
               </strong>
               {run.scope && (
                 <span className="run-scope" aria-label="Batch group">
@@ -829,6 +898,7 @@ function App() {
               </span>
             </div>
             <p>{state.identitySync?.message || run.message}</p>
+            <EvidenceStatsSummary stats={state.evidenceStats} />
             {!state.identitySync && (
               <div className="progress-track">
                 <div style={{ width: `${percent}%` }} />
@@ -1136,12 +1206,26 @@ function App() {
                   </p>
                 </div>
                 <div className="item-actions">
-                  <RebuildActions
-                    saved={detail?.savedRebuild}
-                    discoveryDisabled={busy}
-                    disabled={working || f.status === "excluded"}
-                    run={(action) => void itemAction(action)}
-                  />
+                  <div className="item-rebuild-summary">
+                    <EvidenceSizeSummary
+                      direct={itemSources}
+                      inherited={detail?.inheritedEvidence || []}
+                      gameOnly={f.gameOnly}
+                      pendingUrls={f.sourceUrls.filter(
+                        (url) =>
+                          !(detail?.excludedSources || []).some(
+                            (excluded) =>
+                              sourceKey(excluded.url) === sourceKey(url),
+                          ),
+                      )}
+                    />
+                    <RebuildActions
+                      saved={detail?.savedRebuild}
+                      discoveryDisabled={busy}
+                      disabled={working || f.status === "excluded"}
+                      run={(action) => void itemAction(action)}
+                    />
+                  </div>
                   <button
                     className="button quiet"
                     disabled={working || f.status === "excluded"}
@@ -1195,6 +1279,20 @@ function App() {
                   </button>
                 ))}
               </div>
+              <EvidenceRequestAlert
+                notice={detail?.evidenceRequestNotice}
+                review={() => setTab("sources")}
+                dismiss={async (id) => {
+                  await act(
+                    () =>
+                      request(
+                        `/api/items/${f.id}/evidence-request-notice/dismiss`,
+                        { id },
+                      ),
+                    "Evidence notice dismissed. Source settings unchanged.",
+                  );
+                }}
+              />
               {f.issue && (
                 <div className="issue-card">
                   <TriangleAlert size={20} />
@@ -1634,8 +1732,30 @@ function App() {
                     </div>
                     <InheritedEvidenceList
                       items={detail?.inheritedEvidence || []}
+                      recapture={(ownerId, url) =>
+                        chromeHelper.openPage(ownerId, url)
+                      }
                       disabled={working || (busy && run.currentId === f.id)}
                       key={f.id}
+                      setAllModes={(mode) => {
+                        let saved = false;
+                        return act(
+                          async () => {
+                            await request(
+                              `/api/items/${f.id}/shared-source-modes`,
+                              { mode },
+                            );
+                            saved = true;
+                          },
+                          "All inherited sources set to " +
+                            (mode === "always"
+                              ? "Always include"
+                              : mode === "never"
+                                ? "Never include"
+                                : "Auto") +
+                            ". No build started.",
+                        ).then(() => saved);
+                      }}
                       setMode={(url, mode) => {
                         let saved = false;
                         return act(
@@ -1725,6 +1845,7 @@ function App() {
                               {targets.map((url, index) => (
                                 <span
                                   className="evidence-url-actions"
+                                  data-source-url={url}
                                   key={url}
                                 >
                                   <button
@@ -1782,11 +1903,61 @@ function App() {
                     </div>
                     {itemSources.length ? (
                       itemSources.map((s) => (
-                        <article className="source-card" key={s.id}>
+                        <article
+                          data-source-url={s.url}
+                          className={
+                            "source-card" +
+                            (s.manualText
+                              ? " is-manual-text manual-evidence-surface"
+                              : "")
+                          }
+                          key={s.id}
+                        >
                           <div>
-                            <BookOpen size={18} />
+                            {s.manualText ? (
+                              <ManualEvidenceIcon size={19} />
+                            ) : (
+                              <BookOpen size={18} />
+                            )}
                             <strong>{s.title}</strong>
                             <SourceSite url={s.url} />
+                            {s?.selectedContent && (
+                              <span
+                                className="selected-content-badge"
+                                title="Only user-selected areas were captured; this is not the complete article."
+                              >
+                                Selected page content ·{" "}
+                                {s.selectedContent.boxes} boxes
+                                {s.selectedContent.warnings > 0
+                                  ? " · partial"
+                                  : ""}
+                              </span>
+                            )}
+                            <SourceSize text={s.text} />
+                            {!s.manualText && (
+                              <SourceRecapture
+                                url={s.url}
+                                title={s.title}
+                                disabled={
+                                  working ||
+                                  chromeHelper.opening ||
+                                  f.status === "excluded"
+                                }
+                                run={() => chromeHelper.openPage(f.id, s.url)}
+                              />
+                            )}
+                            {s.manualText && (
+                              <ManualEvidenceEdit
+                                source={s}
+                                ownerId={f.id}
+                                disabled={
+                                  working ||
+                                  !!state.identitySync ||
+                                  (busy && run.currentId === f.id)
+                                }
+                                onSaved={() => void refresh()}
+                              />
+                            )}
                             <SourcePromote
                               owner={f}
                               disabled={
@@ -1803,9 +1974,11 @@ function App() {
                                 )
                               }
                             />
-                            <a target="_blank" rel="noreferrer" href={s.url}>
-                              <ArrowUpRight size={15} />
-                            </a>
+                            {!s.manualText && (
+                              <a target="_blank" rel="noreferrer" href={s.url}>
+                                <ArrowUpRight size={15} />
+                              </a>
+                            )}
                             <button
                               className="source-remove-button"
                               aria-label={"Remove source: " + s.title}
@@ -1834,13 +2007,19 @@ function App() {
                           )}
                           <small>
                             {new Date(s.fetchedAt).toLocaleString()} ·{" "}
-                            {s.captureMethod === "chrome"
-                              ? "Captured in Chrome"
-                              : s.imported
-                                ? "Imported HTML"
-                                : "Fetched & cached"}
+                            {s.manualText
+                              ? "Manually added text"
+                              : s.captureMethod === "chrome"
+                                ? "Captured in Chrome"
+                                : s.imported
+                                  ? "Imported HTML"
+                                  : "Fetched & cached"}
                           </small>
-                          <p>
+                          <p
+                            className={
+                              s.manualText ? "manual-evidence-text" : undefined
+                            }
+                          >
                             {s.text.slice(0, 550)}
                             {s.text.length > 550 ? "…" : ""}
                           </p>
@@ -1870,16 +2049,34 @@ function App() {
                           fetching for this item.
                         </p>
                         {detail.excludedSources.map((source) => (
-                          <div className="removed-source" key={source.sourceId}>
+                          <div
+                            className={
+                              "removed-source" +
+                              (isManualTextUrl(source.url)
+                                ? " manual-evidence-surface"
+                                : "")
+                            }
+                            key={source.sourceId}
+                          >
                             <div>
-                              <a
-                                href={source.url}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                {source.title}
-                              </a>
-                              <small>{source.url}</small>
+                              {isManualTextUrl(source.url) ? (
+                                <>
+                                  <ManualEvidenceIcon size={15} />
+                                  <strong>{source.title}</strong>
+                                  <SourceSite url={source.url} />
+                                </>
+                              ) : (
+                                <>
+                                  <a
+                                    href={source.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    {source.title}
+                                  </a>
+                                  <small>{source.url}</small>
+                                </>
+                              )}
                             </div>
                             <button
                               className="text-button"
@@ -1934,6 +2131,27 @@ function App() {
                     </details>
                   </section>
                   <aside className="correction-card">
+                    <ManualEvidenceForm
+                      key={f.id}
+                      disabled={
+                        working ||
+                        f.status === "excluded" ||
+                        !!state.identitySync ||
+                        (busy && run.currentId === f.id)
+                      }
+                      add={(value) => {
+                        let saved = false;
+                        return act(async () => {
+                          await request(
+                            `/api/items/${f.id}/text-evidence`,
+                            value,
+                          );
+                          saved = true;
+                        }, "Text evidence saved. Used on the next build; no build started.").then(
+                          () => saved,
+                        );
+                      }}
+                    />
                     <h2>Help it move forward</h2>
                     <p>
                       A correction is remembered for future runs. Add a source
@@ -1957,15 +2175,25 @@ function App() {
                         placeholder="https://…"
                       />
                     </label>
-                    {source && (
-                      <button
-                        className="text-button"
-                        disabled={chromeHelper.opening}
-                        onClick={() => chromeHelper.openPage(f.id, source)}
-                      >
-                        <Chrome size={13} /> Open this URL for browser import
-                      </button>
-                    )}
+                    <button
+                      className="text-button source-url-capture"
+                      disabled={
+                        !source.trim() ||
+                        chromeHelper.opening ||
+                        f.status === "excluded"
+                      }
+                      title={
+                        source.trim()
+                          ? "Open this source with the Chrome capture extension."
+                          : "Paste a Wiki or Lootlemon URL above first."
+                      }
+                      onClick={() => chromeHelper.openPage(f.id, source.trim())}
+                    >
+                      <Chrome size={13} />{" "}
+                      {chromeHelper.opening
+                        ? "Opening in Chrome…"
+                        : "Open URL in Chrome for capture"}
+                    </button>
                     <label>
                       Your correction
                       <textarea
@@ -2035,6 +2263,29 @@ function App() {
                 </div>
               ) : tab === "history" ? (
                 <div className="history-list">
+                  {[...(detail?.evidenceStatsHistory || [])]
+                    .reverse()
+                    .map((stats) => (
+                      <div key={stats.id}>
+                        <span className="history-dot" />
+                        <div>
+                          <strong>
+                            AI evidence statistics ·{" "}
+                            {stats.outcome === "cancelled"
+                              ? "Cancelled"
+                              : stats.outcome === "failed"
+                                ? "Stopped with an error"
+                                : "Completed"}
+                          </strong>
+                          <p>
+                            {new Date(
+                              stats.finishedAt || stats.startedAt,
+                            ).toLocaleString()}
+                          </p>
+                          <EvidenceStatsSummary stats={stats} history />
+                        </div>
+                      </div>
+                    ))}
                   {[...f.history].reverse().map((h, i) => (
                     <div key={i}>
                       <span className="history-dot" />
@@ -2048,11 +2299,12 @@ function App() {
                       </div>
                     </div>
                   ))}
-                  {!f.history.length && (
-                    <div className="panel-empty">
-                      This item has not entered processing yet.
-                    </div>
-                  )}
+                  {!f.history.length &&
+                    !detail?.evidenceStatsHistory?.length && (
+                      <div className="panel-empty">
+                        This item has not entered processing yet.
+                      </div>
+                    )}
                 </div>
               ) : (
                 <div className="json-panel">
@@ -2112,7 +2364,7 @@ function App() {
         </main>
         <footer>
           <span>ONE FAMILY. EVERY DETAIL.</span>
-          <span>Borderlens workshop · 0.33.0</span>
+          <span>Borderlens workshop · 0.46.0</span>
         </footer>
       </section>
       <input
@@ -2130,11 +2382,17 @@ function App() {
         <SourceViewer
           key={viewedSource.id}
           source={viewedSource}
+          recapture={() => {
+            const url = viewedSource.url;
+            setViewedSource(null);
+            if (f) return chromeHelper.openPage(f.id, url);
+          }}
           onClose={() => setViewedSource(null)}
         />
       )}
       {sharedScope && (
         <SharedSources
+          key={scopeLabel(sharedScope) + ":" + returnSourceId}
           initial={sharedScope}
           onClose={() => setSharedScope(null)}
           onChange={() => void refresh()}

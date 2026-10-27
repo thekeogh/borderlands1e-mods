@@ -47,7 +47,10 @@
     );
   });
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (sender.id !== chrome.runtime.id || message.type !== "IMPORT_CAPTURE")
+    if (
+      sender.id !== chrome.runtime.id ||
+      !["IMPORT_CAPTURE", "FOCUS_SOURCE"].includes(message.type)
+    )
       return;
     const timer = setTimeout(() => {
       waits.delete(message.captureId);
@@ -65,7 +68,6 @@
     window.postMessage(
       {
         source: "borderlens-chrome-helper",
-        type: "IMPORT_CAPTURE",
         ...message,
       },
       location.origin,

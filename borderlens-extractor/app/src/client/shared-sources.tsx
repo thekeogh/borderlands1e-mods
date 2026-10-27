@@ -1,3 +1,8 @@
+import { SourceRecapture } from "./source-recapture";
+import { ManualEvidenceEdit } from "./manual-evidence-edit";
+import { SourceSize } from "./source-size";
+import { ManualEvidenceIcon } from "./manual-evidence-icon";
+import { isManualTextUrl } from "../shared/manual-evidence";
 import { SourcePromote } from "./source-promote";
 import { SourceSite } from "./source-site";
 import React, { useEffect, useRef, useState } from "react";
@@ -8,8 +13,13 @@ import {
   type EvidenceScope,
 } from "../shared/evidence-scopes";
 import type { Family, Source } from "../shared/models";
-import { sourceKey } from "../shared/research";
-type Detail = { family: Family; sources: Source[]; children: number };
+import { sourceKey, type ExcludedSource } from "../shared/research";
+type Detail = {
+  family: Family;
+  sources: Source[];
+  children: number;
+  excludedSources?: ExcludedSource[];
+};
 async function call(url: string, body?: unknown) {
   const response = await fetch(
     url,
@@ -56,7 +66,7 @@ export function SharedSources({
       if (event.key === "Tab") {
         const controls = [
           ...dialog.current!.querySelectorAll<HTMLElement>(
-            "button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled)",
+            "button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled)",
           ),
         ].filter((el) => el.getClientRects().length && el.offsetWidth > 1);
         const first = controls[0],
@@ -124,7 +134,7 @@ export function SharedSources({
   };
   const capture = async (target: string) => {
     const owner = detail || (await update({ scope }));
-    if (owner) openPage(owner.family.id, target);
+    if (owner) await openPage(owner.family.id, target);
   };
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -212,23 +222,57 @@ export function SharedSources({
               (source) => sourceKey(source.url) === sourceKey(target),
             );
             return (
-              <article className="source-card" key={target}>
+              <article
+                className={
+                  "source-card" +
+                  (isManualTextUrl(target)
+                    ? " is-manual-text manual-evidence-surface"
+                    : "")
+                }
+                key={target}
+                data-source-url={target}
+              >
                 <div>
+                  {isManualTextUrl(target) && <ManualEvidenceIcon size={19} />}
                   <strong>{source?.title || target}</strong>
                   <SourceSite url={target} />
+                  {source?.selectedContent && (
+                    <span
+                      className="selected-content-badge"
+                      title="Only user-selected areas were captured; this is not the complete article."
+                    >
+                      Selected page content · {source.selectedContent.boxes}{" "}
+                      boxes
+                      {source.selectedContent.warnings > 0 ? " · partial" : ""}
+                    </span>
+                  )}
+                  <SourceSize text={source?.text} />
+                  {source?.manualText && (
+                    <ManualEvidenceEdit
+                      source={source}
+                      ownerId={detail.family.id}
+                      disabled={working}
+                      onSaved={() => {
+                        void refresh();
+                        onChange();
+                      }}
+                    />
+                  )}
                   <SourcePromote
                     owner={detail.family}
                     disabled={working}
                     onMove={() => void promote(target)}
                   />
-                  <a
-                    href={target}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="Open article"
-                  >
-                    <ArrowUpRight size={15} />
-                  </a>
+                  {!isManualTextUrl(target) && (
+                    <a
+                      href={target}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label="Open article"
+                    >
+                      <ArrowUpRight size={15} />
+                    </a>
+                  )}
                   <button
                     className="source-remove-button"
                     aria-label={"Remove shared source: " + target}
@@ -242,7 +286,7 @@ export function SharedSources({
                 </div>
                 <small>
                   {source
-                    ? `${source.captureMethod === "chrome" ? "Captured in Chrome" : source.imported ? "Imported HTML" : "Fetched & cached"} · ${new Date(source.fetchedAt).toLocaleString()} · ${source.text.length.toLocaleString()} characters saved`
+                    ? `${source.manualText ? "Manually added text" : source.captureMethod === "chrome" ? "Captured in Chrome" : source.imported ? "Imported HTML" : "Fetched & cached"} · ${new Date(source.fetchedAt).toLocaleString()} · ${source.text.length.toLocaleString()} characters saved`
                     : "Not captured yet · URL only. Open in Chrome to capture the article."}
                 </small>
                 {source && (
@@ -251,34 +295,51 @@ export function SharedSources({
                     {source.text.length > 550 ? "…" : ""}
                   </p>
                 )}
-                <div className="browser-import-buttons">
-                  <button
-                    className="button"
-                    disabled={working}
-                    onClick={() => void capture(target)}
-                  >
-                    Open in Chrome
-                  </button>
-                  <label className="button shared-html-import">
-                    Import saved HTML
-                    <input
-                      aria-label={"Import shared HTML: " + target}
-                      type="file"
-                      accept=".html,.htm"
-                      disabled={working}
-                      onChange={async (event) => {
-                        const file = event.target.files?.[0];
-                        if (file)
-                          await update({
-                            scope,
-                            url: target,
-                            html: await file.text(),
-                          });
-                        event.target.value = "";
-                      }}
-                    />
-                  </label>
-                </div>
+                {source?.manualText && (
+                  <details className="manual-shared-text">
+                    <summary>Show full text</summary>
+                    <pre className="stored-source-text">{source.text}</pre>
+                  </details>
+                )}
+                {!isManualTextUrl(target) && (
+                  <div className="browser-import-buttons">
+                    {source ? (
+                      <SourceRecapture
+                        url={target}
+                        title={source.title}
+                        disabled={working}
+                        run={() => capture(target)}
+                      />
+                    ) : (
+                      <button
+                        className="button"
+                        disabled={working}
+                        onClick={() => void capture(target)}
+                      >
+                        Open in Chrome
+                      </button>
+                    )}
+                    <label className="button shared-html-import">
+                      Import saved HTML
+                      <input
+                        aria-label={"Import shared HTML: " + target}
+                        type="file"
+                        accept=".html,.htm"
+                        disabled={working}
+                        onChange={async (event) => {
+                          const file = event.target.files?.[0];
+                          if (file)
+                            await update({
+                              scope,
+                              url: target,
+                              html: await file.text(),
+                            });
+                          event.target.value = "";
+                        }}
+                      />
+                    </label>
+                  </div>
+                )}
               </article>
             );
           })}
@@ -286,6 +347,32 @@ export function SharedSources({
             <p className="panel-empty">No shared sources in this group yet.</p>
           )}
         </div>
+        {!!detail?.excludedSources?.some((source) =>
+          isManualTextUrl(source.url),
+        ) && (
+          <details className="removed-manual-shared">
+            <summary>Removed manual entries</summary>
+            {detail.excludedSources
+              .filter((source) => isManualTextUrl(source.url))
+              .map((source) => (
+                <div
+                  className="removed-source manual-evidence-surface"
+                  key={source.sourceId}
+                >
+                  <ManualEvidenceIcon size={16} />
+                  <strong>{source.title}</strong>
+                  <button
+                    className="text-button"
+                    disabled={working}
+                    onClick={() => void update({ scope, url: source.url })}
+                    aria-label={"Restore shared manual entry: " + source.title}
+                  >
+                    Restore
+                  </button>
+                </div>
+              ))}
+          </details>
+        )}
         <p className="muted">
           Evidence changes are saved for the next requested build. They do not
           start builds or add items to a running queue.

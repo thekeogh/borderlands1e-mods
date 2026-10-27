@@ -1,5 +1,93 @@
 # Changelog
 
+## Workshop app 0.46.0 / Chrome helper 1.2.0
+
+- Back to workshop selects Sources & evidence, opens the correct item/shared group and scrolls to/highlights the source.
+- Add a persistent Close source tab when returning after capture checkbox in popup and selection panel. Close only the matching accepted-capture tab after the workshop acknowledges navigation; retain unsent/changed tabs and keep tabs open on navigation failure.
+
+## Workshop app 0.45.0
+
+- Add Recapture to external item/shared cards, inherited rows and source viewers. Reopen the exact source with a fresh Chrome capture ticket; sending replaces saved content at its owner. Manual text stays editable separately.
+
+## Workshop app 0.44.2
+
+- Fix Chrome capture reporting a website URL error after saving when the item also contains manual text. Compare old source identities without treating internal manual URLs as website captures.
+
+## Workshop app 0.44.1
+
+- Keep the source URL Chrome-capture link visible in the correction sidebar, disabled until a URL is entered.
+
+## Workshop app 0.44.0 / Chrome helper 1.1.0
+
+- Select page excerpts using Ctrl-drag boxes, with red/green structural checks, resize/move/remove, Fit content, overlap deduplication and a local preview/size counter. Sending is disabled until usable content is selected; partial captures require acknowledgement.
+- Label selected sources throughout the app and pass excerpt context to AI. Keep selections scoped to their item/promoted parent and stable across website refreshes. Preserve HTML headings/tables without copying page controls/scripts.
+- Keep existing local ticket relay and activeTab permissions; include selection.js in the helper ZIP. Compiler 0.11.2 records excerpt-aware instructions.
+
+## Workshop app 0.43.2
+
+- Separate inherited evidence into labelled Always include, Auto and Never include boxes with counts and spacing. Brighter green/blue included/Auto rows; retain purple manual rows and current Never fade.
+
+## Workshop app 0.43.1
+
+- Allow item-specific rejection of unrelated numerical facts from Always include evidence even when automatic relevance matched broadly. Require an exclusion reason; keep complete fact accounting and used-stat validation. Compiler 0.11.1 refreshes writer instructions.
+
+## Workshop app 0.43.0
+
+- Show stored-text totals beside item rebuild controls: dedicated + Always include, with separate muted Auto total. Exclude Never include, deduplicate URLs and identify unknown sizes.
+
+## Workshop app 0.42.2
+
+- Sort inherited evidence by Always include, Auto, Never include, then alphabetically within each group. Fade Never include rows further.
+
+## Workshop app 0.42.1
+
+- Give Cancel run a clear red outline, hover/focus states and circled X icon.
+
+## Workshop app 0.42.0
+
+- Edit manual evidence labels/text in place on item and shared cards. Preserve identity, inheritance and inclusion settings; save for the next requested build without starting work.
+
+## Workshop app 0.41.0
+
+- Add Cancel run beside Pause/Resume for active, paused and blocked single-item/batch/URL-discovery queues. Clear queue/deferred starts/build checkpoints while retaining saved evidence, drafts, outputs, corrections, revisions and caches.
+- Stop active agent process groups without fallback or failure cooldowns. Keep controls in Cancelling until the active step settles; a new run can then start. Preserve cancelled evidence stats and recover interrupted cancellation as idle after restart.
+
+## Workshop app 0.40.0
+
+- Stripe standard inherited-evidence rows and highlight hovered/keyboard-focused rows. Keep manual entries purple, with a stronger purple interaction highlight.
+- Fade Never include rows; restore full contrast during hover/focus so their controls remain easy to use. No evidence settings or processing changes.
+
+## Workshop app 0.39.0
+
+- Show exact saved-text UTF-8 byte sizes in inherited rows, item/shared evidence cards and source viewers, including manual text and its paste form. Use rounded B/KB/MB with exact bytes on hover.
+- Add Small / Medium / Large / Very large document-size guides and excerpt suggestions, clearly separate from actual AI input/token counts. Unknown uncaptured sizes stay unknown. No inclusion, caching or build changes.
+
+## Workshop app 0.38.0
+
+- Give manual text a consistent purple notebook icon, badge and tinted row/card in inherited/shared evidence, item cards, source viewers, removed entries, requested-context results, exclusion alerts and live/History AI stats.
+- Keep names and all source ownership, promotion, caching and Auto/Always/Never behavior unchanged. No schema/compiler changes or rebuilds.
+
+## Workshop app 0.37.0
+
+- Enable one-level parent promotion for manual text evidence, from item to subgroup/category/Everything. Retain exact content, label, ID, checksum and file; reuse one shared index across permitted descendants. Start no builds or model calls.
+- Show manual entries in inherited lists and shared evidence, with full text and remove/restore controls. Respect per-item modes/exclusions, hide website-fetch actions, keep private labels out of indexing prompts and reject fabricated local references.
+
+## Workshop app 0.36.0
+
+- Add item-specific pasted-text evidence with an optional private reference label. Show Manual text cards and exact stored text in Show more. No HTML/URL required, AI call, fetch or automatic build.
+- Reuse source reading, fact validation, remove/restore and actual AI input stats. Preserve excerpts during website refresh, fresh builds, restart and generated reset. Keep them private to their item; never fetch local identifiers or export them as acquisition URLs.
+
+## Workshop app 0.35.0
+
+- Show AI evidence stats in progress: sources from actual serialized input arrays, unique articles versus repeated sends, per-phase requests, exact source lists/modes, shared/item analysis reuse and local response-cache hits. Count at CLI submission; skip auth/cooldown failures and count explicit fallback/retry submissions separately.
+- Keep the last item’s stats visible until the next item. Persist complete/failed snapshots privately in History without the rolling log limit, including across restart. No additional AI calls, input-token estimates, catalogue/schema changes or automatic rebuilds.
+
+## Workshop app 0.34.0
+
+- Add Set all Auto / Always include / Never include to each item’s Inherited evidence header. Save once, invalidate only the selected item, preserve outputs/queues, and start no work.
+- Keep Never include authoritative even after evidence bindings move; no first-read indexing or requested-context pass may send excluded source content. Retain existing Auto relevance and shared index reuse.
+- Persist a private, dismissible item alert when AI requests a topic matching excluded saved evidence. Match locally, send no blocked content, and continue batches without interruption. Dismissing changes no source modes or output.
+
 ## Workshop app 0.33.0
 
 - Add Edit item name in Preview: reveal a free-text field with Save/Cancel. Update navigation, existing JSON/drafts and export slugs without AI or rebuilding.

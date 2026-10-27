@@ -1,7 +1,7 @@
 // Runs a real MV3 extension against an isolated workshop and synthetic wiki page.
 // The temporary test copy grants the fixture host so automated popup navigation
 // doesn't need a physical toolbar gesture. Shipped manifest uses activeTab only.
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 import assert from "node:assert/strict";
 import {
   mkdtempSync,
@@ -63,7 +63,7 @@ try {
   await context.route("https://borderlands.fandom.com/wiki/**", (route) =>
     route.fulfill({
       contentType: "text/html",
-      body: '<!doctype html><html><head><title>Hellfire – fixture only</title></head><body><h1 id="firstHeading">Hellfire</h1><div class="mw-parser-output"><h2>Unique ability</h2><p>This synthetic wiki article exists only to verify browser capture. It is not real game evidence.</p><table><tr><td>Fixture field</td><td>Fixture value</td></tr></table><form><input value="private-test-secret"></form><script>globalThis.fixtureScript=true</script></div></body></html>',
+      body: '<!doctype html><html><head><title>Hellfire – fixture only</title><style>body{padding:40px;min-height:1600px;font:18px/1.6 system-ui}.mw-parser-output{width:650px}p{margin:25px 0}table{border-collapse:collapse;margin-top:40px;width:500px}td,th{border:1px solid;padding:12px}</style></head><body><h1 id="firstHeading">Hellfire</h1><div class="mw-parser-output"><h2>Unique ability</h2><p id="wanted">This synthetic wiki article exists only to verify browser capture. It is not real game evidence.</p><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Fixture field</td><td>Fixture value</td></tr></tbody></table><p id="unwanted">Unselected boilerplate must never reach the saved source.</p><form><input value="private-test-secret"></form><script>globalThis.fixtureScript=true</script></div></body></html>',
     }),
   );
   const app = await context.newPage();
@@ -90,10 +90,21 @@ try {
     { data: { action: "resolve", url, gameOnly: true } },
   );
   await app.getByRole("button", { name: "Sources & evidence" }).click();
+  const sourceUrlInput = app.getByRole("textbox", {
+    name: "Source page URL",
+    exact: true,
+  });
+  const captureLink = app.getByRole("button", {
+    name: "Open URL in Chrome for capture",
+    exact: true,
+  });
+  await sourceUrlInput.fill("");
+  await expect(captureLink).toBeVisible();
+  await expect(captureLink).toBeDisabled();
+  await sourceUrlInput.fill(url);
+  await expect(captureLink).toBeEnabled();
   const articlePromise = context.waitForEvent("page");
-  await app
-    .getByRole("button", { name: "Open wiki in Chrome", exact: true })
-    .click();
+  await captureLink.click();
   const article = await articlePromise;
   // Chrome-created tabs can issue their first navigation before Playwright attaches.
   // Repeat navigation under the installed route to serve the local article fixture.
@@ -101,12 +112,140 @@ try {
   await article.locator(".mw-parser-output").waitFor();
   const popup = await context.newPage();
   await popup.goto(`chrome-extension://${id}/popup.html`);
+  await expect(
+    popup.getByRole("button", {
+      name: "Send selections to Borderlens",
+      exact: true,
+    }),
+  ).toBeDisabled();
   await popup
-    .getByRole("button", { name: "Send page to Borderlens", exact: true })
+    .getByRole("button", { name: "Select content on page", exact: true })
     .click();
-  await popup
-    .getByRole("heading", { name: "Article saved", exact: true })
-    .waitFor();
+  await article.bringToFront();
+  const panel = article
+    .locator("#borderlens-selection-overlay")
+    .getByRole("region", { name: "Borderlens content selection" });
+  await expect(panel).toBeVisible();
+  const sendSelection = panel.getByRole("button", {
+    name: "Send to Borderlens",
+    exact: true,
+  });
+  await expect(sendSelection).toBeDisabled();
+  const draw = async (
+    r: { x: number; y: number; width: number; height: number },
+    fraction = 1,
+    releaseControlFirst = false,
+  ) => {
+    await article.keyboard.down("Control");
+    await article.mouse.move(r.x - 3, r.y - 3);
+    await article.mouse.down();
+    await article.mouse.move(r.x + r.width * fraction + 3, r.y + r.height + 3, {
+      steps: 6,
+    });
+    if (releaseControlFirst) await article.keyboard.up("Control");
+    await article.mouse.up();
+    if (!releaseControlFirst) await article.keyboard.up("Control");
+  };
+  const boxes = article.locator("#borderlens-selection-overlay .box");
+  // Form fields are excluded even if a box covers them.
+  await draw(
+    (await article.locator("input[value=private-test-secret]").boundingBox())!,
+  );
+  await expect(boxes.first()).toHaveClass(/bad/);
+  await panel.locator("#partial input").check();
+  await expect(sendSelection).toBeDisabled();
+  await boxes
+    .first()
+    .getByRole("button", { name: "Remove selection", exact: true })
+    .click();
+  await expect(boxes).toHaveCount(0);
+  const wanted = (await article.locator("#wanted").boundingBox())!;
+  await draw(wanted, 0.5);
+  await expect(boxes).toHaveCount(1);
+  await expect(boxes.first()).toHaveClass(/bad/);
+  await expect(sendSelection).toBeDisabled();
+  mkdirSync(".test-data/screenshots", { recursive: true });
+  await article.screenshot({
+    path: ".test-data/screenshots/chrome-partial-selection.png",
+  });
+  await panel.locator("#partial input").check();
+  await expect(sendSelection).toBeEnabled();
+  await panel.locator("#partial input").uncheck();
+  // Resize the first box to the complete paragraph.
+  const handle = (await boxes.first().locator(".se").boundingBox())!;
+  await article.mouse.move(handle.x + 5, handle.y + 5);
+  await article.mouse.down();
+  await article.mouse.move(
+    wanted.x + wanted.width + 4,
+    wanted.y + wanted.height + 4,
+    { steps: 5 },
+  );
+  await article.mouse.up();
+  await expect(boxes.first()).not.toHaveClass(/bad/);
+  await expect(sendSelection).toBeEnabled();
+  await expect(panel.locator("#partial")).toBeHidden();
+  const shiftBox = async (dx: number) => {
+    const label = (await boxes.first().locator(".caption").boundingBox())!;
+    await article.mouse.move(
+      label.x + label.width / 2,
+      label.y + label.height / 2,
+    );
+    await article.mouse.down();
+    await article.mouse.move(
+      label.x + label.width / 2 + dx,
+      label.y + label.height / 2,
+      { steps: 4 },
+    );
+    await article.mouse.up();
+  };
+  const beforeMove = (await boxes.first().boundingBox())!;
+  await shiftBox(20);
+  assert.equal(
+    Math.round((await boxes.first().boundingBox())!.x),
+    Math.round(beforeMove.x + 20),
+  );
+  await shiftBox(-20);
+  await expect(boxes.first()).not.toHaveClass(/bad/);
+  const table = (await article
+    .locator(".mw-parser-output table")
+    .boundingBox())!;
+  await draw(table, 0.5);
+  await expect(boxes.nth(1)).toHaveClass(/bad/);
+  await expect(panel.locator("#hint")).toContainText("partial");
+  await boxes
+    .nth(1)
+    .getByRole("button", { name: "Fit content", exact: true })
+    .click();
+  await expect(boxes.nth(1)).not.toHaveClass(/bad/);
+  await draw(wanted, 1, true);
+  await expect(boxes).toHaveCount(3);
+  assert.equal(
+    (await panel.locator("#preview").textContent())!.split(
+      "synthetic wiki article",
+    ).length - 1,
+    1,
+  );
+  await boxes
+    .nth(2)
+    .getByRole("button", { name: "Remove selection", exact: true })
+    .click();
+  await expect(boxes).toHaveCount(2);
+  // Boxes stay anchored in document space after scrolling.
+  const beforeScroll = (await boxes.first().boundingBox())!;
+  await article.evaluate(() => window.scrollBy(0, 80));
+  await expect
+    .poll(async () => Math.round((await boxes.first().boundingBox())!.y))
+    .toBe(Math.round(beforeScroll.y - 80));
+  await article.evaluate(() => window.scrollTo(0, 0));
+  await panel.locator("summary").click();
+  mkdirSync(".test-data/screenshots", { recursive: true });
+  await article.screenshot({
+    path: ".test-data/screenshots/chrome-selected-boxes.png",
+  });
+  await sendSelection.click();
+  await expect(
+    panel.getByRole("button", { name: "Saved to Borderlens", exact: true }),
+  ).toBeDisabled();
   await app.getByText("Wiki · 1 saved", { exact: true }).waitFor();
   const detail = await app.request
     .get("http://127.0.0.1:4321/api/items/" + family.id)
@@ -114,8 +253,216 @@ try {
   assert.equal(detail.sources[0].captureMethod, "chrome");
   assert.match(detail.sources[0].text, /synthetic wiki article/);
   assert.ok(detail.sources[0].tables.length);
+  assert.deepEqual(detail.sources[0].selectedContent, {
+    boxes: 2,
+    warnings: 0,
+  });
+  assert.ok(!detail.sources[0].text.includes("Unselected boilerplate"));
+  await expect(
+    app.locator(".source-card .selected-content-badge"),
+  ).toContainText("Selected page content");
+  assert.equal(detail.sources[0].tables[0].rows[1][1], "Fixture value");
   assert.ok(!detail.sources[0].text.includes("private-test-secret"));
   assert.ok(!detail.sources[0].text.includes("fixtureScript"));
+  // Return with the default preference keeps the article and anchors its evidence.
+  const closeAfter = panel.getByRole("checkbox", {
+    name: "Close source tab when returning after capture",
+  });
+  await expect(closeAfter).toBeEnabled();
+  await expect(closeAfter).not.toBeChecked();
+  await app.getByRole("button", { name: "Preview", exact: true }).click();
+  await panel
+    .getByRole("button", { name: "Back to workshop", exact: true })
+    .click();
+  await expect(app.locator(".tabs > button.active")).toContainText(
+    "Sources & evidence",
+  );
+  await expect(
+    app.locator(".source-card.source-return-highlight"),
+  ).toBeInViewport();
+  assert.equal(article.isClosed(), false);
+  await closeAfter.check();
+  await expect
+    .poll(
+      async () =>
+        await worker.evaluate(
+          async () =>
+            (
+              await (globalThis as any).chrome.storage.local.get(
+                "closeSourceTab",
+              )
+            ).closeSourceTab,
+        ),
+    )
+    .toBe(true);
+  const runBeforeRecapture = (
+    await app.request
+      .get("http://127.0.0.1:4321/api/state")
+      .then((r) => r.json())
+  ).run;
+  const callsBeforeRecapture = await app.request
+    .get("http://127.0.0.1:4321/__test/ai-count")
+    .then((r) => r.json());
+  const recaptureAndSend = async (button: any, shared = false) => {
+    const nextPage = context.waitForEvent("page");
+    await button.click();
+    const nextArticle = await nextPage;
+    await nextArticle.goto(url);
+    assert.equal(nextArticle.url(), url);
+    const helper = await context.newPage();
+    await helper.goto(`chrome-extension://${id}/popup.html`);
+    await expect(
+      helper.getByRole("checkbox", {
+        name: "Close source tab when returning after capture",
+      }),
+    ).toBeChecked();
+    await helper
+      .getByRole("button", { name: "Select content on page", exact: true })
+      .click();
+    await nextArticle.bringToFront();
+    const selectionPanel = nextArticle.locator(
+      "#borderlens-selection-overlay .panel",
+    );
+    const text = (await nextArticle.locator("#wanted").boundingBox())!;
+    await nextArticle.keyboard.down("Control");
+    await nextArticle.mouse.move(text.x - 3, text.y - 3);
+    await nextArticle.mouse.down();
+    await nextArticle.mouse.move(
+      text.x + text.width + 3,
+      text.y + text.height + 3,
+      { steps: 5 },
+    );
+    await nextArticle.mouse.up();
+    await nextArticle.keyboard.up("Control");
+    await selectionPanel
+      .getByRole("button", { name: "Send to Borderlens", exact: true })
+      .click();
+    await expect(
+      selectionPanel.getByRole("button", {
+        name: "Saved to Borderlens",
+        exact: true,
+      }),
+    ).toBeDisabled();
+    await expect(
+      selectionPanel.getByRole("checkbox", {
+        name: "Close source tab when returning after capture",
+      }),
+    ).toBeChecked();
+    await app.getByRole("button", { name: "Preview", exact: true }).click();
+    const closed = nextArticle.waitForEvent("close");
+    await selectionPanel
+      .getByRole("button", { name: "Back to workshop", exact: true })
+      .click();
+    await closed;
+    await expect(app.locator(".tabs > button.active")).toContainText(
+      "Sources & evidence",
+    );
+    const anchor = shared
+      ? app.locator(".shared-source-modal .source-return-highlight")
+      : app.locator(".source-card.source-return-highlight");
+    await expect(anchor).toBeInViewport();
+  };
+  const recapture = app
+    .locator(".source-card")
+    .getByRole("button", { name: "Recapture: Hellfire", exact: true });
+  await expect(recapture).toBeVisible();
+  await recaptureAndSend(recapture);
+  const replaced = await app.request
+    .get(`http://127.0.0.1:4321/api/items/${family.id}`)
+    .then((r) => r.json());
+  assert.equal(replaced.sources.length, 1);
+  assert.notEqual(replaced.sources[0].id, detail.sources[0].id);
+  assert.deepEqual(replaced.sources[0].selectedContent, {
+    boxes: 1,
+    warnings: 0,
+  });
+  assert.equal(replaced.sources[0].tables.length, 0);
+  assert.ok(!replaced.sources[0].text.includes("Fixture value"));
+  await app.request.post(
+    `http://127.0.0.1:4321/api/items/${family.id}/text-evidence`,
+    {
+      data: {
+        label: "Manual recapture fixture",
+        text: "Manually selected useful facts.",
+      },
+    },
+  );
+  const manual = app
+    .locator(".source-card")
+    .filter({ hasText: "Manual recapture fixture" });
+  await expect(manual).toBeVisible();
+  await expect(manual.getByRole("button", { name: /Recapture:/ })).toHaveCount(
+    0,
+  );
+  await app.request.post("http://127.0.0.1:4321/api/evidence/promote", {
+    data: { ownerId: family.id, url },
+  });
+  const inherited = app
+    .locator(".inherited-evidence-row")
+    .filter({ hasText: "Hellfire" });
+  await expect(inherited).toBeVisible();
+  await recaptureAndSend(
+    inherited.getByRole("button", { name: "Recapture: Hellfire", exact: true }),
+    true,
+  );
+  const groups = await app.request
+    .get("http://127.0.0.1:4321/api/shared-sources")
+    .then((r) => r.json());
+  const owner = groups.find((g: any) => g.family.sourceUrls.includes(url));
+  assert.ok(owner);
+  assert.equal(owner.sources.length, 1);
+  assert.equal(owner.sources[0].familyId, owner.family.id);
+  assert.deepEqual(owner.sources[0].selectedContent, { boxes: 1, warnings: 0 });
+  assert.deepEqual(
+    (
+      await app.request
+        .get("http://127.0.0.1:4321/api/state")
+        .then((r) => r.json())
+    ).run,
+    runBeforeRecapture,
+  );
+  assert.deepEqual(
+    await app.request
+      .get("http://127.0.0.1:4321/__test/ai-count")
+      .then((r) => r.json()),
+    callsBeforeRecapture,
+  );
+  await app
+    .getByRole("button", { name: "Close shared evidence", exact: true })
+    .click();
+  // The same persistent setting must not close a newly opened, unsent article.
+  const pendingPage = context.waitForEvent("page");
+  await inherited
+    .getByRole("button", { name: "Recapture: Hellfire", exact: true })
+    .click();
+  const unsent = await pendingPage;
+  await unsent.goto(url);
+  const pendingPopup = await context.newPage();
+  await pendingPopup.goto(`chrome-extension://${id}/popup.html`);
+  await expect(
+    pendingPopup.getByRole("checkbox", {
+      name: "Close source tab when returning after capture",
+    }),
+  ).toBeChecked();
+  await pendingPopup
+    .getByRole("button", { name: "Back to workshop", exact: true })
+    .click();
+  await expect(
+    app.locator(".shared-source-modal .source-return-highlight"),
+  ).toBeInViewport();
+  assert.equal(unsent.isClosed(), false);
+  await app
+    .getByRole("button", { name: "Close shared evidence", exact: true })
+    .click();
+  const returns = await worker.evaluate(
+    async () =>
+      (await (globalThis as any).chrome.storage.session.get("jobs")).jobs,
+  );
+  assert.ok(
+    Object.values(returns)
+      .filter((row: any) => row.completed)
+      .every((row: any) => !row.token),
+  );
   assert.deepEqual(errors, []);
   await app.getByTitle("Chrome helper connected", { exact: true }).click();
   await app.getByRole("dialog", { name: "Chrome helper setup" }).waitFor();
@@ -128,7 +475,7 @@ try {
     path: ".test-data/screenshots/chrome-source-saved.png",
   });
   console.log(
-    "MV3 Chrome fixture: automatic connection, open article, popup capture, local relay, cached HTML/tables and live saved status passed.",
+    "MV3 Chrome fixture: automatic connection, open article, Ctrl selection, resize, table fit, overlap deduplication, scroll anchoring, local relay, cached HTML/tables and live saved status passed.",
   );
 } finally {
   await context.close();

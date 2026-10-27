@@ -1,3 +1,7 @@
+import type {
+  BlockedEvidenceMatch,
+  EvidenceRequestNotice,
+} from "../shared/evidence-notice.ts";
 import type { EvidenceRequest } from "../shared/evidence-requests.ts";
 import type { Family, Packet, Source } from "../shared/models.ts";
 import { sourceKey } from "../shared/research.ts";
@@ -38,6 +42,7 @@ export type EvidenceFollowup = {
   missing: string[];
   error?: string;
   ignoredRequests?: number;
+  blocked?: BlockedEvidenceMatch[];
 };
 const otherGame =
   /borderlands\s*[_ -]*[234](?!\d)|\bbl[234]\b|[-_]bl[234]|pre[ -]?sequel|wonderlands/i;
@@ -69,6 +74,21 @@ export function evidenceAllowed(store: Store, f: Family, url: string) {
 }
 export function evidenceLibrary(store: Store, f: Family) {
   return store.storedArticles().filter((source) => {
+    if (
+      (source.manualText || source.selectedContent) &&
+      source.familyId !== f.id &&
+      !store
+        .sharedScopesFor(f)
+        .some(
+          (owner) =>
+            owner.id === source.familyId &&
+            !store.isSourceExcluded(owner.id, source.url) &&
+            owner.sourceUrls.some(
+              (url) => sourceKey(url) === sourceKey(source.url),
+            ),
+        )
+    )
+      return false;
     if (!evidenceAllowed(store, f, source.url)) return false;
     let name = source.title + " " + source.url;
     try {
@@ -186,6 +206,7 @@ export function searchSavedEvidence(
     requests: requests.slice(0, 3),
     matches: [],
     missing: [],
+    blocked: [],
   };
   const library = evidenceLibrary(store, f);
   const selected = new Set(
@@ -202,6 +223,31 @@ export function searchSavedEvidence(
     if (!terms.length) {
       report.missing.push(request.topic);
       continue;
+    }
+    // Only an explicit AI request triggers local matching against blocked pages.
+    // No excluded text, index facts or metadata are returned to any agent.
+    for (const source of store.storedArticles()) {
+      if (store.sourceInclusionMode(f.id, source.url) !== "never") continue;
+      let label = source.title + " " + source.url;
+      try {
+        label = decodeURIComponent(label);
+      } catch {}
+      if (otherGame.test(label)) continue;
+      if (
+        matchingCount(label, terms) < Math.min(2, terms.length) &&
+        !rawPassages(source, terms).some(
+          (quote) =>
+            matchingCount(label + " " + quote, terms) >=
+            Math.min(2, terms.length),
+        )
+      )
+        continue;
+      report.blocked!.push({
+        topic: request.topic,
+        reason: request.reason,
+        url: source.url,
+        title: source.title,
+      });
     }
     const candidates: { score: number; match: EvidenceMatch }[] = [];
     for (const source of library) {
@@ -313,6 +359,27 @@ export function searchSavedEvidence(
   }
   if (report.matches.length) report.status = "supplied";
   return report;
+}
+/** Durable, private notification; dismissing never changes inclusion or queues. */
+export function recordBlockedEvidenceNotice(
+  store: Store,
+  f: Family,
+  report: EvidenceFollowup,
+) {
+  if (!report.blocked?.length) return;
+  const id = hash(
+    stable({ inputKey: report.inputKey, blocked: report.blocked }),
+  );
+  const previous = store.get<EvidenceRequestNotice>(
+    f.id,
+    "evidenceRequestNotice",
+  );
+  if (previous?.id === id) return; // A retry must not resurrect a dismissed notice.
+  store.put(f.id, "evidenceRequestNotice", {
+    id,
+    requestedAt: new Date().toISOString(),
+    blocked: report.blocked,
+  } satisfies EvidenceRequestNotice);
 }
 /** Supplement only this draft's packet/ledger; canonical source bindings and saved full readings stay untouched. */
 export function applySavedEvidence(

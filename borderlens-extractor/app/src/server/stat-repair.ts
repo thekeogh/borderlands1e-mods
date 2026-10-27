@@ -1,3 +1,4 @@
+import { evidenceInput } from "../shared/evidence-stats.ts";
 import { z } from "zod";
 import type { Draft, Packet } from "../shared/models.ts";
 import type { AI } from "./worker.ts";
@@ -98,6 +99,7 @@ export async function repairCatalogueStats(
     model,
     false,
     progress,
+    evidenceInput("repair", facts),
   );
   if (
     result.rows.length !== facts.length ||

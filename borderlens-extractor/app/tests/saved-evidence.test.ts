@@ -16,6 +16,7 @@ import {
   MAX_FOLLOWUP_MATCHES,
   MAX_FOLLOWUP_QUOTE,
   searchSavedEvidence,
+  recordBlockedEvidenceNotice,
 } from "../src/server/saved-evidence.ts";
 import {
   COMPILER_VERSION,
@@ -540,4 +541,71 @@ test("explicit game-only builds do not request additional article context", asyn
   );
   assert(!calls.at(-1)!.prompt.includes(quote));
   assert.equal(s.get<any>(f.id, "evidenceFollowup").matches.length, 0);
+});
+
+test("blocked AI requests persist privately, survive restart, dismiss without changing sources or work, and reappear only for new requests", async (t) => {
+  const x = fixture(t, { request: true, blocked: true });
+  let { s } = x;
+  const { w, f, calls, extra } = x;
+  await w.step(f);
+  const notice = s.get<any>(f.id, "evidenceRequestNotice");
+  assert(notice?.id);
+  assert.equal(notice.blocked[0].topic, request.topic);
+  assert.equal(notice.blocked[0].url, extra.url);
+  assert(!JSON.stringify(notice).includes(quote));
+  assert(calls.every((call) => !call.prompt.includes(quote)));
+  assert.equal(calls.filter((c) => c.label.startsWith("Build ")).length, 1);
+  const report = s.get<any>(f.id, "evidenceFollowup");
+  assert.equal(report.blocked.length, 1);
+  s = x.reopen();
+  assert.deepEqual(s.get(f.id, "evidenceRequestNotice"), notice);
+  const { api } = await import("../src/server/http.ts");
+  const server = api(s, new Worker(s, {} as any)).listen(0, "127.0.0.1");
+  await new Promise<void>((r) => server.once("listening", r));
+  t.after(() => {
+    server.closeAllConnections();
+    server.close();
+  });
+  const base = `http://127.0.0.1:${(server.address() as any).port}`;
+  const post = (id: string) =>
+    fetch(`${base}/api/items/${f.id}/evidence-request-notice/dismiss`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+  assert.equal((await post("stale-notice")).status, 409);
+  const before = structuredClone(s.state);
+  const draft = s.get(f.id, "draft");
+  assert.equal((await post(notice.id)).status, 200);
+  assert(s.get<any>(f.id, "evidenceRequestNotice").dismissedAt);
+  assert.equal(s.sourceInclusionMode(f.id, url), "never");
+  assert.deepEqual(s.state.run, before.run);
+  assert.deepEqual(s.state.families, before.families);
+  assert.deepEqual(s.get(f.id, "draft"), draft);
+  const fetched = await fetch(`${base}/api/items/${f.id}`).then((r) =>
+    r.json(),
+  );
+  assert(fetched.evidenceRequestNotice.dismissedAt);
+  recordBlockedEvidenceNotice(s, s.family(f.id), report);
+  assert(s.get<any>(f.id, "evidenceRequestNotice").dismissedAt);
+  recordBlockedEvidenceNotice(s, s.family(f.id), {
+    ...report,
+    inputKey: "new-build-input",
+  });
+  assert(!s.get<any>(f.id, "evidenceRequestNotice").dismissedAt);
+  assert.notEqual(s.get<any>(f.id, "evidenceRequestNotice").id, notice.id);
+});
+
+test("Never remains authoritative when its parent binding moves and blocked-only cached context triggers a notice without an extra AI pass", async (t) => {
+  const { s, w, f, calls } = fixture(t, { request: true, blocked: true });
+  const owner = s.ensureScope({ category: "Everything" });
+  owner.sourceUrls = [];
+  f.sourceUrls.push(url + "#alias");
+  assert(s.sourceNeverIncluded(f.id, url));
+  assert(!s.sources(f.id).some((p) => p.url === url));
+  assert(!s.effectiveSourceUrls(f).some((u) => u.startsWith(url)));
+  await w.step(f);
+  assert(calls.every((c) => !c.prompt.includes(quote)));
+  assert(s.get<any>(f.id, "evidenceRequestNotice"));
+  assert.equal(calls.filter((c) => c.label.startsWith("Build ")).length, 1);
 });

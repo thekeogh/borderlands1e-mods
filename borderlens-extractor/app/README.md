@@ -10,7 +10,7 @@ Paths are relative to this folder (default configuration).
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `.data/workshop.sqlite`               | Built item JSON, drafts, extracted records, source facts, additional evidence requests/matches, corrections, shared evidence groups, removed items/sources, progress and settings. |
 | `.data/captures/`                     | Imported extractor ZIPs.                                                                                                                                                           |
-| `.data/sources/`                      | Saved Wiki/Lootlemon HTML, including Chrome captures.                                                                                                                              |
+| `.data/sources/`                      | Saved Wiki/Lootlemon HTML, Chrome captures and manual text snapshots.                                                                                                              |
 | `.data/classification-overrides.json` | Item category and weapon-type overrides.                                                                                                                                           |
 | `.data/name-overrides.json`           | Manual name locks, verified names, original identity and supporting proof.                                                                                                         |
 | `.data/image-overrides.json`          | Manual image selections.                                                                                                                                                           |
@@ -34,6 +34,28 @@ Every item's **Preview** sidebar has an **Item type** dropdown. Select a weapon 
 **Edit item name** in the Preview sidebar opens a text field with Save/Cancel. Saving updates navigation, existing JSON/drafts and export slugs immediately, without AI or rebuilding. Your manual name stays locked across builds, syncs, restarts, imports and generated-work resets; only another manual edit replaces it. Original identity and image matching remain intact. Full project reset clears all overrides.
 
 **Sync type** and **Sync name** remain available. These check saved game data, individual/inherited evidence and existing JSON using the selected agent, without fetching or building. Strongly supported changes move navigation immediately and update existing JSON/draft metadata; wording and raw records remain intact. Completed entries stay ready, metadata edits increment their revision, and unbuilt items gain no generated JSON. Uncertain results report the specific validation reason. Rarity/prefix disagreements do not block an otherwise verified type; exact title and defining-body evidence can corroborate each other. Invalid redundant citations are recorded privately, and unsupported identity/type claims still remain unchanged. Manual type overrides take priority; manual name locks also take priority over explicit name sync. Pause an active job first; syncing preserves the paused batch and starts no build.
+
+Each item's **Inherited evidence** header has **Set all**: Auto, Always include or Never include. It saves every inherited reference's mode for that item, including uncaptured pages, without starting work. Individual selectors remain editable. Auto selection is unchanged. Never include blocks the article before any AI reading/indexing, writing, sync or additional-context pass; a later permitted item can index it once and other permitted items reuse that saved analysis.
+
+If AI requests a topic matching a Never include article, a persistent **AI requested evidence you excluded** alert lists the topic and sources. The match is checked locally after the request; no excluded content is sent to AI. Builds continue unattended. Enable the source and rebuild to use it, or **Dismiss notice** to clear the alert while keeping your exclusions.
+
+The progress bar's **AI evidence** summary counts sources from the final payload at each actual CLI submission, after selection. Expand it for the exact source names, Direct/Auto/Always include mode, reading/indexing/writing/check phases, and saved analysis/response reuse. Repeated submissions count again; local cache hits are separate. This measures CLI input, not provider token usage/internal retries. The last item's stats stay visible until the next item. Completed/failed summaries are saved permanently in that item's **History**, beyond the rolling activity log. Existing builds have no retroactive counts.
+
+**Sources & evidence → Add text evidence** saves a pasted passage for this item. An optional Source / name label helps identify it. Entries show a **Manual text** pill; Show more displays exactly what you pasted. Text stays plain, with line breaks preserved; labels are not factual proof. No URL or full-page HTML is required. Add starts no AI call or build. It is read on the next build, survives website refresh/restart/generated reset, and supports remove/restore. Use **Move evidence to…** to share an entry with its immediate parent, then move it further up from Shared evidence if needed. Matching descendants inherit it with Auto/Always include/Never include controls. Shared manual entries show their full text and support removal/restoration. They are never fetched or borrowed outside their assigned scope.
+
+Use the **pencil** on any manual card to edit its label and text in place, then **Save changes** or **Cancel**. Shared edits apply to inheriting items on the next requested build; saving starts no build.
+
+Manual text has a purple notebook icon, badge and tinted row/card throughout the workshop, including inherited/shared evidence, saved viewers and AI input stats. Its appearance stays distinct for every inclusion mode; its name needs no special prefix.
+
+Beside each item’s rebuild button, **Included evidence** totals dedicated + Always include stored text, while **Auto · potential extra** stays separate. Never include is omitted; uncaptured sizes are flagged. These totals describe saved text, not actual AI payload or tokens.
+
+Evidence rows, cards and viewers show exact stored-text UTF-8 size (B/KB/MB) and a size guide: **Small** <8 KB, **Medium** 8–32 KB, **Large** 32–96 KB, **Very large** ≥96 KB. Hover for exact bytes and guidance on using an excerpt. These are document-size guides, not model limits or token counts; HTML, instructions, tables/sections and selected fact payloads can have different sizes. Uncaptured sources show Size unavailable. The same badges cover manual text, including a live size while pasting.
+
+**Always include** makes all indexed facts available to the writer; it does not require every fact in the final JSON. The writer may exclude unrelated shared facts, including numerical stats, with a recorded reason. Used stats still require matching values and source claims.
+
+Inherited webpage rows alternate backgrounds for easier scanning. Hover or keyboard focus highlights a row; manual rows use purple highlights. Never include rows fade until hovered/focused, while their controls remain usable.
+
+**Cancel run** sits beside Pause/Resume for single-item and batch queues. It stops the current agent call and clears the queue, deferred runs and Resume checkpoint. Saved evidence, drafts, completed JSON, corrections and revisions stay intact. Start a new run with your chosen source option. Cancellation does not trigger agent fallback or provider cooldowns; in-flight website requests may finish before it settles.
 
 ## Start
 
@@ -144,10 +166,18 @@ Grok must permit Build calls: if it reports **Legacy (no storage)** is unsupport
 Click **Chrome helper** in the toolbar. The app opens Chrome’s extensions page and provides the folder path. Enable **Developer mode**, click **Load unpacked**, select that folder and pin **Borderlens Page Capture**. This one-time Chrome step cannot be installed silently by a website. The connection indicator turns green when ready.
 
 1. Keep the workshop tab open. On an item’s **Sources & evidence**, click **Open wiki in Chrome** (or open a URL entered in the correction form).
-2. Wait until the actual article is visible. Click the pinned extension → **Send page to Borderlens**.
+2. Wait until the actual article is visible. Click the pinned extension → **Select content on page**.
+3. Hold **Ctrl** and drag boxes around useful text. Move boxes by their labels, resize corners, remove with ×, or **Fit content** to complete paragraphs/tables. Green means structurally complete; red needs review. Empty boxes cannot be sent.
+4. Check the floating panel’s preview and size. Partial selections require acknowledgement; click **Send to Borderlens**.
 3. Return to the workshop. The page is cached, its status updates automatically, and the changes are saved for your next requested build. Click **Rebuild from saved sources** to use them.
 
 No HTML copying or cookie sharing. It captures article content you explicitly send, not browser history or account fields. It makes no background wiki requests and does not solve access challenges. Imports received during processing wait for its next safe checkpoint. Each ticket is tied to one item/article and expires after 30 minutes; open the source again from the app if it expires. Capture does not automatically spend Codex allowance or start a new run.
+
+**Back to workshop** opens Sources & evidence and highlights the captured source (or its shared group). The extension’s **Close source tab when returning after capture** checkbox remembers your choice across browser restarts; it closes the matching source tab only after a saved capture and acknowledged return. Unsent source tabs stay open.
+
+Use **Recapture** on an external evidence card, inherited row or source viewer to reopen that exact URL for a fresh box selection. Shared recaptures save back to their displayed group. Sending replaces the previous saved content, including sections/tables and size; nothing changes until you send. Manual text entries use their pencil editor instead. No build starts automatically.
+
+Selected captures are labelled **Selected page content**, preserve selected headings/tables and deduplicate overlapping boxes. Only those excerpts reach future builds; missing content is not proof of absence. Excerpts stay attached to their item or explicitly promoted parent, survive website refresh and are replaced by recapturing that source. Refresh/navigation/closing the panel discards unsent boxes.
 
 The helper lives in `chrome-extension/`; the setup screen also offers a separate helper ZIP. Keep it in place after loading it. After moving this project or updating extension files, reload the helper through `chrome://extensions/` and refresh the workshop. Website catalogue ZIPs remain item-only.
 

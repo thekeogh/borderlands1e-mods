@@ -83,3 +83,13 @@ button:disabled {
 .success {
   color: #28683e !important;
 }
+
+.close-tab-preference {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #65745e;
+  margin: 12px 0;
+}

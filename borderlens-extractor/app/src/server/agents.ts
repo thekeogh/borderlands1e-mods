@@ -1,3 +1,6 @@
+import { RunCancelledError } from "../shared/run-cancellation.ts";
+import type { EvidenceInput } from "../shared/evidence-stats.ts";
+import { recordEvidenceEvent } from "./evidence-stats.ts";
 import { agentOutputSchema } from "../shared/agent-schema.ts";
 import path from "node:path";
 import { mkdirSync, existsSync, readFileSync } from "node:fs";
@@ -16,6 +19,16 @@ import type { AI } from "./worker.ts";
 type Failure = { message: string; at: string; until: number };
 export class AgentRouter implements AI {
   lastRun?: AgentRun;
+  private cancelled = false;
+  cancelCurrent() {
+    this.cancelled = true;
+    for (const runner of Object.values(this.runners)) runner?.cancelCurrent?.();
+  }
+  resetCancellation() {
+    this.cancelled = false;
+    for (const runner of Object.values(this.runners))
+      runner?.resetCancellation?.();
+  }
   private itemContext: string | null = null;
   setItemContext(id: string | null) {
     this.itemContext = id;
@@ -99,8 +112,19 @@ export class AgentRouter implements AI {
     model: string,
     search: boolean,
     onProgress: (message: string) => void,
+    input: EvidenceInput = { phase: "other", sources: [] },
   ): Promise<T> {
+    if (this.cancelled) throw new RunCancelledError();
     agentOutputSchema(schema);
+    // Confirm the manifest against the final prompt after all bounding/selection.
+    const actualInput = {
+      ...input,
+      sources: input.sources.filter(
+        (source) =>
+          prompt.includes(JSON.stringify(source.id)) ||
+          Boolean(source.url && prompt.includes(source.url)),
+      ),
+    };
     const selected = this.store.state.settings.agent;
     const other: Agent = selected === "grok" ? "codex" : "grok";
     const order: Agent[] = [selected, other].filter((agent) =>
@@ -123,6 +147,7 @@ export class AgentRouter implements AI {
     };
     const errors: string[] = [];
     for (const agent of order) {
+      if (this.cancelled) throw new RunCancelledError();
       const prior = this.failures[agent];
       if (prior && prior.until > Date.now()) {
         errors.push(`${agent}: ${prior.message}`);
@@ -140,7 +165,21 @@ export class AgentRouter implements AI {
           model,
           search,
           onProgress,
+          {
+            ...actualInput,
+            onEvent: (kind) => {
+              if (family)
+                recordEvidenceEvent(this.store, family, actualInput, {
+                  kind,
+                  label,
+                  agent,
+                  promptCharacters: prompt.length,
+                });
+              input.onEvent?.(kind);
+            },
+          },
         );
+        if (this.cancelled) throw new RunCancelledError();
         delete this.failures[agent];
         atomic(this.file, JSON.stringify(this.failures));
         this.lastRun = this.runners[agent]!.lastRun
@@ -151,6 +190,7 @@ export class AgentRouter implements AI {
           : undefined;
         return output;
       } catch (error: any) {
+        if (this.cancelled) throw new RunCancelledError();
         const message = String(error.message || error).slice(0, 1500);
         this.failures[agent] = {
           message,

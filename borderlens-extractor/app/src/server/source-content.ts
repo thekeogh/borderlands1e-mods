@@ -6,6 +6,24 @@ const clean = (text: string) =>
     .trim();
 export function parseSource(html: string) {
   const $ = load(html);
+  const selected =
+    $('meta[name="borderlens-capture"]').attr("content") === "selected";
+  const boxes = Number(
+    $('meta[name="borderlens-selection-count"]').attr("content"),
+  );
+  const warnings = Number(
+    $('meta[name="borderlens-selection-warnings"]').attr("content"),
+  );
+  const selectedContent =
+    selected &&
+    Number.isInteger(boxes) &&
+    boxes >= 1 &&
+    boxes <= 30 &&
+    Number.isInteger(warnings) &&
+    warnings >= 0 &&
+    warnings <= boxes
+      ? { boxes, warnings }
+      : undefined;
   $("script,style,nav,footer,header,iframe,noscript").remove();
   const title = $("h1").first().text().trim() || $("title").text().trim();
   const content = $(".mw-parser-output").first().length
@@ -63,5 +81,11 @@ export function parseSource(html: string) {
         rows,
       });
     });
-  return { title, text: clean(content.text()), sections, tables };
+  return {
+    title,
+    text: clean(content.text()),
+    sections,
+    tables,
+    ...(selectedContent ? { selectedContent } : {}),
+  };
 }

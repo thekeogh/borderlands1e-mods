@@ -1,3 +1,5 @@
+import { storedTextBytes } from "../shared/source-size.ts";
+import { isManualTextUrl } from "../shared/manual-evidence.ts";
 import { Names } from "./names.ts";
 import type {
   InheritedEvidence,
@@ -92,6 +94,35 @@ export class Store extends EventEmitter {
       );
     for (const f of this.state.families)
       if (f.status === "running") f.status = "queued";
+    if (this.state.run.cancelRequested) {
+      const old = this.state.run;
+      for (const id of new Set([
+        ...old.queue,
+        ...old.deferred,
+        ...(old.pendingFrom ? [old.pendingFrom] : []),
+        ...(this.state.buildCheckpoint?.queue || []),
+      ]))
+        this.forget(id, ["pendingRebuild"]);
+      const stats = this.state.evidenceStats;
+      if (stats && !stats.finishedAt) {
+        stats.finishedAt = new Date().toISOString();
+        stats.outcome = "cancelled";
+        const history =
+          this.get<import("../shared/evidence-stats.ts").EvidenceStats[]>(
+            stats.familyId,
+            "evidenceStatsHistory",
+          ) || [];
+        history.push(structuredClone(stats));
+        this.put(stats.familyId, "evidenceStatsHistory", history);
+      }
+      delete this.state.buildCheckpoint;
+      this.state.run = {
+        ...initial().run,
+        sourceMode: old.sourceMode === "fresh" ? "fresh" : "saved",
+        message:
+          "Run cancelled. Saved work is kept; start a new run when ready.",
+      };
+    }
     if (["running", "pausing"].includes(this.state.run.status)) {
       this.state.run.status = "paused";
       this.state.run.pauseRequested = false;
@@ -365,7 +396,9 @@ export class Store extends EventEmitter {
         ].every((value) => typeof value === "string")
       )
         continue;
-      const key = sourceKey(source.url),
+      const key =
+          sourceKey(source.url) +
+          (source.selectedContent ? "|selected:" + source.id : ""),
         previous = pages.get(key);
       if (
         !source.error &&
@@ -400,6 +433,7 @@ export class Store extends EventEmitter {
           previous = pages.get(key);
         if (
           !source.error &&
+          !source.selectedContent &&
           (!previous || (source.fetchedAt || "") >= (previous.fetchedAt || ""))
         )
           pages.set(key, source);
@@ -463,6 +497,14 @@ export class Store extends EventEmitter {
         ),
       ),
       cached = owner.sourceUrls
+        .filter(
+          (url) =>
+            !raw.some(
+              (source) =>
+                source.selectedContent &&
+                sourceKey(source.url) === sourceKey(url),
+            ),
+        )
         .map((url) => this.sharedCached(url))
         .filter(Boolean) as Source[];
     return [
@@ -503,19 +545,10 @@ export class Store extends EventEmitter {
     ].sort();
   }
   sourceNeverIncluded(family: string, url: string) {
-    if (this.sourceInclusionMode(family, url) !== "never") return false;
-    const f = this.state.families.find((f) => f.id === family);
-    return (
-      !!f &&
-      this.sharedScopesFor(f).some(
-        (owner) =>
-          !this.isSourceExcluded(owner.id, url) &&
-          owner.sourceUrls.some(
-            (candidate) => sourceKey(candidate) === sourceKey(url),
-          ),
-      )
-    );
+    // A saved Never preference remains authoritative even if its binding moves.
+    return this.sourceInclusionMode(family, url) === "never";
   }
+
   sourceAlwaysIncluded(family: string, url: string) {
     return this.sourceInclusionMode(family, url) === "always";
   }
@@ -536,7 +569,9 @@ export class Store extends EventEmitter {
           page =
             pages.get(key) ||
             (this.sourceNeverIncluded(f.id, url)
-              ? this.cachedSource(url)
+              ? this.scopeSources(owner).find(
+                  (source) => sourceKey(source.url) === key,
+                )
               : undefined);
         let entry = entries.get(key);
         if (!entry) {
@@ -551,6 +586,10 @@ export class Store extends EventEmitter {
             title: page?.title || title,
             parents: [],
             captured: !!page,
+            textBytes: page ? storedTextBytes(page.text) : null,
+            ...(page?.selectedContent
+              ? { selectedContent: page.selectedContent }
+              : {}),
             alwaysInclude: this.sourceAlwaysIncluded(f.id, url),
             inclusionMode: this.sourceInclusionMode(f.id, url),
           };
@@ -573,6 +612,7 @@ export class Store extends EventEmitter {
         urls
           .filter(
             (url) =>
+              !isManualTextUrl(url) &&
               !this.isSourceExcluded(f.id, url) &&
               !this.sourceNeverIncluded(f.id, url),
           )
@@ -624,6 +664,14 @@ export class Store extends EventEmitter {
     const owned = this.rawSources(family);
     const referenced = f
       ? [...new Set([...f.sourceUrls, ...owned.map((source) => source.url)])]
+          .filter(
+            (url) =>
+              ![...owned, ...inherited].some(
+                (source) =>
+                  source.selectedContent &&
+                  sourceKey(source.url) === sourceKey(url),
+              ),
+          )
           .map((url) => this.cachedSource(url))
           .filter(Boolean)
           .map((source) => {

@@ -46,6 +46,8 @@ export function sourceKey(input: string): string {
 
 /** Effective shared references, including URLs not yet captured. */
 export type InheritedEvidence = {
+  selectedContent?: { boxes: number; warnings: number };
+  textBytes?: number | null;
   url: string;
   title: string;
   parents: { id: string; name: string }[];

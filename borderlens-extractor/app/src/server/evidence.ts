@@ -180,13 +180,14 @@ export function buildPacket(
     evidence.push({
       id: s.id,
       kind: "page",
-      label: s.title || s.url,
+      label: s.manualText ? "Pasted text evidence" : s.title || s.url,
       value: {
         url: s.url,
         hash: s.hash,
         retrievedAt: s.fetchedAt,
         text: s.text,
         imported: s.imported,
+        ...(s.selectedContent ? { selectedContent: s.selectedContent } : {}),
         sections: s.sections || [],
         tables: s.tables || [],
       },
