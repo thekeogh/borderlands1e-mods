@@ -71,6 +71,7 @@ export class Store extends EventEmitter {
         ? path.join(dir, "image-library")
         : imageRoot,
       path.join(dir, "image-overrides.json"),
+      imageRoot,
     );
     this.classifications = new Classifications(
       path.join(dir, "classification-overrides.json"),
@@ -737,7 +738,7 @@ export class Store extends EventEmitter {
     this.articleIndex = undefined;
   }
   /** Reopen a validated full-project snapshot without running startup migrations. */
-  reopenExact(imageRoot = this.images.root) {
+  reopenExact(imageRoot = this.images.localRoot) {
     for (const folder of ["captures", "sources", "ai", "exports"])
       mkdirSync(path.join(this.dir, folder), { recursive: true });
     this.db = new DatabaseSync(path.join(this.dir, "workshop.sqlite"));
@@ -756,6 +757,7 @@ export class Store extends EventEmitter {
         ? path.join(this.dir, "image-library")
         : imageRoot,
       path.join(this.dir, "image-overrides.json"),
+      imageRoot,
     );
     this.records = new Map();
     this.reloadRecords();

@@ -82,6 +82,38 @@ test("image matching is category-scoped, handles punctuation/aliases and exposes
   reopened.set(f.id, null, true);
   assert.equal(reopened.match(f).method, "ambiguous");
 });
+test("artifacts accept names without the redundant suffix while preserving character specificity and full-name priority", (t) => {
+  const { images, add, root } = setup(t);
+  mkdirSync(path.join(root, "artifacts"));
+  add("artifacts/brick-corrosive.png");
+  add("artifacts/lilith-corrosive.png");
+  add("artifacts/corrosive-artifact.png");
+  const family = {
+    id: "brick-corrosive",
+    name: "Corrosive Artifact",
+    category: "Artifacts" as const,
+    character: "Brick" as const,
+    aliases: [],
+  };
+  images.refresh();
+  assert.equal(images.match(family).image, "artifacts/brick-corrosive.png");
+  assert.equal(
+    images.match({ ...family, character: "Lilith" }).image,
+    "artifacts/lilith-corrosive.png",
+  );
+  add("artifacts/brick-corrosive-artifact.png");
+  images.refresh();
+  assert.equal(
+    images.match(family).image,
+    "artifacts/brick-corrosive-artifact.png",
+  );
+  rmSync(path.join(root, "artifacts/brick-corrosive-artifact.png"));
+  add("artifacts/brick-corrosive.webp");
+  images.refresh();
+  assert.equal(images.match(family).method, "ambiguous");
+  images.set(family.id, "artifacts/brick-corrosive.png");
+  assert.equal(images.match(family).method, "manual");
+});
 test("new files refresh automatically; unsafe files and symlinks are never served", (t) => {
   const { images, add, root, dir, f } = setup(t);
   assert.equal(images.match(f).image, null);
@@ -296,10 +328,35 @@ test("restored images inside hidden project directories are served as PNGs witho
     worker = new Worker(store);
   t.after(() => store.close());
   assert.equal(store.images.root, library);
+  mkdirSync(path.join(root, "artifacts"), { recursive: true });
+  mkdirSync(path.join(root, "other", "nested"), { recursive: true });
+  addImage("artifacts/Brick Corrosive (1).png");
+  addImage("other/nested/storage-upgrade.png");
+  addImage("standalone.png");
+  function addImage(relative: string) {
+    writeFileSync(path.join(root, relative), pixel);
+  }
   const server = api(store, worker).listen(0, "127.0.0.1");
   await new Promise<void>((resolve) => server.once("listening", resolve));
   t.after(() => server.close());
   const base = `http://127.0.0.1:${(server.address() as any).port}`;
+  const listing = await fetch(base + "/api/images").then((r) => r.json());
+  for (const name of [
+    "weapons/hellfire.png",
+    "artifacts/Brick Corrosive (1).png",
+    "other/nested/storage-upgrade.png",
+    "standalone.png",
+  ]) {
+    assert.ok(listing.files.includes(name), name);
+    const asset = await fetch(
+      base +
+        "/api/images/file/" +
+        name.split("/").map(encodeURIComponent).join("/"),
+    );
+    assert.equal(asset.status, 200, name);
+    assert.deepEqual(Buffer.from(await asset.arrayBuffer()), pixel);
+  }
+  store.images.set("manual-new-image", "other/nested/storage-upgrade.png");
   const response = await fetch(
     base + "/api/images/file/weapons/hellfire.png?v=restored",
   );

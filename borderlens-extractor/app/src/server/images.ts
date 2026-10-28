@@ -34,34 +34,46 @@ export class Images {
   files: string[] = [];
   private entries: Record<string, string | null> = {};
   private stamp = "";
+  private paths = new Map<string, string>();
+  get roots() {
+    return [...new Set([this.root, this.localRoot])];
+  }
   constructor(
     public root: string,
     public overridesFile: string,
+    public localRoot = root,
   ) {
     this.refresh();
   }
   refresh() {
     const files: string[] = [],
       stamps: unknown[] = [];
-    if (existsSync(this.root)) {
-      const root = realpathSync(this.root);
-      for (const folderEntry of readdirSync(root, { withFileTypes: true })) {
-        if (!folderEntry.isDirectory()) continue;
-        const folder = folderEntry.name;
-        const dir = path.join(root, folder);
-        if (!existsSync(dir) || !realpathSync(dir).startsWith(root + path.sep))
-          continue;
+    this.paths.clear();
+    for (const library of this.roots) {
+      if (!existsSync(library)) continue;
+      const root = realpathSync(library);
+      const scan = (dir: string, prefix = "") => {
         for (const entry of readdirSync(dir, { withFileTypes: true })) {
-          const relative = folder + "/" + entry.name;
-          if (!entry.isFile() || !ImagePath.safeParse(relative).success)
-            continue;
-          const full = realpathSync(path.join(dir, entry.name));
-          if (!full.startsWith(root + path.sep)) continue;
-          const stat = statSync(full);
-          files.push(relative);
-          stamps.push([relative, stat.size, stat.mtimeMs]);
+          if (entry.name.startsWith(".")) continue;
+          const relative = prefix + entry.name;
+          const full = path.join(dir, entry.name);
+          // Do not follow symlinks, including directory links outside the library.
+          if (entry.isDirectory()) scan(full, relative + "/");
+          else if (entry.isFile() && ImagePath.safeParse(relative).success) {
+            const resolved = realpathSync(full);
+            if (
+              !resolved.startsWith(root + path.sep) ||
+              this.paths.has(relative)
+            )
+              continue;
+            const stat = statSync(resolved);
+            this.paths.set(relative, resolved);
+            files.push(relative);
+            stamps.push([relative, resolved, stat.size, stat.mtimeMs]);
+          }
         }
-      }
+      };
+      scan(root);
     }
     this.files = files.sort();
     this.entries = existsSync(this.overridesFile)
@@ -98,6 +110,8 @@ export class Images {
           (f.category === "Artifacts" && file.startsWith("artifact/")),
       );
     const stem = (file: string) => path.basename(file, path.extname(file));
+    const shortName =
+      f.category === "Artifacts" ? f.name.replace(/\s+artifact$/i, "") : f.name;
     const choose = (
       matches: string[],
       method: ImageMatch["method"],
@@ -110,15 +124,17 @@ export class Images {
           }
         : undefined;
     if (f.character) {
-      const specific = choose(
-        local.filter((file) =>
-          [f.character + " " + f.name, f.name + " " + f.character].some(
-            (name) => normalized(name) === normalized(stem(file)),
+      for (const name of new Set([f.name, shortName])) {
+        const specific = choose(
+          local.filter((file) =>
+            [f.character + " " + name, name + " " + f.character].some(
+              (candidate) => normalized(candidate) === normalized(stem(file)),
+            ),
           ),
-        ),
-        "normalized",
-      );
-      if (specific) return specific;
+          "normalized",
+        );
+        if (specific) return specific;
+      }
     }
     const exact = choose(
       local.filter((file) => stem(file) === itemSlug(f.name)),
@@ -137,6 +153,15 @@ export class Images {
       "alias",
     );
     if (byAlias) return byAlias;
+    if (shortName !== f.name) {
+      const shortened = choose(
+        local.filter(
+          (file) => normalized(stem(file)) === normalized(shortName),
+        ),
+        "normalized",
+      );
+      if (shortened) return shortened;
+    }
     // Unclassified equipment can have a uniquely named image in a known folder.
     if (f.category === "Other equipment") {
       const matches = this.files.filter((file) =>
@@ -206,8 +231,6 @@ export class Images {
     if (!ImagePath.safeParse(relative).success) return null;
     this.refresh();
     if (!this.files.includes(relative)) return null;
-    const root = realpathSync(this.root),
-      full = realpathSync(path.join(root, relative));
-    return full.startsWith(root + path.sep) ? full : null;
+    return this.paths.get(relative) || null;
   }
 }

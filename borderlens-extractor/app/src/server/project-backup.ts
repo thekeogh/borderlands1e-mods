@@ -188,7 +188,7 @@ export function exportProject(worker: Worker, ui: BackupUI) {
       zip.addFile(name, bytes);
       files.push({ path: name, bytes: bytes.length, sha256: hash(bytes) });
     };
-    const images = path.resolve(store.images.root);
+    const imageRoots = store.images.roots.map((root) => path.resolve(root));
     walk(
       store.dir,
       (name, full) => {
@@ -202,11 +202,18 @@ export function exportProject(worker: Worker, ui: BackupUI) {
           return;
         add("data/" + name, full);
       },
-      (full) => path.resolve(full) === images,
+      (full) => imageRoots.includes(path.resolve(full)),
     );
     add("data/workshop.sqlite", snapshot);
-    if (existsSync(images))
-      walk(images, (name, full) => add("images/" + name, full));
+    const includedImages = new Set<string>();
+    for (const images of imageRoots) {
+      if (!existsSync(images)) continue;
+      walk(images, (name, full) => {
+        if (includedImages.has(name)) return;
+        includedImages.add(name);
+        add("images/" + name, full);
+      });
+    }
     const manifest = Manifest.parse({
       format: "borderlens-project-backup",
       version: 1,
@@ -359,7 +366,7 @@ export function importProject(worker: Worker, archive: string | Buffer) {
   let moved = false,
     installed = false,
     closed = false;
-  const oldImageRoot = store.images.root;
+  const oldImageRoot = store.images.localRoot;
   const previous =
     store.dir +
     ".before-restore-" +

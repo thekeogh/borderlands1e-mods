@@ -339,3 +339,45 @@ test("API exports/restores ZIPs and rejects active work/cross-origin restore", a
   assert.equal(imported.status, 200);
   assert.equal(s.get<any>("one", "output").summary, "Saved JSON");
 });
+
+test("backups retain both restored images and files added to the local library", (t) => {
+  const { s, w } = fixture(t);
+  const first = exportProject(w, ui);
+  importProject(w, first.buffer);
+  mkdirSync(path.join(s.images.localRoot, "other", "nested"), {
+    recursive: true,
+  });
+  writeFileSync(
+    path.join(s.images.localRoot, "other", "nested", "new.png"),
+    "new local image",
+  );
+  mkdirSync(path.join(s.images.root, "shields"), { recursive: true });
+  writeFileSync(
+    path.join(s.images.root, "shields", "restored-only.png"),
+    "restored image",
+  );
+  const second = exportProject(w, ui);
+  const zip = new AdmZip(second.buffer);
+  assert.equal(
+    zip.readAsText("images/other/nested/new.png"),
+    "new local image",
+  );
+  assert.equal(
+    zip.readAsText("images/shields/restored-only.png"),
+    "restored image",
+  );
+  assert.ok(
+    !zip
+      .getEntries()
+      .some((e) => e.entryName.startsWith("data/image-library/")),
+  );
+  importProject(w, second.buffer);
+  assert.equal(
+    readFileSync(s.images.file("other/nested/new.png")!, "utf8"),
+    "new local image",
+  );
+  assert.equal(
+    readFileSync(s.images.file("shields/restored-only.png")!, "utf8"),
+    "restored image",
+  );
+});

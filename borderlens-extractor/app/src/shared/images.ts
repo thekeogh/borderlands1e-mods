@@ -1,7 +1,19 @@
 import { z } from "zod";
 export const ImagePath = z
   .string()
-  .regex(/^[a-z0-9][a-z0-9_-]*\/[a-z0-9][a-z0-9_-]*\.(png|jpe?g|webp|avif)$/i);
+  .refine(
+    (value) =>
+      /\.(png|jpe?g|webp|avif|gif)$/i.test(value) &&
+      value
+        .split("/")
+        .every(
+          (segment) =>
+            segment.length > 0 &&
+            !segment.startsWith(".") &&
+            !/[\\:\u0000-\u001f\u007f]/.test(segment),
+        ),
+    "Choose a relative image path inside the local library.",
+  );
 export const ImageMatch = z
   .object({
     image: ImagePath.nullable(),

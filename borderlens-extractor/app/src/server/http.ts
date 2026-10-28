@@ -223,10 +223,8 @@ export function api(store: Store, worker: Worker) {
     store.syncClassifications();
     res.json(store.images.coverage(store.state.families));
   });
-  app.get("/api/images/file/:folder/:filename", (req, res) => {
-    const file = store.images.file(
-      req.params.folder + "/" + req.params.filename,
-    );
+  app.get("/api/images/file/*imagePath", (req, res) => {
+    const file = store.images.file(req.params.imagePath.join("/"));
     if (!file) throw new HttpError(404, "Image not found.");
     // Images.file already validates the extension and real path within the library.
     // Pass the filename relative to its directory so a restored library under
