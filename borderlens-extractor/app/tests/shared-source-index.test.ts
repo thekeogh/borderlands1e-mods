@@ -91,7 +91,7 @@ function fixture(t: any) {
   const ai = {
     run: async (label: string, prompt: string, schema: any) => {
       calls.prompts.push(prompt);
-      if (label === "Read source shared article") {
+      if (label.startsWith("Read source shared article")) {
         calls.shared++;
         assert(!prompt.includes("Family: Bad Ass"));
         return schema.parse({
@@ -289,7 +289,7 @@ test("bad shared extraction falls back to full per-item reading; no partial inde
     f = s.state.families[0];
   const fallback = {
     run: async (label: string, prompt: string, schema: any) =>
-      label === "Read source shared article"
+      label.startsWith("Read source shared article")
         ? {
             ...emptySourceReading("Class mods"),
             facts: [fact("Invented fact which is not in this page.", scope())],

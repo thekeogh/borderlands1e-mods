@@ -144,7 +144,7 @@ test("game view is available before building and exposes only original identity,
   assert.equal(view.family.name, "Fixture");
   assert.equal(view.family.subtype, "SMGs");
   assert.deepEqual(view.facts, {
-    dlc: null,
+    dlc: "Base Game",
     redText: "Original extracted red text.",
     manufacturers: ["Maliwan"],
     rarities: ["Legendary"],
@@ -180,7 +180,7 @@ test("view stays identical after source capture, shared evidence, overrides, man
   s.put(f.id, "packet", { facts: { redText: "Generated packet text" } });
   s.put(f.id, "output", {
     schemaVersion: "7",
-    compilerVersion: "0.11.2",
+    compilerVersion: "0.15.1",
     summary: "Generated output",
   });
   f.name = "Corrected name";

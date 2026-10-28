@@ -178,7 +178,7 @@ export function useChromeHelper(callbacks: {
       const ticket = await api("/api/chrome-helper/jobs", { familyId, url });
       await helperMessage("OPEN_SOURCE", ticket);
       current.current.saved(
-        "Article opened in Chrome. When it is visible, click Borderlens Page Capture → Select content on page, then Ctrl-drag and send your selections.",
+        "Article opened in Chrome. Click Borderlens Page Capture, then select content with boxes or choose Capture whole page.",
       );
     } catch (error: any) {
       current.current.error(error.message);
@@ -318,9 +318,11 @@ export function ChromeHelperSetup({
           <p>
             On an item’s Sources & evidence tab, click{" "}
             <b>Open wiki in Chrome</b>. Once loaded, click the extension icon →{" "}
-            <b>Select content on page</b>. Hold Ctrl and drag boxes, check the
-            preview, then send from the floating panel. Return here to rebuild
-            the item.
+            <b>Select content on page</b> for boxes, or{" "}
+            <b>Capture whole page</b>
+            to save all loaded article content. Box selections still support
+            preview, resizing and sending from the floating panel. Return here
+            to rebuild the item.
           </p>
           <small>
             Keep this workshop tab open. Imports received during processing are

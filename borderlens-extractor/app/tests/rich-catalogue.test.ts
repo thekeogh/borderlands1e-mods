@@ -78,7 +78,7 @@ function entry(f: Family) {
     compilerVersion: COMPILER_VERSION,
     id: f.id,
     name: f.name,
-    dlc: null,
+    dlc: "Base Game",
     category: f.category,
     weaponType: "SMGs",
     summary: "A short and useful overview of the fixture family.",
@@ -138,6 +138,11 @@ function draft(store: Store) {
           field: "description",
           evidenceIds: [p.evidence[0].id],
           basis: "Fixture identity.",
+        },
+        {
+          field: "dlc",
+          evidenceIds: [p.evidence[0].id],
+          basis: "Reviewed base-package fixture identity.",
         },
         {
           field: "parts",

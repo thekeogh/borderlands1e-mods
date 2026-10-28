@@ -251,3 +251,24 @@ test("fixed nullable-root schema errors do not keep Codex in provider cooldown; 
   );
   assert.equal(readFileSync(file, "utf8"), original);
 });
+
+test("fixed nested oneOf rejection clears only the affected provider cooldown", (t) => {
+  const s = setup(t),
+    file = path.join(s.dir, "ai", "agent-failures.json");
+  const failure = { at: new Date().toISOString(), until: Date.now() + 600000 };
+  writeFileSync(
+    file,
+    JSON.stringify({
+      codex: {
+        ...failure,
+        message:
+          "Invalid schema for response_format 'codex_output_schema': 'schema.properties.facts.items.properties.structured.anyOf.0.oneOf' is not permitted when strict is true.",
+      },
+      grok: { ...failure, message: "Real capacity failure" },
+    }),
+  );
+  new AgentRouter(s, {});
+  const persisted = JSON.parse(readFileSync(file, "utf8"));
+  assert(!persisted.codex);
+  assert.equal(persisted.grok.message, "Real capacity failure");
+});

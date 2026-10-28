@@ -1,4 +1,4 @@
-# Borderlens Page Capture 1.2.0
+# Borderlens Page Capture 1.3.0
 
 Use **Chrome helper** in the local workshop for setup.
 
@@ -7,7 +7,16 @@ Use **Chrome helper** in the local workshop for setup.
 3. Pin **Borderlens Page Capture** using Chrome’s Extensions puzzle menu.
 
 Keep the workshop open. Open a Wiki/Lootlemon source from the workshop, click the
-pinned extension, then **Select content on page**. A floating panel appears:
+pinned extension. Choose **Capture whole page** to immediately save all loaded
+article text and tables, or **Select content on page** for boxes. Whole-page capture
+also appears in the floating panel and requires no selected boxes. It includes
+loaded Lootlemon tab content even on pages without a main/article element. It
+cannot load data the website has not rendered yet; wait for the content to load.
+Sending either mode uses the same source/recapture ticket and return preferences.
+A whole-page recapture replaces an earlier excerpt, and a selection recapture
+can replace a full page. Both preserve the source's owner and do not start builds.
+
+For **Select content on page**, a floating panel appears:
 
 - Hold **Ctrl** and drag to select text. Release the mouse or Ctrl to save a box.
 - Repeat for up to 30 boxes. Drag labels to move boxes; drag corners to resize.

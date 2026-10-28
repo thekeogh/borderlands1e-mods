@@ -1,5 +1,73 @@
 # Changelog
 
+## Workshop app 0.52.3
+
+- Serve validated image filenames relative to their library directory, fixing images restored under hidden .data paths being rejected by the file server. Keep existing path/extension/symlink checks; no image files moved or changed.
+- Test actual image decoding after backup restore into a hidden project directory.
+
+## Workshop app 0.52.2 / Compiler 0.15.1
+
+- Preserve AI evidence claims for part effects and stat/source/variant/level prose when assembling fixed factual values. Previously these citations were discarded, causing repeated source-accounting corrections despite correct model output.
+- Treat incomplete used-fact field citations as non-blocking notes in best-effort automatic builds; keep invalid/unavailable fact references and core data checks intact. Compatible source readings remain reusable.
+
+## Workshop app 0.52.1 / Chrome helper 1.3.0
+
+- Restore optional Capture whole page in the popup and selection panel while retaining box selection, previews, resizing and partial-selection checks. Capture loaded Wiki/Lootlemon text and tables, including loaded Lootlemon tab panels without requiring main markup.
+- Keep the existing bound import/recapture, ownership, overwrite and return/close-tab flow. Strip forms, scripts, navigation and extension UI; do not fetch unloaded content or start builds. Bundle the full-page script in the downloadable helper ZIP.
+
+## Workshop app 0.52.0 / Compiler 0.15.0
+
+- Consolidate complementary acquisition facts before AI wording; retain per-fact reward, rank and playthrough context, complete evidence claims and the more specific source URL. Preserve separate locations and conditional probabilities.
+- Merge source aliases only with explicit captured equivalence quotes, including across conditional-rate rows. No fuzzy enemy-name matching.
+- Establish Base Game from reviewed original identity packages or explicit saved origin properties; unknown/mixed/mod packages stay unknown. Preview displays Unknown separately from Base Game. Include origin claims when saving manual JSON.
+- Decouple compatible source interpretation caching from prose/compiler releases. Existing evidence and 0.14 readings remain reusable; changes apply on requested rebuilds, without stricter uncertainty validation.
+
+## Workshop app 0.51.0 / Compiler 0.14.0
+
+- Complete automatic builds with non-blocking notes for optional naming/progression uncertainty, same-priority numerical disagreements and minor prose issues. Keep supported values without requiring perfect research.
+- Allow omission of ambiguous optional sources/variants and missing-evidence conditions; numeric wording differences no longer trigger correction loops. Preserve core identity, bounds, schema, original wording and part relationship checks.
+- Show persisted build notes in Preview and retain them in provenance, History and backups. Existing evidence remains reusable.
+
+## Workshop app 0.50.2 / Compiler 0.13.1
+
+- Prevent uncertain shared facts from supplying fixed properties across incompatible category, character, element or weapon-type scopes. Always include keeps evidence available without overriding factual ownership. Reassemble from saved readings; no recapture required.
+- State both special-effect limits in the prose prompt and target special-effect corrections without changing unrelated valid prose. Report genuine factual-review conflicts before cosmetic validation errors.
+
+## Workshop app 0.50.1
+
+- Normalize nested discriminated unions to provider-supported anyOf schemas. Prevent Codex schema rejection and unintended Grok fallback; clear cooldowns caused by this fixed schema error on restart.
+
+## Workshop app 0.50.0 / Compiler 0.13.0
+
+- Assemble structured catalogue data in code from identity-linked game properties and accepted, scoped source facts. AI returns original prose and private evidence accounting; it cannot rewrite numeric values, maker/origin/type fields, stat contexts or accepted relationships.
+- Add conservative offline extraction for complete, item-bound property and min/max tables; unfamiliar, partial, mixed-game and ambiguous layouts retain cached AI interpretation. Remove proven duplicate section bodies from interpretation requests without changing saved captures.
+- Add typed fact values, provenance/acceptance records, exhaustive-versus-partial property lists and deterministic same-scope source priority. Related skill/other-item baselines stay context. Do not infer roll extrema from raw defaults.
+- Correct only affected prose/accounting groups; retain valid text and previous feedback. Cache validated source-interpretation corrections by evidence version. Publish output/revision/provenance together in a SQLite savepoint.
+- Record prompt bytes/characters and CLI elapsed time; label extraction retries with their reason. Keep new facts/corrections in complete backups; generated resets retain accepted research and clear compiled outlines/prose.
+- Keep URL discovery, Chrome selection, source modes, manual overrides, manual JSON protection and image matching. No recapture or automatic build required; next requested build refreshes incompatible readings. Public schemas unchanged.
+
+## Workshop app 0.49.0 / Compiler 0.12.0
+
+- General evidence semantics across all equipment: distinguish item properties, shared mechanics, illustrative examples, component values, ordinal progression and descriptive labels during source reading and shared indexing. Carry explicit manufacturer/origin evidence privately.
+- Writer and correction instructions preserve established Base Game/DLC origins, require actual maker attribution, keep non-item numbers out of item stats/level bounds, and combine rank-only progression rather than padding variants. Validators reject semantic misplacement instead of patching final JSON; stat repairs cannot restore excluded numeric roles.
+- Invalidate old reading/selection caches for the new policy on the next requested build. Retain existing output/manual corrections; no automatic builds or source fetches. Image matching and legitimate null images unchanged. Public schemas unchanged.
+
+## Workshop app 0.48.1
+
+- Add View stored content to saved inherited evidence rows, including manual text and Never include sources. Open the existing full-text/sections/record/HTML viewer without fetching websites or changing inclusion. Recapture from this viewer targets the shared owner.
+
+## Workshop app 0.48.0
+
+- Add a matching green/gold Borderlens b. favicon.
+
+- Audit reset scopes: full reset recreates the database/data folder, clears restored images, unknown stale files, owned recovery/staging copies and browser project layout. Retain app assets and externally saved backups.
+- Generated reset also clears retry/validation/follow-up state, current telemetry/checkpoints, CLI caches and internal exports; retain research, corrections, histories and manually saved JSON/dependencies. Recreate in-memory services without starting work; guard active processing/coverage/metadata sync.
+
+## Workshop app 0.47.0
+
+- Add Settings → Export Data / Import Data for complete timestamped project ZIPs: SQLite snapshot, original game archives, all evidence, generated JSON/drafts/history, overrides, caches and images, plus item/tab/navigation layout.
+- Native Save As on supporting browsers; browser-download fallback. Import validates checksums/paths/database/dependencies before atomic replacement, retains a recovery copy and rolls back failed restores. Paused checkpoints stay paused; no automatic builds.
+
 ## Workshop app 0.46.0 / Chrome helper 1.2.0
 
 - Back to workshop selects Sources & evidence, opens the correct item/shared group and scrolls to/highlights the source.

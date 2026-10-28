@@ -324,6 +324,7 @@ export type Evidence = {
   value: unknown;
 };
 export type Packet = {
+  identityNames?: string[];
   character?: Family["character"];
   element?: Family["element"];
   familyId: string;

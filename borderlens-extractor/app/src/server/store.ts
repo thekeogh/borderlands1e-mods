@@ -66,7 +66,12 @@ export class Store extends EventEmitter {
     mkdirSync(dir, { recursive: true });
     for (const d of ["captures", "sources", "ai", "exports"])
       mkdirSync(path.join(dir, d), { recursive: true });
-    this.images = new Images(imageRoot, path.join(dir, "image-overrides.json"));
+    this.images = new Images(
+      existsSync(path.join(dir, "image-library"))
+        ? path.join(dir, "image-library")
+        : imageRoot,
+      path.join(dir, "image-overrides.json"),
+    );
     this.classifications = new Classifications(
       path.join(dir, "classification-overrides.json"),
     );
@@ -727,6 +732,34 @@ export class Store extends EventEmitter {
       this.state.sharedScopes?.find((f) => f.id === id);
     if (!f) throw new HttpError(404, "Item not found.");
     return f;
+  }
+  clearArticleCache() {
+    this.articleIndex = undefined;
+  }
+  /** Reopen a validated full-project snapshot without running startup migrations. */
+  reopenExact(imageRoot = this.images.root) {
+    for (const folder of ["captures", "sources", "ai", "exports"])
+      mkdirSync(path.join(this.dir, folder), { recursive: true });
+    this.db = new DatabaseSync(path.join(this.dir, "workshop.sqlite"));
+    this.db.exec("PRAGMA journal_mode=WAL");
+    const row = this.db
+      .prepare("SELECT value FROM meta WHERE key='project'")
+      .get() as { value: string };
+    this.state = JSON.parse(row.value);
+    this.articleIndex = undefined;
+    this.classifications = new Classifications(
+      path.join(this.dir, "classification-overrides.json"),
+    );
+    this.names = new Names(path.join(this.dir, "name-overrides.json"));
+    this.images = new Images(
+      existsSync(path.join(this.dir, "image-library"))
+        ? path.join(this.dir, "image-library")
+        : imageRoot,
+      path.join(this.dir, "image-overrides.json"),
+    );
+    this.records = new Map();
+    this.reloadRecords();
+    this.emit("change", this.state.revision);
   }
   close() {
     this.db.close();

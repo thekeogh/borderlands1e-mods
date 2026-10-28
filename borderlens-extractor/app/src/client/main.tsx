@@ -1,3 +1,4 @@
+import { ProjectBackupActions, readRestoredBackupUI } from "./project-backup";
 import { SourceRecapture } from "./source-recapture";
 import { EvidenceSizeSummary } from "./evidence-size-summary";
 import { ManualEvidenceEdit } from "./manual-evidence-edit";
@@ -86,7 +87,11 @@ import type {
 import "./style.css";
 type Detail = {
   extractedDlc: import("../shared/content").ItemDLC;
-  finalValidation: { checkedAt: string; compilerVersion: string } | null;
+  finalValidation: {
+    checkedAt: string;
+    compilerVersion: string;
+    warnings?: string[];
+  } | null;
   image: ImageMatch;
   savedRebuild: { available: boolean; reason: string };
   websiteOutput: import("../shared/website").WebsiteEntry | null;
@@ -142,19 +147,28 @@ const statusLabel = {
   excluded: "Removed",
 };
 function App() {
+  const [restoredUI] = useState(readRestoredBackupUI);
+  useEffect(() => {
+    localStorage.removeItem("borderlens.restored-ui");
+  }, []);
   const [state, setState] = useState<Project | null>(null),
     [images, setImages] = useState<ImageCoverage | null>(null),
     [selected, setSelected] = useState(
-      localStorage.getItem("borderlens.selection") || "",
+      restoredUI?.selection ||
+        localStorage.getItem("borderlens.selection") ||
+        "",
     ),
     [detail, setDetail] = useState<Detail | null>(null),
-    [tab, setTab] = useState("preview"),
-    [view, setView] = useState("catalogue"),
-    [query, setQuery] = useState(""),
-    [filter, setFilter] = useState("all"),
+    [tab, setTab] = useState(restoredUI?.tab || "preview"),
+    [view, setView] = useState(restoredUI?.view || "catalogue"),
+    [query, setQuery] = useState(restoredUI?.query || ""),
+    [filter, setFilter] = useState(restoredUI?.filter || "all"),
     [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
       try {
-        return JSON.parse(localStorage.getItem("borderlens.groups") || "{}");
+        return (
+          restoredUI?.groups ||
+          JSON.parse(localStorage.getItem("borderlens.groups") || "{}")
+        );
       } catch {
         return {};
       }
@@ -1343,6 +1357,25 @@ function App() {
                           <CheckCircle2 size={14} /> Final JSON checked
                         </p>
                       )}
+                    {output && !!detail?.finalValidation?.warnings?.length && (
+                      <details className="notice">
+                        <summary>
+                          Built with {detail.finalValidation.warnings.length}{" "}
+                          notes
+                        </summary>
+                        <p className="muted">
+                          Saved successfully. These uncertainties do not block
+                          this item.
+                        </p>
+                        <ul>
+                          {detail.finalValidation.warnings.map(
+                            (warning, index) => (
+                              <li key={index}>{warning}</li>
+                            ),
+                          )}
+                        </ul>
+                      </details>
+                    )}
                     {output ? (
                       <>
                         <div className="preview-tags">
@@ -1582,7 +1615,7 @@ function App() {
                       <dd>
                         {detail?.extractedDlc ||
                           output?.dlc ||
-                          "Not established yet"}
+                          "Unknown"}
                       </dd>
                       <dt>Game evidence</dt>
                       <dd>
@@ -1732,6 +1765,35 @@ function App() {
                     </div>
                     <InheritedEvidenceList
                       items={detail?.inheritedEvidence || []}
+                      view={async (item) => {
+                        const key = sourceKey(item.url);
+                        let saved = detail?.sources.find(
+                          (source) => sourceKey(source.url) === key,
+                        );
+                        let owner =
+                          item.parents.find(
+                            (parent) => parent.id === saved?.inheritedFrom?.id,
+                          ) || item.parents[0];
+                        if (!saved) {
+                          for (const parent of item.parents) {
+                            const shared = await request<Detail>(
+                              `/api/items/${encodeURIComponent(parent.id)}`,
+                            );
+                            saved = shared.sources.find(
+                              (source) => sourceKey(source.url) === key,
+                            );
+                            if (saved) {
+                              owner = parent;
+                              break;
+                            }
+                          }
+                        }
+                        if (!saved)
+                          throw new Error(
+                            "Saved source is no longer available. Refresh the evidence list.",
+                          );
+                        setViewedSource({ ...saved, inheritedFrom: owner });
+                      }}
                       recapture={(ownerId, url) =>
                         chromeHelper.openPage(ownerId, url)
                       }
@@ -2364,7 +2426,7 @@ function App() {
         </main>
         <footer>
           <span>ONE FAMILY. EVERY DETAIL.</span>
-          <span>Borderlens workshop · 0.46.0</span>
+          <span>Borderlens workshop · 0.52.3</span>
         </footer>
       </section>
       <input
@@ -2385,7 +2447,8 @@ function App() {
           recapture={() => {
             const url = viewedSource.url;
             setViewedSource(null);
-            if (f) return chromeHelper.openPage(f.id, url);
+            const ownerId = viewedSource.inheritedFrom?.id || f?.id;
+            if (ownerId) return chromeHelper.openPage(ownerId, url);
           }}
           onClose={() => setViewedSource(null)}
         />
@@ -2505,10 +2568,30 @@ function App() {
               />
             </label>
             <div className="settings-divider" />
+            <ProjectBackupActions
+              ui={{
+                selection: selected,
+                groups: collapsed,
+                tab: tab as any,
+                view: view as any,
+                query,
+                filter,
+              }}
+              disabled={
+                busy ||
+                state.coverage.status === "running" ||
+                !!state.identitySync ||
+                working ||
+                state.run.status === "pausing"
+              }
+            />
+            <div className="settings-divider" />
             <h3>Reset project</h3>
             <p className="muted small">
               Restart generated work while retaining research/corrections, or
-              clear the whole project.
+              clear all project data, restored images, caches and automatic
+              recovery copies. Downloaded backups and built-in assets stay
+              intact.
             </p>
             <select
               value={resetScope}
@@ -2531,16 +2614,28 @@ function App() {
                 </label>
                 <button
                   className="button danger-button"
-                  disabled={busy || working || resetConfirm !== "RESET"}
+                  disabled={
+                    busy ||
+                    working ||
+                    state.coverage.status === "running" ||
+                    !!state.identitySync ||
+                    resetConfirm !== "RESET"
+                  }
                   onClick={() =>
                     act(async () => {
                       await request("/api/reset", {
                         scope: resetScope,
                         confirmation: resetConfirm,
                       });
+                      if (resetScope === "all") {
+                        for (const key of Object.keys(localStorage))
+                          if (key.startsWith("borderlens."))
+                            localStorage.removeItem(key);
+                        window.location.reload();
+                        return;
+                      }
                       setResetScope("");
                       setResetConfirm("");
-                      setSelected("");
                       setDetail(null);
                     }, "Project reset completed.")
                   }

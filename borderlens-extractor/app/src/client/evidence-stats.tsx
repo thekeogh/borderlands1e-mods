@@ -63,8 +63,9 @@ export function EvidenceStatsSummary({
       <p className="muted">
         Counted at CLI submission from the actual source payload. Repeated
         requests count again. Saved analysis still uses input when its selected
-        facts are sent to the writer. Provider token usage and internal retries
-        aren't measured.
+        facts are sent to the writer. Prompt sizes exclude schema/wrapper
+        tokens; provider token usage and internal retries aren't measured. Times
+        cover CLI round trips.
       </p>
       {stats.events.length === 0 && <p>No AI requests or cache reuse yet.</p>}
       {stats.events.map((event, index) => (
@@ -78,6 +79,12 @@ export function EvidenceStatsSummary({
                 ? "Saved AI response reused; 0 submitted"
                 : `${event.sources.length} sources reused from saved analysis; 0 submitted`}{" "}
             · {new Date(event.at).toLocaleTimeString()}
+            {event.promptBytes != null &&
+              ` · ${(event.promptBytes / 1000).toFixed(1)} KB prompt`}
+            {event.promptCharacters != null &&
+              ` · ${event.promptCharacters.toLocaleString()} characters`}
+            {event.elapsedMs != null &&
+              ` · ${(event.elapsedMs / 1000).toFixed(1)}s`}
           </small>
           {event.sources.length > 0 && (
             <ul>

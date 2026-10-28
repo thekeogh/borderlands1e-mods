@@ -1,3 +1,5 @@
+import { resetProject } from "./project-reset.ts";
+import { backupRoutes } from "./project-backup-http.ts";
 import { ManualTextInput, isManualTextUrl } from "../shared/manual-evidence.ts";
 import type { EvidenceStats } from "../shared/evidence-stats.ts";
 import type { EvidenceRequestNotice } from "../shared/evidence-notice.ts";
@@ -22,7 +24,7 @@ import { Worker } from "./worker.ts";
 import { compareCoverage } from "./research.ts";
 import { importZip } from "./importer.ts";
 import { PublicEntry, PartDefinition, now } from "../shared/models.ts";
-import { mkdirSync, rmSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 export function api(store: Store, worker: Worker) {
   const app = express();
@@ -53,6 +55,7 @@ export function api(store: Store, worker: Worker) {
     next();
   });
   chromeRoutes(app, worker);
+  backupRoutes(app, worker);
   const scopeDetail = (owner: ReturnType<Store["ensureScope"]>) => ({
     family: owner,
     sources: store.sources(owner.id),
@@ -225,7 +228,13 @@ export function api(store: Store, worker: Worker) {
       req.params.folder + "/" + req.params.filename,
     );
     if (!file) throw new HttpError(404, "Image not found.");
-    res.sendFile(file, { headers: { "Cache-Control": "no-cache" } });
+    // Images.file already validates the extension and real path within the library.
+    // Pass the filename relative to its directory so a restored library under
+    // .data isn't mistaken for a requested dotfile by Express's file server.
+    res.sendFile(path.basename(file), {
+      root: path.dirname(file),
+      headers: { "Cache-Control": "no-cache" },
+    });
   });
   app.post("/api/items/:id/image", (req, res) => {
     const f = store.family(req.params.id);
@@ -553,11 +562,6 @@ export function api(store: Store, worker: Worker) {
     res.send(zip);
   });
   app.post("/api/reset", (req, res) => {
-    if (worker.busy || worker.coverageBusy)
-      throw new HttpError(
-        409,
-        "Pause processing and wait for coverage to finish first.",
-      );
     const body = z
       .object({
         scope: z.enum(["generated", "all"]),
@@ -565,56 +569,12 @@ export function api(store: Store, worker: Worker) {
       })
       .strict()
       .parse(req.body);
-    if (body.scope === "all") {
-      store.db.exec(
-        "DELETE FROM raw; DELETE FROM artifacts; DELETE FROM sources;",
-      );
-      store.classifications.clear();
-      store.names.clear();
-      store.images.clear();
-      store.state = initial();
-      store.reloadRecords();
-      for (const dir of ["captures", "sources", "ai", "exports"]) {
-        rmSync(path.join(store.dir, dir), { recursive: true, force: true });
-        mkdirSync(path.join(store.dir, dir), { recursive: true });
-      }
-      worker.research.robots.clear();
-    } else {
-      for (const f of store.state.families) {
-        if (f.manualOutput) continue;
-        store.forget(f.id, [
-          "packet",
-          "draft",
-          "matches",
-          "output",
-          "validatedPacket",
-          "provenance",
-        ]);
-        f.stage = "evidence";
-        if (f.status !== "excluded") f.status = "queued";
-        f.issue = null;
-      }
-      delete store.state.buildCheckpoint;
-      store.state.run = {
-        sourceMode: "saved",
-        sourcePrepared: [],
-        status: "idle",
-        queue: [],
-        index: 0,
-        currentId: null,
-        message: "Processing reset; research and corrections retained.",
-        startedAt: null,
-        deferred: [],
-        pendingFrom: null,
-        pauseRequested: false,
-      };
-    }
-    store.save();
+    resetProject(worker, body.scope);
     res.json({
       ok: true,
       note:
         body.scope === "all"
-          ? "Project and cached files cleared."
+          ? "Project data, restored images, caches and automatic recovery copies cleared."
           : "Generated entries reset; research and corrections retained.",
     });
   });
@@ -650,4 +610,3 @@ export function api(store: Store, worker: Worker) {
   );
   return app;
 }
-import { initial } from "../shared/models.ts";

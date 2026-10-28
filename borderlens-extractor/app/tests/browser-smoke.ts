@@ -742,6 +742,36 @@ try {
       .locator("article.source-card")
       .filter({ hasText: "Universal elemental fixture" }),
   ).toHaveCount(0);
+  await inheritedList
+    .getByRole("button", {
+      name: "View stored content: Universal elemental fixture",
+      exact: true,
+    })
+    .click();
+  const inheritedViewer = page.getByRole("dialog", {
+    name: "Universal elemental fixture",
+    exact: true,
+  });
+  await expect(inheritedViewer).toBeVisible();
+  for (const tab of [
+    "Full text",
+    "Sections & tables",
+    "Source record",
+    "Stored HTML",
+  ]) {
+    await inheritedViewer.getByRole("tab", { name: tab, exact: true }).click();
+    await expect(inheritedViewer.getByRole("tabpanel")).toBeVisible();
+  }
+  await inheritedViewer
+    .getByRole("button", { name: "Close source viewer" })
+    .click();
+  await expect(
+    inheritedList
+      .locator(".inherited-evidence-row")
+      .filter({ hasText: "Pending elemental fixture" })
+      .getByRole("button", { name: /View stored content/ }),
+  ).toHaveCount(0);
+
   await expect(
     page
       .locator("article.source-card")
@@ -1126,6 +1156,32 @@ try {
       (row: any) => row.title === "Saved catalogue article fixture",
     ),
   );
+  const viewCallsBefore = await page.request
+    .get("/__test/ai-count")
+    .then((r) => r.json());
+  await page
+    .getByRole("button", {
+      name: "View stored content: Saved catalogue article fixture",
+      exact: true,
+    })
+    .click();
+  const neverViewer = page.getByRole("dialog", {
+    name: "Saved catalogue article fixture",
+    exact: true,
+  });
+  await expect(
+    neverViewer.getByRole("tab", { name: "Sections & tables", exact: true }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: ".test-data/screenshots/inherited-source-viewer.png",
+  });
+  await neverViewer
+    .getByRole("button", { name: "Close source viewer" })
+    .click();
+  assert.deepEqual(
+    await page.request.get("/__test/ai-count").then((r) => r.json()),
+    viewCallsBefore,
+  );
   await page.screenshot({ path: ".test-data/screenshots/inherited-never.png" });
   const bulkMode = page.getByRole("combobox", {
     name: "Set all inherited evidence",
@@ -1188,6 +1244,21 @@ try {
   assert.equal(followed.evidenceFollowup.status, "supplied");
   assert(followed.evidenceFollowup.matches.length > 0);
   assert(!("evidenceRequests" in followed.websiteOutput));
+  assert(
+    followed.finalValidation.warnings.some((message: string) =>
+      /rank progression/.test(message),
+    ),
+  );
+  await page.getByRole("button", { name: "Preview", exact: true }).click();
+  const buildNotes = page
+    .locator(".item-preview details")
+    .filter({ hasText: /Built with .* notes/ });
+  await expect(buildNotes).toBeVisible();
+  await buildNotes.locator("summary").click();
+  await expect(buildNotes).toContainText("Saved successfully");
+  await expect(buildNotes).toContainText("alternate spellings");
+  await page.screenshot({ path: ".test-data/screenshots/build-notes.png" });
+  await page.getByRole("button", { name: /Sources & evidence/ }).click();
   await expect(page.locator(".runbar .evidence-stats")).toBeVisible();
   await page.locator(".runbar .evidence-stats > summary").click();
   await expect(page.locator(".runbar .evidence-stats")).toContainText(
@@ -1692,21 +1763,27 @@ try {
       )
       .not.toBe(backgrounds[index]);
   }
-  const standardMode = plainRows.first().getByRole("combobox");
+  // Inclusion changes re-sort rows; follow this source rather than the first position.
+  const standardRow = plainRows.filter({
+    has: page.getByRole("combobox", {
+      name: (await plainRows
+        .first()
+        .getByRole("combobox")
+        .getAttribute("aria-label"))!,
+      exact: true,
+    }),
+  });
+  const standardMode = standardRow.getByRole("combobox");
   await standardMode.selectOption("never");
   await expect(standardMode).toBeEnabled();
   await page.getByRole("textbox", { name: "Find an item" }).focus();
   await page.mouse.move(10, 10);
   await expect
-    .poll(() =>
-      plainRows.first().evaluate((row) => getComputedStyle(row).opacity),
-    )
+    .poll(() => standardRow.evaluate((row) => getComputedStyle(row).opacity))
     .toBe("0.45");
   await standardMode.focus();
   await expect
-    .poll(() =>
-      plainRows.first().evaluate((row) => getComputedStyle(row).opacity),
-    )
+    .poll(() => standardRow.evaluate((row) => getComputedStyle(row).opacity))
     .toBe("1");
   await standardMode.selectOption("auto");
   await expect(standardMode).toBeEnabled();
@@ -1723,6 +1800,24 @@ try {
   await expect(manualMode).toBeEnabled();
   await expect(manualMode).toHaveValue("never");
   await expect(inheritedManualRow).toHaveClass(/manual-evidence-surface/);
+  await inheritedManualRow
+    .getByRole("button", {
+      name: "View stored content: Selected Berserk passage",
+      exact: true,
+    })
+    .click();
+  const manualViewer = page.getByRole("dialog", {
+    name: "Selected Berserk passage",
+    exact: true,
+  });
+  await expect(manualViewer.getByRole("tabpanel")).toContainText(pasted);
+  await expect(
+    manualViewer.getByRole("tab", { name: "Stored text file", exact: true }),
+  ).toBeVisible();
+  await manualViewer
+    .getByRole("button", { name: "Close source viewer" })
+    .click();
+
   await page.getByRole("textbox", { name: "Find an item" }).focus();
   await page.mouse.move(10, 10);
   await expect

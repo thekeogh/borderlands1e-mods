@@ -28,6 +28,7 @@ const sourceKey = (input) => {
   );
 };
 async function handle(message, sender) {
+  let fullPage = false;
   if (message.type === "HELLO" || message.type === "OPEN_SOURCE") {
     if (!sender.tab?.id)
       throw new Error("This request must come from the workshop.");
@@ -61,7 +62,9 @@ async function handle(message, sender) {
   }
   const fromSelection =
     sender.url !== chrome.runtime.getURL("popup.html") &&
-    ["DELIVER_SELECTION", "OPEN_WORKSHOP"].includes(message.type) &&
+    ["DELIVER_SELECTION", "CAPTURE_PAGE", "OPEN_WORKSHOP"].includes(
+      message.type,
+    ) &&
     sender.tab?.id &&
     sender.id === chrome.runtime.id;
   if (fromSelection) sourceKey(sender.url);
@@ -108,6 +111,34 @@ async function handle(message, sender) {
       }
     }
     return { ok: true, closed };
+  }
+  if (message.type === "CAPTURE_PAGE") {
+    const tabId = fromSelection ? sender.tab.id : message.tabId;
+    const job = jobs[tabId];
+    if (!job || job.expiresAt < Date.now())
+      throw new Error(
+        "Open this article from Borderlens again; its import ticket expired.",
+      );
+    const tab = await chrome.tabs.get(tabId);
+    if (sourceKey(tab.url) !== sourceKey(job.url))
+      throw new Error(
+        "This is not the requested article. Reopen it from the workshop.",
+      );
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ["capture-page.js"],
+    });
+    const results = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: () => globalThis.__borderlensCapturePage(),
+    });
+    const capture = results[0]?.result;
+    if (!capture)
+      throw new Error(
+        "No article was captured. Wait for the page to load and try again.",
+      );
+    message = { type: "DELIVER", tabId, capture };
+    fullPage = true;
   }
   if (message.type === "DELIVER_SELECTION")
     message = { ...message, type: "DELIVER", tabId: sender.tab.id };
@@ -185,6 +216,13 @@ async function handle(message, sender) {
         returnUntil: Date.now() + 24 * 60 * 60 * 1000,
       };
       await chrome.storage.session.set({ jobs });
+      if (fullPage) {
+        try {
+          await chrome.tabs.sendMessage(message.tabId, {
+            type: "FULL_CAPTURE_SAVED",
+          });
+        } catch {}
+      }
       return { ...response, appTabId: job.appTabId, appUrl: job.appOrigin };
     } catch (error) {
       throw new Error(

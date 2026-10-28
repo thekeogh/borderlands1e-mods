@@ -8,3 +8,6 @@ test-results/
 *.log
 postman/*.ndjson
 postman/*.err
+
+.data.before-restore-*/
+.borderlens-restore-*/

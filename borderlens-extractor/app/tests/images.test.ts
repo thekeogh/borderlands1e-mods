@@ -284,3 +284,38 @@ test("refresh discovers new folders and serves their actual relative paths witho
     "artifact/siren.png",
   );
 });
+
+test("restored images inside hidden project directories are served as PNGs without exposing other files", async (t) => {
+  const { dir, root } = setup(t);
+  const data = path.join(dir, ".data"),
+    library = path.join(data, "image-library");
+  mkdirSync(path.join(library, "weapons"), { recursive: true });
+  writeFileSync(path.join(library, "weapons", "hellfire.png"), pixel);
+  writeFileSync(path.join(data, "secret.json"), '{"private":true}');
+  const store = new Store(data, root),
+    worker = new Worker(store);
+  t.after(() => store.close());
+  assert.equal(store.images.root, library);
+  const server = api(store, worker).listen(0, "127.0.0.1");
+  await new Promise<void>((resolve) => server.once("listening", resolve));
+  t.after(() => server.close());
+  const base = `http://127.0.0.1:${(server.address() as any).port}`;
+  const response = await fetch(
+    base + "/api/images/file/weapons/hellfire.png?v=restored",
+  );
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type")!, /image\/png/);
+  assert.deepEqual(Buffer.from(await response.arrayBuffer()), pixel);
+  assert.equal(
+    (await fetch(base + "/api/images/file/weapons/.secret.png")).status,
+    404,
+  );
+  assert.equal(
+    (await fetch(base + "/api/images/file/weapons/secret.json")).status,
+    404,
+  );
+  assert.equal(
+    (await fetch(base + "/api/images/file/weapons/missing.png")).status,
+    404,
+  );
+});

@@ -3945,3 +3945,40 @@ footer > span:first-child {
   box-shadow: 0 0 0 6px #c09b4222;
   scroll-margin: 100px;
 }
+
+.backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0;
+}
+.project-backup .error {
+  color: #a04436;
+}
+.project-backup > small {
+  display: block;
+  color: #85917d;
+}
+
+.inherited-evidence-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 0;
+  border: 0;
+  background: transparent;
+  color: #45683d;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.inherited-evidence-view:hover {
+  color: #253d20;
+}
+.inherited-evidence-row.is-manual-text .inherited-evidence-view {
+  color: #76549b;
+}
+.inherited-evidence-view:disabled {
+  cursor: wait;
+}

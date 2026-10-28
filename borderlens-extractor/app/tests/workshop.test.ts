@@ -60,7 +60,7 @@ function entry(f: Family): PublicEntry {
   return {
     details: [],
     schemaVersion: "7",
-    compilerVersion: "0.11.2",
+    compilerVersion: "0.15.1",
     description: [
       "An original fixture paragraph describing this item for players.",
     ],
@@ -69,7 +69,7 @@ function entry(f: Family): PublicEntry {
     parts: [],
     id: f.id,
     name: f.name,
-    dlc: null,
+    dlc: "Base Game",
     category: f.category,
     weaponType: f.subtype,
     summary: "A useful weapon family for exploring Pandora.",
@@ -105,6 +105,11 @@ function fakeAI(s: Store, wait?: () => Promise<void>): AI {
             field: "description",
             evidenceIds: [buildPacket(s, f).evidence[0].id],
             basis: "Fixture description.",
+          },
+          {
+            field: "dlc",
+            evidenceIds: [buildPacket(s, f).evidence[0].id],
+            basis: "Reviewed base-package fixture identity.",
           },
         ],
         uncertainties: ["Final stat ranges not established."],
@@ -205,10 +210,12 @@ test("blocked work retains prior output; corrections and manual output survive r
   assert.equal(f.notes, "Keep this correction");
   const manual = {
     ...entry(f),
+    dlc: null,
     summary: "A manually reviewed family description for players.",
   };
   await w.action(f.id, "save-output", { output: manual });
   assert.equal(f.status, "done");
+  assert.equal(s.get<any>(f.id, "output").dlc, "Base Game");
   await w.action(f.id, "rebuild", {});
   await until(() => !w.busy);
   assert.equal(s.get<any>(f.id, "output").summary, manual.summary);
@@ -283,6 +290,11 @@ test("validation rejects unsupported evidence IDs, engine prose and false ranges
         field: "description",
         evidenceIds: [p.evidence[0].id],
         basis: "Fixture description.",
+      },
+      {
+        field: "dlc",
+        evidenceIds: [p.evidence[0].id],
+        basis: "Reviewed base-package fixture identity.",
       },
     ],
     uncertainties: [],
@@ -495,6 +507,11 @@ test("effect prose rejects internals and requires saved-page claims", (t) => {
         field: "description",
         evidenceIds: [p.evidence[0].id],
         basis: "Fixture description.",
+      },
+      {
+        field: "dlc",
+        evidenceIds: [p.evidence[0].id],
+        basis: "Reviewed base-package fixture identity.",
       },
     ],
     uncertainties: [],

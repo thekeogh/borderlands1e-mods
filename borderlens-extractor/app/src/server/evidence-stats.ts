@@ -50,13 +50,15 @@ export function recordEvidenceEvent(
               : "direct",
     });
   }
-  stats.events.push({
+  const recorded: EvidenceStatsEvent = {
     ...event,
     at: new Date().toISOString(),
     phase: input.phase,
     sources: [...sources.values()],
-  });
+  };
+  stats.events.push(recorded);
   store.save();
+  return recorded;
 }
 export function finishEvidenceStats(
   store: Store,

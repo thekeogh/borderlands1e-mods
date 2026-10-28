@@ -4,7 +4,7 @@ import { ManualEvidenceIcon } from "./manual-evidence-icon";
 import { isManualTextUrl } from "../shared/manual-evidence";
 import { SourceSite } from "./source-site";
 import { useEffect, useState } from "react";
-import { BookOpen, ArrowUpRight } from "lucide-react";
+import { BookOpen, ArrowUpRight, Eye } from "lucide-react";
 import type {
   InheritedEvidence,
   SourceInclusionMode,
@@ -12,6 +12,7 @@ import type {
 export function InheritedEvidenceList({
   items,
   manage,
+  view,
   recapture,
   setMode,
   setAllModes,
@@ -19,12 +20,15 @@ export function InheritedEvidenceList({
 }: {
   items: InheritedEvidence[];
   manage: (id: string) => void;
+  view: (item: InheritedEvidence) => Promise<void>;
   recapture?: (ownerId: string, url: string) => unknown | Promise<unknown>;
   setMode: (url: string, mode: SourceInclusionMode) => Promise<boolean>;
   setAllModes: (mode: SourceInclusionMode) => Promise<boolean>;
   disabled?: boolean;
 }) {
   const [bulkPending, setBulkPending] = useState(false);
+  const [viewing, setViewing] = useState("");
+  const [viewError, setViewError] = useState("");
   if (!items.length) return null;
   const priority = { always: 0, auto: 1, never: 2 };
   const mode = (item: InheritedEvidence) =>
@@ -76,6 +80,7 @@ export function InheritedEvidenceList({
         all indexed facts; Never include skips the source for this item. Sizes
         measure saved text; labels are guides, not AI limits.
       </p>
+      {viewError && <p role="alert">{viewError}</p>}
       {(["always", "auto", "never"] as const).map((group) => {
         const rows = sorted.filter((item) => mode(item) === group);
         if (!rows.length) return null;
@@ -148,6 +153,30 @@ export function InheritedEvidenceList({
                     >
                       Selected excerpt
                     </span>
+                  )}
+                  {item.captured && (
+                    <button
+                      type="button"
+                      className="inherited-evidence-view"
+                      aria-label={"View stored content: " + item.title}
+                      disabled={!!viewing}
+                      onClick={() => {
+                        setViewing(item.url);
+                        setViewError("");
+                        void view(item)
+                          .catch((error) =>
+                            setViewError(
+                              error.message || "Unable to open saved source.",
+                            ),
+                          )
+                          .finally(() => setViewing(""));
+                      }}
+                    >
+                      <Eye size={13} />
+                      {viewing === item.url
+                        ? "Opening…"
+                        : "View stored content"}
+                    </button>
                   )}
                   <SourceSize bytes={item.textBytes} />
                   {recapture &&

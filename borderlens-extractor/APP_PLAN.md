@@ -3050,3 +3050,380 @@ exact external tabs, and shared returns anchor the owning group. Popup return
 before sending retains the unsent tab even with preference true. Consumed job
 records contain no tokens. Queue and AI-call counter unchanged. Local synthetic
 fixture only; no live tabs, settings, project data or model calls touched.
+
+### Full project backups (app 0.47.0)
+
+Settings Export Data / Import Data, both require no active worker/coverage/sync.
+POST project-backup/export validates saved project/dependencies, VACUUM INTO a
+standalone SQLite snapshot including WAL, and ZIPs all .data sidecars/files plus
+image root and browser selection/groups/tab/view/query/filter. Timestamped local
+YYYY-MM-DD_HH-mm.zip; native Save As requested during user click before network,
+with download fallback. No project mutations/export queue changes/model calls.
+
+Format borderlens-project-backup v1 backup.json inventory with byte lengths and
+SHA-256 for all files. Import multipart disk upload max1GB, expand max4GB/100kfiles,
+strict paths/no links/duplicates, file inventory/hash checks, known SQLite tables,
+quick_check, ProjectState/override schemas, source and capture dependencies.
+Stage on same filesystem, then close/swap data directories and reopen same Store
+instance without startup migrations so exact rows/state survive. Keep EventEmitter
+listeners, raw record map, override/image readers; reinitialize production router,
+research and browser imports without starting/flushing runs. Preserve paused
+checkpoints. Roll back to previous data if replacement cannot reopen. Keep old
+project in ignored .data.before-restore-* sibling; staging paths also ignored.
+
+Archive images separate from data; restored root .data/image-library takes priority
+over shipped images. Re-export avoids duplicate image subtree. Browser applies UI
+snapshot then reloads. Invalid archive leaves active project untouched. Existing
+HTTP same-origin guard applies; upload temporary files cleaned. Browser extension
+runtime/preferences, CLI accounts, code and unsaved UI/page text are out of scope.
+No compiler/public schema bump; no restore/live test against the user's project.
+Verification: 236 tests pass, 4 optional skips; four focused full-backup tests pass.
+Assert every SQLite table and complete Project state match after round-trip,
+including paused run/checkpoint, raw records, original archive, manual/shared
+sources and per-item modes, output/draft/history, name/type/image override files,
+nested AI cache and exported JSON, all image bytes and no duplicate image subtree.
+Database snapshot captures committed WAL without archiving WAL/SHM. Corrupt,
+missing, foreign, traversal archives leave current state unchanged; simulated
+reopen failure rolls back; same-origin and active-worker guards tested.
+
+Browser fixture verifies timestamped native Save As argument/cancel, successful
+WritableStream save, full ZIP download, Import Data file chooser, replaced later
+changes, restored manual evidence/name/selected item/Sources tab, and no AI calls.
+Inspected Settings backup screenshot. Native mock needed literal browser JS to
+avoid tsx function-name helper serialization; actual application stream code was
+unchanged. Production build, TypeScript, diff and local OpenAPI parse pass. Test
+runs isolated; no live backup/restore or source/user-data mutation performed.
+
+
+### Workshop 0.48.0 — reset completeness audit
+
+Full reset now closes and recreates the SQLite database and entire configured data
+folder, including restored image-library, arbitrary stale files, sources/raw
+archives, manual/shared evidence, all JSON/artifacts/history, overrides, settings
+and caches. Remove owned .data.before-restore-* recovery siblings and new
+.borderlens-restore-<data-basename>-* crash staging siblings. Import staging now
+uses that ownership prefix. Preserve app code/shipped images, external image
+roots, exported backups outside data, extension preferences and CLI accounts.
+Clear browser borderlens.* project preferences and reload after full reset.
+Preserve Store/EventEmitter identity; replace explicit state/database/reader fields
+and clear article index. Recreate production AgentRouter, Research and BrowserImports
+without flushing queued imports or starting AI. Injected test AI resets failures,
+cancellation and context instead.
+
+Generated reset retains research/raw captures/source files, shared fact indexes,
+source modes/exclusions, removal/identity corrections, histories and manually saved
+JSON/validation/dependencies. Remove generated drafts/output/archived revisions,
+parts (retain library if any manual JSON depends on it), build/validation repair
+counters, working ledgers, follow-up notices, queue/checkpoint/current telemetry,
+CLI caches and internal exports. Retain queued browser capture data without
+flushing. Both scopes reject busy/coverage/identity sync, closing or running/pausing
+workers. Typed RESET and HTTP same-origin guards remain. No live user reset used.
+
+Verification: full suite 240 pass, 4 optional skips (244 total); five focused reset
+tests pass after adding restored-root/provider-cooldown coverage. Browser fixture
+exports, restores, then runs full reset through Settings; database/catalogue and
+browser project selection clear while downloaded backup stays intact. Production
+build, TypeScript, local OpenAPI parse and diff whitespace checks pass. All tests
+use temporary projects; live project and existing run untouched.
+
+
+### Workshop 0.48.1 — inherited source snapshots
+
+Saved inherited rows expose View stored content opening existing SourceViewer
+tabs. Keep website links and parent management controls separate. Manual entries
+use the same viewer, preserving purple row styling. Pending URLs have no view link.
+Use current item source snapshot when available; Never include entries load saved
+source from parent detail on demand, without changing policy or initiating builds,
+AI or website fetches. Retain inherited owner identity in viewer so Recapture
+replaces shared content rather than attaching it to the child item.
+
+Verification: production build/TypeScript and browser smoke pass. Browser opens
+all four viewer tabs for inherited web evidence, opens Never include web/manual
+snapshots (manual text exact), hides view on pending URLs and asserts zero extra
+AI calls. Inspected saved-source viewer screenshot. Updated prior opacity check
+to track the source identity as mode changes reorder grouped rows. No live data
+mutation; compiler/catalogue schemas unchanged.
+
+
+### Workshop 0.49.0 / Compiler 0.12.0 — general catalogue meaning
+
+Source facts carry private catalogueRole (item_property, general_mechanic,
+illustrative_example, part_property, progression, descriptive_label), explicit
+manufacturerNames and canonical origin/null. Model-facing direct and shared
+readers expose those fields. Shared selectors still control applicability; they
+do not imply that an applicable system rule is an item stat. Unified meaning
+instruction applies to readers, shared indexing and every writer retry. No
+item/character/weapon-specific exceptions.
+
+Semantic validation checks maker attribution against defining raw manufacturer
+facts or a used item-property fact with a named producer quote (manual corrections
+remain authoritative); descriptor labels alone do not establish makers. Exact
+extracted origin wins over source origin; explicit used item-origin facts must
+be preserved, including Base Game; unsupported origins remain null. Acquisition
+DLC/page game labels/non-DLC paths do not establish introduction. Conflicting
+used origins require resolution using existing source priority. Do not guess
+Base Game merely to replace a null.
+
+Only item-property numbers may be item stats/level bounds. Shared mechanics,
+examples, component modifiers and ordinal progression go to useful explanations
+or irrelevant with a reason; preserve genuine item ranges and distinct quantities.
+Validate source usage placement and matching numeric rows, never silently mutate
+the final entry. Stat repair filters non-item roles and cannot reinsert them.
+Ordinal/example/label facts cannot alone justify variants; explain progression
+compactly, retaining substantive evidenced variant differences. Existing quoted
+fact accounting, exact numeric and copied-prose guards continue.
+
+Compiler 0.12.0 and reading policy 2 invalidate direct/shared/saved-ledger semantic
+caches on next requested build; existing outputs and manual entries retained by
+normal compiler migration. No eager reads/fetches/builds; Never include filtering
+unchanged. No new AI pass, public schema change or image behavior change. Missing
+images remain null. Historical private readings stay parseable but are not reused
+for current builds without the new reading policy.
+
+Verification: 249 tests pass, 4 optional skips (253 total), production build and
+TypeScript pass; local OpenAPI YAML parse/diff checks pass. Eight focused meaning
+tests cover numeric placement across every equipment category, exact genuine
+range retention, explicit maker quotes/raw attribution, unknown/known/Base Game
+and conflicting origins, ordinal versus substantive variants, no-AI numeric
+repair rejection and malformed reader metadata. Existing tests cover reading
+cache policy invalidation, Never include filtering, source priority and manual
+retention. No live rebuild, final JSON rewrite, model call or image change.
+
+
+### Workshop 0.50.0 / Compiler 0.13.0 — factual assembly and prose-only writing
+
+Implementation checklist: app/OFFLINE_BUILD_PLAN.md. Private fact contract/policy 1,
+source reading policy 3; catalogue/website schemas remain 7/9. No extractor or
+website changes. Define StructuredFact (lists with completeness, level bounds,
+red text, acquisition, variants, part links), typed NormalizedFact acceptance and
+provenance, ProseDraft and null-for-unchanged ProsePatch contracts. Model-facing
+objects require all properties and reject undeclared fields in their JSON schema;
+runtime parsing discards unexpected structured fields, never applying them.
+
+The app owns identity/category/type/character, origin, producer/rarity/element
+sets, numeric stats/contexts, levels, acquisition entities/conditions/probabilities
+and part/variant relationships. factual-outline.ts assembles these before writing.
+Accepted source values retain original scope, quotes, source/content hashes and
+extraction method. Raw identity-linked properties retain game evidence IDs/hashes.
+Preserve exact names and red text; no code-written explanatory templates.
+
+Known item-owned complete tables (Property/Value, or Stat/Minimum/Maximum/Unit
+with optional Level/Context) can be extracted without AI. Exact identity title,
+no other-game signals, no sample/max-roll context, no clipped selection warnings,
+no spans or truncation are required. Entire table must be understood before it
+is removed from the private interpretation copy; unknown content stays intact.
+Cap tables/rows. Original saved captures are untouched. Retain full original text
+for ambiguous content, replacing provably duplicated section bodies with short
+heading/start anchors. Share that formatter across reading and cached retrieval.
+No game-stat simulator or unproven extrema calculation introduced.
+
+AI interprets unrecognised evidence once under a hash/policy/source/subject key;
+shared index remains subject-independent, applicability separate. Cache accepted
+reading repairs with their source hash/feedback. Source/override changes invalidate
+dependent derived work. Always include still supplies all selected facts, not
+mandatory publication. Never include stays upstream of parsing/reading/submission.
+Known other-item/skill baselines cannot become this item's numeric stats, even
+when related/Always included; retain them as scoped narrative context if useful.
+Exact raw restrictions win; same-scope exhaustive source lists and scalar values
+use Lootlemon-over-Wiki priority. Maximum-roll labels do not exclude lower tiers;
+contradictions without safe resolution block before spending a prose request.
+
+Prose writer receives compact outline/facts, necessary subject restrictions and
+small original identity context; no full raw graph, repeated readings/checklists
+or schema-filling task. Code accounts accepted structured facts/duplicates/priority
+decisions; AI accounts remaining narrative facts. Prose includes original summary,
+paragraphs, effects, details, notes and ID-keyed stat/source/variant/part text.
+Acquisition condition cardinality and digit values are checked. Unexpected/missing
+slots cause bounded targeted corrections. Writer cannot change structured values
+or stat-context meanings. Existing copied/unclear-prose repair and bounded saved
+evidence requests remain; no mandatory extra AI review pass.
+
+Generic retries use ProsePatch and restrict changed prose groups based on failure;
+other groups remain byte-for-byte retained. Feed accumulated feedback forward.
+Numeric core remains owned by the outline; legacy numeric repair remains available
+for older paths. Publish parts, output, revision, validation and provenance within
+a SQLite savepoint; restore family memory/revision if publication fails.
+
+Artifacts factualOutline/proseDraft/outlineMeasurements/proseAssemblyFeedback are
+compiled/transient and clear on generated reset. factualDecisions and versioned
+readingCorrection artifacts remain accepted research. Complete backups snapshot
+all SQLite artifacts unchanged; full reset recreates the data directory. Existing
+output/manual edits remain protected by normal compiler migration. No eager
+reads, fetches, builds, live data mutation or provider calls performed for tests.
+
+Request telemetry counts compact source fact arrays at the actual submission
+boundary, adding UTF-8 prompt bytes and elapsed CLI round-trip time. Schema/wrapper
+tokens and provider token usage are not fabricated. Retry labels identify reason
+and attempt. app/OFFLINE_BUILD_BASELINE.md reports synthetic request-boundary
+measurements; these are not real provider speed/token or catalogue completeness
+claims. Compare five equipment categories, fresh/cached builds and shared reuse.
+
+Additional invariants: exhaustive property lists distinguish complete, partial,
+maximum-roll and unknown coverage. Unqualified property tables establish partial
+possibilities; they do not prove that no other rarity exists. Prefer more specific
+item rules over broad baselines, resolve actual same-scope contradictions, and
+block unresolved conflicts before writing. Literal version names are required
+for structured variants; unnamed progression/reward distinctions remain details.
+Optional/required part interpretations require a quoted unique captured identifier
+and a positive captured selection rule; no path or legal combination is invented.
+Persist factualRevision:<revision> with successful automatic publication, so later
+source changes do not erase the factual basis for earlier revisions. Generated
+reset clears those compiled snapshots, retaining research correction journals.
+
+Verification (27 October 2026): TypeScript and production build pass; 268 automated
+checks (264 pass, 4 optional skips), full browser smoke and isolated backup-browser
+round trip pass. Final mock writer fixtures approximately 61% smaller by character
+count; fresh ambiguous-source builds 2 calls, cached/shared-reuse builds 1. No real
+provider tokens/latency measured, no live catalogue writes. Restart app and rebuild
+from saved sources; recapture unnecessary. See app/OFFLINE_BUILD_PLAN.md for the
+completed checklist and explicit limits.
+
+### 0.50.1 schema compatibility correction
+
+A real source-reading request exposed nested `oneOf` emitted by Zod discriminated
+unions. Codex strict output rejects that keyword. The common CLI schema boundary
+now emits `anyOf`; literal kind fields retain exclusive branches and runtime Zod
+validation remains intact. Restart clears only cooldowns matching the corrected
+schema failures. Regression coverage traverses actual provider-bound reading,
+prose and patch schemas and tests persisted cooldown recovery. All 28 focused
+router/Codex/offline tests and production build passed. No live model calls made.
+
+### 0.50.2 / compiler 0.13.1: factual scope and effects feedback
+
+A live draft exposed an uncertain shared fact tagged for another equipment
+category being promoted into fixed manufacturer data. Fixed-property acceptance
+now checks category, character, element and weapon type as well as item/skill
+ownership; retaining uncertain evidence does not establish applicability. Original
+saved facts stay unchanged; the next requested build reassembles with fact policy 2.
+The prose prompt explicitly requests zero to two special-effect entries and 45
+words combined. Targeted feedback recognises the hyphenated special-effect label
+and cannot replace unrelated valid prose. Genuine review/conflict messages take
+precedence over cosmetic limits, so a blocked factual draft reports its actual
+reason. No hand edits to final JSON or live model calls performed.
+
+Verification: 271 automated checks, 267 passed and 4 optional skipped; all 17
+offline-build regressions and production build pass. No live data changed.
+
+### 0.51.0 / compiler 0.14.0: best-effort automatic builds
+
+Supersedes earlier perfection/blocking requirements for ordinary uncertainty.
+Private writer review flags, optional source spellings, rank progression and
+same-priority numerical disagreements no longer prevent publication. Keep the
+first equally ranked supported scalar value; record alternatives privately.
+Allow the writer to omit optional source/variant slots and acquisition conditions
+that merely describe missing evidence. Numeric prose differences become notes.
+Best-effort validation runs every remaining check: quality/context/exact source
+stat coverage are advisory; explicit wrong/unresolved core item identity, invalid
+JSON/schema, reversed bounds, unsupported makers/parts and copied source prose
+remain blocking. Manual JSON review keeps its existing explicit validation path.
+Publish uncertainties and advisories as finalValidation.warnings, shown under
+Built with … notes in Preview, and in provenance/revision/History. Standard backup
+and generated reset handle these existing artifacts without special data files.
+Fact policy 3 changes assembly; original source captures/readings stay reusable.
+No live catalogue changes or model calls performed during implementation/tests.
+
+Verification: 274 automated checks (270 passed, 4 optional skips), TypeScript/production
+build and full browser smoke pass. The browser verifies successful publication and
+expandable Preview notes for optional spelling/progression uncertainty; screenshot
+`.test-data/screenshots/build-notes.png` inspected. All tests use isolated data and
+mock AI. Restart the app, then rebuild from saved sources; no recapture needed.
+
+### 0.52.0 / compiler 0.15.0: acquisition consolidation and origin
+
+Consolidate accepted acquisition facts before sending the prose outline. Keep
+all fact IDs and per-fact private detail/conditions in the source slot, including
+complementary reward/rank/playthrough notes even when structural fields match.
+Merge exact names or aliases explicitly equated in a saved quote; no fuzzy
+spelling guesses or item-specific alias rules. Prefer the named source's own URL
+over a generic overview; retain all evidence claims/references. Preserve separate
+known locations and typed rate/player/edition scopes, including aliased names.
+Writer instructions retain useful acquisition outcomes in original notes, treating
+playthroughs as alternatives and missing evidence as private uncertainty. Existing
+best-effort validation remains in place; no new quality-blocking retry is added.
+
+Origin now recognises original identity roots in reviewed base packages from the
+extractor's checked-in package plan (self-contained app snapshot at
+src/server/base-content-packages.json). Unknown/missing/mod or mixed identity
+packages remain unknown; linked loot graphs never assign origin. Explicit
+item-owned Origin/DLC/Content Pack tables can establish origin locally. Known
+Base Game stays the existing JSON enum; unknown stays null and displays Unknown.
+Manual-save claims now include DLC so known origin round-trips through editing.
+
+Fact policy 4 and parser policy 2 update assembly/local parsing. Compatible direct
+source interpretations retain their 0.14 contract cache keys independently of
+writer/compiler releases; shared reading policy stays 3. No refetch, paid model
+call or live catalogue rewrite performed. Apply via next requested saved-source
+rebuild. Existing output, manual corrections and captures remain retained.
+
+Verification: 279 automated checks (275 passed, 4 optional skips), production build,
+OpenAPI/version parsing and full browser smoke passed. Preview screenshot confirms
+Base Game for captured character artifacts. Follow-up manual-save regression
+(22 passed, 3 optional skips) and final production build passed after allowing an
+older null origin to be filled from verified extraction during explicit manual
+save. Explicit user origin values and all user prose remain unchanged. Original
+sources/live catalogue were not modified; no provider calls made.
+
+### 0.52.1 / Chrome helper 1.3.0: optional whole-page capture
+
+Restore Capture whole page in both extension popup and floating selection panel.
+Box selection remains unchanged. A separate injected capture-page.js sanitises the
+loaded DOM, retaining article headings, complete tables and loaded tab contents.
+Wiki uses its article container; Lootlemon uses body content rather than assuming
+a main wrapper. Forms/editable values, scripts/active attributes, navigation and
+selection UI are excluded. No fetch, image/canvas OCR or unloaded tab-data request.
+
+Both modes use the same background-validated ticket, requested URL, owner-bound
+capture/recapture and safe checkpoint. Full recapture clears excerpt metadata;
+selection recapture can replace it again. Return focuses Sources & evidence and
+retains the persistent close-tab preference. Success disables an existing panel
+if a whole capture was sent from the popup. The downloadable helper includes the
+new script; manifest/metadata 1.3.0. Reload extension and refresh workshop/source
+tabs after updating. No compiler/public schema change and no automatic builds.
+
+Verification: eight Chrome helper/ticket/ZIP tests and the actual MV3 extension
+browser flow pass. The browser retains all existing selection/resize/fit/overlap
+checks, then tests a zero-box whole Wiki recapture and a Lootlemon body without
+main markup, loaded hidden tables, removed forms/scripts/navigation, excerpt
+metadata replacement, ownership, persistent close-tab return and unchanged run/AI
+call counts. Popup screenshot inspected. Final TypeScript/production build and
+whitespace checks pass. Tests use isolated data and synthetic pages; no live
+website fetch or user source changes performed.
+
+### 0.52.2 / compiler 0.15.1: preserve prose-slot citations
+
+A saved HellFire run supplied an appropriate parts claim, including its exact
+source fact, but assembly discarded all model claims outside the main prose
+fields. The code-owned parts claim omitted that source page, and source usage
+validation then repeatedly demanded a citation the model had already provided.
+Preserve parts/stats/sources/variants/levels prose citations alongside the main
+prose claims; union them with code-owned factual claims, without exposing fixed
+values or relationships to model edits. Clone claims so assembly does not mutate
+the saved model result. Retain compatible interpretations; fact policy 5 updates
+assembly. In automatic best-effort validation only, an incomplete used-fact field
+citation is a non-blocking note; unknown/missing/duplicate fact IDs and unrelated
+core validators retain their checks. No fabricated citations or live JSON edits.
+
+Verification: 281 checks (277 pass, 4 optional skips). Regression covers part
+citations surviving assembly, unchanged fixed parts, saved-prose immutability,
+strict/manual validation and advisory automatic accounting. A read-only snapshot
+of the reported HellFire prose was assembled locally (only compiler metadata
+updated in memory) and passed draft/parts/source-usage validation with zero notes,
+zero provider calls and no live writes.
+
+Final TypeScript/production build, OpenAPI version parsing and whitespace checks passed.
+
+### 0.52.3: restored image rendering
+
+Reported HellFire PNG exists and matches correctly, but the image endpoint returned
+500/Not Found. Restored backups use .data/image-library; Express sendFile treated
+hidden ancestors in the absolute filepath as dotfiles. Serve the already
+allowlisted/realpath-validated basename relative to its directory, keeping default
+dotfile filtering and all existing library confinement checks. No image files,
+image choices, catalogue data or compiler schema changed. Restart app and refresh
+the page; no rebuild/recapture needed.
+
+Verification: nine image/backup tests passed, including hidden-directory PNG bytes
+and MIME type plus blocked hidden/non-image/missing paths. Real backup-browser
+flow now uses a .data project, restores images and asserts successful browser
+image decoding; restored-image.png inspected. TypeScript/production build and
+whitespace checks passed. Tests use isolated projects; live images/data untouched.

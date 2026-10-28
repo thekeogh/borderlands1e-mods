@@ -63,7 +63,7 @@ function output(s: Store, name: string) {
     "output",
     PublicEntry.parse({
       schemaVersion: "7",
-      compilerVersion: "0.11.2",
+      compilerVersion: "0.15.1",
       id: f.id,
       name: f.name,
       dlc: null,

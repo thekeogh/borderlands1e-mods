@@ -1,7 +1,8 @@
 const title = document.querySelector("#title"),
   message = document.querySelector("#message"),
   send = document.querySelector("#send"),
-  back = document.querySelector("#back");
+  back = document.querySelector("#back"),
+  whole = document.querySelector("#whole");
 let target;
 async function request(type, payload = {}) {
   const response = await chrome.runtime.sendMessage({ type, ...payload });
@@ -27,7 +28,8 @@ async function init() {
       return;
     }
     message.textContent =
-      "Select just the content you need on the page. Hold Ctrl and drag boxes, then preview and send from the floating panel.";
+      "Select content with boxes, or capture the whole loaded page. Whole-page capture includes all loaded article text and tables.";
+    whole.hidden = false;
     send.hidden = false;
     send.disabled = true;
     document.querySelector("#select").hidden = false;
@@ -68,6 +70,8 @@ send.addEventListener("click", async () => {
       "Saved in Borderlens. Return to the workshop to rebuild this item.";
     message.className = "success";
     send.hidden = true;
+    whole.hidden = true;
+    document.querySelector("#select").hidden = true;
     back.textContent = "Back to workshop";
   } catch (error) {
     message.textContent = error.message;
@@ -75,6 +79,38 @@ send.addEventListener("click", async () => {
   } finally {
     send.disabled = false;
     send.textContent = "Send selections to Borderlens";
+  }
+});
+whole.addEventListener("click", async () => {
+  whole.disabled = true;
+  send.disabled = true;
+  document.querySelector("#select").disabled = true;
+  whole.textContent = "Saving whole page…";
+  message.className = "";
+  try {
+    const result = await request("CAPTURE_PAGE", { tabId: target.tab.id });
+    title.textContent = "Whole page saved";
+    message.textContent =
+      result.message ||
+      "Saved in Borderlens. Return to the workshop to rebuild this item.";
+    message.className = "success";
+    whole.hidden = true;
+    send.hidden = true;
+    document.querySelector("#select").hidden = true;
+    back.textContent = "Back to workshop";
+  } catch (error) {
+    message.textContent = error.message;
+    message.className = "error";
+    whole.disabled = false;
+    document.querySelector("#select").disabled = false;
+    try {
+      const status = await chrome.tabs.sendMessage(target.tab.id, {
+        type: "SELECTION_STATUS",
+      });
+      send.disabled = !status?.count || status.warnings > 0;
+    } catch {}
+  } finally {
+    whole.textContent = "Capture whole page";
   }
 });
 document.querySelector("#select").addEventListener("click", async () => {

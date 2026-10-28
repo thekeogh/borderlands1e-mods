@@ -20,7 +20,10 @@ cpSync("chrome-extension", extension, { recursive: true });
 const manifest = JSON.parse(
   readFileSync(path.join(extension, "manifest.json"), "utf8"),
 );
-manifest.host_permissions.push("https://borderlands.fandom.com/*");
+manifest.host_permissions.push(
+  "https://borderlands.fandom.com/*",
+  "https://www.lootlemon.com/*",
+);
 writeFileSync(path.join(extension, "manifest.json"), JSON.stringify(manifest));
 const server = spawn(
   process.execPath,
@@ -454,6 +457,113 @@ try {
   await app
     .getByRole("button", { name: "Close shared evidence", exact: true })
     .click();
+
+  // Whole-page capture from the on-page panel requires no boxes and replaces an excerpt.
+  const fullWikiPopup = await context.newPage();
+  await fullWikiPopup.goto(`chrome-extension://${id}/popup.html`);
+  await expect(
+    fullWikiPopup.getByRole("button", {
+      name: "Capture whole page",
+      exact: true,
+    }),
+  ).toBeEnabled();
+  await fullWikiPopup
+    .getByRole("button", { name: "Select content on page", exact: true })
+    .click();
+  const wholePanel = unsent.locator("#borderlens-selection-overlay .panel");
+  await expect(wholePanel.locator("#count")).toContainText("Saved 0 boxes");
+  await wholePanel
+    .getByRole("button", { name: "Capture whole page", exact: true })
+    .click();
+  await expect(
+    wholePanel.getByRole("button", { name: "Whole page saved", exact: true }),
+  ).toBeDisabled();
+  const fullGroups = await app.request
+    .get("http://127.0.0.1:4321/api/shared-sources")
+    .then((r) => r.json());
+  const fullWiki = fullGroups.find((g: any) => g.family.id === owner.family.id)
+    .sources[0];
+  assert.equal(fullWiki.selectedContent, undefined);
+  assert.match(fullWiki.text, /Unselected boilerplate/);
+  assert.ok(fullWiki.tables.length);
+  assert.ok(!fullWiki.text.includes("Borderlens · Select content"));
+  assert.ok(!fullWiki.text.includes("private-test-secret"));
+  assert.ok(!fullWiki.text.includes("fixtureScript"));
+  const wikiClosed = unsent.waitForEvent("close");
+  await wholePanel
+    .getByRole("button", { name: "Back to workshop", exact: true })
+    .click();
+  await wikiClosed;
+  await app
+    .getByRole("button", { name: "Close shared evidence", exact: true })
+    .click();
+
+  // Lootlemon can use a Webflow body without a main/article element. Include loaded hidden tabs, not forms/scripts.
+  const lootUrl = "https://www.lootlemon.com/weapon/fixture-bl1";
+  await context.route("https://www.lootlemon.com/**", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: '<html><head><title>Lootlemon fixture</title></head><body><nav>Navigation junk</nav><div><h1>Lootlemon fixture</h1><p>The entire loaded item description is useful for this synthetic whole-page capture test.</p><section hidden><h2>Hidden loaded stats</h2><table><tr><th>Stat</th><th>Value</th></tr><tr><td>Damage</td><td>42</td></tr></table></section><p>Additional drop details outside the first text block remain available.</p></div><form><input value="loot-secret"></form><script>globalThis.lootScript=true</script></body></html>',
+    }),
+  );
+  await sourceUrlInput.fill(lootUrl);
+  const lootOpened = context.waitForEvent("page");
+  await captureLink.click();
+  const loot = await lootOpened;
+  await loot.goto(lootUrl);
+  const lootPopup = await context.newPage();
+  await lootPopup.goto(`chrome-extension://${id}/popup.html`);
+  await expect(
+    lootPopup.getByRole("button", {
+      name: "Send selections to Borderlens",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await expect(
+    lootPopup.getByRole("button", {
+      name: "Select content on page",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await lootPopup.screenshot({
+    path: ".test-data/screenshots/chrome-whole-page-option.png",
+  });
+  await lootPopup
+    .getByRole("button", { name: "Capture whole page", exact: true })
+    .click();
+  await expect(lootPopup.locator("#title")).toHaveText("Whole page saved");
+  const lootDetail = await app.request
+    .get(`http://127.0.0.1:4321/api/items/${family.id}`)
+    .then((r) => r.json());
+  const lootSource = lootDetail.sources.find((s: any) => s.url === lootUrl);
+  assert.equal(lootSource.captureMethod, "chrome");
+  assert.equal(lootSource.selectedContent, undefined);
+  assert.match(lootSource.text, /Additional drop details/);
+  assert.match(lootSource.text, /Hidden loaded stats/);
+  assert.equal(lootSource.tables[0].rows[1][1], "42");
+  assert.ok(!/loot-secret|lootScript|Navigation junk/.test(lootSource.text));
+  const lootClosed = loot.waitForEvent("close");
+  await lootPopup
+    .getByRole("button", { name: "Back to workshop", exact: true })
+    .click();
+  await lootClosed;
+  await expect(app.locator(".tabs > button.active")).toContainText(
+    "Sources & evidence",
+  );
+  assert.deepEqual(
+    (
+      await app.request
+        .get("http://127.0.0.1:4321/api/state")
+        .then((r) => r.json())
+    ).run,
+    runBeforeRecapture,
+  );
+  assert.deepEqual(
+    await app.request
+      .get("http://127.0.0.1:4321/__test/ai-count")
+      .then((r) => r.json()),
+    callsBeforeRecapture,
+  );
   const returns = await worker.evaluate(
     async () =>
       (await (globalThis as any).chrome.storage.session.get("jobs")).jobs,

@@ -1,11 +1,77 @@
 openapi: 3.0.3
 info:
   title: Borderlens local workshop
-  version: 0.46.0
+  version: 0.52.3
   description: Local-only catalogue processing. Disk-backed checkpoints; no hosted accounts or API-key billing.
 servers:
   - url: http://127.0.0.1:4317
 paths:
+  /api/project-backup/export:
+    post:
+      operationId: exportCompleteProject
+      description: Export a complete saved project ZIP, named YYYY-MM-DD_HH-mm.zip in local time. Requires processing fully paused/idle. Includes a standalone SQLite VACUUM snapshot (committed WAL included), all data sidecars, extraction archives, source HTML/manual text, drafts/output/history, AI caches and image library. Browser layout supplied in the body is included. Does not change project data or start work. Not the player catalogue export.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [selection, groups, tab, view, query, filter]
+              properties:
+                selection: { type: string, maxLength: 500 }
+                groups:
+                  { type: object, additionalProperties: { type: boolean } }
+                tab:
+                  {
+                    type: string,
+                    enum: [preview, game-data, sources, history, json],
+                  }
+                view: { type: string, enum: [catalogue, coverage, activity] }
+                query: { type: string, maxLength: 1000 }
+                filter: { type: string, maxLength: 100 }
+      responses:
+        "200":
+          description: Full project ZIP with backup.json inventory and SHA-256 checksums; Content-Disposition supplies the timestamped filename.
+          content:
+            { application/zip: { schema: { type: string, format: binary } } }
+        "400":
+          { description: Invalid browser layout or unsupported project files. }
+        "409":
+          {
+            description: Pause all processing and wait for the current step first.,
+          }
+        "413": { description: Project exceeds the backup size limit. }
+  /api/project-backup/import:
+    post:
+      operationId: importCompleteProject
+      description: Restore a complete Borderlens project ZIP (not a game extraction or standalone SQLite). Requires fully paused/idle work. Validate paths, size limits, inventory, hashes, database integrity, evidence/capture dependencies and overrides before touching the current project. Atomically replace data, reopen the same Store without startup migrations, retain the previous project as a recovery copy and roll back on installation failure. Restore images into the project image-library. No queue/model calls or automatic Resume; paused checkpoints remain paused. Browser reapplies returned layout then reloads. External CLI login and extension/browser runtime are not included.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [backup]
+              properties: { backup: { type: string, format: binary } }
+      responses:
+        "200":
+          {
+            description: Restored; returns ok,
+            browser ui,
+            backup createdAt and recoveryCopy path.,
+          }
+        "400":
+          {
+            description: Invalid/incomplete/damaged/unsafe/incompatible archive; current project retained.,
+          }
+        "409":
+          {
+            description: Pause all processing and wait for the current step first.,
+          }
+        "413":
+          { description: Upload exceeds 1 GB or expanded backup exceeds 4 GB. }
+
   /api/shared-sources:
     get:
       operationId: listSharedEvidence
@@ -772,6 +838,7 @@ paths:
   /api/reset:
     post:
       operationId: resetProject
+      description: Requires explicit scope and RESET confirmation, with worker/coverage/metadata sync stopped. all recreates the project data directory and database, removes restored image-library and automatic recovery copies owned by this project, clears raw/artifact/source rows, settings, history and in-memory research/provider caches. Retains shipped/external image assets, app code, CLI accounts, extension preferences and user-exported backups outside the project. Browser clears its project layout and reloads. generated removes compiled entries, archived generated drafts/revisions, validation/retry/follow-up state, CLI response caches and internal exports; retains extracted data, archived/manual/shared evidence, research readings/indexes, exclusions/modes/removals, name/type/image corrections, historical statistics and manually edited JSON/dependencies. Both clear run/checkpoints and never start work.
       requestBody:
         required: true
         content:

@@ -21,7 +21,7 @@
     .panel{pointer-events:auto;position:absolute;right:18px;bottom:18px;width:350px;max-width:calc(100vw - 36px);max-height:70vh;overflow:auto;background:#fbfcf8;border:1px solid #aebda7;border-radius:12px;box-shadow:0 8px 40px #0005;padding:18px}
     h2{font-size:18px;margin:0 0 10px}p{line-height:1.5;margin:8px 0}small{font-size:11px;color:#65745e}button{font:inherit;cursor:pointer;border:1px solid #bdcbb4;background:#fff;color:#315337;border-radius:6px;padding:8px 10px}button:disabled{opacity:.45;cursor:default}button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #ba9942;outline-offset:2px}.send{background:#315c3c;color:white;border-color:#315c3c;width:100%;margin-top:12px;font-weight:650}.close{float:right;padding:2px 7px}.tools{display:flex;gap:6px;margin-top:10px}.error{color:#9c352c}.ok{color:#2d643c}pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:160px;overflow:auto;background:#eef2e7;padding:8px;font-size:12px}summary{cursor:pointer;margin-top:10px}label{display:block;line-height:1.5;margin:10px 0}
     .box{position:absolute;border:2px solid #348252;background:#33825212;pointer-events:none;min-width:8px;min-height:8px}.box.bad{border-color:#c13e35;background:#c13e3512}.bar{position:absolute;left:-2px;top:-30px;display:flex;align-items:center;gap:4px;white-space:nowrap;background:#fff;border:1px solid currentColor;border-radius:5px;padding:2px;pointer-events:auto;color:#267343;cursor:move;box-shadow:0 1px 4px #0002}.bad .bar{color:#a32d25}.bar button{padding:2px 5px;font-size:11px}.caption{padding:0 4px;font-size:11px;max-width:170px;overflow:hidden;text-overflow:ellipsis}.handle{position:absolute;width:12px;height:12px;background:white;border:2px solid #348252;pointer-events:auto}.bad .handle{border-color:#c13e35}.nw{left:-7px;top:-7px;cursor:nwse-resize}.ne{right:-7px;top:-7px;cursor:nesw-resize}.sw{left:-7px;bottom:-7px;cursor:nesw-resize}.se{right:-7px;bottom:-7px;cursor:nwse-resize}.drawing{pointer-events:none}.hint{padding:8px;border-radius:5px;background:#eef2e7}a{color:#315c3c}
-  </style><div id="boxes"></div><section class="panel" aria-label="Borderlens content selection"><button class="close" aria-label="Close selection">×</button><h2>Borderlens · Select content</h2><label class="close-tab-preference"><input id="close-source-tab" type="checkbox" disabled> Close source tab when returning after capture</label><p>Hold <b>Ctrl</b> and drag around the content you want. Release to save a box. Repeat for more.</p><small>Resize using the corner handles. Drag a box’s label to move it. “Fit content” expands to complete paragraphs or tables.</small><p id="count">Saved 0 boxes</p><p class="hint" id="hint">Select some article text to enable sending.</p><details><summary>Preview selected text</summary><pre id="preview">No content selected.</pre></details><label id="partial" hidden><input type="checkbox"> I checked the preview; send partial selections anyway.</label><button class="send" disabled>Send to Borderlens</button><div class="tools"><button id="clear">Clear boxes</button><button id="workshop">Back to workshop</button></div><p id="message" role="status"></p><small>Green = structurally complete text. Red = clipped text/table or no usable content. Green does not guarantee complete facts. Navigation or refresh clears selections.</small></section>`;
+  </style><div id="boxes"></div><section class="panel" aria-label="Borderlens content selection"><button class="close" aria-label="Close selection">×</button><h2>Borderlens · Select content</h2><label class="close-tab-preference"><input id="close-source-tab" type="checkbox" disabled> Close source tab when returning after capture</label><p>Hold <b>Ctrl</b> and drag around the content you want. Release to save a box. Repeat for more.</p><small>Resize using the corner handles. Drag a box’s label to move it. “Fit content” expands to complete paragraphs or tables.</small><p id="count">Saved 0 boxes</p><p class="hint" id="hint">Select some article text to enable sending.</p><details><summary>Preview selected text</summary><pre id="preview">No content selected.</pre></details><label id="partial" hidden><input type="checkbox"> I checked the preview; send partial selections anyway.</label><button class="send" disabled>Send to Borderlens</button><button id="whole" style="width:100%;margin-top:8px">Capture whole page</button><div class="tools"><button id="clear">Clear boxes</button><button id="workshop">Back to workshop</button></div><p id="message" role="status"></p><small>Green = structurally complete text. Red = clipped text/table or no usable content. Green does not guarantee complete facts. Navigation or refresh clears selections.</small></section>`;
   document.documentElement.append(host);
   const $ = (s) => shadow.querySelector(s);
   const boxesRoot = $("#boxes"),
@@ -441,6 +441,18 @@
   };
   function listener(message, _sender, respond) {
     if (message.type === "SELECTION_STATUS") respond(api.status());
+    if (message.type === "FULL_CAPTURE_SAVED") {
+      delivered = true;
+      for (const button of boxesRoot.querySelectorAll("button"))
+        button.disabled = true;
+      $("#clear").disabled = true;
+      $("#whole").disabled = true;
+      $("#whole").textContent = "Whole page saved";
+      send.textContent = "Saved to Borderlens";
+      $("#message").textContent = "Whole page saved. Return to the workshop.";
+      updateSend();
+      respond({ ok: true });
+    }
   }
   function close() {
     cancelAnimationFrame(raf);
@@ -511,6 +523,34 @@
       $("#message").className = "error";
     }
   };
+  $("#whole").onclick = async () => {
+    if (busy || delivered) return;
+    busy = true;
+    updateSend();
+    $("#whole").disabled = true;
+    $("#message").textContent = "Saving whole page…";
+    $("#message").className = "";
+    try {
+      const result = await chrome.runtime.sendMessage({ type: "CAPTURE_PAGE" });
+      if (!result?.ok)
+        throw Error(result?.error || "The workshop did not respond.");
+      delivered = true;
+      for (const button of boxesRoot.querySelectorAll("button"))
+        button.disabled = true;
+      $("#clear").disabled = true;
+      $("#message").textContent =
+        result.message || "Whole page saved. Return to the workshop.";
+      send.textContent = "Saved to Borderlens";
+      $("#whole").textContent = "Whole page saved";
+    } catch (error) {
+      $("#message").textContent = error.message;
+      $("#message").className = "error";
+    } finally {
+      busy = false;
+      $("#whole").disabled = delivered;
+      updateSend();
+    }
+  };
   send.onclick = async () => {
     if (
       location.href !== startUrl &&
@@ -539,6 +579,7 @@
       if (!result?.ok)
         throw Error(result?.error || "The workshop did not respond.");
       delivered = true;
+      $("#whole").disabled = true;
       for (const button of boxesRoot.querySelectorAll("button"))
         button.disabled = true;
       $("#clear").disabled = true;

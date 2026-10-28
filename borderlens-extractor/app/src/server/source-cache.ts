@@ -1,3 +1,4 @@
+import { interpretationContent } from "./deterministic-source.ts";
 import { SHARED_READING_POLICY } from "./shared-source-index.ts";
 import {
   SourceReading,
@@ -40,22 +41,29 @@ export function savedSourceCache(
       const entry = ledger.find(
         (row) => row.sourceId === page.id && row.hash === page.hash,
       );
-      const content =
-        page.text +
-        "\n\nSTORED SECTIONS AND TABLES\n" +
-        JSON.stringify({
-          sections: page.sections || [],
-          tables: page.tables || [],
-        });
-      const chunks = sourceChunks(content);
+      const interpreted = interpretationContent(store, f, page);
+      const content = interpreted.content;
+      const chunks = content ? sourceChunks(content) : [];
+      const parsedChunk = entry?.chunks.find((chunk) => chunk.index === -1);
+      if (
+        entry?.interpretationHash &&
+        (entry.interpretationHash !== interpreted.hash ||
+          entry.parserPolicy !== interpreted.policy)
+      )
+        throw Error();
+      if (
+        stable(parsedChunk?.reading.facts || []) !== stable(interpreted.facts)
+      )
+        throw Error();
+      const remaining = entry?.chunks.filter((chunk) => chunk.index >= 0) || [];
       if (
         !entry ||
         entry.characters !== content.length ||
-        entry.chunks.length !== chunks.length
+        remaining.length !== chunks.length
       )
         throw Error();
       for (const [index, text] of chunks.entries()) {
-        const chunk = entry.chunks[index],
+        const chunk = remaining[index],
           reading = SourceReading.parse(chunk.reading);
         if (
           chunk.index !== index ||

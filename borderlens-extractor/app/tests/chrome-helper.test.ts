@@ -65,7 +65,7 @@ function ai(s: Store, wait?: () => Promise<void>): AI {
       return schema.parse({
         entry: {
           schemaVersion: "7",
-          compilerVersion: "0.11.2",
+          compilerVersion: "0.15.1",
           id: f.id,
           name: f.name,
           dlc: null,
@@ -224,8 +224,9 @@ test("helper endpoints keep same-origin protection and package only extension fi
       ).arrayBuffer(),
     ),
   );
-  assert.equal(archive.getEntries().length, 8);
+  assert.equal(archive.getEntries().length, 9);
   assert.ok(archive.getEntry("borderlens-chrome-helper/selection.js"));
+  assert.ok(archive.getEntry("borderlens-chrome-helper/capture-page.js"));
   assert.ok(archive.getEntry("borderlens-chrome-helper/manifest.json"));
   const manifest = JSON.parse(
     archive.readAsText("borderlens-chrome-helper/manifest.json"),

@@ -1,5 +1,8 @@
 import { RunCancelledError } from "../shared/run-cancellation.ts";
-import type { EvidenceInput } from "../shared/evidence-stats.ts";
+import type {
+  EvidenceInput,
+  EvidenceStatsEvent,
+} from "../shared/evidence-stats.ts";
 import { recordEvidenceEvent } from "./evidence-stats.ts";
 import { agentOutputSchema } from "../shared/agent-schema.ts";
 import path from "node:path";
@@ -52,11 +55,11 @@ export class AgentRouter implements AI {
           ...(saved.codex ? { codex: saved.codex } : {}),
         };
       } catch {}
-    // A fixed caller-side nullable-root bug is not a provider outage/capacity limit.
+    // Fixed caller-side schema bugs are not provider outages/capacity limits.
     let repaired = false;
     for (const agent of ["grok", "codex"] as const)
       if (
-        /Invalid schema[\s\S]*codex_output_schema[\s\S]*schema must be a JSON Schema[\s\S]*None/.test(
+        /Invalid schema[\s\S]*codex_output_schema[\s\S]*(?:schema must be a JSON Schema[\s\S]*None|oneOf[\s\S]*not permitted when strict)/.test(
           this.failures[agent]?.message || "",
         )
       ) {
@@ -156,6 +159,8 @@ export class AgentRouter implements AI {
         );
         continue;
       }
+      let recorded: EvidenceStatsEvent | undefined;
+      const requestStarted = Date.now();
       try {
         onProgress(`${agentNames[agent]} — starting ${label.toLowerCase()}…`);
         const output = await this.runners[agent]!.run(
@@ -169,16 +174,26 @@ export class AgentRouter implements AI {
             ...actualInput,
             onEvent: (kind) => {
               if (family)
-                recordEvidenceEvent(this.store, family, actualInput, {
-                  kind,
-                  label,
-                  agent,
-                  promptCharacters: prompt.length,
-                });
+                recorded = recordEvidenceEvent(
+                  this.store,
+                  family,
+                  actualInput,
+                  {
+                    kind,
+                    label,
+                    agent,
+                    promptCharacters: prompt.length,
+                    promptBytes: Buffer.byteLength(prompt, "utf8"),
+                  },
+                );
               input.onEvent?.(kind);
             },
           },
         );
+        if (recorded) {
+          recorded.elapsedMs = Date.now() - requestStarted;
+          this.store.save();
+        }
         if (this.cancelled) throw new RunCancelledError();
         delete this.failures[agent];
         atomic(this.file, JSON.stringify(this.failures));
@@ -190,6 +205,10 @@ export class AgentRouter implements AI {
           : undefined;
         return output;
       } catch (error: any) {
+        if (recorded) {
+          recorded.elapsedMs = Date.now() - requestStarted;
+          this.store.save();
+        }
         if (this.cancelled) throw new RunCancelledError();
         const message = String(error.message || error).slice(0, 1500);
         this.failures[agent] = {

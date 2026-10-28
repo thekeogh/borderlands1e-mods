@@ -1,3 +1,4 @@
+import { coreIdentityConcern } from "./fact-semantics.ts";
 import { extractedContent } from "./content.ts";
 import {
   genericAdviceReason,
@@ -216,6 +217,13 @@ export function buildPacket(
   );
   return {
     character: f.character,
+    identityNames: [
+      f.name,
+      f.rawName,
+      ...f.aliases,
+      f.nameOverride?.identityName,
+      ...(f.nameOverride?.identityAliases || []),
+    ].filter(Boolean) as string[],
     element: f.element,
     familyId: f.id,
     name: f.name,
@@ -236,7 +244,28 @@ export class StatContextError extends Error {
     );
   }
 }
-export function validateDraft(draft: any, p: Packet) {
+export function validateDraft(
+  draft: any,
+  p: Packet,
+  warn?: (message: string) => void,
+) {
+  const advisory = (error: Error) => {
+    if (warn) warn(error.message);
+    else throw error;
+  };
+  const identityIssue = [draft.reviewReason, ...draft.conflicts]
+    .filter(Boolean)
+    .find(coreIdentityConcern);
+  if (identityIssue) throw new Error(identityIssue);
+  // Optional research uncertainty is advisory in best-effort automatic builds.
+  if (draft.requiresReview || draft.conflicts.length)
+    advisory(
+      new Error(
+        draft.reviewReason ||
+          draft.conflicts[0] ||
+          "This entry needs review before export.",
+      ),
+    );
   acquisitionSources(draft.entry.sources);
   if (p.facts.dlc && draft.entry.dlc !== p.facts.dlc)
     throw new Error("Item DLC differs from its extracted identity package.");
@@ -251,13 +280,13 @@ export function validateDraft(draft: any, p: Packet) {
           other.level === stat.level,
       )
     )
-      throw new StatContextError(stat.name);
+      advisory(new StatContextError(stat.name));
     const key = JSON.stringify([
       stat.name.trim().toLowerCase(),
       stat.context?.trim().toLowerCase() || null,
       stat.level,
     ]);
-    if (statKeys.has(key)) throw new StatContextError(stat.name);
+    if (statKeys.has(key)) advisory(new StatContextError(stat.name));
     statKeys.add(key);
   }
   if (
@@ -283,12 +312,14 @@ export function validateDraft(draft: any, p: Packet) {
       quality?.startsWith("Vague comparison") ||
       quality?.startsWith("Research wording")
     )
-      throw new UnclearPublicProse(passage, quality);
+      advisory(new UnclearPublicProse(passage, quality));
     const reason = genericAdviceReason(passage) || quality;
     if (reason)
-      throw new Error(
-        reason +
-          ": remove shared-site guide content; keep item-specific facts only.",
+      advisory(
+        new Error(
+          reason +
+            ": remove shared-site guide content; keep item-specific facts only.",
+        ),
       );
   }
   const publicText = [
@@ -324,16 +355,20 @@ export function validateDraft(draft: any, p: Packet) {
       publicText,
     )
   )
-    throw new Error(
-      "Player-facing text contains engine/debug language. Rebuild or edit the draft.",
+    advisory(
+      new Error(
+        "Player-facing text contains engine/debug language. Rebuild or edit the draft.",
+      ),
     );
   if (
     /source[- ]reported|according to (?:the )?(?:wiki|lootlemon|source)|(?:wiki|lootlemon) (?:reports|states|says)/i.test(
       publicText,
     )
   )
-    throw new Error(
-      "Public catalogue facts must not contain source-reporting labels; keep attribution in private evidence.",
+    advisory(
+      new Error(
+        "Public catalogue facts must not contain source-reporting labels; keep attribution in private evidence.",
+      ),
     );
   if (
     draft.entry.stats.some((stat: any) =>
@@ -342,8 +377,10 @@ export function validateDraft(draft: any, p: Packet) {
       ),
     )
   )
-    throw new Error(
-      "Remove source/range verification commentary from public stat notes; use null levels and private evidence instead.",
+    advisory(
+      new Error(
+        "Remove source/range verification commentary from public stat notes; use null levels and private evidence instead.",
+      ),
     );
   // Catch substantial verbatim copying while allowing names, red text and short labels.
   const words = (text: string) =>
@@ -403,16 +440,20 @@ export function validateDraft(draft: any, p: Packet) {
     effects.length > 2 ||
     effects.join(" ").trim().split(/\s+/).filter(Boolean).length > 45
   )
-    throw new Error(
-      "Special-effect explanation must be at most two short entries and 45 words total. Rewrite the saved article explanation in plain gameplay language.",
+    advisory(
+      new Error(
+        "Special-effect explanation must be at most two short entries and 45 words total. Rewrite the saved article explanation in plain gameplay language.",
+      ),
     );
   if (
     /tech[- ]consuming|tech levels?|defining accessory|accessory adds|ordinary incendiary accessory/i.test(
       [draft.entry.summary, ...effects].join(" "),
     )
   )
-    throw new Error(
-      "Effect explanation is too technical. Explain the player-visible ability in plain language, using the saved articles.",
+    advisory(
+      new Error(
+        "Effect explanation is too technical. Explain the player-visible ability in plain language, using the saved articles.",
+      ),
     );
   if (
     draft.entry.notes.some((note: string) =>
@@ -421,8 +462,10 @@ export function validateDraft(draft: any, p: Packet) {
       ),
     )
   )
-    throw new Error(
-      "Move evidence limitations into uncertainties; public notes should contain gameplay tips.",
+    advisory(
+      new Error(
+        "Move evidence limitations into uncertainties; public notes should contain gameplay tips.",
+      ),
     );
   if (effects.length && p.evidence.some((e) => e.kind === "page")) {
     const pages = new Set(
@@ -437,8 +480,10 @@ export function validateDraft(draft: any, p: Packet) {
           claim.evidenceIds.some((id: string) => pages.has(id)),
       )
     )
-      throw new Error(
-        "Special effects must cite the saved wiki/Lootlemon article explanation (or an explicit manual review), not only raw game internals.",
+      advisory(
+        new Error(
+          "Special effects must cite the saved wiki/Lootlemon article explanation (or an explicit manual review), not only raw game internals.",
+        ),
       );
   }
   const claimed = new Set(draft.claims.map((c: any) => c.field));
@@ -473,11 +518,5 @@ export function validateDraft(draft: any, p: Packet) {
   if (p.facts.redText && draft.entry.redText !== p.facts.redText)
     throw new Error(
       "Generated red flavour text differs from the captured text.",
-    );
-  if (draft.requiresReview || draft.conflicts.length)
-    throw new Error(
-      draft.reviewReason ||
-        draft.conflicts[0] ||
-        "This entry needs review before export.",
     );
 }

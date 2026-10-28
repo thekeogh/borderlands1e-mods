@@ -165,19 +165,30 @@ const ai: AI = {
         conflicts: [],
       });
     }
+    const outline = s.get<any>(f.id, "factualOutline");
     return schema.parse({
       nameDecision: f.notes.includes("browser-name-fixture")
         ? nameProposal(f, namePage)
         : null,
       entry: {
         schemaVersion: "7",
-        compilerVersion: "0.11.2",
+        compilerVersion: "0.15.1",
         description: [
           "An original fixture paragraph describing this item for players.",
         ],
         references: [],
-        variants: [],
-        parts: [],
+        variants:
+          outline?.slots.variants.map((slot: any) => ({
+            id: slot.id,
+            description:
+              "A synthetic alternate configuration with documented differences.",
+            differences: slot.distinctions,
+          })) || [],
+        parts:
+          outline?.fixed.parts.map((part: any) => ({
+            partId: part.partId,
+            notes: "",
+          })) || [],
         id: f.id,
         name: f.name,
         dlc: p.facts.dlc || null,
@@ -194,11 +205,28 @@ const ai: AI = {
         redText: p.facts.redText,
         specialEffects: [],
         levels: { minimum: null, maximum: null, notes: "" },
-        stats: [],
-        sources: [],
+        stats:
+          outline?.slots.stats.map((slot: any) => ({
+            id: slot.id,
+            context: slot.context,
+            notes: "",
+          })) || [],
+        sources:
+          outline?.slots.sources.map((slot: any) => ({
+            id: slot.id,
+            notes: "Original synthetic acquisition wording.",
+            conditions: slot.conditions,
+            dropConditions: slot.dropConditions,
+          })) || [],
         notes: [],
       },
-      partDefinitions: [],
+      partDefinitions:
+        outline?.parts.map((part: any) => ({
+          id: part.id,
+          name: "Defining " + part.slot,
+          effects: [],
+          notes: [],
+        })) || [],
       evidenceRequests:
         f.notes.includes("browser-followup-fixture") &&
         !_prompt.includes('"retrieval":{"topic":')
@@ -236,10 +264,14 @@ const ai: AI = {
         evidenceIds: [p.evidence[0].id],
         basis: "Browser fixture only.",
       })),
-      uncertainties: [],
+      uncertainties: f.notes.includes("browser-followup-fixture")
+        ? ["An optional acquisition name has alternate spellings."]
+        : [],
       conflicts: [],
-      requiresReview: false,
-      reviewReason: null,
+      requiresReview: f.notes.includes("browser-followup-fixture"),
+      reviewReason: f.notes.includes("browser-followup-fixture")
+        ? "Optional rank progression is not fully established."
+        : null,
     });
   },
 };

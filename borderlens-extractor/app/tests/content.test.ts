@@ -104,14 +104,20 @@ function draft(
     reviewReason: null,
   });
 }
-test("exact extraction identity packages identify all four DLCs across equipment families without assuming base game", () => {
+test("reviewed original identity packages distinguish Base Game, DLC and unknown packages", () => {
   for (let i = 1; i <= 4; i++) {
     const x = packet([`DLC${i}_gd_items.Title.Origin`]);
     assert.equal(extractedContent(x.f, x.records).dlc, contentPacks[i]);
     assert.equal(x.p.facts.dlc, contentPacks[i]);
   }
   const x = packet(["gd_shields.Title.Origin"]);
-  assert.equal(x.p.facts.dlc, null);
+  assert.equal(x.p.facts.dlc, "Base Game");
+  assert.equal(packet(["gd_unreviewed.Title.Origin"]).p.facts.dlc, null);
+  assert.equal(
+    packet(["gd_shields.Title.Origin", "dlc3_gd_items.Title.Origin"]).p.facts
+      .dlc,
+    null,
+  );
   assert.equal(
     extractedContent(family(["dlc3_missing.Title.Origin"]), x.records).dlc,
     null,
@@ -129,7 +135,7 @@ test("shared DLC loot/parts do not assign origin; contradictory identity roots r
   assert.equal(
     buildPacket({ records, sources: () => [], get: () => null }, family([base]))
       .facts.dlc,
-    null,
+    "Base Game",
   );
   assert.equal(
     packet(["dlc2_gd_items.Title.Origin", "dlc3_gd_items.Title.Origin"]).p.facts

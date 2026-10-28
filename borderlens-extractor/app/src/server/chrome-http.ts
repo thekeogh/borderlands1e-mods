@@ -13,7 +13,7 @@ const folder = fileURLToPath(
 export function chromeRoutes(app: Express, worker: Worker) {
   app.get("/api/chrome-helper", (_req, res) =>
     res.json({
-      version: "1.2.0",
+      version: "1.3.0",
       extensionPath: folder,
       chromeUrl: "chrome://extensions/",
       platform: process.platform,
@@ -41,6 +41,7 @@ export function chromeRoutes(app: Express, worker: Worker) {
       "popup.html",
       "popup.js",
       "selection.js",
+      "capture-page.js",
       "popup.css",
       "README.md",
     ])

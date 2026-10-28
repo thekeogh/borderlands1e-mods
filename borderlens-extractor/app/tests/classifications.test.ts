@@ -102,7 +102,7 @@ function ai(
       return schema.parse({
         entry: {
           schemaVersion: "7",
-          compilerVersion: "0.11.2",
+          compilerVersion: "0.15.1",
           description: [
             "An original fixture paragraph describing this item for players.",
           ],

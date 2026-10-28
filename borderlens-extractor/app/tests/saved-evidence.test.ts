@@ -1,3 +1,4 @@
+import { interpretationText } from "../src/server/deterministic-source.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -341,13 +342,7 @@ test("cached indexed facts can recover filtered Auto context with numerical valu
     `<h1>Amplifier ignition</h1><p>${body}</p>`,
     true,
   );
-  const text =
-    page.text +
-    "\n\nSTORED SECTIONS AND TABLES\n" +
-    JSON.stringify({
-      sections: page.sections || [],
-      tables: page.tables || [],
-    });
+  const text = interpretationText(page);
   await sharedChunkReading(
     s,
     {

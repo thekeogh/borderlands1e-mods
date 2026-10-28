@@ -2,6 +2,33 @@
 
 A local workspace for turning BL1 Enhanced extractions into readable item-family JSON. Import a capture, press **Start from saved sources**, and browse while it researches and builds each entry. Progress, pages and corrections are saved on disk.
 
+## Back up or restore the whole project
+
+In **Settings → Project backup**, pause processing, then:
+
+- **Export Data** → choose a Save As location. Filename defaults to `YYYY-MM-DD_HH-mm.zip`, e.g. `2026-10-27_13-16.zip`. Browsers without native Save As use their normal download behavior.
+- **Import Data** → select that ZIP. The app validates it, replaces the saved project and reloads into its backed-up item/tab. No manual rename or unzip, and no extra confirmation step.
+
+This is a complete saved-project backup, separate from the player catalogue export.
+SQLite alone is insufficient. The ZIP includes a consistent database snapshot,
+original extraction archives, captured HTML/manual evidence, inherited modes,
+JSON/drafts/history, corrections/name/type/image overrides, AI caches/logs and the
+entire image library. Selected item, tab, sidebar groups and filters are included.
+Paused runs/checkpoints remain paused; restoring starts no AI or builds.
+
+Restore checks file inventory, SHA-256 hashes, safe paths, database integrity and
+required source/capture files before touching current data. Installation failure
+rolls back. The previous project is retained next to `.data` as
+`.data.before-restore-<timestamp>-<id>` for recovery. Restored images live inside
+`.data/image-library`, so the backup is portable. Backups can be saved to your
+Dropbox folder using Save As; the app makes no cloud upload itself.
+
+The backup contains saved project data, not application code, CLI sign-in accounts,
+browser extension installation/settings, unsent page boxes or unsaved text fields.
+Import accepts the app’s complete backup ZIP, not a standalone SQLite or game ZIP.
+Uploads support up to 1 GB compressed / 4 GB expanded. Keep using a compatible app
+version for the same schema; later normal startup migrations still apply.
+
 ## Where data lives
 
 Paths are relative to this folder (default configuration).
@@ -95,6 +122,10 @@ Completed items pass source checks and a final whole-document check for JSON syn
 
 **Coverage** compares extracted families with wiki/Lootlemon listings. Link ambiguous names to a family or exclude irrelevant candidates. Settings control writing style, optional game-evidence-only processing, run size, and resets.
 
+**Restart generated work** clears generated outputs, drafts, retries, validation/follow-up state, current run/checkpoint, AI response caches and internal exports. Keeps captures, research, saved evidence, inclusion choices, corrections, history and manually saved JSON. No work starts automatically.
+
+**Clear the entire project** recreates the project data folder and database: all captures, web/manual/shared evidence, JSON, histories, settings, overrides, restored images, caches, queued imports and automatic recovery copies are removed. Browser project selection/layout also resets. App code, built-in image assets, downloaded backups outside the project data folder and external account/extension settings remain. Pause processing first; type RESET to confirm.
+
 **Current item** clears sidebar search/status filters, opens its category/character path and scrolls to the item. The sidebar collapse/expand controls work one level per click: collapse deepest groups first, expand parents first. Spinners mark the active category and character group even when collapsed.
 
 Category and character-group badges show **completed / needs attention / total**. Hover for waiting and processing counts. Counts follow the current search/filter.
@@ -149,7 +180,7 @@ Put images in `img/borderlands/` under their type folder, for example `weapons/h
 
 **Coverage → Image coverage** lists missing and ambiguous images, with search and a link to each item. **Refresh images** picks up files you add. Captured candidates awaiting review are included; deliberately excluded items are hidden.
 
-Website JSON includes `image: "weapons/hellfire.png"`, or `null` when missing. The export ZIP remains JSON-only. Your website supplies the base image URL. Saved choices live in `.data/image-overrides.json` and survive restarts and generated resets; a full project reset clears choices but keeps the image files.
+Website JSON includes `image: "weapons/hellfire.png"`, or `null` when missing. The export ZIP remains JSON-only. Your website supplies the base image URL. Saved choices live in `.data/image-overrides.json` and survive restarts and generated resets; a full project reset clears choices and restored project-local images; built-in app image files remain.
 
 ## Choose an agent
 
@@ -169,7 +200,7 @@ Click **Chrome helper** in the toolbar. The app opens Chrome’s extensions page
 2. Wait until the actual article is visible. Click the pinned extension → **Select content on page**.
 3. Hold **Ctrl** and drag boxes around useful text. Move boxes by their labels, resize corners, remove with ×, or **Fit content** to complete paragraphs/tables. Green means structurally complete; red needs review. Empty boxes cannot be sent.
 4. Check the floating panel’s preview and size. Partial selections require acknowledgement; click **Send to Borderlens**.
-3. Return to the workshop. The page is cached, its status updates automatically, and the changes are saved for your next requested build. Click **Rebuild from saved sources** to use them.
+5. Return to the workshop. The page is cached, its status updates automatically, and the changes are saved for your next requested build. Click **Rebuild from saved sources** to use them.
 
 No HTML copying or cookie sharing. It captures article content you explicitly send, not browser history or account fields. It makes no background wiki requests and does not solve access challenges. Imports received during processing wait for its next safe checkpoint. Each ticket is tied to one item/article and expires after 30 minutes; open the source again from the app if it expires. Capture does not automatically spend Codex allowance or start a new run.
 
@@ -271,6 +302,61 @@ Optional live subscription/fallback check: `pnpm exec tsx tests/live-agents.ts`.
 
 **Move evidence to parent** (up-arrow on an evidence card) shares the article one level higher: item → character/weapon group → category → Everything. Move again from its new shared group to go higher. Saved content is retained; duplicates merge. Evidence edits never start builds or add items to a running queue; affected entries use the changed evidence on your next requested build.
 
-On an item's **Sources & evidence** tab, each inherited source has **Auto / Always include / Never include**. Auto (default) selects relevant facts and retains uncertain ones. Always include sends every indexed fact to the writer, which can still omit irrelevant information from final JSON. Never include skips that source before fetching, classification, source reading and writing for this item. The article remains saved and visible; other items can still use it. Choices apply on the next requested build and survive restarts/generated resets. Changing a mode never starts a build. Shared category controls have no inclusion dropdowns.
+On an item's **Sources & evidence** tab, each inherited source has **Auto / Always include / Never include**. Saved rows also have **View stored content**, opening the full-text, sections/tables, source record and stored HTML/text tabs. Works for manual text and Never include rows too. Auto (default) selects relevant facts and retains uncertain ones. Always include sends every indexed fact to the writer, which can still omit irrelevant information from final JSON. Never include skips that source before fetching, classification, source reading and writing for this item. The article remains saved and visible; other items can still use it. Choices apply on the next requested build and survive restarts/generated resets. Changing a mode never starts a build. Shared category controls have no inclusion dropdowns.
 
 **Additional saved evidence:** while drafting, the agent can request up to three specific missing topics. The workshop searches saved articles and cached fact indexes, then supplies at most four short matches for **one** extra writing pass. No request or no match costs no extra writing call. No new scraping occurs. Never include and removed sources remain excluded. If the extra pass fails, the original draft continues. Sources & evidence shows the requests, exact saved excerpts and any misses. Answers are reused across retries/restarts until their inputs or saved sources change; retrieved pages are not permanently attached to the item. Compiler 0.9.0 adds this step; existing output stays retained until you request a rebuild.
+
+**Build pipeline (compiler 0.13.0):** the app extracts supported game properties
+and recognised complete tables, interprets remaining evidence through cached AI
+readings, then assembles the factual data. AI writes original prose only; code
+combines it with established values and validates the result. Missing data stays
+unknown. Shared mechanics, sample values and ordinal progression remain separate
+from item stats. Unsupported calculations are not guessed.
+
+Keep capturing useful content with the Chrome selection tool as before. No special
+format is required; complete table headers and nearby conditions help. Unknown
+layouts and partial selections use interpretation rather than guessed parsing.
+Saved HTML/text is never rewritten. The first requested build under this contract
+may refresh readings from saved content; no website recapture is required.
+
+Accepted shared interpretations and validated corrections are cached against their
+evidence version and scope. Prose corrections preserve established facts and valid
+text; changes to sources/overrides invalidate dependent results. No automatic
+global AI rules are created. Existing JSON/manual corrections remain retained.
+
+AI evidence statistics show actual prompt bytes/characters and CLI round-trip time
+when recorded, plus source sends, cache hits and labelled retries. Prompt sizes
+exclude schemas/wrappers; provider token counts are not estimated as exact usage.
+See [the implementation plan](OFFLINE_BUILD_PLAN.md) and
+[isolated payload measurements](OFFLINE_BUILD_BASELINE.md).
+
+### Builds with incomplete evidence
+
+Automatic builds save the best supported entry instead of waiting for perfect
+research. Optional names, progression uncertainty, numerical disagreements and
+minor wording issues become **Built with … notes** in Preview and are retained
+in History/provenance. Unsupported optional sources and conditions may be omitted;
+missing evidence is not a player acquisition requirement. Equally ranked source
+values use the first supported value; existing source priority still applies.
+Original AI wording, valid JSON, core item identity, valid bounds and captured
+part relationships remain checked. No recapture required: rebuild from saved sources.
+
+Acquisition facts for the same named source are combined before the AI wording
+pass, keeping separate reward/playthrough contexts. Different known locations
+and conditional drop rates remain distinct. Alternate names merge only when a
+captured quote explicitly establishes the alias. Source slots carry original
+reward/drop facts so the writer can retain useful rank and random-reward details.
+
+The DLC field distinguishes **Base Game** from **Unknown**. Original identity
+roots in reviewed base-game packages establish Base Game; DLC identity packages
+or explicit origin evidence establish expansions. Shared drop locations and a
+missing DLC prefix alone do not establish origin. Existing outputs are retained
+until rebuilding; compatible saved interpretations need no new AI read.
+
+**Whole-page Chrome capture:** in the extension popup or floating selection panel,
+choose **Capture whole page** to save all loaded article text/tables without boxes.
+The box selection tools remain available. Whole-page capture includes loaded
+Lootlemon content even without a main/article wrapper; it does not fetch unloaded
+data. Recapture replaces the saved source at its existing owner and never starts
+a build. After updating, reload the extension in chrome://extensions and refresh
+the workshop/source tabs.

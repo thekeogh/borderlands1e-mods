@@ -1,6 +1,6 @@
 {
   "name": "borderlens-workshop",
-  "version": "0.46.0",
+  "version": "0.52.3",
   "private": true,
   "type": "module",
   "engines": {
@@ -14,7 +14,8 @@
     "check": "tsc --noEmit",
     "format": "prettier --write src tests api vite.config.ts README.md",
     "test:browser": "tsx tests/browser-smoke.ts",
-    "test:chrome": "tsx tests/chrome-extension-browser.ts"
+    "test:chrome": "tsx tests/chrome-extension-browser.ts",
+    "test:backup": "tsx tests/project-backup-browser.ts"
   },
   "dependencies": {
     "adm-zip": "^0.5.16",

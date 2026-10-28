@@ -19,6 +19,10 @@ export type EvidenceStatsEvent = {
   sources: EvidenceSourceStat[];
   agent?: Agent;
   promptCharacters?: number;
+  promptBytes?: number;
+  elapsedMs?: number;
+  inputTokens?: number;
+  outputTokens?: number;
   chunks?: number;
 };
 export type EvidenceStats = {
@@ -63,6 +67,7 @@ export function evidenceInput(
     else if (
       typeof value.sourceId === "string" &&
       (value.chunks ||
+        value.facts ||
         value.quote ||
         value.fact ||
         typeof value.text === "string")
