@@ -278,7 +278,3523 @@ where appropriate. Stable public IDs are illustrative except existing item IDs,
 which are preserved. Missing optional fields are intentional.
 
 
-### Hypothetical examples showing all fields and values
+### Hypothetical examples of all item types showing all fields and values
+
+#### Weapon
+
+**Hypothetical, deliberately comprehensive:** Paradox is an invented convertible
+weapon. Every name, number, image path and source below is illustrative. It is not
+a new BL1 item or a generated catalogue entry. The cartridge and energy variants
+are alternatives, not simultaneous resource systems.
+
+This includes every applicable common/public field and the optional private
+`research` block. It demonstrates alternative numerical shapes and conditional
+values through separate stats, parts, variants and acquisition cases. A single
+item still has one `kind` and one main weapon `type`; unrelated shield, class-mod,
+artifact and upgrade fields are deliberately absent. Enum alternatives are not
+lists of values the item automatically possesses.
+
+**Extensions suggested by the new captures, illustrated here only:**
+
+| Field/change | Why it is needed |
+| --- | --- |
+| `weapon.subtype`, `weapon.proficiency` | A descriptive archetype is distinct from its ammo pool and proficiency; revolvers can use a different ammo pool while sharing pistol proficiency. |
+| `weapon.resourceSystems[]` | Discriminated magazine/energy records: pool, capacity, reload behavior, energy cost, regen rate/delay, depletion delay, and holstered recharge. This replaces the earlier weapon-level `ammoPool`; the pool belongs to a conventional resource system. |
+| Firing-mode `resourceSystemId`, `projectileId`, `burstInterval`, `referenceIds` | Distinguish rounds in a burst, projectiles per shot and resource cost per shot. `ammoPerShot` remains the earlier field name, with an explicit rounds/energy unit. Energy cost is not tech cost. |
+| `weapon.projectiles[]` | Delivery, trajectory, speed, lifetime, direct damage, penetration, ricochets, and separately triggered explosion effects. `basis` identifies what a damage multiplier multiplies. |
+| `weapon.elementalEffects[]`, `weapon.techResource` | Element/status duration and tick rules, tech thresholds, independent proc rolls, proc chance/cost and conditional contagion. Tech-level rating and consumable tech units are distinct. |
+| Variant `overrides` | A variant can replace elemental behavior without adding both elements to the same shot. The example changes impact effects and selects a different status profile. |
+| `naming.displayNames`, `naming.internalNames`, `naming.models`, `naming.ruleSelection` | Edition-specific displayed names, naming bugs, part-derived body/material codes, binary or summed model numbers, conditional multipliers, prefix/title priority and worked name examples. Internal definition names stay distinct from public aliases. |
+| `stat_threshold` and `resource` conditions | Titles can require generated stat thresholds; behavior can depend on remaining charge. Threshold evaluation names its stage. |
+| Extra stat/unit keys | Energy regeneration/depletion delay, energy, energy/second, tech units, tech units/second, projectile speed and angles need meaningful keys/units rather than misleading ammo or percent labels. |
+| Proc probability `per: hit / eligible_target` | A proc chance is neither a drop chance nor a relative part weight. |
+
+These are proposal additions, not implementation. The earlier examples and
+TypeScript below intentionally remain unchanged, as requested; they therefore do
+not yet describe all extensions in this example. The notes and tables in this
+weapon section are part of this example's design, not edits to the rest of the
+proposal.
+
+The new Blaster/Eridian captures motivate the energy and model fields; Rolling
+Spatter Gun motivates bounce/impact behavior; Defiler motivates contagion and
+proc distinctions; Viper/revolver parts motivate thresholds, proficiency and name
+composition; Crux (Plague) motivates displayed/internal name distinctions and
+comparison baselines. The shield captures were reviewed but introduce no
+shield-specific fields into this weapon. Contradictory source values remain
+alternatives in `research`, not invented roll ranges.
+
+```json
+{
+  "schemaVersion": "proposal-1",
+  "compilerVersion": "hypothetical-design",
+  "revision": 1,
+  "id": "weapons-aster-paradox",
+  "slug": "aster-paradox",
+  "name": "Paradox",
+  "aliases": [
+    "Aster Paradox",
+    "Parallax"
+  ],
+  "legacySlugs": [
+    "parallax-prototype"
+  ],
+  "kind": "weapon",
+  "origin": {
+    "contentPack": "general_knoxx",
+    "introducedEdition": "original"
+  },
+  "availability": {
+    "status": "obtainable",
+    "editions": [
+      "original",
+      "enhanced"
+    ],
+    "when": {
+      "kind": "content_pack",
+      "values": [
+        "general_knoxx"
+      ]
+    }
+  },
+  "image": "weapons/hypothetical/paradox.png",
+  "tags": [
+    "unique",
+    "convertible",
+    "ricochet",
+    "contagion"
+  ],
+  "manufacturers": {
+    "values": [
+      "Aster"
+    ],
+    "coverage": "complete"
+  },
+  "rarities": {
+    "values": [
+      "epic",
+      "legendary"
+    ],
+    "coverage": "complete"
+  },
+  "elements": {
+    "values": [
+      "non_elemental",
+      "corrosive",
+      "shock"
+    ],
+    "coverage": "complete"
+  },
+  "redText": "There is always another way around.",
+  "requirements": {
+    "kind": "all",
+    "conditions": [
+      {
+        "kind": "level",
+        "subject": "character",
+        "min": 19,
+        "max": 69
+      },
+      {
+        "kind": "content_pack",
+        "values": [
+          "general_knoxx"
+        ]
+      }
+    ]
+  },
+  "prose": {
+    "summary": "A convertible experimental weapon that trades conventional rounds for bouncing elemental orbs when fitted with an energy barrel.",
+    "overview": [
+      "Paradox is a fictional Aster weapon built around two incompatible feed systems. Its cartridge barrel fires metal slugs; its energy barrel fires rechargeable corrosive orbs.",
+      "Changing the barrel also changes the required magazine. A cartridge cylinder and an energy cell cannot be installed together."
+    ],
+    "gameplay": [
+      {
+        "heading": "Choosing a configuration",
+        "paragraphs": [
+          "Use the cartridge configuration for direct hits and predictable reloads. Choose the energy configuration when bouncing an orb around cover is more useful than sustained fire."
+        ]
+      },
+      {
+        "heading": "Managing energy",
+        "paragraphs": [
+          "The cell starts recovering after a short pause. Emptying it causes a longer delay, so leaving a little charge can keep the weapon available more often."
+        ]
+      }
+    ],
+    "notes": [
+      "All names, figures, locations, references and behavior in this example are invented. They demonstrate the proposed data shape."
+    ],
+    "trivia": [
+      "The two barrel silhouettes form an hourglass when placed side by side."
+    ]
+  },
+  "weapon": {
+    "type": "eridian_weapon",
+    "subtype": "convertible_energy_revolver",
+    "proficiency": "eridian",
+    "resourceSystems": [
+      {
+        "id": "resource-cartridge",
+        "kind": "magazine",
+        "ammoPool": "revolver",
+        "capacity": {
+          "value": {
+            "kind": "choices",
+            "values": [
+              6,
+              9
+            ]
+          },
+          "unit": "rounds"
+        },
+        "ammoPerReload": {
+          "kind": "fill_magazine"
+        },
+        "reloadDuration": {
+          "value": {
+            "kind": "range",
+            "min": 1.6,
+            "max": 2.4
+          },
+          "unit": "seconds"
+        },
+        "reloadStyle": "full_magazine",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-cartridge"
+        },
+        "referenceIds": [
+          "ref-design"
+        ]
+      },
+      {
+        "id": "resource-energy",
+        "kind": "energy",
+        "capacity": {
+          "value": {
+            "kind": "choices",
+            "values": [
+              100,
+              130
+            ]
+          },
+          "unit": "energy"
+        },
+        "costPerShot": {
+          "value": {
+            "kind": "fixed",
+            "value": 15
+          },
+          "unit": "energy"
+        },
+        "regenerationRate": {
+          "value": {
+            "kind": "choices",
+            "values": [
+              7,
+              9.8
+            ]
+          },
+          "unit": "energy_per_second"
+        },
+        "regenerationDelay": {
+          "value": {
+            "kind": "fixed",
+            "value": 1.3
+          },
+          "unit": "seconds"
+        },
+        "depletedDelay": {
+          "value": {
+            "kind": "choices",
+            "values": [
+              2.9,
+              4
+            ]
+          },
+          "unit": "seconds"
+        },
+        "depletionBehavior": "wait_then_regenerate",
+        "regeneratesWhileHolstered": true,
+        "holsteredCapacity": "unmodified",
+        "cardCapacityDisplay": "infinite",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-energy"
+        },
+        "referenceIds": [
+          "ref-design"
+        ]
+      }
+    ],
+    "firingModes": [
+      {
+        "id": "fire-slug",
+        "mode": "semi_auto",
+        "shotsPerBurst": {
+          "value": {
+            "kind": "fixed",
+            "value": 1
+          },
+          "unit": "count"
+        },
+        "projectilesPerShot": {
+          "value": {
+            "kind": "fixed",
+            "value": 1
+          },
+          "unit": "projectiles"
+        },
+        "ammoPerShot": {
+          "value": {
+            "kind": "fixed",
+            "value": 1
+          },
+          "unit": "rounds"
+        },
+        "resourceSystemId": "resource-cartridge",
+        "projectileId": "projectile-slug",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-cartridge"
+        },
+        "referenceIds": [
+          "ref-design"
+        ]
+      },
+      {
+        "id": "fire-orb",
+        "mode": "burst",
+        "shotsPerBurst": {
+          "value": {
+            "kind": "fixed",
+            "value": 3
+          },
+          "unit": "count"
+        },
+        "projectilesPerShot": {
+          "value": {
+            "kind": "fixed",
+            "value": 1
+          },
+          "unit": "projectiles"
+        },
+        "ammoPerShot": {
+          "value": {
+            "kind": "fixed",
+            "value": 15
+          },
+          "unit": "energy"
+        },
+        "burstInterval": {
+          "value": {
+            "kind": "fixed",
+            "value": 0.12
+          },
+          "unit": "seconds"
+        },
+        "resourceSystemId": "resource-energy",
+        "projectileId": "projectile-orb",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-energy"
+        },
+        "referenceIds": [
+          "ref-design"
+        ]
+      }
+    ],
+    "projectiles": [
+      {
+        "id": "projectile-slug",
+        "name": "Metal slug",
+        "delivery": "projectile",
+        "trajectory": {
+          "kind": "straight"
+        },
+        "speed": {
+          "value": {
+            "kind": "fixed",
+            "value": 800
+          },
+          "unit": "meters_per_second"
+        },
+        "lifetime": {
+          "value": {
+            "kind": "fixed",
+            "value": 2
+          },
+          "unit": "seconds"
+        },
+        "directHit": {
+          "dealsDamage": true,
+          "element": "non_elemental",
+          "damage": {
+            "value": {
+              "kind": "fixed",
+              "value": 1
+            },
+            "unit": "multiplier"
+          },
+          "basis": "weapon_damage"
+        },
+        "penetration": {
+          "maximumTargets": {
+            "value": {
+              "kind": "fixed",
+              "value": 1
+            },
+            "unit": "count"
+          },
+          "damageRetention": {
+            "value": {
+              "kind": "fixed",
+              "value": 75
+            },
+            "unit": "percent"
+          }
+        },
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-cartridge"
+        },
+        "referenceIds": [
+          "ref-design"
+        ]
+      },
+      {
+        "id": "projectile-orb",
+        "name": "Corrosive orb",
+        "delivery": "projectile",
+        "trajectory": {
+          "kind": "arc",
+          "gravityScale": {
+            "value": {
+              "kind": "fixed",
+              "value": 0.6
+            },
+            "unit": "multiplier"
+          }
+        },
+        "speed": {
+          "value": {
+            "kind": "fixed",
+            "value": 24,
+            "approximate": true
+          },
+          "unit": "meters_per_second"
+        },
+        "lifetime": {
+          "value": {
+            "kind": "fixed",
+            "value": 5
+          },
+          "unit": "seconds"
+        },
+        "directHit": {
+          "dealsDamage": false
+        },
+        "ricochet": {
+          "maximumBounces": {
+            "value": {
+              "kind": "fixed",
+              "value": 3
+            },
+            "unit": "count"
+          },
+          "surfaces": [
+            "terrain",
+            "enemy"
+          ],
+          "canHitSameTargetAgain": true,
+          "damageRetentionPerBounce": {
+            "value": {
+              "kind": "fixed",
+              "value": 90
+            },
+            "unit": "percent"
+          }
+        },
+        "impactEffects": [
+          {
+            "id": "orb-bounce",
+            "trigger": "on_bounce",
+            "element": "corrosive",
+            "damage": {
+              "value": {
+                "kind": "fixed",
+                "value": 0.6
+              },
+              "unit": "multiplier"
+            },
+            "basis": "weapon_damage",
+            "radius": {
+              "value": {
+                "kind": "fixed",
+                "value": 2
+              },
+              "unit": "meters"
+            },
+            "canCrit": false,
+            "damagesOwner": false,
+            "referenceIds": [
+              "ref-design"
+            ]
+          },
+          {
+            "id": "orb-terminal",
+            "trigger": "on_expiry",
+            "element": "corrosive",
+            "damage": {
+              "value": {
+                "kind": "fixed",
+                "value": 1
+              },
+              "unit": "multiplier"
+            },
+            "basis": "weapon_damage",
+            "radius": {
+              "value": {
+                "kind": "fixed",
+                "value": 3
+              },
+              "unit": "meters"
+            },
+            "canCrit": false,
+            "damagesOwner": true,
+            "referenceIds": [
+              "ref-design"
+            ]
+          }
+        ],
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-energy"
+        },
+        "referenceIds": [
+          "ref-design"
+        ]
+      }
+    ],
+    "elementalEffects": [
+      {
+        "id": "effect-corrosion",
+        "element": "corrosive",
+        "trigger": "on_splash_hit",
+        "when": {
+          "kind": "all",
+          "conditions": [
+            {
+              "kind": "variant_selected",
+              "variantId": "variant-energy"
+            },
+            {
+              "kind": "not",
+              "condition": {
+                "kind": "variant_selected",
+                "variantId": "variant-shock"
+              }
+            }
+          ]
+        },
+        "statusEffect": {
+          "id": "status-corrosion",
+          "name": "Corrode",
+          "duration": {
+            "value": {
+              "kind": "fixed",
+              "value": 4
+            },
+            "unit": "seconds"
+          },
+          "tickInterval": {
+            "value": {
+              "kind": "fixed",
+              "value": 0.5
+            },
+            "unit": "seconds"
+          },
+          "damagePerTick": {
+            "value": {
+              "kind": "fixed",
+              "value": 0.1
+            },
+            "unit": "multiplier"
+          },
+          "basis": "weapon_damage",
+          "stacking": "independent_instances"
+        },
+        "procRules": [
+          {
+            "id": "proc-basic",
+            "minimumTechLevel": 6,
+            "effectLevel": 1,
+            "chance": {
+              "value": {
+                "kind": "fixed",
+                "value": 100
+              },
+              "unit": "percent",
+              "per": "hit"
+            },
+            "techCost": {
+              "value": {
+                "kind": "fixed",
+                "value": 0
+              },
+              "unit": "tech_units"
+            },
+            "damage": {
+              "value": {
+                "kind": "fixed",
+                "value": 0.4
+              },
+              "unit": "multiplier"
+            },
+            "basis": "weapon_damage",
+            "referenceIds": [
+              "ref-design"
+            ]
+          },
+          {
+            "id": "proc-strong",
+            "minimumTechLevel": 10,
+            "effectLevel": 3,
+            "chance": {
+              "value": {
+                "kind": "fraction",
+                "numerator": 1,
+                "denominator": 4
+              },
+              "unit": "ratio",
+              "per": "hit"
+            },
+            "techCost": {
+              "value": {
+                "kind": "fixed",
+                "value": 12
+              },
+              "unit": "tech_units"
+            },
+            "damage": {
+              "value": {
+                "kind": "fixed",
+                "value": 0.9
+              },
+              "unit": "multiplier"
+            },
+            "basis": "weapon_damage",
+            "referenceIds": [
+              "ref-design"
+            ]
+          }
+        ],
+        "contagion": {
+          "trigger": "on_proximity_to_afflicted_target",
+          "radius": {
+            "value": {
+              "kind": "fixed",
+              "value": 2
+            },
+            "unit": "meters"
+          },
+          "chance": {
+            "value": {
+              "kind": "fixed",
+              "value": 35
+            },
+            "unit": "percent",
+            "per": "eligible_target"
+          },
+          "affectsAlreadyAfflictedTargets": false,
+          "respectsElementImmunity": true,
+          "when": {
+            "kind": "part_selected",
+            "groupId": "group-accessory",
+            "optionId": "accessory-contagion"
+          }
+        },
+        "referenceIds": [
+          "ref-design"
+        ],
+        "procSelection": "independent_rolls"
+      },
+      {
+        "id": "effect-shock",
+        "element": "shock",
+        "trigger": "on_splash_hit",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-shock"
+        },
+        "statusEffect": {
+          "id": "status-shock",
+          "name": "Electrocute",
+          "duration": {
+            "value": {
+              "kind": "fixed",
+              "value": 2
+            },
+            "unit": "seconds"
+          },
+          "tickInterval": {
+            "value": {
+              "kind": "fixed",
+              "value": 0.5
+            },
+            "unit": "seconds"
+          },
+          "damagePerTick": {
+            "value": {
+              "kind": "fixed",
+              "value": 0.1
+            },
+            "unit": "multiplier"
+          },
+          "basis": "weapon_damage",
+          "stacking": "refresh_duration"
+        },
+        "procRules": [
+          {
+            "id": "proc-shock",
+            "minimumTechLevel": 6,
+            "effectLevel": 2,
+            "chance": {
+              "value": {
+                "kind": "fixed",
+                "value": 50
+              },
+              "unit": "percent",
+              "per": "hit"
+            },
+            "techCost": {
+              "value": {
+                "kind": "fixed",
+                "value": 8
+              },
+              "unit": "tech_units"
+            },
+            "damage": {
+              "value": {
+                "kind": "fixed",
+                "value": 0.6
+              },
+              "unit": "multiplier"
+            },
+            "basis": "weapon_damage",
+            "referenceIds": [
+              "ref-design"
+            ]
+          }
+        ],
+        "referenceIds": [
+          "ref-design"
+        ],
+        "procSelection": "independent_rolls"
+      }
+    ],
+    "techResource": {
+      "capacity": {
+        "value": {
+          "kind": "fixed",
+          "value": 40
+        },
+        "unit": "tech_units"
+      },
+      "regenerationRate": {
+        "value": {
+          "kind": "fixed",
+          "value": 4
+        },
+        "unit": "tech_units_per_second"
+      },
+      "regenerationDelay": {
+        "value": {
+          "kind": "fixed",
+          "value": 0.5
+        },
+        "unit": "seconds"
+      },
+      "when": {
+        "kind": "variant_selected",
+        "variantId": "variant-energy"
+      },
+      "referenceIds": [
+        "ref-design"
+      ]
+    }
+  },
+  "stats": [
+    {
+      "id": "card-damage",
+      "stat": "damage",
+      "value": {
+        "kind": "range",
+        "min": 240,
+        "max": 360
+      },
+      "unit": "damage",
+      "context": {
+        "surface": "card",
+        "selection": "reported_range",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-cartridge"
+        },
+        "notes": "Ranges describe the fictional cartridge configuration across level-40 legal part combinations, not every roll at every level.",
+        "atItemLevel": 40
+      },
+      "referenceIds": [
+        "ref-design"
+      ]
+    },
+    {
+      "id": "card-accuracy",
+      "stat": "accuracy",
+      "value": {
+        "kind": "range",
+        "min": 85,
+        "max": 96
+      },
+      "unit": "rating",
+      "context": {
+        "surface": "card",
+        "selection": "reported_range",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-cartridge"
+        },
+        "notes": "Ranges describe the fictional cartridge configuration across level-40 legal part combinations, not every roll at every level.",
+        "atItemLevel": 40
+      }
+    },
+    {
+      "id": "card-fire-rate",
+      "stat": "fire_rate",
+      "value": {
+        "kind": "range",
+        "min": 1.5,
+        "max": 2.5
+      },
+      "unit": "rounds_per_second",
+      "context": {
+        "surface": "card",
+        "selection": "reported_range",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-cartridge"
+        },
+        "notes": "Ranges describe the fictional cartridge configuration across level-40 legal part combinations, not every roll at every level.",
+        "atItemLevel": 40
+      }
+    },
+    {
+      "id": "card-capacity",
+      "stat": "magazine_capacity",
+      "value": {
+        "kind": "choices",
+        "values": [
+          6,
+          9
+        ]
+      },
+      "unit": "rounds",
+      "context": {
+        "surface": "card",
+        "selection": "reported_range",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-cartridge"
+        },
+        "notes": "Ranges describe the fictional cartridge configuration across level-40 legal part combinations, not every roll at every level.",
+        "atItemLevel": 40
+      }
+    },
+    {
+      "id": "card-element-level",
+      "stat": "element_level",
+      "value": {
+        "kind": "choices",
+        "values": [
+          3,
+          4
+        ]
+      },
+      "unit": "effect_levels",
+      "context": {
+        "surface": "card",
+        "selection": "reported_range",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-energy"
+        }
+      }
+    },
+    {
+      "id": "reload-example",
+      "stat": "reload_duration",
+      "value": {
+        "kind": "fixed",
+        "value": 1.8
+      },
+      "unit": "seconds",
+      "context": {
+        "surface": "gameplay",
+        "selection": "example_roll",
+        "atItemLevel": 40,
+        "atCharacterLevel": 40,
+        "when": {
+          "kind": "part_selected",
+          "groupId": "group-magazine",
+          "optionId": "mag-cartridge-6"
+        },
+        "notes": "Measured with the standard body, cylinder and stock; not the entire family."
+      }
+    },
+    {
+      "id": "tech-rating",
+      "stat": "tech_level",
+      "value": {
+        "kind": "range",
+        "min": 6,
+        "max": 18
+      },
+      "unit": "tech_levels",
+      "context": {
+        "surface": "gameplay",
+        "selection": "fixed_rule",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-energy"
+        }
+      }
+    },
+    {
+      "id": "melee-example",
+      "stat": "melee_damage",
+      "value": {
+        "kind": "formula",
+        "expression": {
+          "op": "multiply",
+          "args": [
+            {
+              "op": "constant",
+              "value": 8
+            },
+            {
+              "op": "add",
+              "args": [
+                {
+                  "op": "variable",
+                  "name": "character_level"
+                },
+                {
+                  "op": "constant",
+                  "value": 5
+                }
+              ]
+            }
+          ]
+        },
+        "inputs": {
+          "character_level": {
+            "min": 19,
+            "max": 69
+          }
+        }
+      },
+      "unit": "damage",
+      "context": {
+        "surface": "gameplay",
+        "selection": "calculated",
+        "notes": "Fictional base melee calculation before the blade modifier."
+      }
+    },
+    {
+      "id": "max-zoom",
+      "stat": "zoom",
+      "value": {
+        "kind": "bound",
+        "side": "maximum",
+        "value": 4.2
+      },
+      "unit": "multiplier",
+      "context": {
+        "surface": "gameplay",
+        "selection": "maximum_roll",
+        "when": {
+          "kind": "part_selected",
+          "groupId": "group-sight",
+          "optionId": "sight-scope"
+        }
+      }
+    },
+    {
+      "id": "min-draw-time",
+      "stat": "equip_duration",
+      "value": {
+        "kind": "bound",
+        "side": "minimum",
+        "value": 0.35
+      },
+      "unit": "seconds",
+      "context": {
+        "surface": "gameplay",
+        "selection": "minimum_roll"
+      }
+    },
+    {
+      "id": "recoil-recovery",
+      "stat": "recoil_recovery",
+      "value": {
+        "kind": "fixed",
+        "value": 0.4
+      },
+      "unit": "seconds",
+      "context": {
+        "surface": "gameplay",
+        "selection": "fixed_rule"
+      }
+    },
+    {
+      "id": "hip-spread",
+      "stat": "spread",
+      "value": {
+        "kind": "range",
+        "min": 1.2,
+        "max": 2.4
+      },
+      "unit": "degrees",
+      "context": {
+        "surface": "gameplay",
+        "selection": "fixed_rule",
+        "when": {
+          "kind": "not",
+          "condition": {
+            "kind": "state",
+            "value": "aiming"
+          }
+        }
+      }
+    },
+    {
+      "id": "aim-spread",
+      "stat": "spread",
+      "value": {
+        "kind": "range",
+        "min": 0.2,
+        "max": 0.6
+      },
+      "unit": "degrees",
+      "context": {
+        "surface": "gameplay",
+        "selection": "fixed_rule",
+        "when": {
+          "kind": "state",
+          "value": "aiming"
+        }
+      }
+    },
+    {
+      "id": "accuracy-recovery",
+      "stat": "accuracy_recovery",
+      "value": {
+        "kind": "fixed",
+        "value": 0.6
+      },
+      "unit": "seconds",
+      "context": {
+        "surface": "gameplay",
+        "selection": "fixed_rule"
+      }
+    },
+    {
+      "id": "swap-duration",
+      "stat": "custom:swap_duration",
+      "value": {
+        "kind": "fixed",
+        "value": 0.5
+      },
+      "unit": "seconds",
+      "label": "Swap duration",
+      "context": {
+        "surface": "gameplay",
+        "selection": "fixed_rule"
+      }
+    },
+    {
+      "id": "recoil-pitch",
+      "stat": "custom:recoil_pitch",
+      "value": {
+        "kind": "fixed",
+        "value": 2.5
+      },
+      "unit": "degrees",
+      "label": "Vertical recoil",
+      "context": {
+        "surface": "gameplay",
+        "selection": "fixed_rule",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-cartridge"
+        }
+      }
+    },
+    {
+      "id": "inaccuracy-min",
+      "stat": "min_inaccuracy",
+      "value": {
+        "kind": "fixed",
+        "value": 0.1
+      },
+      "unit": "degrees",
+      "context": {
+        "surface": "technical",
+        "selection": "fixed_rule"
+      }
+    },
+    {
+      "id": "inaccuracy-max",
+      "stat": "max_inaccuracy",
+      "value": {
+        "kind": "fixed",
+        "value": 2.4
+      },
+      "unit": "degrees",
+      "context": {
+        "surface": "technical",
+        "selection": "fixed_rule"
+      }
+    }
+  ],
+  "modifiers": [
+    {
+      "id": "intrinsic-critical",
+      "stat": "critical_hit_damage",
+      "operation": "add_percent",
+      "value": {
+        "kind": "fixed",
+        "value": 100
+      },
+      "unit": "percent",
+      "stage": "pre_add",
+      "stacking": "additive",
+      "basis": "base_stat",
+      "target": {
+        "recipient": "owner"
+      },
+      "context": {
+        "surface": "gameplay",
+        "selection": "fixed_rule",
+        "notes": "Intrinsic critical bonus, separate from the sight bonus."
+      },
+      "referenceIds": [
+        "ref-design"
+      ]
+    },
+    {
+      "id": "held-speed",
+      "stat": "move_speed",
+      "operation": "multiply",
+      "value": {
+        "kind": "fixed",
+        "value": 0.95
+      },
+      "unit": "multiplier",
+      "stage": "post_add",
+      "stacking": "multiplicative",
+      "basis": "current_stat",
+      "target": {
+        "recipient": "owner"
+      },
+      "when": {
+        "kind": "text",
+        "text": "While Paradox is held."
+      },
+      "context": {
+        "surface": "gameplay",
+        "selection": "fixed_rule"
+      }
+    },
+    {
+      "id": "anti-armor",
+      "stat": "damage",
+      "operation": "add_percent",
+      "value": {
+        "kind": "fixed",
+        "value": 25
+      },
+      "unit": "percent",
+      "stage": "post_add",
+      "stacking": "additive",
+      "basis": "weapon_damage",
+      "target": {
+        "recipient": "hit_target",
+        "damageElements": [
+          "corrosive"
+        ]
+      },
+      "when": {
+        "kind": "all",
+        "conditions": [
+          {
+            "kind": "variant_selected",
+            "variantId": "variant-energy"
+          },
+          {
+            "kind": "health_type",
+            "value": "armor",
+            "shielded": false
+          }
+        ]
+      },
+      "context": {
+        "surface": "gameplay",
+        "selection": "fixed_rule"
+      }
+    }
+  ],
+  "mechanics": [
+    {
+      "id": "mechanic-conversion",
+      "name": "Barrel conversion",
+      "description": "Each barrel accepts its own feed system. Cartridge and energy magazines are mutually exclusive.",
+      "trigger": "passive",
+      "when": {
+        "kind": "any",
+        "conditions": [
+          {
+            "kind": "variant_selected",
+            "variantId": "variant-cartridge"
+          },
+          {
+            "kind": "variant_selected",
+            "variantId": "variant-energy"
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "id": "conversion-options",
+          "stat": "custom:configuration_count",
+          "value": {
+            "kind": "fixed",
+            "value": 2
+          },
+          "unit": "count",
+          "label": "Feed configurations",
+          "context": {
+            "surface": "gameplay",
+            "selection": "fixed_rule"
+          }
+        }
+      ],
+      "modifiers": [
+        {
+          "id": "energy-low-charge",
+          "stat": "damage",
+          "operation": "add_percent",
+          "value": {
+            "kind": "fixed",
+            "value": 10
+          },
+          "unit": "percent",
+          "when": {
+            "kind": "all",
+            "conditions": [
+              {
+                "kind": "variant_selected",
+                "variantId": "variant-energy"
+              },
+              {
+                "kind": "resource",
+                "resourceSystemId": "resource-energy",
+                "comparison": "less_than",
+                "value": 25,
+                "unit": "percent_capacity"
+              }
+            ]
+          },
+          "target": {
+            "recipient": "owner"
+          },
+          "context": {
+            "surface": "gameplay",
+            "selection": "fixed_rule"
+          }
+        }
+      ],
+      "referenceIds": [
+        "ref-design"
+      ]
+    },
+    {
+      "id": "mechanic-kill-regain",
+      "name": "Recovered charge",
+      "description": "A kill with an energy orb restores a small amount of charge.",
+      "trigger": "on_kill",
+      "when": {
+        "kind": "variant_selected",
+        "variantId": "variant-energy"
+      },
+      "parameters": [
+        {
+          "id": "kill-energy",
+          "stat": "custom:energy_restored",
+          "value": {
+            "kind": "fixed",
+            "value": 5
+          },
+          "unit": "energy",
+          "label": "Charge restored"
+        }
+      ],
+      "referenceIds": [
+        "ref-design"
+      ]
+    }
+  ],
+  "partGroups": [
+    {
+      "id": "group-body",
+      "slot": "body",
+      "name": "Body",
+      "coverage": "complete",
+      "selection": {
+        "min": 1,
+        "max": 1
+      },
+      "options": [
+        {
+          "id": "body-balanced",
+          "name": "Balanced body",
+          "presence": "part",
+          "role": "possible",
+          "sourceNames": [
+            "body1_Aster"
+          ],
+          "image": "parts/hypothetical/body-balanced.png",
+          "manufacturers": {
+            "values": [
+              "Aster"
+            ],
+            "coverage": "complete"
+          },
+          "modifiers": [
+            {
+              "id": "body-balanced-damage",
+              "stat": "damage",
+              "operation": "add_percent",
+              "value": {
+                "kind": "fixed",
+                "value": -8
+              },
+              "unit": "percent"
+            }
+          ],
+          "weights": [
+            {
+              "value": {
+                "kind": "fixed",
+                "value": 3
+              },
+              "when": {
+                "kind": "playthrough",
+                "values": [
+                  "first"
+                ]
+              },
+              "referenceIds": [
+                "ref-native"
+              ]
+            },
+            {
+              "value": {
+                "kind": "fixed",
+                "value": 1
+              },
+              "when": {
+                "kind": "playthrough",
+                "values": [
+                  "second",
+                  "post_second"
+                ]
+              }
+            }
+          ],
+          "notes": [
+            "The tan hammer housing identifies this body."
+          ],
+          "referenceIds": [
+            "ref-native"
+          ]
+        },
+        {
+          "id": "body-heavy",
+          "name": "Heavy body",
+          "presence": "part",
+          "role": "possible",
+          "modifiers": [
+            {
+              "id": "body-heavy-damage",
+              "stat": "damage",
+              "operation": "add_percent",
+              "value": {
+                "kind": "fixed",
+                "value": 20
+              },
+              "unit": "percent"
+            },
+            {
+              "id": "body-heavy-rate",
+              "stat": "fire_rate",
+              "operation": "add_percent",
+              "value": {
+                "kind": "fixed",
+                "value": -20
+              },
+              "unit": "percent"
+            },
+            {
+              "id": "body-heavy-recoil",
+              "stat": "recoil",
+              "operation": "add_percent",
+              "value": {
+                "kind": "fixed",
+                "value": 30
+              },
+              "unit": "percent"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "group-barrel",
+      "slot": "barrel",
+      "name": "Conversion barrel",
+      "coverage": "complete",
+      "selection": {
+        "min": 1,
+        "max": 1
+      },
+      "options": [
+        {
+          "id": "barrel-cartridge",
+          "name": "Cartridge barrel",
+          "presence": "part",
+          "role": "defining",
+          "notes": [
+            "Enables the cartridge configuration."
+          ]
+        },
+        {
+          "id": "barrel-energy",
+          "name": "Orb barrel",
+          "presence": "part",
+          "role": "defining",
+          "sourceNames": [
+            "barrel3_Paradox"
+          ],
+          "mechanics": [
+            {
+              "id": "barrel-bounce",
+              "name": "Orb assembly",
+              "description": "Fires the bouncing orb defined in the weapon projectile profile.",
+              "trigger": "on_shot",
+              "when": {
+                "kind": "variant_selected",
+                "variantId": "variant-energy"
+              },
+              "referenceIds": [
+                "ref-native"
+              ]
+            }
+          ]
+        }
+      ],
+      "rules": [
+        {
+          "id": "rule-cartridge-feed",
+          "when": {
+            "kind": "part_selected",
+            "groupId": "group-barrel",
+            "optionId": "barrel-cartridge"
+          },
+          "requires": {
+            "kind": "any",
+            "conditions": [
+              {
+                "kind": "part_selected",
+                "groupId": "group-magazine",
+                "optionId": "mag-cartridge-6"
+              },
+              {
+                "kind": "part_selected",
+                "groupId": "group-magazine",
+                "optionId": "mag-cartridge-9"
+              }
+            ]
+          },
+          "forbids": {
+            "kind": "any",
+            "conditions": [
+              {
+                "kind": "part_selected",
+                "groupId": "group-magazine",
+                "optionId": "cell-standard"
+              },
+              {
+                "kind": "part_selected",
+                "groupId": "group-magazine",
+                "optionId": "cell-fast"
+              }
+            ]
+          },
+          "description": "Cartridge barrels require a cylinder and reject energy cells.",
+          "referenceIds": [
+            "ref-native"
+          ]
+        },
+        {
+          "id": "rule-energy-feed",
+          "when": {
+            "kind": "part_selected",
+            "groupId": "group-barrel",
+            "optionId": "barrel-energy"
+          },
+          "requires": {
+            "kind": "any",
+            "conditions": [
+              {
+                "kind": "part_selected",
+                "groupId": "group-magazine",
+                "optionId": "cell-standard"
+              },
+              {
+                "kind": "part_selected",
+                "groupId": "group-magazine",
+                "optionId": "cell-fast"
+              }
+            ]
+          },
+          "forbids": {
+            "kind": "any",
+            "conditions": [
+              {
+                "kind": "part_selected",
+                "groupId": "group-magazine",
+                "optionId": "mag-cartridge-6"
+              },
+              {
+                "kind": "part_selected",
+                "groupId": "group-magazine",
+                "optionId": "mag-cartridge-9"
+              }
+            ]
+          },
+          "description": "Energy barrels require a cell and reject cartridge cylinders.",
+          "referenceIds": [
+            "ref-native"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "group-magazine",
+      "slot": "magazine",
+      "name": "Cylinder or energy cell",
+      "coverage": "complete",
+      "selection": {
+        "min": 1,
+        "max": 1
+      },
+      "options": [
+        {
+          "id": "mag-cartridge-6",
+          "name": "Six-round cylinder",
+          "presence": "part",
+          "role": "possible",
+          "when": {
+            "kind": "variant_selected",
+            "variantId": "variant-cartridge"
+          },
+          "modifiers": [
+            {
+              "id": "cyl-six",
+              "stat": "magazine_capacity",
+              "operation": "set",
+              "value": {
+                "kind": "fixed",
+                "value": 6
+              },
+              "unit": "rounds"
+            }
+          ]
+        },
+        {
+          "id": "mag-cartridge-9",
+          "name": "Nine-round cylinder",
+          "presence": "part",
+          "role": "possible",
+          "when": {
+            "kind": "variant_selected",
+            "variantId": "variant-cartridge"
+          },
+          "modifiers": [
+            {
+              "id": "cyl-nine",
+              "stat": "magazine_capacity",
+              "operation": "set",
+              "value": {
+                "kind": "fixed",
+                "value": 9
+              },
+              "unit": "rounds"
+            },
+            {
+              "id": "cyl-nine-reload",
+              "stat": "reload_speed",
+              "operation": "reported",
+              "value": {
+                "kind": "fixed",
+                "value": -10
+              },
+              "unit": "percent",
+              "stage": "unknown",
+              "stacking": "unknown",
+              "basis": "unknown",
+              "context": {
+                "surface": "gameplay",
+                "selection": "fixed_rule",
+                "notes": "A reported reload-speed modifier; not a calculated reload duration."
+              }
+            }
+          ]
+        },
+        {
+          "id": "cell-standard",
+          "name": "Standard cell",
+          "presence": "part",
+          "role": "possible",
+          "when": {
+            "kind": "variant_selected",
+            "variantId": "variant-energy"
+          },
+          "modifiers": [
+            {
+              "id": "cell-standard-cap",
+              "stat": "magazine_capacity",
+              "operation": "set",
+              "value": {
+                "kind": "fixed",
+                "value": 100
+              },
+              "unit": "energy"
+            },
+            {
+              "id": "cell-standard-regen",
+              "stat": "energy_regeneration",
+              "operation": "set",
+              "value": {
+                "kind": "fixed",
+                "value": 7
+              },
+              "unit": "energy_per_second"
+            },
+            {
+              "id": "cell-standard-delay",
+              "stat": "energy_depleted_delay",
+              "operation": "set",
+              "value": {
+                "kind": "fixed",
+                "value": 4
+              },
+              "unit": "seconds"
+            }
+          ]
+        },
+        {
+          "id": "cell-fast",
+          "name": "Fast cell",
+          "presence": "part",
+          "role": "possible",
+          "when": {
+            "kind": "variant_selected",
+            "variantId": "variant-energy"
+          },
+          "modifiers": [
+            {
+              "id": "cell-fast-cap",
+              "stat": "magazine_capacity",
+              "operation": "set",
+              "value": {
+                "kind": "fixed",
+                "value": 130
+              },
+              "unit": "energy"
+            },
+            {
+              "id": "cell-fast-regen",
+              "stat": "energy_regeneration",
+              "operation": "set",
+              "value": {
+                "kind": "fixed",
+                "value": 9.8
+              },
+              "unit": "energy_per_second"
+            },
+            {
+              "id": "cell-fast-delay",
+              "stat": "energy_depleted_delay",
+              "operation": "set",
+              "value": {
+                "kind": "fixed",
+                "value": 2.9
+              },
+              "unit": "seconds"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "group-stock",
+      "slot": "stock",
+      "name": "Stock",
+      "coverage": "complete",
+      "selection": {
+        "min": 1,
+        "max": 1
+      },
+      "options": [
+        {
+          "id": "stock-none",
+          "name": "No stock",
+          "presence": "none",
+          "role": "possible",
+          "modifiers": [
+            {
+              "id": "stock-none-recoil",
+              "stat": "recoil",
+              "operation": "add_percent",
+              "value": {
+                "kind": "fixed",
+                "value": 40
+              },
+              "unit": "percent"
+            },
+            {
+              "id": "stock-none-swap",
+              "stat": "swap_speed",
+              "operation": "add_percent",
+              "value": {
+                "kind": "fixed",
+                "value": 30
+              },
+              "unit": "percent"
+            }
+          ],
+          "notes": [
+            "Absence changes handling; it is not missing evidence."
+          ]
+        },
+        {
+          "id": "stock-braced",
+          "name": "Braced stock",
+          "presence": "part",
+          "role": "possible",
+          "modifiers": [
+            {
+              "id": "stock-recoil",
+              "stat": "recoil",
+              "operation": "add_percent",
+              "value": {
+                "kind": "fixed",
+                "value": -30
+              },
+              "unit": "percent"
+            },
+            {
+              "id": "stock-recovery",
+              "stat": "recoil_recovery",
+              "operation": "add_percent",
+              "value": {
+                "kind": "fixed",
+                "value": 40
+              },
+              "unit": "percent"
+            },
+            {
+              "id": "stock-equip",
+              "stat": "equip_speed",
+              "operation": "add_percent",
+              "value": {
+                "kind": "fixed",
+                "value": -10
+              },
+              "unit": "percent"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "group-sight",
+      "slot": "sight",
+      "name": "Sight",
+      "coverage": "complete",
+      "selection": {
+        "min": 1,
+        "max": 1
+      },
+      "options": [
+        {
+          "id": "sight-none",
+          "name": "No sight",
+          "presence": "none",
+          "role": "possible",
+          "modifiers": [
+            {
+              "id": "sight-none-move",
+              "stat": "move_speed",
+              "operation": "add_percent",
+              "value": {
+                "kind": "fixed",
+                "value": -25
+              },
+              "unit": "percent",
+              "when": {
+                "kind": "state",
+                "value": "aiming"
+              }
+            }
+          ]
+        },
+        {
+          "id": "sight-scope",
+          "name": "4.2× scope",
+          "presence": "part",
+          "role": "possible",
+          "image": "parts/hypothetical/scope.png",
+          "modifiers": [
+            {
+              "id": "scope-zoom",
+              "stat": "zoom",
+              "operation": "set",
+              "value": {
+                "kind": "fixed",
+                "value": 4.2
+              },
+              "unit": "multiplier"
+            },
+            {
+              "id": "scope-spread",
+              "stat": "spread",
+              "operation": "add_percent",
+              "value": {
+                "kind": "fixed",
+                "value": -40
+              },
+              "unit": "percent",
+              "when": {
+                "kind": "state",
+                "value": "aiming"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "group-grip",
+      "slot": "grip",
+      "name": "Grip",
+      "coverage": "complete",
+      "selection": {
+        "min": 1,
+        "max": 1
+      },
+      "options": [
+        {
+          "id": "grip-aster",
+          "name": "Aster grip",
+          "presence": "part",
+          "role": "required",
+          "manufacturers": {
+            "values": [
+              "Aster"
+            ],
+            "coverage": "complete"
+          },
+          "notes": [
+            "Identifies the producer; has no numerical effect."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "group-action",
+      "slot": "action",
+      "name": "Action",
+      "coverage": "complete",
+      "selection": {
+        "min": 1,
+        "max": 1
+      },
+      "options": [
+        {
+          "id": "action-paradox",
+          "name": "Paradox action",
+          "presence": "part",
+          "role": "required",
+          "notes": [
+            "Shared by both conversion barrels."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "group-accessory",
+      "slot": "accessory",
+      "name": "Accessory",
+      "coverage": "complete",
+      "selection": {
+        "min": 1,
+        "max": 1
+      },
+      "options": [
+        {
+          "id": "accessory-none",
+          "name": "No accessory",
+          "presence": "none",
+          "role": "possible"
+        },
+        {
+          "id": "accessory-blade",
+          "name": "Blade",
+          "presence": "part",
+          "role": "possible",
+          "when": {
+            "kind": "variant_selected",
+            "variantId": "variant-cartridge"
+          },
+          "modifiers": [
+            {
+              "id": "blade-melee",
+              "stat": "melee_damage",
+              "operation": "add_percent",
+              "value": {
+                "kind": "fixed",
+                "value": 100
+              },
+              "unit": "percent"
+            },
+            {
+              "id": "blade-speed",
+              "stat": "melee_speed",
+              "operation": "add_percent",
+              "value": {
+                "kind": "fixed",
+                "value": -15
+              },
+              "unit": "percent"
+            }
+          ]
+        },
+        {
+          "id": "accessory-contagion",
+          "name": "Contagion lens",
+          "presence": "part",
+          "role": "possible",
+          "when": {
+            "kind": "variant_selected",
+            "variantId": "variant-energy"
+          },
+          "modifiers": [
+            {
+              "id": "contagion-tech",
+              "stat": "tech_level",
+              "operation": "add",
+              "value": {
+                "kind": "fixed",
+                "value": 14
+              },
+              "unit": "tech_levels"
+            }
+          ],
+          "mechanics": [
+            {
+              "id": "lens-contagion",
+              "name": "Contagion lens",
+              "description": "Enables the proximity spread rule in the corrosion profile.",
+              "trigger": "on_hit",
+              "when": {
+                "kind": "variant_selected",
+                "variantId": "variant-energy"
+              },
+              "referenceIds": [
+                "ref-design"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "group-material",
+      "slot": "material",
+      "name": "Material",
+      "coverage": "complete",
+      "selection": {
+        "min": 1,
+        "max": 1
+      },
+      "options": [
+        {
+          "id": "material-standard",
+          "name": "Aster standard",
+          "presence": "part",
+          "role": "possible",
+          "modifiers": [
+            {
+              "id": "material-tech",
+              "stat": "tech_level",
+              "operation": "add",
+              "value": {
+                "kind": "fixed",
+                "value": 4
+              },
+              "unit": "tech_levels"
+            }
+          ]
+        },
+        {
+          "id": "material-resonant",
+          "name": "Aster resonant",
+          "presence": "part",
+          "role": "possible",
+          "modifiers": [
+            {
+              "id": "material-damage",
+              "stat": "damage",
+              "operation": "add_percent",
+              "value": {
+                "kind": "fixed",
+                "value": 10
+              },
+              "unit": "percent"
+            },
+            {
+              "id": "material-reload",
+              "stat": "reload_speed",
+              "operation": "reported",
+              "value": {
+                "kind": "fixed",
+                "value": 11
+              },
+              "unit": "percent"
+            }
+          ],
+          "when": {
+            "kind": "level",
+            "subject": "item",
+            "min": 28
+          }
+        }
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "id": "variant-cartridge",
+      "name": "Cartridge Paradox",
+      "kind": "firing_mode",
+      "description": "The conventional configuration uses revolver ammunition and a cylinder.",
+      "when": {
+        "kind": "part_selected",
+        "groupId": "group-barrel",
+        "optionId": "barrel-cartridge"
+      },
+      "selectedParts": [
+        {
+          "groupId": "group-barrel",
+          "optionId": "barrel-cartridge"
+        }
+      ],
+      "modifiers": [
+        {
+          "id": "cartridge-rate",
+          "stat": "fire_rate",
+          "operation": "add_percent",
+          "value": {
+            "kind": "fixed",
+            "value": 10
+          },
+          "unit": "percent"
+        }
+      ],
+      "mechanics": [
+        {
+          "id": "mechanic-cartridge-reload",
+          "name": "Cylinder reload",
+          "description": "All rounds are replaced in a single reload.",
+          "trigger": "other",
+          "when": {
+            "kind": "variant_selected",
+            "variantId": "variant-cartridge"
+          }
+        }
+      ],
+      "rarities": {
+        "values": [
+          "epic"
+        ],
+        "coverage": "complete"
+      },
+      "elements": {
+        "values": [
+          "non_elemental"
+        ],
+        "coverage": "complete"
+      },
+      "relatedItems": [
+        {
+          "id": "weapons-aster-prototype",
+          "name": "Aster Prototype"
+        }
+      ],
+      "comparisons": [
+        {
+          "baseline": {
+            "id": "weapons-aster-prototype",
+            "name": "Aster Prototype"
+          },
+          "description": "Compared with the fictional prototype, this configuration trades recoil for a larger cylinder.",
+          "differences": [
+            {
+              "id": "comparison-cylinder",
+              "stat": "magazine_capacity",
+              "operation": "add",
+              "value": {
+                "kind": "fixed",
+                "value": 2
+              },
+              "unit": "rounds"
+            }
+          ]
+        }
+      ],
+      "referenceIds": [
+        "ref-design"
+      ]
+    },
+    {
+      "id": "variant-energy",
+      "name": "Energy Paradox",
+      "kind": "hybrid",
+      "description": "The orb barrel replaces cartridge feeding with a self-recharging cell.",
+      "when": {
+        "kind": "part_selected",
+        "groupId": "group-barrel",
+        "optionId": "barrel-energy"
+      },
+      "selectedParts": [
+        {
+          "groupId": "group-barrel",
+          "optionId": "barrel-energy"
+        }
+      ],
+      "rarities": {
+        "values": [
+          "legendary"
+        ],
+        "coverage": "complete"
+      },
+      "elements": {
+        "values": [
+          "corrosive"
+        ],
+        "coverage": "complete"
+      },
+      "referenceIds": [
+        "ref-design"
+      ]
+    },
+    {
+      "id": "variant-shock",
+      "name": "Resonant Energy Paradox",
+      "kind": "elemental",
+      "description": "The resonant material can replace corrosion with shock.",
+      "when": {
+        "kind": "all",
+        "conditions": [
+          {
+            "kind": "variant_selected",
+            "variantId": "variant-energy"
+          },
+          {
+            "kind": "part_selected",
+            "groupId": "group-material",
+            "optionId": "material-resonant"
+          }
+        ]
+      },
+      "selectedParts": [
+        {
+          "groupId": "group-barrel",
+          "optionId": "barrel-energy"
+        },
+        {
+          "groupId": "group-material",
+          "optionId": "material-resonant"
+        }
+      ],
+      "elements": {
+        "values": [
+          "shock"
+        ],
+        "coverage": "complete"
+      },
+      "overrides": {
+        "projectileElements": [
+          {
+            "projectileId": "projectile-orb",
+            "directHit": "unchanged",
+            "impactEffectIds": [
+              "orb-bounce",
+              "orb-terminal"
+            ],
+            "element": "shock"
+          }
+        ],
+        "elementalEffectIds": [
+          "effect-shock"
+        ]
+      },
+      "referenceIds": [
+        "ref-design"
+      ]
+    }
+  ],
+  "acquisition": [
+    {
+      "id": "acq-warden",
+      "method": "drop",
+      "source": {
+        "id": "enemy-clockwork-warden",
+        "name": "Clockwork Warden",
+        "kind": "raid_boss",
+        "locations": [
+          {
+            "id": "location-glass-basin",
+            "name": "Glass Basin"
+          }
+        ]
+      },
+      "contentPack": "general_knoxx",
+      "cases": [
+        {
+          "id": "warden-solo",
+          "when": {
+            "kind": "all",
+            "conditions": [
+              {
+                "kind": "players",
+                "count": 1
+              },
+              {
+                "kind": "playthrough",
+                "values": [
+                  "post_second"
+                ]
+              },
+              {
+                "kind": "level",
+                "subject": "enemy",
+                "min": 50
+              }
+            ]
+          },
+          "chance": {
+            "value": {
+              "kind": "fixed",
+              "value": 12.5
+            },
+            "unit": "percent",
+            "per": "kill"
+          },
+          "rewards": [
+            {
+              "kind": "item",
+              "item": {
+                "id": "weapons-aster-paradox",
+                "name": "Paradox"
+              },
+              "quantity": {
+                "kind": "fixed",
+                "value": 1
+              },
+              "elementSelection": "random"
+            }
+          ],
+          "status": "current",
+          "notes": "This is a per-kill probability, not a part weight.",
+          "referenceIds": [
+            "ref-design"
+          ]
+        },
+        {
+          "id": "warden-party",
+          "when": {
+            "kind": "all",
+            "conditions": [
+              {
+                "kind": "players",
+                "count": 4
+              },
+              {
+                "kind": "mode",
+                "value": "multiplayer"
+              }
+            ]
+          },
+          "chance": {
+            "value": {
+              "kind": "fraction",
+              "numerator": 1,
+              "denominator": 5
+            },
+            "unit": "ratio",
+            "per": "kill"
+          },
+          "status": "current",
+          "referenceIds": [
+            "ref-design"
+          ]
+        }
+      ],
+      "notes": "The encounter can be repeated after leaving and returning.",
+      "referenceIds": [
+        "ref-design"
+      ]
+    },
+    {
+      "id": "acq-mission",
+      "method": "mission_reward",
+      "source": {
+        "id": "mission-two-ways-out",
+        "name": "Two Ways Out",
+        "kind": "mission",
+        "locations": [
+          {
+            "id": "location-glass-basin",
+            "name": "Glass Basin"
+          }
+        ]
+      },
+      "contentPack": "general_knoxx",
+      "cases": [
+        {
+          "id": "mission-turn-in",
+          "when": {
+            "kind": "all",
+            "conditions": [
+              {
+                "kind": "mission",
+                "mission": {
+                  "id": "mission-two-ways-out",
+                  "name": "Two Ways Out"
+                },
+                "state": "turned_in"
+              },
+              {
+                "kind": "objective",
+                "name": "Recover experimental cells",
+                "quantity": 5
+              }
+            ]
+          },
+          "rewards": [
+            {
+              "kind": "item",
+              "item": {
+                "id": "weapons-aster-paradox",
+                "name": "Paradox"
+              },
+              "quantity": {
+                "kind": "fixed",
+                "value": 1
+              },
+              "elementSelection": "fixed",
+              "element": "non_elemental"
+            },
+            {
+              "kind": "money",
+              "value": {
+                "kind": "fixed",
+                "value": 2500
+              }
+            },
+            {
+              "kind": "experience",
+              "value": {
+                "kind": "fixed",
+                "value": 10000
+              }
+            }
+          ],
+          "status": "current",
+          "notes": "The reward uses the cartridge configuration.",
+          "referenceIds": [
+            "ref-design"
+          ]
+        }
+      ],
+      "referenceIds": [
+        "ref-design"
+      ]
+    },
+    {
+      "id": "acq-vendor",
+      "method": "purchase",
+      "source": {
+        "id": "vendor-mara",
+        "name": "Mara the Mechanic",
+        "kind": "vendor",
+        "locations": [
+          {
+            "id": "location-brass-market",
+            "name": "Brass Market"
+          }
+        ]
+      },
+      "contentPack": "general_knoxx",
+      "cases": [
+        {
+          "id": "vendor-sale",
+          "when": {
+            "kind": "mission",
+            "mission": {
+              "id": "mission-two-ways-out",
+              "name": "Two Ways Out"
+            },
+            "state": "completed"
+          },
+          "cost": {
+            "currency": "money",
+            "value": {
+              "kind": "fixed",
+              "value": 24000
+            },
+            "basis": "fixed",
+            "referenceIds": [
+              "ref-design"
+            ]
+          },
+          "status": "current",
+          "notes": "Sold only after the mission.",
+          "referenceIds": [
+            "ref-design"
+          ]
+        }
+      ],
+      "referenceIds": [
+        "ref-design"
+      ]
+    },
+    {
+      "id": "acq-world",
+      "method": "drop",
+      "source": {
+        "id": "pool-aster-experiments",
+        "name": "Aster Experiment Pool",
+        "kind": "loot_pool",
+        "locations": [
+          {
+            "id": "region-knoxx",
+            "name": "General Knoxx regions"
+          }
+        ]
+      },
+      "contentPack": "general_knoxx",
+      "cases": [
+        {
+          "id": "world-roll",
+          "chance": {
+            "value": {
+              "kind": "fixed",
+              "value": 0.5
+            },
+            "unit": "percent",
+            "per": "loot_roll"
+          },
+          "status": "current",
+          "notes": "Probability applies to a roll of this pool, not every enemy kill.",
+          "referenceIds": [
+            "ref-design"
+          ]
+        }
+      ],
+      "referenceIds": [
+        "ref-design"
+      ]
+    },
+    {
+      "id": "acq-code",
+      "method": "code",
+      "source": {
+        "id": "code-clockwork-gift",
+        "name": "Clockwork Gift",
+        "kind": "code"
+      },
+      "contentPack": "base_game",
+      "cases": [
+        {
+          "id": "old-promotion",
+          "when": {
+            "kind": "edition",
+            "values": [
+              "original"
+            ]
+          },
+          "status": "expired",
+          "notes": "An invented historical promotion; no working redemption code is implied.",
+          "referenceIds": [
+            "ref-design"
+          ]
+        }
+      ],
+      "referenceIds": [
+        "ref-design"
+      ]
+    }
+  ],
+  "interactions": [
+    {
+      "id": "interaction-skill",
+      "kind": "synergy",
+      "with": [
+        {
+          "id": "skill-field-reserve",
+          "name": "Field Reserve"
+        }
+      ],
+      "when": {
+        "kind": "all",
+        "conditions": [
+          {
+            "kind": "variant_selected",
+            "variantId": "variant-energy"
+          },
+          {
+            "kind": "character",
+            "values": [
+              "roland"
+            ]
+          },
+          {
+            "kind": "skill_rank",
+            "skill": {
+              "id": "skill-field-reserve",
+              "name": "Field Reserve"
+            },
+            "minimumInvested": 1,
+            "minimumEffective": 1
+          }
+        ]
+      },
+      "description": "Field Reserve expands the equipped energy capacity. Its rank-dependent bonus belongs to the skill, not the weapon.",
+      "referenceIds": [
+        "ref-manual"
+      ]
+    },
+    {
+      "id": "interaction-holster",
+      "kind": "limitation",
+      "with": [
+        {
+          "id": "skill-field-reserve",
+          "name": "Field Reserve"
+        }
+      ],
+      "when": {
+        "kind": "variant_selected",
+        "variantId": "variant-energy"
+      },
+      "description": "While holstered, the cell refills only to its ordinary capacity; equip it to reach a skill-boosted capacity.",
+      "referenceIds": [
+        "ref-design"
+      ]
+    },
+    {
+      "id": "interaction-reset",
+      "kind": "bug",
+      "when": {
+        "kind": "all",
+        "conditions": [
+          {
+            "kind": "variant_selected",
+            "variantId": "variant-energy"
+          },
+          {
+            "kind": "edition",
+            "values": [
+              "original"
+            ]
+          },
+          {
+            "kind": "mode",
+            "value": "single_player"
+          }
+        ]
+      },
+      "description": "Unequipping and reequipping resets the cell in the original fictional release.",
+      "referenceIds": [
+        "ref-design"
+      ]
+    },
+    {
+      "id": "interaction-armor-crit",
+      "kind": "behavior",
+      "with": [
+        {
+          "id": "enemy-glass-burrower",
+          "name": "Glass Burrower"
+        }
+      ],
+      "when": {
+        "kind": "health_type",
+        "value": "armor",
+        "shielded": false
+      },
+      "description": "Hits on a Glass Burrower claw count as critical hits. This is a target-specific rule, not universal armor penetration.",
+      "referenceIds": [
+        "ref-design"
+      ]
+    }
+  ],
+  "knowledge": {
+    "skills": [
+      {
+        "id": "skill-field-reserve",
+        "name": "Field Reserve",
+        "character": "roland",
+        "baseMaxRank": 5,
+        "boostedMaxRank": 9,
+        "description": "Increases the capacity of equipped energy weapons. This is a fictional skill baseline, not an innate Paradox bonus.",
+        "scaling": [
+          {
+            "id": "table-field-reserve",
+            "title": "Field Reserve effective ranks",
+            "coverage": "partial",
+            "columns": [
+              {
+                "id": "rank",
+                "label": "Effective rank",
+                "stat": "skill_points",
+                "unit": "skill_points"
+              },
+              {
+                "id": "capacity",
+                "label": "Capacity bonus",
+                "stat": "magazine_capacity",
+                "unit": "percent"
+              }
+            ],
+            "rows": [
+              {
+                "rank": 1,
+                "capacity": 5
+              },
+              {
+                "rank": 5,
+                "capacity": 25
+              },
+              {
+                "rank": 9,
+                "capacity": 45
+              }
+            ],
+            "referenceIds": [
+              "ref-manual"
+            ]
+          }
+        ],
+        "referenceIds": [
+          "ref-manual"
+        ]
+      }
+    ],
+    "sharedMechanics": [
+      {
+        "id": "rule-corroding-target",
+        "name": "Corroding targets",
+        "description": "In this fictional ruleset, Field Reserve also improves follow-up damage against corroding targets. This optional shared skill interaction is not an innate weapon bonus.",
+        "trigger": "on_hit",
+        "when": {
+          "kind": "state",
+          "value": "target_corroding"
+        },
+        "modifiers": [
+          {
+            "id": "corroding-bonus",
+            "stat": "damage",
+            "operation": "add_percent",
+            "value": {
+              "kind": "fixed",
+              "value": 15
+            },
+            "unit": "percent",
+            "target": {
+              "recipient": "hit_target"
+            },
+            "basis": "weapon_damage",
+            "context": {
+              "surface": "gameplay",
+              "selection": "fixed_rule"
+            }
+          }
+        ],
+        "appliesTo": {
+          "kinds": [
+            "weapon"
+          ],
+          "itemIds": [
+            "weapons-aster-paradox"
+          ],
+          "weaponTypes": [
+            "eridian_weapon"
+          ],
+          "characters": [
+            "brick",
+            "lilith",
+            "mordecai",
+            "roland"
+          ],
+          "elements": [
+            "corrosive"
+          ],
+          "skills": [
+            "skill-field-reserve"
+          ]
+        },
+        "referenceIds": [
+          "ref-design"
+        ]
+      }
+    ]
+  },
+  "tables": [
+    {
+      "id": "table-manufacturer-tier",
+      "title": "Manufacturer tiers and base requirements",
+      "coverage": "partial",
+      "columns": [
+        {
+          "id": "tier",
+          "label": "Manufacturer tier"
+        },
+        {
+          "id": "requiredLevel",
+          "label": "Base required level",
+          "unit": "count"
+        },
+        {
+          "id": "saleValue",
+          "label": "Example sale value",
+          "unit": "money"
+        },
+        {
+          "id": "scope",
+          "label": "Scope"
+        },
+        {
+          "id": "obtainable",
+          "label": "Obtainable"
+        }
+      ],
+      "rows": [
+        {
+          "tier": "Aster 001",
+          "requiredLevel": 19,
+          "saleValue": 1580,
+          "scope": "Example at this tier; before player adjustments.",
+          "obtainable": true
+        },
+        {
+          "tier": "Aster 010",
+          "requiredLevel": 28,
+          "saleValue": 6000,
+          "scope": "Example at this tier; before player adjustments.",
+          "obtainable": true
+        }
+      ],
+      "referenceIds": [
+        "ref-design"
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "ref-design",
+      "kind": "web",
+      "title": "Invented Paradox design sheet",
+      "url": "https://example.invalid/paradox"
+    },
+    {
+      "id": "ref-manual",
+      "kind": "manual",
+      "title": "Invented Field Reserve notes"
+    },
+    {
+      "id": "ref-native",
+      "kind": "game_data",
+      "title": "Invented Paradox component definitions"
+    }
+  ],
+  "economy": {
+    "buy": [
+      {
+        "currency": "money",
+        "value": {
+          "kind": "range",
+          "min": 10000,
+          "max": 40000
+        },
+        "basis": "reported_table",
+        "when": {
+          "kind": "level",
+          "subject": "item",
+          "min": 19,
+          "max": 40
+        },
+        "referenceIds": [
+          "ref-design"
+        ]
+      }
+    ],
+    "sell": [
+      {
+        "currency": "money",
+        "value": {
+          "kind": "fixed",
+          "value": 6000
+        },
+        "basis": "example",
+        "when": {
+          "kind": "level",
+          "subject": "item",
+          "min": 28,
+          "max": 28
+        },
+        "referenceIds": [
+          "ref-design"
+        ]
+      }
+    ],
+    "tradeable": true
+  },
+  "naming": {
+    "prefixes": {
+      "values": [
+        "Measured",
+        "Caustic",
+        "Resonant"
+      ],
+      "coverage": "complete"
+    },
+    "rules": [
+      {
+        "id": "name-caustic",
+        "kind": "prefix",
+        "name": "Caustic",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-energy"
+        },
+        "modifiers": [
+          {
+            "id": "prefix-tech",
+            "stat": "tech_level",
+            "operation": "add",
+            "value": {
+              "kind": "fixed",
+              "value": 2
+            },
+            "unit": "tech_levels",
+            "context": {
+              "surface": "technical",
+              "selection": "fixed_rule"
+            }
+          }
+        ],
+        "mechanics": [
+          {
+            "id": "prefix-sound",
+            "name": "Resonant report",
+            "description": "The energy barrel produces a rising tone while its cell recharges.",
+            "trigger": "other",
+            "when": {
+              "kind": "variant_selected",
+              "variantId": "variant-energy"
+            },
+            "referenceIds": [
+              "ref-design"
+            ]
+          }
+        ],
+        "referenceIds": [
+          "ref-design"
+        ]
+      },
+      {
+        "id": "title-paradox",
+        "kind": "title",
+        "name": "Paradox",
+        "when": {
+          "kind": "stat_threshold",
+          "stat": "accuracy",
+          "comparison": "at_least",
+          "value": {
+            "kind": "fixed",
+            "value": 85
+          },
+          "unit": "rating",
+          "evaluation": "generated_unmodified"
+        },
+        "referenceIds": [
+          "ref-native"
+        ]
+      },
+      {
+        "id": "name-measured",
+        "kind": "prefix",
+        "name": "Measured",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-cartridge"
+        },
+        "referenceIds": [
+          "ref-design"
+        ]
+      },
+      {
+        "id": "name-resonant",
+        "kind": "prefix",
+        "name": "Resonant",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-shock"
+        },
+        "referenceIds": [
+          "ref-design"
+        ]
+      }
+    ],
+    "displayNames": [
+      {
+        "name": "Parallax",
+        "when": {
+          "kind": "edition",
+          "values": [
+            "original"
+          ]
+        },
+        "reason": "Earlier displayed title."
+      },
+      {
+        "name": "Paradox",
+        "when": {
+          "kind": "edition",
+          "values": [
+            "enhanced"
+          ]
+        },
+        "reason": "Corrected displayed title."
+      }
+    ],
+    "internalNames": [
+      {
+        "name": "Aster_Paradox",
+        "role": "definition",
+        "referenceIds": [
+          "ref-native"
+        ]
+      },
+      {
+        "name": "Aster_Parallax",
+        "role": "legacy_definition",
+        "referenceIds": [
+          "ref-native"
+        ]
+      }
+    ],
+    "models": [
+      {
+        "template": "{bodyCode}{modelNumber}{materialCode} {prefix} {title}",
+        "components": [
+          {
+            "id": "bodyCode",
+            "kind": "part_lookup",
+            "groupId": "group-body",
+            "values": [
+              {
+                "optionId": "body-balanced",
+                "text": "AS"
+              },
+              {
+                "optionId": "body-heavy",
+                "text": "AX"
+              }
+            ]
+          },
+          {
+            "id": "modelNumber",
+            "kind": "composite",
+            "operation": "concatenate",
+            "radix": 2,
+            "inputs": [
+              {
+                "groupId": "group-stock",
+                "width": 3,
+                "values": [
+                  {
+                    "optionId": "stock-none",
+                    "value": 0
+                  },
+                  {
+                    "optionId": "stock-braced",
+                    "value": 2
+                  }
+                ]
+              },
+              {
+                "groupId": "group-magazine",
+                "width": 3,
+                "values": [
+                  {
+                    "optionId": "mag-cartridge-6",
+                    "value": 1
+                  },
+                  {
+                    "optionId": "mag-cartridge-9",
+                    "value": 2
+                  },
+                  {
+                    "optionId": "cell-standard",
+                    "value": 3
+                  },
+                  {
+                    "optionId": "cell-fast",
+                    "value": 4
+                  }
+                ]
+              }
+            ],
+            "omitWhenZero": true
+          },
+          {
+            "id": "materialCode",
+            "kind": "part_lookup",
+            "groupId": "group-material",
+            "values": [
+              {
+                "optionId": "material-standard",
+                "text": "S"
+              },
+              {
+                "optionId": "material-resonant",
+                "text": "R"
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "name": "AS010011S Caustic Paradox",
+            "selectedParts": [
+              {
+                "groupId": "group-body",
+                "optionId": "body-balanced"
+              },
+              {
+                "groupId": "group-stock",
+                "optionId": "stock-braced"
+              },
+              {
+                "groupId": "group-magazine",
+                "optionId": "cell-standard"
+              },
+              {
+                "groupId": "group-material",
+                "optionId": "material-standard"
+              },
+              {
+                "groupId": "group-barrel",
+                "optionId": "barrel-energy"
+              }
+            ]
+          }
+        ],
+        "referenceIds": [
+          "ref-design"
+        ],
+        "id": "model-energy",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-energy"
+        }
+      },
+      {
+        "id": "model-cartridge",
+        "when": {
+          "kind": "variant_selected",
+          "variantId": "variant-cartridge"
+        },
+        "template": "{bodyCode}{modelNumber}{materialCode} {prefix} {title}",
+        "components": [
+          {
+            "id": "bodyCode",
+            "kind": "part_lookup",
+            "groupId": "group-body",
+            "values": [
+              {
+                "optionId": "body-balanced",
+                "text": "AS"
+              },
+              {
+                "optionId": "body-heavy",
+                "text": "AX"
+              }
+            ]
+          },
+          {
+            "id": "modelNumber",
+            "kind": "composite",
+            "operation": "sum",
+            "radix": 10,
+            "inputs": [
+              {
+                "groupId": "group-stock",
+                "values": [
+                  {
+                    "optionId": "stock-none",
+                    "value": 10
+                  },
+                  {
+                    "optionId": "stock-braced",
+                    "value": 20
+                  }
+                ]
+              },
+              {
+                "groupId": "group-magazine",
+                "values": [
+                  {
+                    "optionId": "mag-cartridge-6",
+                    "value": 1
+                  },
+                  {
+                    "optionId": "mag-cartridge-9",
+                    "value": 0
+                  }
+                ]
+              }
+            ],
+            "multiplierRules": [
+              {
+                "factor": 10,
+                "when": {
+                  "kind": "all",
+                  "conditions": [
+                    {
+                      "kind": "part_selected",
+                      "groupId": "group-stock",
+                      "optionId": "stock-braced"
+                    },
+                    {
+                      "kind": "part_selected",
+                      "groupId": "group-magazine",
+                      "optionId": "mag-cartridge-6"
+                    }
+                  ]
+                }
+              }
+            ],
+            "omitWhenZero": true
+          },
+          {
+            "id": "materialCode",
+            "kind": "part_lookup",
+            "groupId": "group-material",
+            "values": [
+              {
+                "optionId": "material-standard",
+                "text": "S"
+              },
+              {
+                "optionId": "material-resonant",
+                "text": "R"
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "name": "AS210S Measured Paradox",
+            "selectedParts": [
+              {
+                "groupId": "group-body",
+                "optionId": "body-balanced"
+              },
+              {
+                "groupId": "group-stock",
+                "optionId": "stock-braced"
+              },
+              {
+                "groupId": "group-magazine",
+                "optionId": "mag-cartridge-6"
+              },
+              {
+                "groupId": "group-material",
+                "optionId": "material-standard"
+              },
+              {
+                "groupId": "group-barrel",
+                "optionId": "barrel-cartridge"
+              }
+            ]
+          }
+        ],
+        "referenceIds": [
+          "ref-design"
+        ]
+      }
+    ],
+    "ruleSelection": {
+      "prefix": "last_matching",
+      "title": "last_matching"
+    }
+  },
+  "gallery": [
+    {
+      "id": "image-card",
+      "path": "weapons/hypothetical/paradox-card.png",
+      "role": "card",
+      "caption": "An invented level-40 cartridge roll."
+    },
+    {
+      "id": "image-world",
+      "path": "weapons/hypothetical/paradox-world.png",
+      "role": "world",
+      "caption": "The energy configuration as a world drop."
+    },
+    {
+      "id": "image-inventory",
+      "path": "weapons/hypothetical/paradox-inventory.png",
+      "role": "inventory",
+      "caption": "The experimental barrel in the inventory view."
+    },
+    {
+      "id": "image-parts",
+      "path": "weapons/hypothetical/paradox-parts.png",
+      "role": "other",
+      "caption": "Visual differences between the two barrel assemblies."
+    }
+  ],
+  "research": {
+    "sources": [
+      {
+        "id": "capture-design",
+        "referenceId": "ref-design",
+        "captureId": "hypothetical:capture-design",
+        "contentHash": "ebe95c0ee2f119550e1977bc0ba4b7bf0c110581ac57bec08dc3b24b86f916f1",
+        "kind": "page",
+        "captureMode": "full_page",
+        "capturedAt": "2026-10-28T09:00:00.000Z",
+        "characters": 12000,
+        "bytes": 12160,
+        "fromScope": {
+          "id": "scope-experiments",
+          "path": [
+            "Weapons",
+            "Aster experiments"
+          ]
+        },
+        "selectedForBuild": "always",
+        "capturedSections": [
+          "Energy system",
+          "Parts",
+          "Acquisition"
+        ]
+      },
+      {
+        "id": "capture-manual",
+        "referenceId": "ref-manual",
+        "captureId": "hypothetical:capture-manual",
+        "kind": "manual",
+        "captureMode": "manual_text",
+        "capturedAt": "2026-10-28T09:05:00.000Z",
+        "characters": 250,
+        "bytes": 250,
+        "fromScope": {
+          "id": "scope-shared-skills",
+          "path": [
+            "Everything",
+            "Skill notes"
+          ]
+        },
+        "selectedForBuild": "auto"
+      },
+      {
+        "id": "capture-native",
+        "referenceId": "ref-native",
+        "captureId": "hypothetical:capture-native",
+        "kind": "game_record",
+        "captureMode": "game_extract",
+        "capturedAt": "2026-10-28T08:00:00.000Z",
+        "selectedForBuild": "always"
+      }
+    ],
+    "assertions": [
+      {
+        "id": "assert-energy-delay",
+        "subject": {
+          "id": "weapons-aster-paradox",
+          "name": "Paradox"
+        },
+        "role": "item_property",
+        "sourceIds": [
+          "capture-design"
+        ],
+        "locator": {
+          "section": "Energy system",
+          "table": 0,
+          "row": 1,
+          "quote": "Regen delay: 1.3 seconds."
+        },
+        "outputPaths": [
+          "/weapon/resourceSystems/1/regenerationDelay"
+        ],
+        "scope": {
+          "kinds": [
+            "weapon"
+          ],
+          "characters": [
+            "brick",
+            "lilith",
+            "mordecai",
+            "roland"
+          ],
+          "elements": [
+            "corrosive",
+            "shock"
+          ],
+          "itemIds": [
+            "weapons-aster-paradox"
+          ],
+          "editions": [
+            "original",
+            "enhanced"
+          ],
+          "games": [
+            "borderlands"
+          ]
+        },
+        "status": "accepted",
+        "reason": "The design sheet explicitly distinguishes this from depletion delay.",
+        "originalValue": {
+          "regenDelay": 1.3,
+          "unit": "seconds"
+        }
+      },
+      {
+        "id": "assert-native-reload",
+        "subject": {
+          "id": "mag-cartridge-9",
+          "name": "Nine-round cylinder"
+        },
+        "role": "component_property",
+        "sourceIds": [
+          "capture-native"
+        ],
+        "locator": {
+          "recordPath": "hypothetical.Aster.Magazine.mag9"
+        },
+        "outputPaths": [
+          "/partGroups/2/options/1/modifiers/1"
+        ],
+        "status": "unresolved",
+        "reason": "The native duration coefficient and reported speed bonus have not been reconciled.",
+        "originalValue": -0.1
+      },
+      {
+        "id": "assert-delay-alt",
+        "subject": {
+          "id": "weapons-aster-paradox",
+          "name": "Paradox"
+        },
+        "role": "item_property",
+        "sourceIds": [
+          "capture-manual"
+        ],
+        "locator": {
+          "section": "Old delay notes",
+          "quote": "Delay approximately 1.5 seconds."
+        },
+        "status": "alternative",
+        "reason": "An older informal measurement; the explicit design value is selected.",
+        "originalValue": 1.5
+      },
+      {
+        "id": "assert-card-example",
+        "subject": {
+          "id": "weapons-aster-paradox",
+          "name": "Paradox"
+        },
+        "role": "example",
+        "sourceIds": [
+          "capture-design"
+        ],
+        "locator": {
+          "section": "Example roll"
+        },
+        "outputPaths": [
+          "/stats/5"
+        ],
+        "status": "accepted",
+        "originalValue": {
+          "reloadSeconds": 1.8,
+          "itemLevel": 40
+        }
+      },
+      {
+        "id": "assert-skill",
+        "subject": {
+          "id": "skill-field-reserve",
+          "name": "Field Reserve"
+        },
+        "role": "skill_baseline",
+        "sourceIds": [
+          "capture-manual"
+        ],
+        "outputPaths": [
+          "/knowledge/skills/0"
+        ],
+        "status": "accepted",
+        "originalValue": {
+          "capacityBonusPerRank": 5
+        }
+      },
+      {
+        "id": "assert-shared-corrosion",
+        "subject": {
+          "id": "rule-corroding-target",
+          "name": "Corroding targets"
+        },
+        "role": "shared_rule",
+        "sourceIds": [
+          "capture-design"
+        ],
+        "outputPaths": [
+          "/knowledge/sharedMechanics/0"
+        ],
+        "status": "accepted",
+        "originalValue": {
+          "followUpDamagePercent": 15
+        }
+      },
+      {
+        "id": "assert-prototype",
+        "subject": {
+          "id": "weapons-aster-prototype",
+          "name": "Aster Prototype"
+        },
+        "role": "comparison",
+        "sourceIds": [
+          "capture-design"
+        ],
+        "outputPaths": [
+          "/variants/0/comparisons/0"
+        ],
+        "status": "accepted",
+        "originalValue": {
+          "extraCylinderRounds": 2
+        }
+      },
+      {
+        "id": "assert-recommendation",
+        "subject": {
+          "id": "unrelated-example",
+          "name": "Unrelated recommendation"
+        },
+        "role": "example",
+        "sourceIds": [
+          "capture-design"
+        ],
+        "scope": {
+          "games": [
+            "wonderlands"
+          ]
+        },
+        "status": "omitted",
+        "reason": "A hypothetical recommendation widget for another game.",
+        "originalValue": "Unrelated armor recommendation."
+      }
+    ],
+    "decisions": [
+      {
+        "field": "/weapon/resourceSystems/1/regenerationDelay",
+        "selectedAssertion": "assert-energy-delay",
+        "alternatives": [
+          "assert-delay-alt"
+        ],
+        "reason": "Prefer the explicit design value to the older approximate measurement."
+      }
+    ],
+    "warnings": [
+      "The nine-round cylinder retains its reported reload modifier until native coefficient semantics are resolved.",
+      "This entire audit is invented illustration; these captures do not exist in the workshop."
+    ],
+    "nativeModifiers": [
+      {
+        "assertionId": "assert-native-reload",
+        "attributePath": "hypothetical.Attributes.ReloadDuration",
+        "modifierType": "Scale",
+        "rawValue": -0.1
+      }
+    ]
+  }
+}
+```
+
+#### Shield
+
+```json
+
+```
+
+#### Class Mod
+
+```json
+
+```
+
+#### Grendade Mod
+
+```json
+
+```
+
+#### Artifact
+
+```json
+
+```
+
+#### Other Equipment
 
 ```json
 
