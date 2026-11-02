@@ -1,0 +1,124 @@
+{
+  "source": "logs/one-playthrough-20261102-161555-777325.json",
+  "sha256": "ae601a38793e5bb7cfb3ba6240ef38efc6d53c7ca55ed3eca54acb9601ca57ce",
+  "version": "4.5.10",
+  "note": "Captured post-turn-in BL1E F10 reward grade ranges and accepted mission levels. Actor generation is modeled in tests, not executed natively.",
+  "cases": [
+    {
+      "mission": "Z1_Missions.Missions.M_AssassinateJack",
+      "stage": 31,
+      "reward": {
+        "balance": "gd_customweapons.Retail_Weapons.CustomWeap_CombatRifle_Sentinel",
+        "chain": [
+          "gd_customweapons.Retail_Weapons.CustomWeap_CombatRifle_Sentinel"
+        ],
+        "manufacturer_source": "gd_customweapons.Retail_Weapons.CustomWeap_CombatRifle_Sentinel",
+        "inventory_definition": "gd_weap_combat_rifle.A_Weapon.WeaponType_combat_rifle",
+        "mission_level": 31,
+        "target_internal_level": 33,
+        "manufacturer_grades": [
+          {
+            "manufacturer_index": 0,
+            "grade_index": 0,
+            "native_internal_level": 8,
+            "min_stage": 6,
+            "max_stage": 9
+          },
+          {
+            "manufacturer_index": 0,
+            "grade_index": 1,
+            "native_internal_level": 17,
+            "min_stage": 15,
+            "max_stage": 18
+          },
+          {
+            "manufacturer_index": 0,
+            "grade_index": 2,
+            "native_internal_level": 26,
+            "min_stage": 22,
+            "max_stage": 27
+          },
+          {
+            "manufacturer_index": 0,
+            "grade_index": 3,
+            "native_internal_level": 35,
+            "min_stage": 33,
+            "max_stage": 36
+          },
+          {
+            "manufacturer_index": 0,
+            "grade_index": 4,
+            "native_internal_level": 44,
+            "min_stage": 42,
+            "max_stage": 45
+          },
+          {
+            "manufacturer_index": 0,
+            "grade_index": 5,
+            "native_internal_level": 50,
+            "min_stage": 50,
+            "max_stage": 100
+          }
+        ]
+      }
+    },
+    {
+      "mission": "Z1_Missions.Missions.M_KingWeeWee",
+      "stage": 29,
+      "reward": {
+        "balance": "gd_customweapons.Retail_Weapons.CustomWeap_SMG_TheSpy",
+        "chain": [
+          "gd_customweapons.Retail_Weapons.CustomWeap_SMG_TheSpy"
+        ],
+        "manufacturer_source": "gd_customweapons.Retail_Weapons.CustomWeap_SMG_TheSpy",
+        "inventory_definition": "gd_weap_patrol_smg.A_Weapon.WeaponType_patrol_smg",
+        "mission_level": 29,
+        "target_internal_level": 31,
+        "manufacturer_grades": [
+          {
+            "manufacturer_index": 0,
+            "grade_index": 0,
+            "native_internal_level": 8,
+            "min_stage": 6,
+            "max_stage": 9
+          },
+          {
+            "manufacturer_index": 0,
+            "grade_index": 1,
+            "native_internal_level": 17,
+            "min_stage": 15,
+            "max_stage": 20
+          },
+          {
+            "manufacturer_index": 0,
+            "grade_index": 2,
+            "native_internal_level": 26,
+            "min_stage": 21,
+            "max_stage": 27
+          },
+          {
+            "manufacturer_index": 0,
+            "grade_index": 3,
+            "native_internal_level": 35,
+            "min_stage": 33,
+            "max_stage": 36
+          },
+          {
+            "manufacturer_index": 0,
+            "grade_index": 4,
+            "native_internal_level": 44,
+            "min_stage": 42,
+            "max_stage": 45
+          },
+          {
+            "manufacturer_index": 0,
+            "grade_index": 5,
+            "native_internal_level": 50,
+            "min_stage": 50,
+            "max_stage": 100
+          }
+        ]
+      }
+    }
+  ]
+}

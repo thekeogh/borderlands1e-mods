@@ -1,5 +1,22 @@
 # One Playthrough changelog
 
+## 4.5.11 — 2026-11-02
+
+- Fix missing scaled mission equipment rewards when manufacturer grade ranges
+  contain internal gaps. F10 captured Sentinel requested at mission stage 31 and
+  The Spy at 29, both between their native 27 maximum and next 33 minimum.
+- When no manufacturer grade accepts the mission stage, temporarily extend the
+  preceding grade range to that stage. Preserve already-eligible ranges, later
+  tiers, original balance/part identities and probability modifier values. Keep
+  the accepted mission's use requirement and existing outer-bound extensions.
+- Restore the original ranges and levels after generation, nested calls or
+  failures; inherited tables remain temporary child-owned copies.
+- Preserve the relevant captured fields in a regression fixture. Validate both
+  reward cases, stages 1–69, inherited rollback and nested gap scopes locally.
+  Native Windows reward generation still needs in-game confirmation.
+- Existing saves work. Previously completed missions do not automatically grant
+  missed rewards again; replay their turn-in from a backed-up save to test.
+
 ## 4.5.10 — 2026-10-23
 
 - Audit two BL1E Borderlens captures: 218 mission definitions, 74 reward balances,

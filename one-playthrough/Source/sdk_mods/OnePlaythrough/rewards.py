@@ -76,6 +76,13 @@ def prepare_items(mission, level):
                     continue
                 lows = [g.GameStageRequirement.MinGameStage for g in grades]
                 highs = [g.GameStageRequirement.MaxGameStage for g in grades]
+                # Custom rewards can leave holes between manufacturer tiers
+                # (captured examples: 22-27, then 33-36). If no tier accepts
+                # the mission stage, extend only the preceding tier(s) to it.
+                # Never unlock a later tier early or alter an eligible table.
+                extend_high = None
+                if not any(low <= level <= high for low, high in zip(lows, highs)):
+                    extend_high = max((high for high in highs if high < level), default=None)
                 for j, grade in enumerate(grades):
                     inventory = getattr(grade.GradeModifiers, "CustomInventoryDefinition", None) or definition
                     if getattr(inventory, "bUsesPlayerLevelRequirement", True) is False:
@@ -84,7 +91,7 @@ def prepare_items(mission, level):
                     patches.set(balance, (*path, "GradeModifiers", "ExpLevel"), internal_level(inventory, level))
                     if lows[j] == min(lows) and level < lows[j]:
                         patches.set(balance, (*path, "GameStageRequirement", "MinGameStage"), int(level))
-                    if highs[j] == max(highs) and level > highs[j]:
+                    if highs[j] == extend_high:
                         patches.set(balance, (*path, "GameStageRequirement", "MaxGameStage"), int(level))
         return patches
     except Exception:
