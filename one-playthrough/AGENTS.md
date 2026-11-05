@@ -3,7 +3,7 @@
 One Playthrough is the active mod in this directory. Keep playthrough-3/ (version
 3) and reference/ unchanged. Record releases in CHANGELOG.md.
 README.md is a concise player guide: installation, New Game, Continue and scope.
-Always retain the full Easy / Normal / Hard spawn-percentage table in README.md
+Always retain the full Easy / Normal / Hard / Very Hard spawn-percentage table in README.md
 and keep it synchronized with the actual weights when changing difficulty.
 Preserve vanilla regional/mission floors, native reward identities and money formulas.
 Equipment rewards use the accepted mission level, not turn-in character level.
@@ -53,14 +53,15 @@ ownership. Never call health methods on NPCs during native item construction;
 require a confirmed death/loot scope for NPC query sources.
 Leave unknown/interpolated/dynamic formats native and record skip reasons in F10.
 Keep SDU progression upgrades and non-levelled consumables native.
-Enemy difficulty is a saved Easy / Normal / Hard selector, default Normal.
+Enemy difficulty is a saved Easy / Normal / Hard / Very Hard selector, default Normal.
 Ordinary hostile roll weights (native / +1 / +2 / +3): Easy 70/20/9/1,
-Normal 50/20/25/5, Hard 20/5/55/20. All preserve max(player, vanilla area)
+Normal 50/20/25/5, Hard 20/5/55/20. Very Hard adds a fifth +4 slot and uses
+0/0/40/55/5 (native / +1 / +2 / +3 / +4). All preserve max(player, vanilla area)
 as their base. Native ordinary levels floor at player level +1; keep the original
 factory GameStage/grade bands when applying that floor. Native/+1 rolls overlap
 at the +1 minimum; keep raw weights and named/boss player-level floors unchanged.
-No extra +4 roll.
-Retain naturally higher levels without stacking or capping them at +3.
+Only Very Hard has an extra +4 roll; Easy/Normal/Hard stay unchanged.
+Retain naturally higher levels without stacking or capping them at a preset's maximum bonus.
 Difficulty changes affect new spawns only; never rewrite existing pawn data.
 Named enemies/bosses never use that roll. No fixed boss levels or completion
 flags to enable scaling. Keep rare-level data private to those spawns.

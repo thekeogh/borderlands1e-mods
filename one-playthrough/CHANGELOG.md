@@ -1,5 +1,21 @@
 # One Playthrough changelog
 
+## 4.5.12 — 2026-11-04
+
+- Add the saved Very Hard enemy difficulty: native 0%, +1 0%, +2 40%, +3 55%,
+  +4 5%, using the higher of player level and native area stage as the base.
+  Read the selection for new ordinary hostile spawns only; existing pawns keep
+  their initialized levels.
+- Keep Easy/Normal/Hard weights, Normal default, named/boss rules, regional floors,
+  mission rewards and loot-floor behavior unchanged. Preserve naturally higher
+  enemy levels without stacking or capping them at the selected roll.
+- Include +4 in Very Hard's F10 ticket table, and update the option description,
+  player-guide table and submission text for the fourth preset.
+- Validation: 242 local tests pass, including all 100 tickets per preset, both
+  directions of the area/player base, level-69 +4 targets, higher native levels,
+  named-enemy exclusions and saved-setting persistence. Native Windows testing
+  remains required for the new difficulty selection and spawned levels.
+
 ## 4.5.11 — 2026-11-02
 
 - Fix missing scaled mission equipment rewards when manufacturer grade ranges

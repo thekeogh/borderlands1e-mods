@@ -1,6 +1,6 @@
 # One Playthrough
 
-**4.5.11 · keogh · Borderlands GOTY Enhanced**
+**4.5.12 · keogh · Borderlands GOTY Enhanced**
 
 Play from level **1 to 69** in one continuous journey through Pandora. Enemies
 and mission offers scale with you across the main story and all four DLCs,
@@ -15,17 +15,19 @@ you finish earlier or later; SDU upgrades keep their native behaviour.
 Choose **Enemy difficulty** in the mod options. **Normal** is the default;
 the setting is saved and applies to new spawns.
 
-| Ordinary-enemy roll | Easy | Normal | Hard |
-| --- | ---: | ---: | ---: |
-| Native, minimum your level +1 | 70% | 50% | 20% |
-| At least +1 | 20% | 20% | 5% |
-| At least +2 | 9% | 25% | 55% |
-| At least +3 | 1% | 5% | 20% |
+| Ordinary-enemy roll | Easy | Normal | Hard | Very Hard |
+| --- | ---: | ---: | ---: | ---: |
+| Native, minimum your level +1 | 70% | 50% | 20% | 0% |
+| At least +1 | 20% | 20% | 5% | 0% |
+| At least +2 | 9% | 25% | 55% | 40% |
+| At least +3 | 1% | 5% | 20% | 55% |
+| At least +4 | 0% | 0% | 0% | 5% |
 
 The base remains **max(your level, vanilla area level)** in every difficulty.
 New ordinary spawns also floor native level variation at **your level +1**. The mod's
-extra boosts stop at +3; naturally higher enemies and higher-level areas can
-still exceed that. Existing spawned enemies keep their levels.
+extra boosts stop at +3 for Easy, Normal and Hard. **Very Hard** rolls +2/+3/+4
+at **40%/55%/5%**, with no native or +1 roll. Naturally higher enemies and
+higher-level areas can still exceed these boosts. Existing spawned enemies keep their levels.
 Native and +1 rolls now share a +1 minimum. Around your level, their combined
 chances are Easy **90%**, Normal **70%**, Hard **25%**; naturally higher enemies
 and areas retain their higher levels.

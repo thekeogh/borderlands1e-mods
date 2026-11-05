@@ -12,10 +12,11 @@ Enemy levels and available missions follow your character while keeping their
 vanilla minimums: dangerous areas stay dangerous until you catch up. Leave
 missions for later and their levels and rewards keep pace until you accept them.
 Equipment rewards match the accepted mission level, regardless of your level at turn-in.
-Choose Easy, Normal (default) or Hard for ordinary enemies. Each keeps native
+Choose Easy, Normal (default), Hard or Very Hard for ordinary enemies. Each keeps native
 variety and the higher of your level and the vanilla area level, with different
 chances of tougher spawns. New ordinary enemies spawn at least one level above you;
-extra rolls stop at +3, retaining naturally higher levels. The choice is saved
+Easy/Normal/Hard extra rolls stop at +3; Very Hard rolls +2/+3/+4 at
+40%/55%/5%, retaining naturally higher levels. The choice is saved
 and affects new spawns only.
 Named enemies and bosses keep their existing scaling and receive no extra roll.
 The optional loot level floor targets new world drops, containers and vendor

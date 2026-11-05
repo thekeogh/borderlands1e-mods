@@ -100,13 +100,22 @@ class SettingsTests(unittest.TestCase):
         self.settings.write_text(json.dumps({"enabled": True}))
         first = self.boot()
         self.assertEqual(first.mod.enemy_difficulty.value, "Normal")
-        self.assertEqual(first.mod.enemy_difficulty.choices, ["Easy", "Normal", "Hard"])
+        self.assertEqual(first.mod.enemy_difficulty.choices, ["Easy", "Normal", "Hard", "Very Hard"])
         first.mod.enemy_difficulty.value = "Hard"
         first.registered_mod.save_settings()
         second = self.boot()
         self.assertEqual(second.mod.enemy_difficulty.value, "Hard")
         self.assertEqual(second.runtime.spawns.snapshot()["difficulty"], "Hard")
         self.assertTrue(second.registered_mod.is_enabled)
+
+    def test_very_hard_setting_survives_restart(self):
+        first = self.boot()
+        first.mod.enemy_difficulty.value = "Very Hard"
+        first.registered_mod.save_settings()
+        second = self.boot()
+        self.assertEqual(second.mod.enemy_difficulty.value, "Very Hard")
+        self.assertEqual(second.runtime.spawns.snapshot()["ordinary_tickets"],
+                         {"native": 0, "+1": 0, "+2": 40, "+3": 55, "+4": 5})
 
     def test_saved_keybind_and_mission_levels_survive_enable_and_restart(self):
         self.settings.parent.mkdir(parents=True)

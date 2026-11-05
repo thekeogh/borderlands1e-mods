@@ -177,6 +177,7 @@ class Rare(unittest.TestCase):
             "Easy": {21: 90, 22: 9, 23: 1},
             "Normal": {21: 70, 22: 25, 23: 5},
             "Hard": {21: 25, 22: 55, 23: 20},
+            "Very Hard": {22: 40, 23: 55, 24: 5},
         }
         for difficulty, counts in expected.items():
             with self.subTest(difficulty=difficulty):
@@ -189,7 +190,7 @@ class Rare(unittest.TestCase):
 
     def test_every_preset_keeps_max_player_vanilla_area_as_spawn_base(self):
         policies = {"Easy": (70, 20, 9, 1), "Normal": (50, 20, 25, 5),
-                    "Hard": (20, 5, 55, 20)}
+                    "Hard": (20, 5, 55, 20), "Very Hard": (0, 0, 40, 55, 5)}
         for difficulty, weights in policies.items():
             self.h.mod.enemy_difficulty.value = difficulty
             for player, area in ((8, 30), (40, 12)):
@@ -209,16 +210,27 @@ class Rare(unittest.TestCase):
         first = self.spawn(85)
         self.h.mod.enemy_difficulty.value = "Hard"
         second = self.spawn(95)
-        self.assertEqual((first.level, second.level), (21, 23))
+        self.h.mod.enemy_difficulty.value = "Very Hard"
+        third = self.spawn(99)
+        self.assertEqual((first.level, second.level, third.level), (21, 23, 24))
         self.assertEqual(first.definition.DefaultExpLevel.BaseValueConstant, 0)
         self.assertIs(first.definition.DefaultExpLevel.BaseValueAttribute, self.exact)
         self.assertIs(self.factory.PawnBalanceDefinition, self.definition)
 
     def test_all_presets_keep_naturally_higher_levels_without_stacking(self):
         self.definition.DefaultExpLevel.BaseValueAttribute = Object("gd_Balance.EnemyLevel.EnemyLevel_GameStage_plus5")
-        for difficulty in ("Easy", "Normal", "Hard"):
+        for difficulty in ("Easy", "Normal", "Hard", "Very Hard"):
             self.h.mod.enemy_difficulty.value = difficulty
             self.assertTrue(all(self.spawn(t).level == 25 for t in range(100)))
+
+    def test_very_hard_reports_plus_four_and_keeps_rare_spawn_above_player_cap(self):
+        self.h.mod.enemy_difficulty.value = "Very Hard"
+        self.assertEqual(self.h.runtime.spawns.snapshot()["ordinary_tickets"],
+                         {"native": 0, "+1": 0, "+2": 40, "+3": 55, "+4": 5})
+        self.h.enable(69)
+        self.args.GameStage = 69
+        for ticket, level in ((0, 71), (39, 71), (40, 72), (94, 72), (95, 73), (99, 73)):
+            self.assertEqual(self.spawn(ticket).level, level)
 
     def test_invalid_difficulty_falls_back_to_normal(self):
         self.h.mod.enemy_difficulty.value = "Invalid saved value"
@@ -233,7 +245,7 @@ class Rare(unittest.TestCase):
         self.assertEqual(self.definition.Grades[0].GradeModifiers.ExpLevel, 20)
 
     def test_native_plus_one_floor_applies_at_level_one_and_above_player_cap(self):
-        for difficulty in ("Easy", "Normal", "Hard"):
+        for difficulty in ("Easy", "Normal", "Hard", "Very Hard"):
             self.h.mod.enemy_difficulty.value = difficulty
             for player in (1, 12, 69):
                 with self.subTest(difficulty=difficulty, player=player):
@@ -241,8 +253,9 @@ class Rare(unittest.TestCase):
                     self.args.GameStage = player
                     self.definition.DefaultExpLevel = aid(player)
                     self.definition.Grades[0].GradeModifiers.ExpLevel = 0
-                    self.assertEqual(self.spawn(0).level, player + 1)
-                    self.assertEqual(self.calls[-1][4], player)
+                    extra = 2 if difficulty == "Very Hard" else 0
+                    self.assertEqual(self.spawn(0).level, player + (extra or 1))
+                    self.assertEqual(self.calls[-1][4], player + extra)
 
     def test_named_enemy_equal_player_keeps_existing_player_floor(self):
         self.definition.path = "gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Bonehead"
@@ -359,7 +372,7 @@ class Rare(unittest.TestCase):
 
     def test_named_base_game_and_every_dlc_are_excluded_from_roll(self):
         names = self.h.runtime.spawns.plan.__globals__["named_enemy"].__globals__["BALANCE_NAMES"]
-        for difficulty in ("Easy", "Normal", "Hard"):
+        for difficulty in ("Easy", "Normal", "Hard", "Very Hard"):
             self.h.mod.enemy_difficulty.value = difficulty
             for path in names:
                 self.definition.path = path

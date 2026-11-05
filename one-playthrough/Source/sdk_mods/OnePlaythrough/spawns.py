@@ -15,6 +15,7 @@ DIFFICULTIES = {
     "Easy": (70, 20, 9, 1),
     "Normal": (50, 20, 25, 5),
     "Hard": (20, 5, 55, 20),
+    "Very Hard": (0, 0, 40, 55, 5),
 }
 
 
@@ -162,6 +163,7 @@ class Spawns:
     def snapshot(self):
         difficulty = self.selected_difficulty()
         return {"difficulty": difficulty,
-                "ordinary_tickets": dict(zip(("native", "+1", "+2", "+3"), DIFFICULTIES[difficulty])),
+                "ordinary_tickets": {"native" if extra == 0 else f"+{extra}": weight
+                                     for extra, weight in enumerate(DIFFICULTIES[difficulty])},
                 "native_floor": "max(player level + 1, native spawn level)",
                 "named_bonus": False, "private_definitions": len(self.clones)}

@@ -76,7 +76,7 @@ class CatalogAudit(unittest.TestCase):
         original = factory.PawnBalanceDefinition
         self.assertTrue(self.hostile(factory,original,original.AIPawnArchetype))
         self.svc.roll = lambda:self.fail('Mission-specific Moe must not use ordinary bonus RNG')
-        for difficulty in ('Easy','Normal','Hard'):
+        for difficulty in ('Easy','Normal','Hard','Very Hard'):
             self.h.mod.enemy_difficulty.value = difficulty
             stage,clone = self.svc.plan(factory,10,30)
             self.assertEqual(stage,30)  # Keep the native 29-35 Moe grade eligible.
