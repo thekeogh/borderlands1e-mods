@@ -97,12 +97,36 @@ class RewardEncodingTests(unittest.TestCase):
         self.assertEqual(self.encoding.pack_level((7 << 16) | 5, 71), (71 << 16) | 5)
         with self.assertRaises(ValueError): self.encoding.pack_level(1, 0)
 
-    def test_accepted_level_not_current_character_level_controls_encoding(self):
+    def test_current_mission_level_controls_encoding_after_acceptance(self):
         self.h.pc.level = 40
         self.h.runtime.sync(self.h.pc)
         generated = []
         self.h.reward(native=lambda: generated.append(self.initialize(self.original)))
-        self.assertEqual(generated[0].required, 20)
+        self.assertEqual(generated[0].required, 40)
+
+    def test_full_payout_encodes_start_level_despite_xp_level_up_and_later_copy(self):
+        self.h.pc.level = 40
+        self.h.state(3)
+        path = "WillowGame.WillowPlayerController:GrantMissionRewards"
+        args = NS(InMission=self.h.mission)
+        self.h.callbacks[(path, "PRE")](self.h.pc, args, None, None)
+        generated = []
+        try:
+            self.assertEqual(self.h.reward("GetExperienceReward"), 40)
+            self.h.pc.level = 41
+            self.h.runtime.sync(self.h.pc)
+            self.h.state(4)
+            self.h.runtime.sync(self.h.pc)
+            self.h.reward(native=lambda: generated.append(self.initialize(self.original)))
+            self.assertEqual(self.h.reward("GetCreditReward"), 40)
+        finally:
+            self.h.callbacks[(path, "POST_UNCONDITIONAL")](self.h.pc, args, None, None)
+        self.assertEqual((generated[0].level, generated[0].required), (42, 40))
+        copied = self.initialize(deepcopy(generated[0].DefinitionData))
+        self.assertEqual((copied.level, copied.required), (42, 40))
+        self.assertEqual(self.reward.Manufacturers[0].Grades[1].GradeModifiers.ExpLevel, 18)
+        self.assertEqual(self.h.runtime.missions.scope_missions, {})
+        self.assertEqual(self.h.runtime.regions.level, 41)
 
     def test_world_loot_and_existing_inventory_are_not_rewritten(self):
         args = NS(NewDefinitionData=self.original)

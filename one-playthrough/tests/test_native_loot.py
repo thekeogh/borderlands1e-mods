@@ -92,39 +92,67 @@ class NativeLootTests(unittest.TestCase):
         finally:
             self.h.callbacks[(DEF, "POST_UNCONDITIONAL")](obj, args, None, native)
 
-    def test_captured_vendor_sniper_five_becomes_ten_without_a_reroll(self):
+    def test_captured_vendor_sniper_five_becomes_player_level_without_a_reroll(self):
         obj = self.item()
         self.assertEqual(self.fixture["vendor_item"]["native_required_level"], 5)
         obj.Owner = self.actor("WillowVendingMachine", "World.Vendor", ("WillowInteractiveObject",))
         before = vars(obj.DefinitionData).copy()
         tables = deepcopy(self.balance.Manufacturers)
         self.initialize(obj)
-        self.assertEqual((obj.ExpLevel, obj.required, obj.damage), (12, 10, 204))
+        self.assertEqual((obj.ExpLevel, obj.required, obj.damage), (14, 12, 238))
         self.assertEqual(len(self.calls), 1)
-        self.assertEqual(self.calls[0]["InGradeIndex"], 12 << 16)
-        self.assertEqual(obj.DefinitionData.ManufacturerGradeIndex, 12 << 16)
+        self.assertEqual(self.calls[0]["InGradeIndex"], 14 << 16)
+        self.assertEqual(obj.DefinitionData.ManufacturerGradeIndex, 14 << 16)
         self.assertEqual(self.balance.Manufacturers, tables)
         for key, value in before.items():
             if key != "ManufacturerGradeIndex":
                 self.assertIs(getattr(obj.DefinitionData, key), value)
         self.assertEqual(self.h.runtime.loot.native.recent[-1]["kind"], "vendor")
 
-    def test_captured_enemy_grenade_seven_becomes_ten(self):
+    def test_captured_enemy_grenade_seven_becomes_player_level(self):
         obj = self.item(self.fixture["enemy_drop"])
         self.assertEqual(self.fixture["enemy_drop"]["native_required_level"], 7)
         self.initialize(obj)
-        self.assertEqual(obj.required, 10)
+        self.assertEqual(obj.required, 12)
         self.assertEqual(len(self.calls), 1)
-        self.assertEqual(obj.DefinitionData.ManufacturerGradeIndex, 12 << 16)
+        self.assertEqual(obj.DefinitionData.ManufacturerGradeIndex, 14 << 16)
 
-    def test_captured_chest_rifle_and_shotgun_already_high_enough_stay_native(self):
+    def test_player_36_floor_covers_all_equipment_families_and_preserves_higher_rolls(self):
+        self.h.pc.level = 36
+        families = (
+            (self.fixture['vendor_item'],None,2),
+            (self.fixture['enemy_drop'],'gd_shields.A_Item.Item_Shield',2),
+            (self.fixture['enemy_drop'],None,2),
+            (self.fixture['enemy_drop'],'gd_CommandDecks.A_Item.Item_CommandDeck_Roland',1),
+        )
+        for record,definition,bonus in families:
+            record = deepcopy(record)
+            if definition is not None:
+                record['fields']['DefinitionData']['ItemDefinition'] = definition
+            with self.subTest(definition=definition or record['class']):
+                obj = self.item(record)
+                self.definition.PlayerUseLevelBonus = aid(bonus)
+                self.initialize(obj)
+                self.assertEqual(obj.required,36)
+                self.assertEqual(obj.DefinitionData.ManufacturerGradeIndex >> 16,36+bonus)
+        self.assertEqual(len(self.calls),4)
+        obj = self.item()
+        self.balance.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel = 42
+        original = obj.DefinitionData
+        self.initialize(obj)
+        self.assertEqual(obj.required,40)
+        self.assertIs(obj.DefinitionData,original)
+
+    def test_captured_chest_items_raise_only_below_player_level(self):
         for record in self.fixture["chest_items"]:
             obj = self.item(record)
             original = obj.DefinitionData
             self.initialize(obj)
-            self.assertEqual(obj.required, record["native_required_level"])
-            self.assertIs(obj.DefinitionData, original)
-        self.assertEqual(self.h.runtime.loot.raised, 0)
+            self.assertEqual(obj.required, max(12, record["native_required_level"]))
+            if record["native_required_level"] >= 12:
+                self.assertIs(obj.DefinitionData, original)
+        self.assertEqual(self.h.runtime.loot.raised,
+                         sum(record["native_required_level"] < 12 for record in self.fixture["chest_items"]))
         self.assertEqual(len(self.calls), 2)
 
     def test_chests_skag_piles_and_other_containers_share_same_floor_without_name_allowlist(self):
@@ -132,7 +160,7 @@ class NativeLootTests(unittest.TestCase):
             obj = self.item()
             obj.Owner = self.actor("WillowInteractiveObject", "World." + name)
             self.initialize(obj)
-            self.assertEqual(obj.required, 10)
+            self.assertEqual(obj.required, 12)
             self.assertEqual(self.h.runtime.loot.native.recent[-1]["kind"], "container")
 
     def test_stat_initialization_and_definition_data_use_identical_packed_level(self):
@@ -150,7 +178,7 @@ class NativeLootTests(unittest.TestCase):
         obj = self.item()
         obj.Owner = self.actor("WillowVendingMachine", "World.Vendor", ("WillowInteractiveObject",))
         self.initialize(obj, self.args(obj, self.h.pc.Pawn))
-        self.assertEqual(obj.required, 10)
+        self.assertEqual(obj.required, 12)
         self.assertIs(self.calls[0]["InAdditionalQueryInterfaceSource"], self.h.pc.Pawn)
 
     def test_pickup_save_reload_and_player_drop_copies_are_excluded_even_when_owner_none(self):
@@ -162,7 +190,7 @@ class NativeLootTests(unittest.TestCase):
         for _ in range(3):
             copy = self.actor("WillowWeapon", "World.Copy")
             self.reconstruct(copy, saved)
-            self.assertEqual(copy.required, 10)
+            self.assertEqual(copy.required, 12)
         self.assertEqual(self.h.runtime.loot.native.definition_scopes, [])
         self.assertEqual(self.h.runtime.loot.raised, 1)
 
@@ -210,7 +238,7 @@ class NativeLootTests(unittest.TestCase):
             self.initialize(obj, self.args(obj, enemy))
         finally:
             self.h.runtime.loot.end_death(token)
-        self.assertEqual(obj.required, 10)
+        self.assertEqual(obj.required, 12)
         self.assertEqual(self.h.runtime.loot.native.recent[-1]["kind"], "enemy")
 
     def test_mission_level_wins_even_when_below_world_loot_floor(self):
@@ -239,7 +267,7 @@ class NativeLootTests(unittest.TestCase):
             obj = self.item()
             self.balance.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel = 2
             self.initialize(obj)
-            self.assertEqual(obj.required, max(1, player - 2))
+            self.assertEqual(obj.required, max(1, player))
 
     def test_weapon_and_other_gear_share_same_safe_floor_at_low_levels(self):
         for player in range(1, 7):
@@ -249,7 +277,7 @@ class NativeLootTests(unittest.TestCase):
                     obj = self.item(record)
                     self.balance.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel = 2
                     self.initialize(obj)
-                    self.assertEqual(obj.required, max(1, player - 2))
+                    self.assertEqual(obj.required, max(1, player))
 
     def test_consumables_mission_items_sdus_and_unknown_formats_remain_native(self):
         for kind in ("non-levelled", "mission", "SDU", "interpolated", "dynamic"):
@@ -326,14 +354,14 @@ class NativeLootTests(unittest.TestCase):
         self.assertEqual(result, (self.h.mod.Block, False))
         self.assertEqual(len(calls), 1)
         self.assertIs(calls[0]["Extra"], True)
-        self.assertEqual(calls[0]["InGradeIndex"], 12 << 16)
+        self.assertEqual(calls[0]["InGradeIndex"], 14 << 16)
 
     def test_item_definition_not_yet_copied_uses_native_balance_without_replacing_parts(self):
         obj = self.item()
         obj.DefinitionData.WeaponTypeDefinition = None
         body = obj.DefinitionData.BodyPartDefinition
         self.initialize(obj)
-        self.assertEqual(obj.required, 10)
+        self.assertEqual(obj.required, 12)
         self.assertIsNone(obj.DefinitionData.WeaponTypeDefinition)
         self.assertIs(obj.DefinitionData.BodyPartDefinition, body)
 
@@ -341,7 +369,7 @@ class NativeLootTests(unittest.TestCase):
         obj = self.item()
         self.definition.PlayerUseLevelBonus = aid(1)
         self.initialize(obj)
-        self.assertEqual((obj.ExpLevel, obj.required), (11, 10))
+        self.assertEqual((obj.ExpLevel, obj.required), (13, 12))
 
     def test_definition_guard_unwinds_on_native_exception(self):
         obj = self.item()
@@ -358,7 +386,7 @@ class NativeLootTests(unittest.TestCase):
             after(obj, args, None, None)
         self.assertEqual(self.h.runtime.loot.native.definition_scopes, [])
         self.initialize(obj)
-        self.assertEqual(obj.required, 10)
+        self.assertEqual(obj.required, 12)
 
 
 if __name__ == "__main__": unittest.main()

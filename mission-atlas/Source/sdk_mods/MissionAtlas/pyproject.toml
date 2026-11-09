@@ -1,0 +1,23 @@
+[project]
+name = "Mission Atlas"
+version = "0.1.9"
+authors = [{ name = "keogh" }]
+description = """Show one faded marker per other accepted mission on your current map.
+
+Appears automatically when the native map is ready, without panning.
+Uses the map's native objective clip as the visual template. Mission positions
+are cached; panning and zooming never rescan actor properties. Includes optional
+turn-in markers, adjustable opacity and hover/focus mission-name tooltips.
+Labels use native mouse/controller hover behavior, never permanent text.
+Keeps tracked missions and saves intact.
+
+BL1E: markers and hover/focus mission labels confirmed in game.
+Press F9 on the map or export from Mods if markers are missing.
+"""
+
+[tool.sdkmod]
+name = "Mission Atlas"
+supported_games = ["BL1E"]
+coop_support = "Unknown"
+auto_enable = true
+license = { name = "GPL3", url = "https://choosealicense.com/licenses/gpl-3.0/" }

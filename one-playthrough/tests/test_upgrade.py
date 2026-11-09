@@ -1,4 +1,4 @@
-"""Preserve accepted mission levels when upgrading the renamed mod."""
+"""Migrate legacy metadata while allowing unfinished missions to scale."""
 
 import json
 from pathlib import Path
@@ -26,31 +26,32 @@ class UpgradeTests(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(value))
 
-    def test_upgrade_copies_all_character_locks_and_preserves_legacy_bytes(self):
+    def test_upgrade_updates_active_mission_and_preserves_other_characters_and_legacy_bytes(self):
         self.write(self.legacy, self.payload(7))
         before = self.legacy.read_bytes()
         self.h.state()
-        self.h.enable(8)
-        self.assertEqual(self.h.mission.ExpLevel, 7)
-        self.assertEqual(json.loads(self.current.read_text()), self.payload(7))
+        self.h.enable(30)
+        self.assertEqual(self.h.mission.ExpLevel, 30)
+        self.assertEqual(json.loads(self.current.read_text()), self.payload(30))
         self.assertEqual(self.legacy.read_bytes(), before)
         self.assertEqual(self.h.runtime.store.path, self.current)
 
-    def test_existing_new_settings_take_priority_over_legacy(self):
+    def test_existing_new_settings_take_priority_over_legacy_for_paid_missions(self):
         self.write(self.legacy, self.payload(7))
         self.write(self.current, self.payload(6))
-        self.h.state()
-        self.h.enable(8)
+        self.h.state(4)
+        self.h.enable(30)
         self.assertEqual(self.h.mission.ExpLevel, 6)
         self.assertEqual(json.loads(self.legacy.read_text()), self.payload(7))
 
     def test_migration_is_not_repeated_on_later_loads(self):
         self.write(self.legacy, self.payload(7))
-        self.h.enable(8)
+        self.h.state(4)
+        self.h.enable(30)
         self.write(self.legacy, self.payload(5))
         reloaded = Harness(self.tmp.name)
-        reloaded.state()
-        reloaded.enable(9)
+        reloaded.state(4)
+        reloaded.enable(31)
         self.assertEqual(reloaded.mission.ExpLevel, 7)
 
     def test_corrupt_legacy_is_preserved_without_creating_empty_new_file(self):

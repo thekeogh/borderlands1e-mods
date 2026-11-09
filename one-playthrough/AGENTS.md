@@ -6,7 +6,10 @@ README.md is a concise player guide: installation, New Game, Continue and scope.
 Always retain the full Easy / Normal / Hard / Very Hard spawn-percentage table in README.md
 and keep it synchronized with the actual weights when changing difficulty.
 Preserve vanilla regional/mission floors, native reward identities and money formulas.
-Equipment rewards use the accepted mission level, not turn-in character level.
+Unpaid missions follow max(player level, native mission floor), including accepted
+and ready-to-turn-in missions. Ignore old acceptance locks for unpaid missions.
+Freeze the mission level for the entire synchronous reward payout; XP level-ups
+must not change later cash/equipment rewards. Preserve paid mission records.
 Scope inventory grade overrides to native reward calls and restore them afterward;
 never clone saved item balance identities. Materialize inherited manufacturer
 tables on the reward child temporarily, never edit shared parent tables. Convert
@@ -18,7 +21,7 @@ resolved value and scaling; use the fallback constant only when no attribute exi
 Never evaluate actor-dependent attributes on uninitialized inventory or silently
 substitute a guessed offset. Retain native equipped-card behavior. F10's separate
 use_level_bonuses summaries must survive the broad definition graph limit.
-Before native reward-item initialization, encode the accepted mission's internal
+Before native reward-item initialization, encode the payout mission's internal
 level in native non-interpolated ManufacturerGradeIndex high bits, preserving
 low grade bits and original definition identities. Only encode mission balances in the
 active reward scope. Explicitly recall the bound native function with replacement
@@ -28,7 +31,7 @@ from native metadata; skip unsupported output parameters and interpolated format
 Loot level floor is a saved toggle, default on. Use the captured native
 Engine.WillowInventory:InitializeInventory boundary for fresh world/container loot
 (including skag piles) and vendor stock. Every equipment type uses the same
-max(1, player - 2) floor: weapons, shields, grenade mods and class mods. Encode
+max(1, player) floor: weapons, shields, grenade mods and class mods. Encode
 before native stats are built, in both InGradeIndex and copied item definition data. Forward all
 other arguments and the original native return value; never initialize twice.
 Preserve higher native levels, rarity/legendary probabilities, pools, stage,
@@ -55,12 +58,12 @@ Leave unknown/interpolated/dynamic formats native and record skip reasons in F10
 Keep SDU progression upgrades and non-levelled consumables native.
 Enemy difficulty is a saved Easy / Normal / Hard / Very Hard selector, default Normal.
 Ordinary hostile roll weights (native / +1 / +2 / +3): Easy 70/20/9/1,
-Normal 50/20/25/5, Hard 20/5/55/20. Very Hard adds a fifth +4 slot and uses
-0/0/40/55/5 (native / +1 / +2 / +3 / +4). All preserve max(player, vanilla area)
+Normal 50/20/25/5, Hard 20/5/55/20. Very Hard adds +4 and +5 slots and uses
+0/0/10/40/45/5 (native / +1 / +2 / +3 / +4 / +5). All preserve max(player, vanilla area)
 as their base. Native ordinary levels floor at player level +1; keep the original
 factory GameStage/grade bands when applying that floor. Native/+1 rolls overlap
 at the +1 minimum; keep raw weights and named/boss player-level floors unchanged.
-Only Very Hard has an extra +4 roll; Easy/Normal/Hard stay unchanged.
+Only Very Hard has extra +4/+5 rolls; Easy/Normal/Hard stay unchanged.
 Retain naturally higher levels without stacking or capping them at a preset's maximum bonus.
 Difficulty changes affect new spawns only; never rewrite existing pawn data.
 Named enemies/bosses never use that roll. No fixed boss levels or completion

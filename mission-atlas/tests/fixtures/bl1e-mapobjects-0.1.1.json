@@ -1,0 +1,84 @@
+{
+  "source": "mission-atlas-20261106-152822-518380.json",
+  "sha256": "f30fc355688d05309a7c3790a7aa224ec56bdce68555227ae20c974a7f42189c",
+  "errors": [
+    "discover interfaces: RuntimeError: Could not install WillowGame.StatusMenuExGFxMovie:PanMap Observe"
+  ],
+  "counts": {
+    "map_calls": 73,
+    "selected_definitions": 6,
+    "candidate_actors": 16,
+    "WillowGame.StatusMenuExGFxMovie:PanMap": 73
+  },
+  "custom_map_objects": [
+    {
+      "Player": null,
+      "Landmark": null,
+      "ClientInteractiveObject": null,
+      "WPRI": null,
+      "bWaypoint": false,
+      "CustomObjectLoc": {
+        "X": 2994.947265625,
+        "Y": 10142.2744140625,
+        "Z": 1468.0
+      },
+      "bIsDirty": false,
+      "TransformedLocation": {
+        "X": 0.2070058286190033,
+        "Y": 0.469853013753891
+      },
+      "Angle": 0.0,
+      "AS_IconClipPath": "map.maps.landmarks",
+      "AS_IconClipFrame": "rstation",
+      "AS_IconPath": "_level0.map.maps.rstation20",
+      "TooltipTitle": "New-U Station",
+      "TooltipBody": "Customize yourself!"
+    },
+    {
+      "Player": null,
+      "Landmark": null,
+      "ClientInteractiveObject": null,
+      "WPRI": null,
+      "bWaypoint": false,
+      "CustomObjectLoc": {
+        "X": -35034.0,
+        "Y": 42854.65625,
+        "Z": 2061.9345703125
+      },
+      "bIsDirty": false,
+      "TransformedLocation": {
+        "X": 0.5900160670280457,
+        "Y": 0.784578800201416
+      },
+      "Angle": 0.0,
+      "AS_IconClipPath": "map.maps.landmarks",
+      "AS_IconClipFrame": "questionmark",
+      "AS_IconPath": "_level0.map.maps.questionmark21",
+      "TooltipTitle": "Unknown",
+      "TooltipBody": "How mysterious!"
+    },
+    {
+      "Player": null,
+      "Landmark": null,
+      "ClientInteractiveObject": null,
+      "WPRI": null,
+      "bWaypoint": false,
+      "CustomObjectLoc": {
+        "X": -15778.3564453125,
+        "Y": 55473.390625,
+        "Z": 3220.844482421875
+      },
+      "bIsDirty": false,
+      "TransformedLocation": {
+        "X": 0.7377615571022034,
+        "Y": 0.625220000743866
+      },
+      "Angle": 0.0,
+      "AS_IconClipPath": "map.maps.landmarks",
+      "AS_IconClipFrame": "objective",
+      "AS_IconPath": "_level0.map.maps.objective22",
+      "TooltipTitle": "Objective",
+      "TooltipBody": "Green Thumb"
+    }
+  ]
+}

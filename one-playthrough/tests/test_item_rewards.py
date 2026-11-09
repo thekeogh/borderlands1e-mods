@@ -41,7 +41,7 @@ class ItemRewardsTests(unittest.TestCase):
         self.h.accept()
         self.assertEqual(self.h.mission.ExpLevel, 10)
 
-    def test_low_and_high_character_both_receive_accepted_mission_level(self):
+    def test_rewards_follow_character_while_retaining_higher_native_floor(self):
         self.accept()
         for player in (5, 20, 69):
             self.h.pc.level = player
@@ -55,10 +55,10 @@ class ItemRewardsTests(unittest.TestCase):
                         generated.append(NS(level=g.GradeModifiers.ExpLevel,
                                             saved_balance=self.balance._path_name()))
             self.h.reward(native=native_generate)
-            self.assertEqual([item.level for item in generated], [10, 10, 10])
+            self.assertEqual([item.level for item in generated], [max(10, player)] * 3)
             self.assertTrue(all(item.saved_balance == self.balance._path_name() for item in generated))
             self.assertEqual(self.levels(), [7, -3, 0])
-            self.assertEqual(self.h.mission.ExpLevel, 10)
+            self.assertEqual(self.h.mission.ExpLevel, max(10, player))
             self.assertEqual(self.h.runtime.missions.scopes, [])
 
     def test_no_parts_probabilities_or_reward_identity_change(self):
@@ -87,7 +87,7 @@ class ItemRewardsTests(unittest.TestCase):
         self.h.callbacks[(path, "POST_UNCONDITIONAL")](self.h.pc, args, None, None)
         self.assertEqual(self.levels(), [7, -3, 0])
 
-    def test_preview_follows_offer_but_acceptance_locks_it(self):
+    def test_preview_keeps_following_player_after_acceptance(self):
         self.h.enable(5)
         self.h.reward(native=lambda: self.assertEqual(self.levels(), [10] * 3))
         self.h.pc.level = 20
@@ -96,7 +96,7 @@ class ItemRewardsTests(unittest.TestCase):
         self.h.accept()
         self.h.pc.level = 30
         self.h.runtime.sync(self.h.pc)
-        self.h.reward(native=lambda: self.assertEqual(self.levels(), [20] * 3))
+        self.h.reward(native=lambda: self.assertEqual(self.levels(), [30] * 3))
         self.assertEqual(self.levels(), [7, -3, 0])
 
     def test_nested_missions_sharing_reward_restore_outer_then_original(self):
@@ -105,6 +105,7 @@ class ItemRewardsTests(unittest.TestCase):
         other.GameStageRegion = self.h.mission.GameStageRegion
         other.GameStage, other.ExpLevel, other.MinimumLevel = 20, 20, 0
         other.ItemRewards = [self.balance]
+        other.RefreshRewardGameStage = lambda pc: None
         self.h.pc.MissionPlaythroughData[0].MissionList.append(NS(MissionDef=other, Status=1))
         self.h.runtime.missions.remember(other._path_name().lower(), 20)
         outer = self.h.runtime.missions.enter_reward(self.h.mission, self.h.pc)
@@ -231,7 +232,7 @@ class InheritedRewardTests(unittest.TestCase):
     def test_real_sniper_shape_requires_inheritance_and_native_two_level_offset(self):
         self.assertEqual(self.data["observed_reward"]["internal_level"], 7)
         self.assertEqual(self.data["observed_reward"]["required_level"], 5)
-        self.assertEqual(self.h.mission.ExpLevel, 17)
+        self.assertEqual(self.h.mission.ExpLevel, 20)
         created = []
         def native_generate():
             raw = self.child.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel
@@ -239,7 +240,7 @@ class InheritedRewardTests(unittest.TestCase):
             created.append(NS(internal=raw, required=raw - 2, saved_balance=self.child.path))
             self.assertEqual(self.parent.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel, 7)
         self.h.reward(native=native_generate)
-        self.assertEqual((created[0].internal, created[0].required), (19, 17))
+        self.assertEqual((created[0].internal, created[0].required), (22, 20))
         self.assertEqual(created[0].saved_balance, self.child.path)
         self.assertEqual(self.child.Manufacturers, [])
         self.assertEqual(self.parent.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel, 7)
@@ -264,7 +265,7 @@ class InheritedRewardTests(unittest.TestCase):
         inner = scopes.enter_reward(self.h.mission, self.h.pc)
         scopes.exit_reward(inner)
         self.assertIs(self.child.Manufacturers, shadow)
-        self.assertEqual(shadow[0].Grades[0].GradeModifiers.ExpLevel, 19)
+        self.assertEqual(shadow[0].Grades[0].GradeModifiers.ExpLevel, 22)
         scopes.exit_reward(outer)
         self.assertEqual(self.child.Manufacturers, [])
 
@@ -283,7 +284,7 @@ class InheritedRewardTests(unittest.TestCase):
                                            BaseValueAttribute=None, InitializationDefinition=None)
         self.parent.Manufacturers[0].Grades[0].GradeModifiers.CustomInventoryDefinition = definition
         def native_generate():
-            self.assertEqual(self.child.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel, 18)
+            self.assertEqual(self.child.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel, 21)
         self.h.reward(native=native_generate)
         self.assertEqual(self.child.Manufacturers, [])
 
@@ -300,7 +301,8 @@ class InheritedRewardTests(unittest.TestCase):
         self.assertEqual(self.child.ObjectFlags, 0)
 
     def test_backpack_level_69_can_use_internal_level_above_69(self):
-        self.h.runtime.missions.remember(self.h.mission.path.lower(), 69, replace=True)
+        self.h.pc.level = 69
+        self.h.runtime.sync(self.h.pc)
         self.h.reward(native=lambda: self.assertEqual(
             self.child.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel, 71))
         self.assertEqual(self.child.Manufacturers, [])
@@ -311,8 +313,8 @@ class InheritedRewardTests(unittest.TestCase):
         mission = next(m for m in report["missions"] if m["path"] == self.h.mission.path)
         reward = mission["item_rewards"][0]
         self.assertEqual(reward["chain"], [self.child.path, self.parent.path])
-        self.assertEqual(reward["mission_level"], 17)
-        self.assertEqual(reward["target_internal_level"], 19)
+        self.assertEqual(reward["mission_level"], 20)
+        self.assertEqual(reward["target_internal_level"], 22)
         self.assertEqual(reward["manufacturer_grades"][0]["native_internal_level"], 7)
         self.assertEqual(self.child.Manufacturers, [])
 

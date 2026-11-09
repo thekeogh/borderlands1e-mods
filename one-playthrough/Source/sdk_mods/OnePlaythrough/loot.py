@@ -40,7 +40,7 @@ def pool_specs(sdk):
 class Loot:
     @staticmethod
     def minimum(player, _data=None):
-        return max(1, player - 2)
+        return max(1, player)
 
     def __init__(self, runtime):
         self.runtime = runtime
@@ -115,7 +115,7 @@ class Loot:
                 if kind is not None:
                     player = self.runtime.level(pc)
                     if player is not None:
-                        scope = {"kind": kind, "source": source._path_name(), "floor": max(1, player - 2),
+                        scope = {"kind": kind, "source": source._path_name(), "floor": self.minimum(player),
                                  "player_level": player}
         except Exception as exc:
             self.runtime.problem("loot context", exc)
@@ -183,7 +183,7 @@ class Loot:
         self.deaths.clear()
 
     def snapshot(self):
-        return {"enabled": self.selected(), "minimum": "max(1, player level - 2) for all equipment",
+        return {"enabled": self.selected(), "minimum": "max(1, player level) for all equipment",
                 "pool_hooks": self.hooks, "active_scopes": len(self.scopes),
                 "death_scopes": len(self.deaths), "equipment_seen": self.seen,
                 "raised": self.raised, "contexts": dict(self.contexts),

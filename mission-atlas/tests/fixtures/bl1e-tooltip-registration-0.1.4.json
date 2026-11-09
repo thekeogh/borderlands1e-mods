@@ -1,0 +1,92 @@
+{
+  "source": "mission-atlas-20261106-164325-833519.json",
+  "sha256": "c27b2e1066bb482abc6aa61114e603a99786346a7087f4fcf5f7bc936bfab91b",
+  "version": "0.1.4",
+  "registered_tooltips": 6,
+  "tooltip_rows": [
+    {
+      "clip": "_level0.map.maps._mission_atlas_19",
+      "title": "Jaynistown: Secret Rendezvous",
+      "body": "",
+      "world": {
+        "X": -31227.283203125,
+        "Y": 52823.09765625,
+        "Z": 2649.0
+      },
+      "map": {
+        "X": 0.7067307829856873,
+        "Y": 0.7530746459960938
+      }
+    },
+    {
+      "clip": "_level0.map.maps._mission_atlas_20",
+      "title": "Altar Ego: Burning Heresy",
+      "body": "",
+      "world": {
+        "X": 45461.375,
+        "Y": -1286.88037109375,
+        "Z": 359.070556640625
+      },
+      "map": {
+        "X": 0.07318852096796036,
+        "Y": 0.11840283870697021
+      }
+    },
+    {
+      "clip": "_level0.map.maps._mission_atlas_21",
+      "title": "Scavenger: Shotgun",
+      "body": "",
+      "world": {
+        "X": 26393.697265625,
+        "Y": 56759.1796875,
+        "Z": 1030.0
+      },
+      "map": {
+        "X": 0.7528160214424133,
+        "Y": 0.27620604634284973
+      }
+    },
+    {
+      "clip": "_level0.map.maps._mission_atlas_22",
+      "title": "Hidden Journal: Rust Commons East",
+      "body": "",
+      "world": {
+        "X": -43528.8671875,
+        "Y": 22053.798828125,
+        "Z": 1283.0
+      },
+      "map": {
+        "X": 0.3464709520339966,
+        "Y": 0.8548819422721863
+      }
+    },
+    {
+      "clip": "_level0.map.maps._mission_atlas_23",
+      "title": "Altar Ego: The New Religion",
+      "body": "",
+      "world": {
+        "X": -9153.6240234375,
+        "Y": 37778.63671875,
+        "Z": 3343.0
+      },
+      "map": {
+        "X": 0.530583918094635,
+        "Y": 0.5703940391540527
+      }
+    },
+    {
+      "clip": "_level0.map.maps._mission_atlas_24",
+      "title": "A Bug Problem",
+      "body": "",
+      "world": {
+        "X": 10360.65234375,
+        "Y": 44348.51953125,
+        "Z": 3204.51171875
+      },
+      "map": {
+        "X": 0.6075068116188049,
+        "Y": 0.40889477729797363
+      }
+    }
+  ]
+}

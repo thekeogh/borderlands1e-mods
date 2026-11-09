@@ -1,4 +1,4 @@
-"""Mission offers follow the player; accepted missions retain their level."""
+"""Missions follow the player until payout, preserving higher native floors."""
 
 from .patches import Patches
 from .rewards import prepare_items
@@ -26,6 +26,7 @@ class Missions:
         self.key = None
         self.levels = {}
         self.scopes = []
+        self.scope_missions = {}
         self.pending = {}
         self.reading_native = False
         self.floors = {}
@@ -75,8 +76,8 @@ class Missions:
                 self.store.save()
         if loading and level == 1:
             progress = states(pc)
-            # Reused save slots must not inherit a deleted character's locks.
-            # Reopening an existing level-1 introduction is harmless: its lock is 1.
+            # Reused save slots must not inherit a deleted character's records.
+            # Reopening an existing level-1 introduction is harmless.
             if not progress or all(name == INTRO and status < 4 for name, (_, status) in progress.items()):
                 levels.clear()
                 if key is not None:
@@ -84,7 +85,7 @@ class Missions:
         self.token, self.key, self.levels = token, key, levels
 
     def remember(self, name, level, replace=False):
-        if replace or name not in self.levels:
+        if name not in self.levels or (replace and self.levels[name] != level):
             self.levels[name] = level
             if self.key is not None:
                 self.store.save()
@@ -97,15 +98,19 @@ class Missions:
         name = mission._path_name().lower()
         progress = states(pc) if progress is None else progress
         state = progress.get(name, (None, 0))[1]
-        # Existing acceptance locks survive upgrades unchanged. Only new offers
-        # and previously untracked active missions need their vanilla floor read.
-        if state == 0 or name not in self.levels:
-            level = max(level, self.native_level(mission, pc, progress))
-        if state in (1, 2, 3):
-            self.remember(name, level)
+        # All nested native calls and level-up refreshes in a payout must use
+        # the level chosen on entry, including after mission status changes.
+        frozen = next((entry[2] for entry in reversed(self.scope_missions.values())
+                       if entry[0] == mission and entry[1] == pc), None)
+        if frozen is not None:
+            level = frozen
+        elif state == 4 and name in self.levels:
             level = self.levels[name]
-        elif state == 4:
-            level = self.levels.get(name, level)
+        else:
+            # Old acceptance records must not lock active/ready missions.
+            level = max(level, self.native_level(mission, pc, progress))
+        if state in (1, 2, 3) or (state == 4 and frozen is not None):
+            self.remember(name, level, replace=True)
         # An unaccepted offer ignores stale sidecar data after quit-without-save.
         self.patches.set(mission, ("GameStage",), level)
         self.patches.set(mission, ("ExpLevel",), level)
@@ -153,6 +158,7 @@ class Missions:
         token = object()
         items = prepare_items(mission, level)
         self.scopes.append((token, name, level, items))
+        self.scope_missions[token] = (mission, pc, level)
         # Native C++ reward calls can bypass Python function hooks. Override the
         # mission's regional input and item grades for this synchronous call.
         try:
@@ -178,12 +184,16 @@ class Missions:
         if found is None:
             return
         _, name, _, items = self.scopes.pop(found)
+        mission, pc, _ = self.scope_missions.pop(token)
         for error in items.restore():
             self.runtime.problem("restore reward items", error)
         level = next((row[2] for row in reversed(self.scopes) if row[1] == name), None)
         # Reapply the latest player level, not the old one: a reward can level up.
         if name is not None:
             self.runtime.regions.override(name, level)
+        # Active missions can follow a level gained during payout once its
+        # outermost call ends; paid missions retain the recorded payout level.
+        self.apply(mission, pc)
 
     def restore(self):
         while self.scopes:

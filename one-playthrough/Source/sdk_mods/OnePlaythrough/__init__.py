@@ -31,7 +31,7 @@ runtime = Runtime(unrealsdk, MissionLevels(
 enemy_difficulty = SpinnerOption(
     "Enemy difficulty", value="Normal", choices=["Easy", "Normal", "Hard", "Very Hard"], wrap_enabled=True,
     description="Ordinary enemies only. Base is always the higher of your level and the vanilla area level. "
-                "Ordinary native levels floor at your level +1. Very Hard rolls +2/+3/+4 at 40%/55%/5%; "
+                "Ordinary native levels floor at your level +1. Very Hard rolls +2/+3/+4/+5 at 10%/40%/45%/5%; "
                 "other difficulties stop their extra rolls at +3. New spawns only; bosses unchanged.",
 )
 # Read the saved/live option at spawn time; changing it never edits existing pawns.
@@ -39,7 +39,7 @@ runtime.spawns.difficulty = lambda: enemy_difficulty.value
 
 loot_floor = BoolOption(
     "Loot level floor", value=True,
-    description="New drops, containers and vendor stock: all equipment at most 2 levels below you. "
+    description="New drops, containers and vendor stock: all equipment at least your level. "
                 "Rarity chances stay vanilla. Existing gear and mission rewards are unchanged.",
 )
 runtime.loot.selected = lambda: loot_floor.value

@@ -77,7 +77,7 @@ class Runtime:
                 "regions": self.regions.snapshot(), "character": self.missions.key,
                 "mission_levels": dict(self.missions.levels),
                 "reward_scopes": len(self.missions.scopes),
-                "item_reward_level": "accepted mission level (equipment only; native SDUs)",
+                "item_reward_level": "mission level at turn-in, frozen during payout (equipment only; native SDUs)",
                 "reward_item_encoding": self.missions.item_encoding, "settings_error": self.store.error,
                 "loot_level_floor": self.loot.snapshot(),
                 "problems": list(self.problems)}

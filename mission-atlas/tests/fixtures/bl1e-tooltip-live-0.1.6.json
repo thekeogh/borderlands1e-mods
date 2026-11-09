@@ -1,0 +1,140 @@
+{
+  "version": "0.1.6",
+  "counts": {
+    "registered_tooltips": 6,
+    "WillowGame.StatusMenuExGFxMovie:SetupMapPage": 1,
+    "selected_definitions": 6,
+    "candidate_actors": 16,
+    "selected_missions": 6,
+    "point_scans": 18,
+    "visible_extra_clips": 6,
+    "waiting_for_native_template": 1,
+    "map_helper_applied": 67,
+    "initial_render_retries": 1,
+    "anchor_calibrations": 92,
+    "clips_created": 6,
+    "tooltip_rows_written": 6,
+    "tooltip_refreshes": 235,
+    "initial_renders_completed": 1,
+    "WillowGame.StatusMenuExGFxMovie:HandleMapInputKey": 51,
+    "WillowGame.StatusMenuExGFxMovie:HandleMapInputAxis": 2248,
+    "WillowGame.StatusMenuExGFxMovie:PanMap": 2136,
+    "WillowGame.StatusMenuExGFxMovie:MapUpdateBehavior": 2
+  },
+  "tooltips": {
+    "registered": [
+      "_level0.map.maps._mission_atlas_1",
+      "_level0.map.maps._mission_atlas_2",
+      "_level0.map.maps._mission_atlas_3",
+      "_level0.map.maps._mission_atlas_4",
+      "_level0.map.maps._mission_atlas_5",
+      "_level0.map.maps._mission_atlas_6"
+    ],
+    "last_error": null,
+    "query_trace": []
+  },
+  "last_live_tooltip_interaction": {
+    "clips": [
+      {
+        "clip": "_level0.map.maps._mission_atlas_1",
+        "enabled_requested": true,
+        "_width": 48.599998474121094,
+        "_height": 48.599998474121094,
+        "_currentframe": 1.0,
+        "enabled": true
+      },
+      {
+        "clip": "_level0.map.maps._mission_atlas_2",
+        "enabled_requested": true,
+        "_width": 48.599998474121094,
+        "_height": 48.599998474121094,
+        "_currentframe": 1.0,
+        "enabled": true
+      },
+      {
+        "clip": "_level0.map.maps._mission_atlas_3",
+        "enabled_requested": true,
+        "_width": 48.599998474121094,
+        "_height": 48.599998474121094,
+        "_currentframe": 1.0,
+        "enabled": true
+      },
+      {
+        "clip": "_level0.map.maps._mission_atlas_4",
+        "enabled_requested": true,
+        "_width": 48.599998474121094,
+        "_height": 48.599998474121094,
+        "_currentframe": 1.0,
+        "enabled": true
+      },
+      {
+        "clip": "_level0.map.maps._mission_atlas_5",
+        "enabled_requested": true,
+        "_width": 48.599998474121094,
+        "_height": 48.599998474121094,
+        "_currentframe": 1.0,
+        "enabled": true
+      },
+      {
+        "clip": "_level0.map.maps._mission_atlas_6",
+        "enabled_requested": true,
+        "_width": 48.599998474121094,
+        "_height": 48.599998474121094,
+        "_currentframe": 1.0,
+        "enabled": true
+      }
+    ]
+  },
+  "tooltip_interaction": {
+    "clips": [
+      {
+        "clip": "_level0.map.maps._mission_atlas_1",
+        "enabled_requested": true,
+        "_width": 0.0,
+        "_height": 0.0,
+        "_currentframe": 0.0,
+        "enabled": false
+      },
+      {
+        "clip": "_level0.map.maps._mission_atlas_2",
+        "enabled_requested": true,
+        "_width": 0.0,
+        "_height": 0.0,
+        "_currentframe": 0.0,
+        "enabled": false
+      },
+      {
+        "clip": "_level0.map.maps._mission_atlas_3",
+        "enabled_requested": true,
+        "_width": 0.0,
+        "_height": 0.0,
+        "_currentframe": 0.0,
+        "enabled": false
+      },
+      {
+        "clip": "_level0.map.maps._mission_atlas_4",
+        "enabled_requested": true,
+        "_width": 0.0,
+        "_height": 0.0,
+        "_currentframe": 0.0,
+        "enabled": false
+      },
+      {
+        "clip": "_level0.map.maps._mission_atlas_5",
+        "enabled_requested": true,
+        "_width": 0.0,
+        "_height": 0.0,
+        "_currentframe": 0.0,
+        "enabled": false
+      },
+      {
+        "clip": "_level0.map.maps._mission_atlas_6",
+        "enabled_requested": true,
+        "_width": 0.0,
+        "_height": 0.0,
+        "_currentframe": 0.0,
+        "enabled": false
+      }
+    ]
+  }
+}

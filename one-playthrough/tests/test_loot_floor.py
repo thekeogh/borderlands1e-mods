@@ -83,14 +83,14 @@ class LootFloorTests(unittest.TestCase):
         for source in (self.enemy, self.chest):
             with self.subTest(source=source.path), self.pool(source):
                 item = self.initialize()
-                self.assertEqual((item.raw, item.required, item.damage), (20, 18, 200))
-                self.assertEqual(item.data.ManufacturerGradeIndex, 20 << 16)
+                self.assertEqual((item.raw, item.required, item.damage), (22, 20, 220))
+                self.assertEqual(item.data.ManufacturerGradeIndex, 22 << 16)
         self.assertEqual(len(self.calls), 2)  # Native initialization exactly once per item.
         self.assertEqual(self.h.runtime.loot.raised, 2)
         self.assertEqual(self.data.ManufacturerGradeIndex, 0)
 
     def test_existing_acceptable_and_higher_levels_are_never_lowered_or_reencoded(self):
-        for raw in (20, 21, 22, 30, 71):
+        for raw in (22, 23, 30, 71):
             self.balance.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel = raw
             with self.pool(self.chest):
                 item = self.initialize()
@@ -104,7 +104,7 @@ class LootFloorTests(unittest.TestCase):
         before = deepcopy(vars(self.balance.Manufacturers[0].Grades[1]))
         with self.pool(self.chest):
             item = self.initialize()
-        self.assertEqual(item.data.ManufacturerGradeIndex, (20 << 16) | 1)
+        self.assertEqual(item.data.ManufacturerGradeIndex, (22 << 16) | 1)
         for field in vars(self.data):
             if field != "ManufacturerGradeIndex":
                 self.assertIs(getattr(item.data, field), getattr(self.data, field))
@@ -118,7 +118,7 @@ class LootFloorTests(unittest.TestCase):
         parent.Manufacturers.insert(0, NS(Manufacturer=Object("Other.Manufacturer"), Grades=[grade(60)]))
         self.data.BalanceDefinition = child
         with self.pool(self.chest):
-            self.assertEqual(self.initialize().required, 18)
+            self.assertEqual(self.initialize().required, 20)
         self.assertEqual(child.Manufacturers, [])
         self.assertEqual(parent.Manufacturers[1].Grades[0].GradeModifiers.ExpLevel, 7)
 
@@ -130,7 +130,7 @@ class LootFloorTests(unittest.TestCase):
         loaded = deepcopy(self.data)
         loaded.ManufacturerGradeIndex = saved["grade"]
         self.h.mod.on_disable()
-        self.assertEqual(self.initialize(loaded).required, 18)
+        self.assertEqual(self.initialize(loaded).required, 20)
         self.assertEqual(self.h.runtime.loot.raised, 1)
 
     def test_world_existing_inventory_player_drops_vendors_and_unknown_sources_untouched(self):
@@ -161,7 +161,7 @@ class LootFloorTests(unittest.TestCase):
         self.enemy.bIsDead = False
         self.enemy.bPlayedDeath = True
         with self.pool(self.enemy):
-            self.assertEqual(self.initialize().required,18)
+            self.assertEqual(self.initialize().required,20)
         self.assertEqual(self.h.runtime.loot.deaths,[])
 
     def test_deleted_enemy_pool_source_is_not_used(self):
@@ -175,7 +175,7 @@ class LootFloorTests(unittest.TestCase):
         self.enemy.bIsDead = False
         self.h.callbacks[(DEATH, "PRE")](self.enemy, None, None, None)
         with self.pool(self.enemy):
-            self.assertEqual(self.initialize().required, 18)
+            self.assertEqual(self.initialize().required, 20)
         self.h.callbacks[(DEATH, "POST_UNCONDITIONAL")](self.enemy, None, None, None)
         self.assertEqual(self.h.runtime.loot.deaths, [])
         with self.pool(self.enemy):
@@ -185,7 +185,7 @@ class LootFloorTests(unittest.TestCase):
         for name in ("InteractiveObj_TreasureChest", "InteractiveObj_Crate_Metal", "InteractiveObj_crimson_Chest"):
             self.chest.InteractiveObjectDefinition = Object("DLC.Custom." + name)
             with self.pool(self.chest):
-                self.assertEqual(self.initialize().required, 18)
+                self.assertEqual(self.initialize().required, 20)
         self.chest.InteractiveObjectDefinition = Object("Native.NewUStation")
         with self.pool(self.chest):
             self.assertEqual(self.initialize().required, 5)
@@ -194,7 +194,7 @@ class LootFloorTests(unittest.TestCase):
         with self.pool(self.chest):
             with self.pool(None):
                 self.assertEqual(self.initialize().required, 5)
-            self.assertEqual(self.initialize().required, 18)
+            self.assertEqual(self.initialize().required, 20)
         self.assertEqual(self.h.runtime.loot.scopes, [])
         self.assertEqual(self.initialize().required, 5)
 
@@ -207,14 +207,14 @@ class LootFloorTests(unittest.TestCase):
         with self.pool(self.chest):
             self.assertEqual(self.initialize().required, 5)
 
-    def test_levels_one_through_four_keep_a_minimum_requirement_of_one(self):
+    def test_levels_one_through_four_follow_player_level(self):
         self.balance.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel = 2
         for player in range(1, 5):
             self.h.pc.level = player
             with self.pool(self.chest):
-                self.assertEqual(self.initialize().required, max(1, player - 2))
+                self.assertEqual(self.initialize().required, max(1, player))
 
-    def test_accepted_mission_below_loot_floor_stays_at_accepted_level_even_nested(self):
+    def test_mission_reward_uses_current_level_without_world_loot_floor_even_nested(self):
         def native_level(_pc):
             self.h.mission.GameStage = self.h.mission.ExpLevel = 12
         self.h.mission.RefreshRewardGameStage = native_level
@@ -227,7 +227,7 @@ class LootFloorTests(unittest.TestCase):
         items = []
         with self.pool(self.chest):
             self.h.reward(native=lambda: items.append(self.initialize()))
-        self.assertEqual(items[0].required, 12)
+        self.assertEqual(items[0].required, 20)
         self.assertEqual(self.h.runtime.loot.raised, 0)
 
     def test_equipment_types_use_their_own_fallback_and_skip_non_equipment(self):
@@ -235,7 +235,7 @@ class LootFloorTests(unittest.TestCase):
         self.data.ItemDefinition = self.data.WeaponTypeDefinition
         self.data.WeaponTypeDefinition = None
         with self.pool(self.chest):
-            self.assertEqual(self.initialize().required, 18)
+            self.assertEqual(self.initialize().required, 20)
         for field in ("bMissionItem", "bPlayerUseItemOnPickup"):
             setattr(self.definition, field, True)
             with self.pool(self.chest):
@@ -297,7 +297,7 @@ class LootFloorTests(unittest.TestCase):
         with self.pool(self.chest):
             with self.pool(self.enemy):
                 self.assertEqual(self.initialize().required, 5)
-            self.assertEqual(self.initialize().required, 18)
+            self.assertEqual(self.initialize().required, 20)
         self.assertEqual(self.h.runtime.loot.scopes, [])
         self.assertIn("unavailable death state", str(self.h.runtime.problems))
 

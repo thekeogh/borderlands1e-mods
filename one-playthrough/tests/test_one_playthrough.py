@@ -272,7 +272,7 @@ class Tests(unittest.TestCase):
         for root in h.globals:
             self.assertEqual(root.RegionBalanceData[1].BalanceDefinitions[0].BalanceByRegion[0].DefaultGameStage.BaseValueConstant, 37)
 
-    def test_offer_tracks_player_until_acceptance_then_locks(self):
+    def test_offer_and_accepted_mission_keep_tracking_player(self):
         h = self.h
         h.enable(20)
         self.assertEqual(h.mission.ExpLevel, 20)
@@ -282,17 +282,17 @@ class Tests(unittest.TestCase):
         h.accept()
         h.pc.level = 40
         h.mod.player_ready(h.pc, NS(), None, None)
-        self.assertEqual((h.mission.GameStage, h.mission.ExpLevel), (30, 30))
+        self.assertEqual((h.mission.GameStage, h.mission.ExpLevel), (40, 40))
         self.assertEqual(h.row().DefaultGameStage.BaseValueConstant, 40)
 
-    def test_all_native_reward_entry_points_use_locked_level(self):
+    def test_all_native_reward_entry_points_use_current_mission_level(self):
         h = self.h
         h.enable(20)
         h.accept()
         h.pc.level = 30
         h.runtime.sync(h.pc)
         for method in ("GetExperienceReward", "GetCreditReward", "GetItemRewardForPlayer", "GenerateRewardString"):
-            self.assertEqual(h.reward(method), 20)
+            self.assertEqual(h.reward(method), 30)
             self.assertEqual(h.row().DefaultGameStage.BaseValueConstant, 30)
         self.assertEqual(h.runtime.missions.scopes, [])
 
@@ -305,7 +305,7 @@ class Tests(unittest.TestCase):
         h.accept()
         h.pc.level = 30
         result = h.reward("GetExperienceReward", lambda: multiplier.BaseValueConstant * h.mission.GameStage ** 2)
-        self.assertAlmostEqual(result, 1.15 * 20 ** 2)
+        self.assertAlmostEqual(result, 1.15 * 30 ** 2)
         self.assertEqual(h.mission.ItemRewards, rewards)
         self.assertIs(h.mission.ExperienceRewardMultiplier, multiplier)
         self.assertIs(h.mission.CreditRewardMultiplier, credits)
@@ -319,7 +319,7 @@ class Tests(unittest.TestCase):
         def native():
             h.pc.level = 31
             h.mod.player_ready(h.pc, NS(), None, None)
-            self.assertEqual(h.row().DefaultGameStage.BaseValueConstant, 20)
+            self.assertEqual(h.row().DefaultGameStage.BaseValueConstant, 30)
         h.reward("GetExperienceReward", native)
         self.assertEqual(h.row().DefaultGameStage.BaseValueConstant, 31)
 
@@ -329,14 +329,14 @@ class Tests(unittest.TestCase):
         h.accept()
         h.pc.level = 30
         def outer():
-            self.assertEqual(h.reward("GetExperienceReward"), 20)
-            self.assertEqual(h.row().DefaultGameStage.BaseValueConstant, 20)
+            self.assertEqual(h.reward("GetExperienceReward"), 30)
+            self.assertEqual(h.row().DefaultGameStage.BaseValueConstant, 30)
             raise RuntimeError("modeled native failure")
         with self.assertRaises(RuntimeError): h.reward(native=outer)
         self.assertEqual(h.row().DefaultGameStage.BaseValueConstant, 30)
         self.assertEqual(h.runtime.missions.scopes, [])
 
-    def test_acceptance_survives_full_reload_and_characters_are_isolated(self):
+    def test_active_missions_resume_scaling_after_reload_and_characters_are_isolated(self):
         h = self.h
         h.enable(20)
         h.accept()
@@ -344,7 +344,7 @@ class Tests(unittest.TestCase):
         second.pc.level = 30
         second.state()
         second.enable(30)
-        self.assertEqual(second.mission.ExpLevel, 20)
+        self.assertEqual(second.mission.ExpLevel, 30)
         second.pc.SaveGameFileId = second.pc.LastLoadedProfile.SaveGameId = 2
         second.runtime.sync(second.pc)
         self.assertEqual(second.mission.ExpLevel, 30)
@@ -462,14 +462,14 @@ class Tests(unittest.TestCase):
         self.assertEqual(before, [r.DefaultGameStage.BaseValueConstant for r in h.rows()])
         self.assertEqual(len(h.messages), 3)  # Loading line, manual request, saved path.
 
-    def test_native_autoaccepted_story_mission_locks_without_manual_accept(self):
+    def test_native_autoaccepted_story_mission_keeps_scaling(self):
         h = self.h
         h.enable(20)
         h.state(1)
         h.mod.player_ready(h.pc, NS(), None, None)
         h.pc.level = 30
         h.runtime.sync(h.pc)
-        self.assertEqual(h.mission.ExpLevel, 20)
+        self.assertEqual(h.mission.ExpLevel, 30)
 
     def test_reward_without_explicit_controller_uses_local_player(self):
         h = self.h
@@ -479,7 +479,7 @@ class Tests(unittest.TestCase):
         path = "WillowGame.MissionDefinition:GetExperienceReward"
         args = NS(InWPC=None)
         h.callbacks[(path, "PRE")](h.mission, args, None, None)
-        self.assertEqual(h.row().DefaultGameStage.BaseValueConstant, 20)
+        self.assertEqual(h.row().DefaultGameStage.BaseValueConstant, 30)
         h.callbacks[(path, "POST_UNCONDITIONAL")](h.mission, args, None, None)
         self.assertEqual(h.row().DefaultGameStage.BaseValueConstant, 30)
 

@@ -58,9 +58,6 @@ class RewardGradeGapTests(unittest.TestCase):
                 levels = [g.GradeModifiers.ExpLevel for g in item.Manufacturers[0].Grades]
                 self.assertEqual(eligible(item, case['stage']), [])
                 self.accept_case(case, item)
-                # A later turn-in must still use the accepted level.
-                self.h.pc.level = 40
-                self.h.runtime.sync(self.h.pc)
                 for method in ('GenerateRewardString', 'GetItemRewardForPlayer'):
                     def native_select():
                         self.assertEqual(self.h.mission.GameStage, case['stage'])
@@ -83,9 +80,12 @@ class RewardGradeGapTests(unittest.TestCase):
             item = captured_balance(case)
             self.accept_case(case, item)
             before = bands(item)
+            def native_floor(pc):
+                self.h.mission.GameStage = self.h.mission.ExpLevel = 1
+            self.h.mission.RefreshRewardGameStage = native_floor
             for level in range(1, 70):
                 with self.subTest(mission=case['mission'], level=level):
-                    self.h.runtime.missions.remember(case['mission'].lower(), level, replace=True)
+                    self.h.pc.level = level
                     token = self.h.runtime.missions.enter_reward(self.h.mission, self.h.pc)
                     try:
                         native_matches = [i for i, (low, high) in enumerate(before) if low <= level <= high]
@@ -135,6 +135,7 @@ class RewardGradeGapTests(unittest.TestCase):
         other.GameStageRegion = self.h.mission.GameStageRegion
         other.GameStage, other.ExpLevel, other.MinimumLevel = 32, 32, 0
         other.ItemRewards = [item]
+        other.RefreshRewardGameStage = lambda pc: None
         self.h.pc.MissionPlaythroughData[0].MissionList.append(NS(MissionDef=other, Status=1))
         self.h.runtime.missions.remember(other.path.lower(), 32)
         inner = self.h.runtime.missions.enter_reward(other, self.h.pc)

@@ -1,5 +1,39 @@
 # One Playthrough changelog
 
+## 4.6.1 — 2026-11-07
+
+- Raise the optional equipment loot minimum from player level minus two to the
+  player level (minimum 1). Apply the shared policy to fresh world/container loot,
+  vendor stock and verified carried hostile death-drop replacements. Preserve
+  higher native levels, parts, rarity, drop chances and original item identities.
+- Retune Very Hard ordinary spawns: +2 10%, +3 40%, +4 45%, +5 5%. Base remains
+  max(player, native area stage), with naturally higher levels preserved rather
+  than stacked or capped. Easy/Normal/Hard and named/boss scaling stay unchanged.
+- Existing inventory, player-drop copies and spawned enemies retain their levels.
+  Existing vendor stock needs to refresh. Preserve mission payout rules, saved
+  difficulty/toggle selections and native money formulas.
+- Update F10 policy descriptions, mod option help and full player-guide difficulty
+  table. No new logging or diagnostic hooks.
+- Validation: 252 local tests pass, covering all 100 rolls per preset, player/area
+  floors, +5 boundaries, unchanged named/boss rules, level-36 equipment families,
+  higher native loot, carried copies, save/reload and mission reward exclusions.
+  Native Windows behavior still requires in-game verification.
+
+## 4.6.0 — 2026-11-06
+
+- Keep accepted missions and finished objectives awaiting turn-in scaled to the
+  player, including their journal level. Preserve higher native mission floors.
+  Existing unpaid missions adopt this without resetting progress or acceptance.
+- Use the mission level at turn-in for native XP, cash and equipment rewards.
+  Freeze that level throughout nested payout calls, even if XP levels the player
+  up or the mission status changes. Resume world scaling after the payout.
+- Retain paid mission levels, reward identities, native multipliers, money
+  formulas, SDUs and the equipment grade-gap/required-level fixes. Preserve all
+  difficulty and world-loot behavior.
+- Validation: 250 local tests pass, including early/late completion, journal
+  previews, old metadata, higher vanilla floors, payout level-ups, nested scopes,
+  failures and restored item grades. Native Windows verification remains required.
+
 ## 4.5.12 — 2026-11-04
 
 - Add the saved Very Hard enemy difficulty: native 0%, +1 0%, +2 40%, +3 55%,

@@ -149,7 +149,7 @@ class CarriedLootTests(unittest.TestCase):
     def live_pickups(self):
         return [p for p in self.pickups if not p.bDeleteMe and not p.bPendingDelete and p.bPickupable]
 
-    def test_captured_level_three_becomes_ten_only_after_native_death_drop(self):
+    def test_captured_level_three_becomes_player_level_only_after_native_death_drop(self):
         self.assertEqual(self.fixture['player_level'],12)
         self.assertEqual(self.fixture['drop_before']['internal_level'],5)
         original_data = vars(self.original.DefinitionData).copy()
@@ -161,7 +161,7 @@ class CarriedLootTests(unittest.TestCase):
         self.assertEqual(len(self.clones),1)
         self.end()
         clone = self.clones[0]
-        self.assertEqual((clone.ExpLevel,clone.ExpLevel-2,clone.damage),(12,10,120))
+        self.assertEqual((clone.ExpLevel,clone.ExpLevel-2,clone.damage),(14,12,140))
         self.assertEqual(len(self.live_pickups()),1)
         self.assertIs(self.live_pickups()[0].Inventory,clone)
         self.assertTrue(old_pickup.bDeleteMe)
@@ -171,7 +171,7 @@ class CarriedLootTests(unittest.TestCase):
         self.assertEqual(clone.RarityLevel,self.original.RarityLevel)
         for key,value in original_data.items():
             if key != 'ManufacturerGradeIndex': self.assertIs(getattr(clone.DefinitionData,key),value)
-        self.assertEqual(clone.DefinitionData.ManufacturerGradeIndex,12 << 16)
+        self.assertEqual(clone.DefinitionData.ManufacturerGradeIndex,14 << 16)
         self.assertEqual(len(self.init_calls),1)
         self.assertIsNone(self.init_calls[0][1]['InAdditionalQueryInterfaceSource'])
         self.assertIs(self.init_calls[0][1]['bForceSelectNameParts'],False)
@@ -188,13 +188,13 @@ class CarriedLootTests(unittest.TestCase):
         self.balance.path = 'Native.Other.NamedUnique'
         self.begin(); self.drop_original(); self.end()
         self.assertEqual(self.svc.changed,1)
-        self.assertEqual(self.live_pickups()[0].Inventory.ExpLevel-2,10)
+        self.assertEqual(self.live_pickups()[0].Inventory.ExpLevel-2,12)
 
     def test_failure_before_commit_keeps_original_pickup_and_cleans_copy(self):
         for fault in ('spawn','initialize','parts','rarity','level','drop','missing copy pickup'):
             with self.subTest(fault=fault):
                 # Separate rig per failure; no accumulated actor/scoping effects.
-                rig = CarriedLootTests('test_captured_level_three_becomes_ten_only_after_native_death_drop')
+                rig = CarriedLootTests('test_captured_level_three_becomes_player_level_only_after_native_death_drop')
                 rig.setUp()
                 try:
                     rig.fault = fault
@@ -294,7 +294,7 @@ class CarriedLootTests(unittest.TestCase):
         self.h.callbacks[(path,'POST_UNCONDITIONAL')](self.original,self.args,None,None)
         self.end()
         self.assertTrue(old.bDeleteMe)
-        self.assertEqual(self.clones[0].ExpLevel-2,10)
+        self.assertEqual(self.clones[0].ExpLevel-2,12)
         self.assertEqual(self.clones[0].Quantity,2)
 
     def test_low_level_carried_floor_is_never_zero_or_negative(self):
@@ -303,8 +303,8 @@ class CarriedLootTests(unittest.TestCase):
             self.original.ExpLevel = 1
             self.begin()
             plan = self.svc.prepare(self.original,self.args,self.h.pc)
-            self.assertEqual(plan['floor'],max(1,player-2))
-            self.assertEqual(plan['data'].ManufacturerGradeIndex >> 16,max(1,player-2)+2)
+            self.assertEqual(plan['floor'],max(1,player))
+            self.assertEqual(plan['data'].ManufacturerGradeIndex >> 16,max(1,player)+2)
             self.end()
 
     def test_replacement_grade_survives_modeled_save_and_copy(self):
@@ -313,7 +313,7 @@ class CarriedLootTests(unittest.TestCase):
         saved = json.loads(json.dumps({'grade':encoded}))
         self.h.pc.level = 30
         # Native explicit-level format survives without any active floor/scopes.
-        self.assertEqual((saved['grade'] >> 16)-2,10)
+        self.assertEqual((saved['grade'] >> 16)-2,12)
         self.assertEqual(saved['grade'] & 0xFFFF,0)
         self.assertEqual(self.svc.changed,1)
 
@@ -413,8 +413,8 @@ class CarriedLootTests(unittest.TestCase):
         self.assertEqual(d['changed'],1)
         self.assertEqual(d['pending'],0)
         self.assertEqual(d['recent'][0]['old_internal_level'],5)
-        self.assertEqual(d['recent'][0]['target_internal_level'],12)
-        self.assertEqual(d['recent'][0]['floor'],10)
+        self.assertEqual(d['recent'][0]['target_internal_level'],14)
+        self.assertEqual(d['recent'][0]['floor'],12)
 
 
 if __name__ == '__main__': unittest.main()

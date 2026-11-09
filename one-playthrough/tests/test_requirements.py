@@ -76,13 +76,13 @@ class RequirementTests(unittest.TestCase):
                 result=self.h.callbacks[('Engine.WillowInventory:InitializeInventory','PRE')](actor,args,None,native)
                 self.assertIs(result,self.h.mod.Block)
                 self.assertEqual(len(calls),1)
-                self.assertEqual((actor.ExpLevel,actor.required,actor.damage),(6,4,60))
-                self.assertEqual(actor.DefinitionData.ManufacturerGradeIndex,6 << 16)
+                self.assertEqual((actor.ExpLevel,actor.required,actor.damage),(8,6,80))
+                self.assertEqual(actor.DefinitionData.ManufacturerGradeIndex,8 << 16)
                 for key in vars(self.data):
                     if key!='ManufacturerGradeIndex':
                         self.assertIs(getattr(actor.DefinitionData,key),getattr(self.data,key))
 
-    def test_mission_grade_and_packed_reward_both_follow_accepted_level(self):
+    def test_mission_grade_and_packed_reward_both_follow_current_level(self):
         self.h.mission.ItemRewards=[self.reward]
         self.h.enable(20)
         self.h.accept()
@@ -90,7 +90,7 @@ class RequirementTests(unittest.TestCase):
         self.h.runtime.sync(self.h.pc)
         got=[]
         def native_reward():
-            self.assertEqual(self.reward.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel,22)
+            self.assertEqual(self.reward.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel,32)
             args=NS(NewDefinitionData=self.data)
             path='WillowGame.WillowWeapon:InitializeFromDefinitionData'
             try:
@@ -100,13 +100,13 @@ class RequirementTests(unittest.TestCase):
             finally:
                 self.h.callbacks[(path,'POST_UNCONDITIONAL')](None,args,None,None)
         self.h.reward(native=native_reward)
-        self.assertEqual((got[0].ManufacturerGradeIndex >> 16)-2,20)
+        self.assertEqual((got[0].ManufacturerGradeIndex >> 16)-2,30)
         self.assertEqual(self.reward.Manufacturers[0].Grades[0].GradeModifiers.ExpLevel,4)
         self.assertEqual(self.data.ManufacturerGradeIndex,0)
 
     def test_carried_pistol_conversion_uses_same_native_bonus(self):
         from test_carried_loot import CarriedLootTests
-        rig=CarriedLootTests('test_captured_level_three_becomes_ten_only_after_native_death_drop')
+        rig=CarriedLootTests('test_captured_level_three_becomes_player_level_only_after_native_death_drop')
         rig.setUp()
         try:
             rig.h.pc.level=6
@@ -117,8 +117,8 @@ class RequirementTests(unittest.TestCase):
             rig.original.DefinitionData.ManufacturerGradeIndex=5 << 16
             rig.begin();rig.drop_original();rig.end()
             self.assertEqual(rig.svc.changed,1)
-            self.assertEqual(rig.live_pickups()[0].Inventory.ExpLevel,6)
-            self.assertEqual(rig.live_pickups()[0].Inventory.ExpLevel-2,4)
+            self.assertEqual(rig.live_pickups()[0].Inventory.ExpLevel,8)
+            self.assertEqual(rig.live_pickups()[0].Inventory.ExpLevel-2,6)
         finally:
             rig.doCleanups()
 

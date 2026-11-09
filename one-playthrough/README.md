@@ -1,16 +1,17 @@
 # One Playthrough
 
-**4.5.12 · keogh · Borderlands GOTY Enhanced**
+**4.6.1 · keogh · Borderlands GOTY Enhanced**
 
 Play from level **1 to 69** in one continuous journey through Pandora. Enemies
-and mission offers scale with you across the main story and all four DLCs,
+and missions scale with you across the main story and all four DLCs,
 without restarting the story in another playthrough.
 
 Higher-level areas and missions keep their vanilla minimums. Once you outlevel
 them, they scale with you—including every DLC, without first completing it.
-Available missions follow your level until accepted; accepted missions keep
-their level. Equipment rewards match that accepted mission level, even if
-you finish earlier or later; SDU upgrades keep their native behaviour.
+Missions keep following your level after acceptance, including completed objectives
+awaiting turn-in. Equipment rewards, XP and cash use the mission level when you
+turn it in, preserving higher vanilla mission levels. A level gained from that
+payout does not change its remaining rewards; SDU upgrades keep their native behaviour.
 
 Choose **Enemy difficulty** in the mod options. **Normal** is the default;
 the setting is saved and applies to new spawns.
@@ -19,14 +20,15 @@ the setting is saved and applies to new spawns.
 | --- | ---: | ---: | ---: | ---: |
 | Native, minimum your level +1 | 70% | 50% | 20% | 0% |
 | At least +1 | 20% | 20% | 5% | 0% |
-| At least +2 | 9% | 25% | 55% | 40% |
-| At least +3 | 1% | 5% | 20% | 55% |
-| At least +4 | 0% | 0% | 0% | 5% |
+| At least +2 | 9% | 25% | 55% | 10% |
+| At least +3 | 1% | 5% | 20% | 40% |
+| At least +4 | 0% | 0% | 0% | 45% |
+| At least +5 | 0% | 0% | 0% | 5% |
 
 The base remains **max(your level, vanilla area level)** in every difficulty.
 New ordinary spawns also floor native level variation at **your level +1**. The mod's
-extra boosts stop at +3 for Easy, Normal and Hard. **Very Hard** rolls +2/+3/+4
-at **40%/55%/5%**, with no native or +1 roll. Naturally higher enemies and
+extra boosts stop at +3 for Easy, Normal and Hard. **Very Hard** rolls +2/+3/+4/+5
+at **10%/40%/45%/5%**, with no native or +1 roll. Naturally higher enemies and
 higher-level areas can still exceed these boosts. Existing spawned enemies keep their levels.
 Native and +1 rolls now share a +1 minimum. Around your level, their combined
 chances are Easy **90%**, Normal **70%**, Hard **25%**; naturally higher enemies
@@ -37,14 +39,14 @@ bonus.
 
 **Loot level floor** is enabled by default. New equipment from world drops,
 containers (including chests and skag piles) and vending-machine stock targets
-at least **your level minus two for all equipment**,
+at least **your level for all equipment**,
 never below level 1. Higher-level equipment stays higher; rarity and legendary
 chances stay vanilla. Toggle it off in the
 mod options for native loot levels.
 
 The floor applies when equipment is generated, and when carried enemy equipment
 drops on death. Existing player inventory and player-drop copies keep their levels.
-Mission rewards keep their accepted mission level. Existing vendor stock needs to refresh before
+Mission rewards use the mission level at turn-in. Existing vendor stock needs to refresh before
 the floor can affect it; money and pricing formulas stay native.
 
 Designed for solo play; reaching level 69 depends on how much you play.
@@ -62,7 +64,8 @@ Designed for solo play; reaching level 69 depends on how much you play.
 
 **Upgrading from Playthrough 3 v4?** Remove its old SDK archive or unpacked mod
 folder before installing this one. Choose **Continue** with your existing
-character; saved mission levels transfer automatically.
+character; saved mission records transfer automatically. Unpaid missions follow
+your level immediately, including missions accepted in older versions.
 
 For troubleshooting, **F10** exports a report to
 `sdk_mods/settings/OnePlaythrough/diagnostics/`.

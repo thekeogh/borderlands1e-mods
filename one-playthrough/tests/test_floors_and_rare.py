@@ -50,7 +50,7 @@ class Floors(unittest.TestCase):
         self.assertEqual(h.pc.MissionPlaythroughData[0].MissionList, [])
         self.assertEqual(h.pc.pt, 0)
 
-    def test_offer_below_vanilla_level_stays_high_then_tracks_player_and_locks(self):
+    def test_offer_and_active_mission_preserve_vanilla_floor_then_track_player(self):
         h = self.h
         h.enable(5)
         self.assertEqual(h.mission.ExpLevel, 16)
@@ -58,15 +58,15 @@ class Floors(unittest.TestCase):
         self.assertEqual(h.mission.ExpLevel, 20)
         h.accept()
         h.enable(30)
-        self.assertEqual(h.mission.ExpLevel, 20)
+        self.assertEqual(h.mission.ExpLevel, 30)
 
-    def test_accepting_high_level_offer_locks_offer_level_not_player_level(self):
+    def test_accepted_high_level_mission_tracks_player_after_catching_up(self):
         h = self.h
         h.enable(5)
         h.accept()
         self.assertEqual(h.runtime.missions.levels[h.mission.path.lower()], 16)
         h.enable(30)
-        self.assertEqual(h.reward(), 16)
+        self.assertEqual(h.reward(), 30)
 
     def test_dlc_offers_keep_floor_then_scale_before_any_dlc_completion(self):
         for n in range(1, 5):
@@ -80,7 +80,7 @@ class Floors(unittest.TestCase):
                 self.assertEqual(h.mission.ExpLevel, 50)
                 h.accept()
                 h.enable(69)
-                self.assertEqual(h.reward(), 50)
+                self.assertEqual(h.reward(), 69)
                 self.assertEqual(row.DefaultGameStage.BaseValueConstant, 69)
 
     def test_native_mission_refresh_selects_current_story_override(self):
@@ -94,14 +94,14 @@ class Floors(unittest.TestCase):
         self.assertEqual(h.mission.ExpLevel, 5)
         self.assertNotEqual(h.mission.ExpLevel, 12)
 
-    def test_legacy_accepted_level_below_new_floor_still_rewards_at_saved_level(self):
+    def test_legacy_acceptance_record_no_longer_overrides_active_vanilla_floor(self):
         h = self.h
         h.state()
         h.runtime.store.levels("slot:1:gd_playerclassid.soldier")[h.mission.path.lower()] = 7
         h.runtime.store.save()
         h.enable(10)
-        self.assertEqual(h.mission.ExpLevel, 7)
-        self.assertEqual(h.reward(), 7)
+        self.assertEqual(h.mission.ExpLevel, 16)
+        self.assertEqual(h.reward(), 16)
         self.assertEqual(h.row().DefaultGameStage.BaseValueConstant, 16)
 
     def test_exception_during_native_floor_query_restores_all_live_fields(self):
@@ -177,7 +177,7 @@ class Rare(unittest.TestCase):
             "Easy": {21: 90, 22: 9, 23: 1},
             "Normal": {21: 70, 22: 25, 23: 5},
             "Hard": {21: 25, 22: 55, 23: 20},
-            "Very Hard": {22: 40, 23: 55, 24: 5},
+            "Very Hard": {22: 10, 23: 40, 24: 45, 25: 5},
         }
         for difficulty, counts in expected.items():
             with self.subTest(difficulty=difficulty):
@@ -188,9 +188,16 @@ class Rare(unittest.TestCase):
                 self.assertEqual(report["difficulty"], difficulty)
                 self.assertEqual(sum(report["ordinary_tickets"].values()), 100)
 
+    def test_very_hard_player_36_rolls_38_through_41_at_agreed_percentages(self):
+        self.h.enable(36)
+        self.h.mod.enemy_difficulty.value = 'Very Hard'
+        levels = [self.spawn(ticket).level for ticket in range(100)]
+        self.assertEqual({level:levels.count(level) for level in set(levels)},
+                         {38:10,39:40,40:45,41:5})
+
     def test_every_preset_keeps_max_player_vanilla_area_as_spawn_base(self):
         policies = {"Easy": (70, 20, 9, 1), "Normal": (50, 20, 25, 5),
-                    "Hard": (20, 5, 55, 20), "Very Hard": (0, 0, 40, 55, 5)}
+                    "Hard": (20, 5, 55, 20), "Very Hard": (0, 0, 10, 40, 45, 5)}
         for difficulty, weights in policies.items():
             self.h.mod.enemy_difficulty.value = difficulty
             for player, area in ((8, 30), (40, 12)):
@@ -212,7 +219,7 @@ class Rare(unittest.TestCase):
         second = self.spawn(95)
         self.h.mod.enemy_difficulty.value = "Very Hard"
         third = self.spawn(99)
-        self.assertEqual((first.level, second.level, third.level), (21, 23, 24))
+        self.assertEqual((first.level, second.level, third.level), (21, 23, 25))
         self.assertEqual(first.definition.DefaultExpLevel.BaseValueConstant, 0)
         self.assertIs(first.definition.DefaultExpLevel.BaseValueAttribute, self.exact)
         self.assertIs(self.factory.PawnBalanceDefinition, self.definition)
@@ -223,13 +230,13 @@ class Rare(unittest.TestCase):
             self.h.mod.enemy_difficulty.value = difficulty
             self.assertTrue(all(self.spawn(t).level == 25 for t in range(100)))
 
-    def test_very_hard_reports_plus_four_and_keeps_rare_spawn_above_player_cap(self):
+    def test_very_hard_reports_plus_five_and_keeps_rare_spawn_above_player_cap(self):
         self.h.mod.enemy_difficulty.value = "Very Hard"
         self.assertEqual(self.h.runtime.spawns.snapshot()["ordinary_tickets"],
-                         {"native": 0, "+1": 0, "+2": 40, "+3": 55, "+4": 5})
+                         {"native": 0, "+1": 0, "+2": 10, "+3": 40, "+4": 45, "+5": 5})
         self.h.enable(69)
         self.args.GameStage = 69
-        for ticket, level in ((0, 71), (39, 71), (40, 72), (94, 72), (95, 73), (99, 73)):
+        for ticket, level in ((0, 71), (9, 71), (10, 72), (49, 72), (50, 73), (94, 73), (95, 74), (99, 74)):
             self.assertEqual(self.spawn(ticket).level, level)
 
     def test_invalid_difficulty_falls_back_to_normal(self):

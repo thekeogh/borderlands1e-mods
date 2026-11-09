@@ -1,4 +1,4 @@
-"""Generate equipment at the accepted mission's native use requirement.
+"""Generate equipment at the payout mission's native use requirement.
 
 Custom rewards can inherit empty manufacturer tables from BaseDefinition.
 Materialize those tables on the child only for the synchronous reward call;

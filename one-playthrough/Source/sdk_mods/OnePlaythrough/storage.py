@@ -1,4 +1,4 @@
-"""Acceptance levels alongside SDK settings; never edits a .sav file."""
+"""Latest mission/payout levels alongside SDK settings; never edits a .sav file."""
 
 from __future__ import annotations
 
@@ -32,9 +32,9 @@ class MissionLevels:
                     raise ValueError("Invalid character record")
                 if any(not isinstance(name, str) or type(level) is not int or not 1 <= level <= 69
                        for name, level in missions.items()):
-                    raise ValueError("Invalid acceptance level")
+                    raise ValueError("Invalid mission level")
             self.characters = data["characters"]
-            # Copy valid acceptance levels once when upgrading the renamed mod.
+            # Copy valid mission records once when upgrading the renamed mod.
             # Existing new settings always win; never edit the legacy file.
             if source != self.path:
                 self.save()

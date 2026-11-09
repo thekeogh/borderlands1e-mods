@@ -8,20 +8,22 @@ mod_categories: gameplay enemy overhaul
 Play Borderlands GOTY Enhanced from level 1 to 69 in one continuous journey,
 without restarting the story in another playthrough.
 
-Enemy levels and available missions follow your character while keeping their
+Enemy levels and missions follow your character while keeping their
 vanilla minimums: dangerous areas stay dangerous until you catch up. Leave
-missions for later and their levels and rewards keep pace until you accept them.
-Equipment rewards match the accepted mission level, regardless of your level at turn-in.
+missions for later and their levels keep pace, even after acceptance or finishing
+their objectives. Equipment rewards, XP and cash use the mission level at turn-in,
+preserving higher vanilla levels. Gaining a level from that payout does not change
+its remaining rewards. Existing unpaid missions adopt this automatically.
 Choose Easy, Normal (default), Hard or Very Hard for ordinary enemies. Each keeps native
 variety and the higher of your level and the vanilla area level, with different
 chances of tougher spawns. New ordinary enemies spawn at least one level above you;
-Easy/Normal/Hard extra rolls stop at +3; Very Hard rolls +2/+3/+4 at
-40%/55%/5%, retaining naturally higher levels. The choice is saved
+Easy/Normal/Hard extra rolls stop at +3; Very Hard rolls +2/+3/+4/+5 at
+10%/40%/45%/5%, retaining naturally higher levels. The choice is saved
 and affects new spawns only.
 Named enemies and bosses keep their existing scaling and receive no extra roll.
 The optional loot level floor targets new world drops, containers and vendor
-stock at no more than two levels below you for all equipment (minimum level 1). Rarity and legendary chances stay vanilla. Carried enemy equipment receives the floor when dropped on death. Existing player
-equipment stays unchanged; mission rewards follow the accepted mission level. Economy follows the game's normal rules.
+stock at least at your level for all equipment (minimum level 1). Rarity and legendary chances stay vanilla. Carried enemy equipment receives the floor when dropped on death. Existing player
+equipment stays unchanged; mission rewards follow the mission level at turn-in. Economy follows the game's normal rules.
 
 Scaling covers the main story and all four DLCs: The Zombie Island of Dr. Ned,
 Mad Moxxi's Underdome Riot, The Secret Armory of General Knoxx and Claptrap's

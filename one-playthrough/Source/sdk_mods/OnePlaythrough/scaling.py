@@ -116,7 +116,7 @@ class Regions:
                 self.floor(definition, ("BalanceByRegion", i, "MissionOverrides", j, "GameStage"), name)
 
     def floor(self, definition, path, name):
-        # Scope rewards to their acceptance level, including below an area floor.
+        # Scope rewards to their payout level, preserving it through XP level-ups.
         if name in self.overrides:
             self.patches.stage(definition, path, self.overrides[name])
             return

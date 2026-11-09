@@ -1,0 +1,602 @@
+{
+  "source": "mission-atlas-20261106-151337-456304.json",
+  "sha256": "32d6332a3737f344bacc43af0c2cdb929689f9c03d8d7528f42141188b61be01",
+  "captured_summary": {
+    "map": "Trash_p",
+    "tracked": [],
+    "map_scope_hooks": 0,
+    "marker_adapter_hooks": 0,
+    "net_mode": 2
+  },
+  "path_note": "Original report recorded corrupted hook paths. Declaring class and function names below reconstructed from those identifiers; raw UFunction paths were not captured.",
+  "map_functions": [
+    {
+      "reported_hook": "WillowGame:StatusMenuExGFxMovie:PanMap",
+      "owner": "WillowGame.StatusMenuExGFxMovie",
+      "name": "PanMap",
+      "parameters": [
+        {
+          "name": "X",
+          "type": "FloatProperty",
+          "flags": 128
+        },
+        {
+          "name": "Y",
+          "type": "FloatProperty",
+          "flags": 128
+        },
+        {
+          "name": "ReturnValue",
+          "type": "BoolProperty",
+          "flags": 1408
+        }
+      ]
+    },
+    {
+      "reported_hook": "WillowGame:StatusMenuExGFxMovie:HandleMapInputAxis",
+      "owner": "WillowGame.StatusMenuExGFxMovie",
+      "name": "HandleMapInputAxis",
+      "parameters": [
+        {
+          "name": "ControllerId",
+          "type": "IntProperty",
+          "flags": 128
+        },
+        {
+          "name": "ukey",
+          "type": "NameProperty",
+          "flags": 128
+        },
+        {
+          "name": "Delta",
+          "type": "FloatProperty",
+          "flags": 128
+        },
+        {
+          "name": "DeltaTime",
+          "type": "FloatProperty",
+          "flags": 128
+        },
+        {
+          "name": "ReturnValue",
+          "type": "BoolProperty",
+          "flags": 1408
+        }
+      ]
+    },
+    {
+      "reported_hook": "WillowGame:StatusMenuExGFxMovie:HandleMapInputKey",
+      "owner": "WillowGame.StatusMenuExGFxMovie",
+      "name": "HandleMapInputKey",
+      "parameters": [
+        {
+          "name": "ControllerId",
+          "type": "IntProperty",
+          "flags": 128
+        },
+        {
+          "name": "ukey",
+          "type": "NameProperty",
+          "flags": 128
+        },
+        {
+          "name": "uevent",
+          "type": "ByteProperty",
+          "flags": 128
+        },
+        {
+          "name": "ReturnValue",
+          "type": "BoolProperty",
+          "flags": 1408
+        }
+      ]
+    },
+    {
+      "reported_hook": "WillowGame:StatusMenuExGFxMovie:SetupMapPage",
+      "owner": "WillowGame.StatusMenuExGFxMovie",
+      "name": "SetupMapPage",
+      "parameters": []
+    },
+    {
+      "reported_hook": "WillowGame:StatusMenuExGFxMovie:extUpdateMapPage",
+      "owner": "WillowGame.StatusMenuExGFxMovie",
+      "name": "extUpdateMapPage",
+      "parameters": []
+    },
+    {
+      "reported_hook": "WillowGame:StatusMenuExGFxMovie:MapUpdateBehavior",
+      "owner": "WillowGame.StatusMenuExGFxMovie",
+      "name": "MapUpdateBehavior",
+      "parameters": []
+    }
+  ],
+  "missions": [
+    {
+      "mission": "Z1_Missions.Missions.M_JaynisSecretRendezvous",
+      "name": "Jaynistown: Secret Rendezvous",
+      "status": 1,
+      "target": {
+        "path": "Z1_MissionData.Waypoints.WP_TaylorKobb_Bridge",
+        "map": "Trash_p",
+        "sublevel": "Trash_Locks"
+      },
+      "turn_in": {
+        "path": "Z1_MissionData.Waypoints.WP_TaylorKnobb",
+        "map": "Trash_p",
+        "sublevel": "Trash_Aquaduct"
+      }
+    },
+    {
+      "mission": "Z1_Missions.Missions.M_OldHaven_Investigate",
+      "name": "Smoke Signals: Investigate Old Haven",
+      "status": 1,
+      "target": {
+        "path": "Z1_MissionData.Waypoints.WP_Oldhaven_Investigate",
+        "map": "Scrap_OldHaven_P",
+        "sublevel": "Scrap_OldHaven_P"
+      },
+      "turn_in": {
+        "path": "Z1_MissionData.Waypoints.WP_Oldhaven_Investigate",
+        "map": "Scrap_OldHaven_P",
+        "sublevel": "Scrap_OldHaven_P"
+      }
+    },
+    {
+      "mission": "Z1_Missions.Missions.M_AltarEgo",
+      "name": "Altar Ego: Burning Heresy",
+      "status": 1,
+      "target": {
+        "path": "Z1_MissionData.Waypoints.WP_Altar",
+        "map": "Trash_p",
+        "sublevel": "Trash_p"
+      },
+      "turn_in": {
+        "path": "Z1_MissionData.Waypoints.WP_MiddleOfNowhere_BountyBoard",
+        "map": "Trash_p",
+        "sublevel": "Trash_p"
+      }
+    },
+    {
+      "mission": "Z1_Missions.Missions.M_SlaughterMeatAndGreet",
+      "name": "Circle Of Slaughter: Meat and Greet",
+      "status": 1,
+      "target": {
+        "path": "Z1_MissionData.Waypoints.WP_SlaughterNPC",
+        "map": "scrap_p",
+        "sublevel": "scrap_p"
+      },
+      "turn_in": {
+        "path": "Z1_MissionData.Waypoints.WP_SlaughterNPC",
+        "map": "scrap_p",
+        "sublevel": "scrap_p"
+      }
+    },
+    {
+      "mission": "Z1_Missions.Missions.M_Scavenger5",
+      "name": "Scavenger: Shotgun",
+      "status": 1,
+      "target": {
+        "path": "Z1_MissionData.Waypoints.WP_Scavanger_5_Shotgun",
+        "map": "Trash_p",
+        "sublevel": "Trash_p"
+      },
+      "turn_in": {
+        "path": "Z1_MissionData.Waypoints.WP_MiddleOfNowhere_BountyBoard",
+        "map": "Trash_p",
+        "sublevel": "Trash_p"
+      }
+    },
+    {
+      "mission": "Z2_Missions.Missions.M_RecoverLostData_3",
+      "name": "Hidden Journal: Rust Commons East",
+      "status": 1,
+      "target": {
+        "path": "Z1_MissionData.Waypoints.WP_DataRecorders_2",
+        "map": "Trash_p",
+        "sublevel": "Trash_p"
+      },
+      "turn_in": {
+        "path": "Z1_MissionData.Waypoints.WP_MiddleOfNowhere_BountyBoard",
+        "map": "Trash_p",
+        "sublevel": "Trash_p"
+      }
+    },
+    {
+      "mission": "Z1_Missions.Missions.M_HeathensInvestigate",
+      "name": "Altar Ego: The New Religion",
+      "status": 1,
+      "target": {
+        "path": "Z1_MissionData.Waypoints.WP_Chapel",
+        "map": "Trash_p",
+        "sublevel": "Trash_p"
+      },
+      "turn_in": {
+        "path": "Z1_MissionData.Waypoints.WP_MiddleOfNowhere_BountyBoard",
+        "map": "Trash_p",
+        "sublevel": "Trash_p"
+      }
+    },
+    {
+      "mission": "Z1_Missions.Missions.M_ABugProblem",
+      "name": "A Bug Problem",
+      "status": 1,
+      "target": {
+        "path": "Z1_MissionData.Waypoints.WP_ABugProblem",
+        "map": "Trash_p",
+        "sublevel": "Trash_p"
+      },
+      "turn_in": {
+        "path": "Z1_MissionData.Waypoints.WP_MiddleOfNowhere_BountyBoard",
+        "map": "Trash_p",
+        "sublevel": "Trash_p"
+      }
+    },
+    {
+      "mission": "Z1_Missions.Missions.M_GreenThumb",
+      "name": "Green Thumb",
+      "status": 1,
+      "target": {
+        "path": "Z1_MissionData.Waypoints.WP_GreenThumb_Pipe",
+        "map": "Trash_p",
+        "sublevel": "Trash_Aquaduct"
+      },
+      "turn_in": {
+        "path": "Z1_MissionData.Waypoints.WP_GreenThumb",
+        "map": "Trash_p",
+        "sublevel": "Trash_Aquaduct"
+      }
+    }
+  ],
+  "waypoints": [
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_0",
+      "definition": "Z1_MissionData.Waypoints.WP_Custodian_BountyBoard",
+      "number": 1,
+      "location": {
+        "X": 1421.70654296875,
+        "Y": 8043.51806640625,
+        "Z": 1852.0
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_1",
+      "definition": null,
+      "number": 1,
+      "location": {
+        "X": -31410.939453125,
+        "Y": 28599.927734375,
+        "Z": 1344.75537109375
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_10",
+      "definition": "Z1_MissionData.Waypoints.WP_Miscommunication_FindPart",
+      "number": 0,
+      "location": {
+        "X": 54240.0,
+        "Y": 12028.0,
+        "Z": 3271.0
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_11",
+      "definition": "Z1_MissionData.Waypoints.WP_Chapel",
+      "number": 0,
+      "location": {
+        "X": -9153.6240234375,
+        "Y": 37778.63671875,
+        "Z": 3343.0
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_12",
+      "definition": "Z1_MissionData.Waypoints.WP_ABugProblem",
+      "number": 4,
+      "location": {
+        "X": -56520.44140625,
+        "Y": 42224.16015625,
+        "Z": 1348.0
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_13",
+      "definition": "Z1_MissionData.Waypoints.WP_ABugProblem",
+      "number": 2,
+      "location": {
+        "X": 9888.0478515625,
+        "Y": 45339.40234375,
+        "Z": 3224.51171875
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_14",
+      "definition": "Z1_MissionData.Waypoints.WP_DataRecorders_2",
+      "number": 1,
+      "location": {
+        "X": -43528.8671875,
+        "Y": 22053.798828125,
+        "Z": 1283.0
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_16",
+      "definition": "Z1_MissionData.Waypoints.WP_Altar",
+      "number": 2,
+      "location": {
+        "X": 29786.93359375,
+        "Y": 30127.45703125,
+        "Z": 2605.86279296875
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_17",
+      "definition": "Z1_MissionData.Waypoints.WP_DataRecorders_2",
+      "number": 2,
+      "location": {
+        "X": -17485.16796875,
+        "Y": 6261.22119140625,
+        "Z": 1269.0
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_18",
+      "definition": "Z1_MissionData.Waypoints.WP_DataRecorders_2",
+      "number": 3,
+      "location": {
+        "X": 1417.576171875,
+        "Y": 33720.5078125,
+        "Z": 236.0
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_19",
+      "definition": "Z1_MissionData.Waypoints.WP_DataRecorders_2",
+      "number": 4,
+      "location": {
+        "X": 20086.697265625,
+        "Y": 35911.80078125,
+        "Z": 3593.68896484375
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_2",
+      "definition": "Z1_MissionData.Waypoints.WP_TaylorKobb_Claptrap",
+      "number": 0,
+      "location": {
+        "X": -32379.44921875,
+        "Y": 56817.55859375,
+        "Z": 4304.478515625
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_20",
+      "definition": "Z1_MissionData.Waypoints.WP_GreenThumb_Pipe",
+      "number": 2,
+      "location": {
+        "X": -30383.986328125,
+        "Y": 28951.216796875,
+        "Z": 1800.849853515625
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_21",
+      "definition": "Z1_MissionData.Waypoints.WP_DataRecorders_2",
+      "number": 5,
+      "location": {
+        "X": 3622.100341796875,
+        "Y": 13568.4375,
+        "Z": 1583.0
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_22",
+      "definition": "Z1_MissionData.Waypoints.WP_ABugProblem",
+      "number": 1,
+      "location": {
+        "X": 10360.65234375,
+        "Y": 44348.51953125,
+        "Z": 3204.51171875
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_23",
+      "definition": "Z1_MissionData.Waypoints.WP_ABugProblem",
+      "number": 3,
+      "location": {
+        "X": -57916.40234375,
+        "Y": 41517.7578125,
+        "Z": 1396.685546875
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_24",
+      "definition": "Z1_MissionData.Waypoints.WP_GodlessMonsters",
+      "number": 0,
+      "location": {
+        "X": 55106.35546875,
+        "Y": 11892.6611328125,
+        "Z": 3609.0
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_3",
+      "definition": "Z1_MissionData.Waypoints.WP_Altar",
+      "number": 3,
+      "location": {
+        "X": -20316.8984375,
+        "Y": 19596.267578125,
+        "Z": 830.34814453125
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_30",
+      "definition": "Z1_MissionData.Waypoints.WP_RelightingBeacon",
+      "number": 2,
+      "location": {
+        "X": -6719.9453125,
+        "Y": 21548.380859375,
+        "Z": 5667.0
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_32",
+      "definition": "Z1_MissionData.Waypoints.WP_RelightingBeacon",
+      "number": 1,
+      "location": {
+        "X": 17429.87890625,
+        "Y": -75.32459259033203,
+        "Z": 2712.0
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_33",
+      "definition": "Z1_MissionData.Waypoints.WP_Scavanger_5_Shotgun",
+      "number": 0,
+      "location": {
+        "X": 26393.697265625,
+        "Y": 56759.1796875,
+        "Z": 1030.0
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_37",
+      "definition": "Z1_MissionData.Waypoints.WP_CheckPoints",
+      "number": 2,
+      "location": {
+        "X": 13232.181640625,
+        "Y": 42981.79296875,
+        "Z": 3618.2744140625
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_4",
+      "definition": "Z1_MissionData.Waypoints.WP_GreenThumb_Pipe",
+      "number": 1,
+      "location": {
+        "X": -15778.3564453125,
+        "Y": 55473.390625,
+        "Z": 3220.844482421875
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_5",
+      "definition": "Z1_MissionData.Waypoints.WP_Altar",
+      "number": 1,
+      "location": {
+        "X": 45461.375,
+        "Y": -1286.88037109375,
+        "Z": 359.070556640625
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_6",
+      "definition": "Z1_MissionData.Waypoints.WP_MiddleOfNowhere_BountyBoard",
+      "number": 0,
+      "location": {
+        "X": 1428.106689453125,
+        "Y": 8040.5517578125,
+        "Z": 1855.0
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_7",
+      "definition": "Z1_MissionData.Waypoints.WP_Custodian_BountyBoard",
+      "number": 2,
+      "location": {
+        "X": 3727.251220703125,
+        "Y": 13347.328125,
+        "Z": 1692.0
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_8",
+      "definition": "Z1_MissionData.Waypoints.WP_Custodian",
+      "number": 0,
+      "location": {
+        "X": 3728.513427734375,
+        "Y": 13354.2119140625,
+        "Z": 1684.0
+      }
+    },
+    {
+      "actor": "Trash_p.TheWorld:PersistentLevel.WillowWaypoint_9",
+      "definition": "Z1_MissionData.Waypoints.WP_Miscommunication_SmallFavor",
+      "number": 0,
+      "location": {
+        "X": 7685.8671875,
+        "Y": 4949.3876953125,
+        "Z": 1230.4732666015625
+      }
+    },
+    {
+      "actor": "Trash_Aquaduct.TheWorld:PersistentLevel.WillowWaypoint_0",
+      "definition": "Z1_MissionData.Waypoints.WP_TaylorKobb_Bridge",
+      "number": 2,
+      "location": {
+        "X": -31227.283203125,
+        "Y": 52823.09765625,
+        "Z": 2649.0
+      }
+    },
+    {
+      "actor": "Trash_Aquaduct.TheWorld:PersistentLevel.WillowWaypoint_1",
+      "definition": "Z1_MissionData.Waypoints.WP_GreenThumb",
+      "number": 0,
+      "location": {
+        "X": -31204.41796875,
+        "Y": 20296.119140625,
+        "Z": 240.0
+      }
+    },
+    {
+      "actor": "Trash_Aquaduct.TheWorld:PersistentLevel.WillowWaypoint_11",
+      "definition": "Z1_MissionData.Waypoints.WP_TaylorKobb_Kill",
+      "number": 1,
+      "location": {
+        "X": -35190.58984375,
+        "Y": 25006.056640625,
+        "Z": 1346.0
+      }
+    },
+    {
+      "actor": "Trash_Aquaduct.TheWorld:PersistentLevel.WillowWaypoint_26",
+      "definition": "Z1_MissionData.Waypoints.WP_Aqueduct",
+      "number": 0,
+      "location": {
+        "X": -32062.369140625,
+        "Y": 30428.96484375,
+        "Z": 1346.0
+      }
+    },
+    {
+      "actor": "Trash_Aquaduct.TheWorld:PersistentLevel.WillowWaypoint_29",
+      "definition": "Z1_MissionData.Waypoints.WP_TaylorKobb_Bridge",
+      "number": 1,
+      "location": {
+        "X": -42198.9140625,
+        "Y": 21159.50390625,
+        "Z": 1369.485107421875
+      }
+    },
+    {
+      "actor": "Trash_Aquaduct.TheWorld:PersistentLevel.WillowWaypoint_3",
+      "definition": "Z1_MissionData.Waypoints.WP_TaylorKobb_Kill",
+      "number": 2,
+      "location": {
+        "X": -32350.890625,
+        "Y": 56777.8984375,
+        "Z": 4280.0
+      }
+    },
+    {
+      "actor": "Trash_Locks.TheWorld:PersistentLevel.WillowWaypoint_0",
+      "definition": "Z1_MissionData.Waypoints.WP_TaylorKnobb",
+      "number": 0,
+      "location": {
+        "X": -31227.283203125,
+        "Y": 52825.09765625,
+        "Z": 2668.0
+      }
+    }
+  ]
+}
