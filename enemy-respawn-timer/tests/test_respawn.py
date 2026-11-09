@@ -1,8 +1,10 @@
 """Event/cooldown regression model; cannot reproduce UE3 native faults."""
 
 import json
+from itertools import product
 from pathlib import Path
 import sys
+import tempfile
 from types import ModuleType, SimpleNamespace as NS
 import unittest
 from unittest.mock import patch
@@ -32,10 +34,10 @@ def load():
     sdk.logging = NS(info=messages.append, error=messages.append)
     def find_object(cls, path):
         if path.startswith("GearboxFramework."):
-            return Object(path)
+            return Object(path.rsplit(".", 1)[0] + ":" + path.rsplit(".", 1)[1])
         raise ValueError("Object not found: " + path)
     sdk.find_object = find_object
-    sdk.find_all = lambda cls: [] if cls == "Function" else (_ for _ in ()).throw(AssertionError("No pawn scans"))
+    sdk.find_all = lambda cls: [] if cls in ("Function", "PopulationOpportunityDen") else (_ for _ in ()).throw(AssertionError("No pawn scans"))
     sdk.find_class = lambda name: None
     hooks = ModuleType("unrealsdk.hooks")
     hooks.Block = object()
@@ -55,9 +57,17 @@ def load():
     def hook(path, kind):
         def decorate(fn):
             registrations.append((path, kind))
+            fn.hook_identifier = path
+            fn.get_active_count = lambda: 1
             return fn
         return decorate
     base.hook = hook
+    def keybind(name, key):
+        def decorate(fn):
+            fn.identifier, fn.key = name, key
+            return fn
+        return decorate
+    base.keybind = keybind
     build = []
     base.build_mod = lambda **kw: build.append(kw)
     package = ModuleType("respawn_test")
@@ -117,10 +127,10 @@ class RespawnTests(unittest.TestCase):
         self.mod.after_spawning(den, None, None, None)
         return result
 
-    def test_exact_six_choices_default_and_settings(self):
-        self.assertEqual(self.mod.respawn_delay.value, "15 minutes")
+    def test_exact_five_choices_default_and_settings(self):
+        self.assertEqual(self.mod.respawn_delay.value, "30 minutes")
         self.assertEqual(self.mod.respawn_delay.choices,
-                         ["5 minutes", "15 minutes", "30 minutes", "1 hour", "3 hours", "Forever (until reload)"])
+                         ["1 minute", "30 minutes", "1 hour", "3 hours", "Forever (until reload)"])
         self.assertEqual(self.mod.testing.build[0]["settings_file"].name, "EnemyRespawnTimer.json")
 
     def test_default_starts_after_last_enemy_not_first_kill(self):
@@ -128,14 +138,14 @@ class RespawnTests(unittest.TestCase):
         self.die(first, 110)
         self.assertEqual(self.den.SpawnData.NextSpawnTime, 120)
         self.die(second, 130)
-        self.assertEqual(self.den.SpawnData.NextSpawnTime, 1030)
-        self.world.TimeSeconds = 1029
+        self.assertEqual(self.den.SpawnData.NextSpawnTime, 1930)
+        self.world.TimeSeconds = 1929
         self.assertIs(self.attempt(), self.mod.Block)
-        self.world.TimeSeconds = 1030
+        self.world.TimeSeconds = 1930
         self.assertIsNone(self.attempt())
 
     def test_every_finite_choice_deadline_and_exact_expiry(self):
-        for choice, seconds in [("5 minutes", 300), ("15 minutes", 900), ("30 minutes", 1800), ("1 hour", 3600), ("3 hours", 10800)]:
+        for choice, seconds in [("1 minute", 60), ("30 minutes", 1800), ("1 hour", 3600), ("3 hours", 10800)]:
             self.mod.reset_session()
             self.world.TimeSeconds = 100
             self.mod.respawn_delay.value = choice
@@ -163,7 +173,7 @@ class RespawnTests(unittest.TestCase):
         b, = self.spawn(other, count=1)
         self.die(a, 130)
         self.die(b, 200)
-        self.world.TimeSeconds = 1030
+        self.world.TimeSeconds = 1930
         self.assertIsNone(self.attempt())
         self.assertIs(self.attempt(other), self.mod.Block)
         self.assertIsNone(self.attempt(self.make_den("Untouched")))
@@ -175,19 +185,19 @@ class RespawnTests(unittest.TestCase):
         self.mod.change_delay(None, "3 hours")
         self.assertEqual(self.den.SpawnData.NextSpawnTime, 10930)
         self.mod.respawn_delay.value = "3 hours"
-        self.mod.change_delay(None, "5 minutes")
-        self.mod.respawn_delay.value = "5 minutes"
-        self.assertEqual(self.den.SpawnData.NextSpawnTime, 430)
-        self.world.TimeSeconds = 431
+        self.mod.change_delay(None, "1 minute")
+        self.mod.respawn_delay.value = "1 minute"
+        self.assertEqual(self.den.SpawnData.NextSpawnTime, 190)
+        self.world.TimeSeconds = 200
         self.assertIsNone(self.attempt())
 
     def test_change_forever_to_finite_keeps_clear_time(self):
         self.mod.respawn_delay.value = "Forever (until reload)"
         pawn, = self.spawn(count=1)
         self.die(pawn, 150)
-        self.mod.change_delay(None, "5 minutes")
-        self.mod.respawn_delay.value = "5 minutes"
-        self.world.TimeSeconds = 450
+        self.mod.change_delay(None, "1 minute")
+        self.mod.respawn_delay.value = "1 minute"
+        self.world.TimeSeconds = 210
         self.assertIsNone(self.attempt())
 
     def test_disable_restores_only_timestamp_and_drops_weak_tracking(self):
@@ -294,7 +304,7 @@ class RespawnTests(unittest.TestCase):
         pawn, = self.spawn(count=1)
         self.die(pawn, 130)
         self.die(pawn, 200)
-        self.assertEqual(self.den.SpawnData.NextSpawnTime, 1030)
+        self.assertEqual(self.den.SpawnData.NextSpawnTime, 1930)
         self.assertEqual(self.mod._counts["cleared_groups"], 1)
 
     def test_blocked_death_with_alive_flag_does_not_start_timer(self):
@@ -305,10 +315,10 @@ class RespawnTests(unittest.TestCase):
     def test_respawn_generation_gets_fresh_native_restore_baseline(self):
         first, = self.spawn(count=1)
         self.die(first, 130)
-        self.world.TimeSeconds = 1030
+        self.world.TimeSeconds = 1930
         second, = self.spawn(count=1)
         self.den.SpawnData.NextSpawnTime = 2000  # Native second-generation schedule.
-        self.die(second, 1040)
+        self.die(second, 1940)
         self.mod.on_disable()
         self.assertEqual(self.den.SpawnData.NextSpawnTime, 2000)
 
@@ -319,14 +329,13 @@ class RespawnTests(unittest.TestCase):
         self.assertEqual(self.mod._actors, {})
         self.assertEqual(self.den.SpawnData.NextSpawnTime, 120)
 
-    def test_missing_native_hook_disables_mutations_and_reports_error(self):
+    def test_missing_native_hook_keeps_polling_available_and_reports_error(self):
         self.mod.on_disable()
         self.mod.testing.sdk.find_object = lambda *args: None
         self.mod.on_enable()
-        self.assertFalse(self.mod._ready)
+        self.assertTrue(self.mod._ready)
         self.assertTrue(self.mod._errors)
-        self.spawn()
-        self.assertEqual(self.mod._actors, {})
+        self.assertIsNotNone(self.mod.host_clock())
 
     def test_native_sdk_lookup_exception_tries_next_declaring_class(self):
         self.mod.on_disable()
@@ -349,6 +358,30 @@ class RespawnTests(unittest.TestCase):
         self.assertTrue(self.mod._ready)
         self.assertEqual(self.mod._spawn_path, "OtherFramework.PopulationOpportunityDen:DoSpawning")
 
+    def test_windows_sdk_function_path_installs_canonical_hook(self):
+        # The mock originally used dot-only paths, hiding the Windows bug.
+        self.assertEqual(self.mod._spawn_path,
+                         "GearboxFramework.PopulationOpportunityDen:DoSpawning")
+        self.assertEqual([args[0] for args in self.mod.testing.additions],
+                         [self.mod._spawn_path, self.mod._spawn_path])
+        for sdk_path in ("WillowGame.PopulationOpportunityDen:DoSpawning",
+                         "WillowGame:PopulationOpportunityDen.DoSpawning",
+                         "WillowGame.PopulationOpportunityDen.DoSpawning"):
+            with self.subTest(sdk_path=sdk_path):
+                self.mod.on_disable()
+                self.mod.testing.sdk.find_object = lambda *args: Object(sdk_path)
+                self.mod.on_enable()
+                self.assertEqual(self.mod._spawn_path, "WillowGame.PopulationOpportunityDen:DoSpawning")
+                self.assertEqual(self.mod.testing.additions[-1][0], self.mod._spawn_path)
+
+    def test_function_inventory_accepts_windows_sdk_colon_path(self):
+        self.mod.on_disable()
+        self.mod.testing.sdk.find_object = lambda *args: None
+        self.mod.testing.sdk.find_all = lambda cls: [Object("WillowGame.PopulationOpportunityDen:DoSpawning")]
+        self.mod.on_enable()
+        self.assertEqual(self.mod._spawn_path, "WillowGame.PopulationOpportunityDen:DoSpawning")
+        self.assertTrue(self.mod._ready)
+
     def test_missing_layout_delegates_and_cleans_context(self):
         del self.den.SpawnData.MaxActiveActors
         self.assertIsNone(self.attempt())
@@ -361,7 +394,7 @@ class RespawnTests(unittest.TestCase):
         # Module imports a direct alias; replace it too.
         self.mod.add_hook = self.mod.testing.hooks.add_hook
         self.mod.on_enable()
-        self.assertFalse(self.mod._ready)
+        self.assertTrue(self.mod._ready)
         self.assertTrue(self.mod._errors)
         self.assertEqual(len(self.mod.testing.removals), 4)
 
@@ -372,8 +405,566 @@ class RespawnTests(unittest.TestCase):
         result = self.mod.snapshot()
         json.dumps(result, allow_nan=False)
         self.assertEqual(result["counts"]["tracked_spawns"], 1)
-        self.assertEqual(result["dens"][0]["deadline"], 1030)
+        self.assertEqual(result["dens"][0]["deadline"], 1930)
         self.assertEqual((dict(vars(self.den.SpawnData)), dict(self.mod._counts)), before)
+
+    def test_one_minute_diagnostics_explain_full_lifecycle(self):
+        self.mod.respawn_delay.value = "1 minute"
+        pawn, = self.spawn(count=1)
+        self.die(pawn, 130)
+        self.world.TimeSeconds = 189
+        self.assertIs(self.attempt(), self.mod.Block)
+        report = self.mod.snapshot()
+        self.assertEqual(report["counts"]["den_spawn_calls"], 2)
+        self.assertEqual(report["counts"]["factory_callbacks"], 1)
+        self.assertEqual(report["counts"]["death_callbacks"], 1)
+        self.assertEqual(report["dens"][0]["deadline"], 190)
+        self.assertEqual([e["event"] for e in report["recent_events"]],
+                         ["session_reset", "spawn_tracked", "death_tracked", "group_cleared", "spawn_blocked"])
+
+    def test_skipped_allegiance_and_den_are_explained(self):
+        self.spawn(count=1, allegiance="Custom.Unknown")
+        self.den.Aspect = Object()
+        self.attempt()
+        report = self.mod.snapshot()
+        self.assertEqual(report["skip_counts"]["scripted_aspect"], 1)
+        self.assertEqual(report["skip_counts"]["unknown_or_non_enemy_allegiance"], 1)
+        self.assertEqual(report["dens"][0]["ignore_reason"], "unknown_or_non_enemy_allegiance")
+
+    def test_scripted_skag_aspect_export_is_read_only_and_explains_exclusion(self):
+        aspect = Object("Arid_Firestone.TheWorld:PersistentLevel.PopulationOpportunityDen_25.MissionPopulationAspect_0")
+        aspect.MissionReactions = NS(MissionDefinition="gd_Missions.TestMission",
+                                     MissionStatusOpportunityReaction=(1, 1, 1, 0))
+        aspect.MissionItems = NS(MissionDefinition=None, MissionItemPool="gd_Items.QuestPool")
+        aspect.MissionObjective = NS(MissionDefinition=None, ObjectiveIndex=-1)
+        cls = Object("WillowGame.MissionPopulationAspect")
+        cls._properties = lambda: (_ for _ in ()).throw(AssertionError("No raw schema dumps"))
+        aspect.Class = cls
+        self.den.Aspect = aspect
+        self.den.SpawnData.PopulationDefName = "SkagDen_Regular"
+        self.den.SpawnData.NumActiveActors = 0
+        self.den.SpawnData.NumTotalActors = 5
+        self.mod.testing.sdk.find_all = lambda name: [self.den] if name == "PopulationOpportunityDen" else []
+        before = dict(vars(self.den.SpawnData)), dict(vars(aspect))
+        report = self.mod.snapshot()
+        row, = report["native_dens"]
+        self.assertEqual(row["skip_reason"], "scripted_aspect")
+        self.assertEqual(set(row["aspect"]["fields"]),
+                         {"MissionReactions", "MissionItems", "MissionObjective"})
+        self.assertIn("gd_Missions.TestMission", row["aspect"]["fields"]["MissionReactions"])
+        self.assertNotIn("read_error", row["aspect"])
+        self.assertNotIn("schemas", report)
+        self.assertEqual((dict(vars(self.den.SpawnData)), dict(vars(aspect))), before)
+        self.assertIsNone(self.mod.aspect_snapshot(None))
+
+    def test_native_inventory_available_without_tracking(self):
+        self.mod.testing.sdk.find_all = lambda cls: [self.den] if cls == "PopulationOpportunityDen" else []
+        before = dict(vars(self.den.SpawnData))
+        report = self.mod.snapshot()
+        self.assertEqual(report["native_dens"][0]["spawn_data"]["NextSpawnTime"], 120)
+        self.assertFalse(report["native_dens"][0]["tracked"])
+        self.assertEqual(dict(vars(self.den.SpawnData)), before)
+
+    def test_diagnostics_export_key_and_button_write_even_when_not_ready(self):
+        self.mod._ready = False
+        key, = self.mod.testing.build[0]["keybinds"]
+        self.assertEqual(key.key, "F8")
+        with tempfile.TemporaryDirectory() as folder:
+            self.mod.SETTINGS_DIR = Path(folder)
+            key()
+            button = self.mod.testing.build[0]["options"][1]
+            button.on_press(button)
+            files = list((Path(folder) / "EnemyRespawnTimer").glob("respawn-*.json"))
+            self.assertEqual(len(files), 2)
+            for file in files:
+                report = json.loads(file.read_text())
+                self.assertFalse(report["ready"])
+                self.assertEqual(report["version"], "1.2.8")
+                self.assertNotIn("schemas", report)
+
+    def test_event_buffer_is_bounded_and_reports_dead_weak_references(self):
+        pawn, = self.spawn(count=1)
+        self.mod._actors[pawn._get_address()] = (lambda: None, self.den._get_address())
+        for i in range(250):
+            self.mod.trace("test", index=i)
+        report = self.mod.snapshot()
+        self.assertEqual(len(report["recent_events"]), 200)
+        self.assertFalse(report["dens"][0]["actors"][0]["valid"])
+
+    def test_removed_saved_choice_falls_back_to_thirty_minutes(self):
+        self.mod.on_disable()
+        self.mod.respawn_delay.value = "15 minutes"
+        self.mod.on_enable()
+        self.assertEqual(self.mod.respawn_delay.value, "30 minutes")
+
+    def prepare_native_den(self, count=2, allegiance="gd_allegiance.HumanoidEnemy.BanditAllegiance"):
+        self.den.SpawnData.NumActiveActors = count
+        self.den.SpawnData.NumTotalActors = count
+        self.den.MaxTotalActors = count
+        self.den.SpawnedDenMembers = []
+        for i in range(count):
+            pawn = Object("TheWorld.NativePawn" + str(i))
+            pawn.bIsDead = False
+            pawn.Allegiance = Object(allegiance)
+            self.den.SpawnedDenMembers.append(pawn)
+            self.pawns.append(pawn)
+        self.mod.testing.sdk.find_all = lambda cls: [self.den] if cls == "PopulationOpportunityDen" else []
+        self.mod.respawn_delay.value = "1 minute"
+        self.mod.poll_tick(None, None, None, None)
+        return list(self.den.SpawnedDenMembers)
+
+    def native_kill(self, pawn, now, callback=True):
+        self.world.TimeSeconds = now
+        pawn.bIsDead = True
+        self.den.SpawnedDenMembers.remove(pawn)
+        self.den.SpawnData.NumActiveActors -= 1
+        if callback:
+            self.mod.record_death(pawn, None, None, None)
+        self.mod.poll_tick(None, None, None, None)
+
+    def test_recorded_kroms_bridge_bandits_track_clear_and_rearm(self):
+        # 1.2.0 exports: 11.893s alive; 36.630s both dead; 130.911s still empty.
+        # Previously all 301 polls rejected this exact captured allegiance.
+        self.den.path = "Scrap_Canyon_P.TheWorld:PersistentLevel.PopulationOpportunityDen_31"
+        self.world.TimeSeconds = 11.893261909484863
+        first, second = self.prepare_native_den(
+            allegiance="gd_allegiance.humanoidenemy.banditallegiance")
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertFalse(entry["ignored"])
+        self.assertEqual(len(entry["group"].members), 2)
+        self.native_kill(first, 30)
+        self.native_kill(second, 36.62998962402344)
+        self.assertEqual(entry["group"].cleared_at, 36.62998962402344)
+        self.assertAlmostEqual(self.den.SpawnData.NextSpawnTime, 96.62998962402344)
+        self.world.TimeSeconds = 96.12998962402344
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.den.SpawnData.NumTotalActors, 2)
+        self.world.TimeSeconds = 130.9114532470703
+        self.mod.poll_tick(None, None, None, None)
+        self.assertTrue(entry["released"])
+        self.assertEqual(self.den.SpawnData.NumTotalActors, 0)
+        self.assertEqual(self.mod._counts["tracked_spawns"], 2)
+        self.assertEqual(self.mod._counts["cleared_groups"], 1)
+        self.assertEqual(self.mod._counts["rearmed_groups"], 1)
+
+    def test_humanoid_enemy_paths_keep_friendly_neutral_and_unknown_exclusions(self):
+        for path, expected in (
+            ("gd_allegiance.HumanoidEnemy:BanditAllegiance", True),
+            ("gd_allegiance.HumanoidEnemy.BanditAllegiance", True),
+            ("gd_allegiance.HumanoidEnemy.FriendlyNPC", False),
+            ("gd_allegiance.HumanoidEnemy.NeutralNPC", False),
+            ("gd_allegiance.HumanoidEnemy.Player", False),
+            ("gd_allegiance.NotHumanoidEnemy.BanditAllegiance", False),
+            ("gd_allegiance.Friendly.NPC", False),
+        ):
+            with self.subTest(path=path):
+                self.setUp()
+                self.prepare_native_den(1, allegiance=path)
+                entry = self.mod._dens[self.den._get_address()]
+                self.assertEqual(not entry["ignored"], expected)
+                self.assertEqual(len(entry["group"].members), int(expected))
+
+    def make_fyrestone_aspect(self):
+        aspect = Object("Arid_Firestone.TheWorld:PersistentLevel.PopulationOpportunityDen_25.MissionPopulationAspect_0")
+        aspect.Class = Object("WillowGame.MissionPopulationAspect")
+        aspect.MissionReactions = NS(
+            MissionDefinition=Object("Z0_Missions.Missions.M_RepairClapTrap_02"),
+            MissionStatusOpportunityReaction=(1, 1, 1, 0))
+        aspect.MissionItems = NS(MissionDefinition=None, MissionItemPool=None)
+        aspect.MissionObjective = NS(MissionDefinition=None, ObjectiveIndex=-1)
+        return aspect
+
+    def test_captured_enabled_fyrestone_skag_gate_can_clear_and_rearm(self):
+        self.den.Aspect = self.make_fyrestone_aspect()
+        self.den.IsEnabled = True
+        pawn, = self.prepare_native_den(1, allegiance="gd_allegiance.creatureenemy.skagallegiance")
+        before = self.den.Aspect.MissionReactions.MissionStatusOpportunityReaction
+        self.native_kill(pawn, 110)
+        self.assertEqual(self.mod._counts["cleared_groups"], 1)
+        self.world.TimeSeconds = 170
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.mod._counts["rearmed_groups"], 1)
+        self.assertEqual(self.den.SpawnData.NumTotalActors, 0)
+        self.assertEqual(self.den.Aspect.MissionReactions.MissionStatusOpportunityReaction, before)
+        self.assertTrue(self.den.IsEnabled)
+
+    def test_mission_gate_rejects_objectives_items_and_unknown_layouts(self):
+        for change in ("disabled", "no_respawn", "objective", "objective_index", "item_mission",
+                       "item_pool", "invalid_pattern", "unknown_class", "missing_layout"):
+            with self.subTest(change=change):
+                self.setUp()
+                self.den.IsEnabled = True
+                aspect = self.make_fyrestone_aspect()
+                self.den.Aspect = aspect
+                if change == "disabled": self.den.IsEnabled = False
+                elif change == "no_respawn": self.den.bNoRespawning = True
+                elif change == "objective": aspect.MissionObjective.MissionDefinition = Object()
+                elif change == "objective_index": aspect.MissionObjective.ObjectiveIndex = 0
+                elif change == "item_mission": aspect.MissionItems.MissionDefinition = Object()
+                elif change == "item_pool": aspect.MissionItems.MissionItemPool = Object()
+                elif change == "invalid_pattern": aspect.MissionReactions.MissionStatusOpportunityReaction = (1, 0, 2, 0)
+                elif change == "unknown_class": aspect.Class = Object("WillowGame.OtherAspect")
+                elif change == "missing_layout": del aspect.MissionObjective
+                self.prepare_native_den(1, allegiance="gd_allegiance.creatureenemy.skagallegiance")
+                self.assertNotIn(self.den._get_address(), self.mod._dens)
+                self.assertEqual(self.den.SpawnData.NumTotalActors, 1)
+
+    def test_enabled_unconditional_mission_gate_without_payload_is_allowed(self):
+        self.den.IsEnabled = True
+        self.den.Aspect = self.make_fyrestone_aspect()
+        self.den.Aspect.MissionReactions.MissionDefinition = None
+        self.den.Aspect.MissionReactions.MissionStatusOpportunityReaction = (0, 0, 0, 0)
+        self.assertIsNone(self.mod.den_skip_reason(self.den, self.world))
+        # Captured den 1 carries a quest item pool and must still be skipped.
+        self.den.Aspect.MissionItems.MissionItemPool = Object("gd_COEMissions.ItemPools.IP_SkagYoung")
+        self.assertEqual(self.mod.den_skip_reason(self.den, self.world), "scripted_aspect")
+
+    def test_captured_aqueduct_turret_gate_tracks_two_kills_and_rearms(self):
+        # 1.2.3 captures: den 7, AutoTurret_Gatling, two alive -> zero alive.
+        self.den.path = "Trash_Aquaduct.TheWorld:PersistentLevel.PopulationOpportunityDen_7"
+        self.den.SpawnData.PopulationDefName = "AutoTurret_Gatling"
+        self.den.IsEnabled = True
+        self.den.Aspect = self.make_fyrestone_aspect()
+        reactions = self.den.Aspect.MissionReactions
+        reactions.MissionDefinition = Object("Z1_Missions.Missions.M_JaynisCleaningUp")
+        reactions.MissionStatusOpportunityReaction = (1, 0, 0, 0)
+        first, second = self.prepare_native_den()
+        self.assertEqual(self.mod._counts["tracked_spawns"], 2)
+        self.native_kill(first, 110)
+        self.assertEqual(self.mod._counts["cleared_groups"], 0)
+        self.native_kill(second, 120)
+        self.assertEqual(self.den.SpawnData.NextSpawnTime, 180)
+        self.world.TimeSeconds = 179
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.den.SpawnData.NumTotalActors, 2)
+        self.world.TimeSeconds = 180
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.mod._counts["rearmed_groups"], 1)
+        self.assertEqual(self.den.SpawnData.NumTotalActors, 0)
+        self.assertEqual(reactions.MissionStatusOpportunityReaction, (1, 0, 0, 0))
+        self.assertTrue(self.den.IsEnabled)
+
+    def test_all_sixteen_gate_combinations_track_clear_and_rearm(self):
+        for states in product((0, 1), repeat=4):
+            for linked_mission in (False, True):
+                with self.subTest(states=states, linked_mission=linked_mission):
+                    self.setUp()
+                    self.den.IsEnabled = True
+                    self.den.Aspect = self.make_fyrestone_aspect()
+                    reactions = self.den.Aspect.MissionReactions
+                    reactions.MissionStatusOpportunityReaction = states
+                    if not linked_mission:
+                        reactions.MissionDefinition = None
+                    pawn, = self.prepare_native_den(1)
+                    self.assertEqual(self.mod._counts["tracked_spawns"], 1)
+                    self.native_kill(pawn, 110)
+                    self.world.TimeSeconds = 170
+                    self.mod.poll_tick(None, None, None, None)
+                    self.assertEqual(self.mod._counts["rearmed_groups"], 1)
+                    self.assertEqual(reactions.MissionStatusOpportunityReaction, states)
+                    self.assertTrue(self.den.IsEnabled)
+
+    def test_all_sixteen_gate_combinations_preserve_other_exclusions(self):
+        for states in product((0, 1), repeat=4):
+            for exclusion in ("disabled", "no_respawn", "objective", "items"):
+                with self.subTest(states=states, exclusion=exclusion):
+                    self.setUp()
+                    self.den.IsEnabled = True
+                    self.den.Aspect = self.make_fyrestone_aspect()
+                    self.den.Aspect.MissionReactions.MissionStatusOpportunityReaction = states
+                    if exclusion == "disabled": self.den.IsEnabled = False
+                    elif exclusion == "no_respawn": self.den.bNoRespawning = True
+                    elif exclusion == "objective": self.den.Aspect.MissionObjective.MissionDefinition = Object()
+                    elif exclusion == "items": self.den.Aspect.MissionItems.MissionItemPool = Object()
+                    self.assertIsNotNone(self.mod.den_skip_reason(self.den, self.world))
+
+    def test_invalid_gate_table_shapes_and_values_are_excluded(self):
+        self.den.IsEnabled = True
+        self.den.Aspect = self.make_fyrestone_aspect()
+        for states in ((), (1, 0, 0), (1, 0, 0, 0, 0), (1, 2, 0, 0), (-1, 0, 0, 0), None):
+            with self.subTest(states=states):
+                self.den.Aspect.MissionReactions.MissionStatusOpportunityReaction = states
+                self.assertFalse(self.mod.passive_mission_gate(self.den, self.den.Aspect))
+
+    def test_native_membership_without_any_den_hook_rearms_exactly_once(self):
+        first, second = self.prepare_native_den()
+        self.assertEqual(self.mod._counts["den_spawn_calls"], 0)
+        self.assertEqual(self.mod._counts["tracked_spawns"], 2)
+        self.native_kill(first, 110)
+        self.assertEqual(self.mod._counts["cleared_groups"], 0)
+        self.native_kill(second, 130)
+        self.assertEqual(self.den.SpawnData.NextSpawnTime, 190)
+        self.world.TimeSeconds = 189.5
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.den.SpawnData.NumTotalActors, 2)
+        self.world.TimeSeconds = 190
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.den.SpawnData.NumTotalActors, 0)
+        self.assertEqual(self.den.SpawnData.NextSpawnTime, 0)
+        self.assertEqual(self.mod._counts["rearmed_groups"], 1)
+        self.world.TimeSeconds = 200
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.mod._counts["rearmed_groups"], 1)
+        self.assertEqual(self.mod.snapshot()["tracking_mode"], "native_den_members")
+
+    def test_native_second_generation_can_clear_and_rearm_again(self):
+        pawn, = self.prepare_native_den(1)
+        self.native_kill(pawn, 110)
+        self.world.TimeSeconds = 170
+        self.mod.poll_tick(None, None, None, None)
+        other = Object("TheWorld.NewGeneration")
+        other.bIsDead = False
+        other.Allegiance = Object("gd_allegiance.HumanEnemy:Bandit")
+        self.den.SpawnedDenMembers = [other]
+        self.den.SpawnData.NumTotalActors = self.den.SpawnData.NumActiveActors = 1
+        self.world.TimeSeconds = 171
+        self.mod.poll_tick(None, None, None, None)
+        self.native_kill(other, 180)
+        self.assertEqual(self.den.SpawnData.NextSpawnTime, 240)
+        self.world.TimeSeconds = 240
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.mod._counts["rearmed_groups"], 2)
+
+    def test_poll_recovers_missed_death_callback_but_never_guesses_disappearance(self):
+        first, second = self.prepare_native_den()
+        self.native_kill(first, 110, callback=False)
+        self.assertEqual(self.mod._counts["cleared_groups"], 0)
+        self.native_kill(second, 120, callback=False)
+        self.assertEqual(self.mod._counts["cleared_groups"], 1)
+        self.mod.reset_session()
+        pawn, = self.prepare_native_den(1)
+        self.mod._actors[pawn._get_address()] = (lambda: None, self.den._get_address())
+        self.den.SpawnedDenMembers = []
+        self.den.SpawnData.NumActiveActors = 0
+        self.world.TimeSeconds = 140
+        self.mod.poll_tick(None, None, None, None)
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertFalse(entry["ignored"])
+        self.assertTrue(entry["suspended"])
+        self.assertIsNone(entry["group"].cleared_at)
+
+    def test_disappeared_member_is_replaced_without_permanently_excluding_den(self):
+        old, = self.prepare_native_den(1)
+        self.mod._actors[old._get_address()] = (lambda: None, self.den._get_address())
+        replacement = Object("TheWorld.ReplacementPawn")
+        replacement.bIsDead = False
+        replacement.Allegiance = old.Allegiance
+        self.den.SpawnedDenMembers = [replacement]
+        self.world.TimeSeconds = 110
+        self.mod.poll_tick(None, None, None, None)
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertFalse(entry["ignored"])
+        self.assertFalse(entry["suspended"])
+        self.assertEqual(entry["group"].members, {replacement._get_address()})
+        self.assertNotIn(old._get_address(), self.mod._actors)
+        self.assertEqual(self.mod._counts["cleared_groups"], 0)
+        self.native_kill(replacement, 120)
+        self.world.TimeSeconds = 180
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.mod._counts["cleared_groups"], 1)
+        self.assertEqual(self.mod._counts["rearmed_groups"], 1)
+
+    def test_captured_rust_commons_dens_recover_after_native_actor_replacement(self):
+        fixture = json.loads((ROOT / "tests/fixtures/rust-commons-west-disappearances.json").read_text())
+        self.assertEqual(len(fixture["records"]), 6)
+        for record in fixture["records"]:
+            with self.subTest(den=record["den"], definition=record["definition"]):
+                self.setUp()
+                self.den.path = record["den"]
+                self.den.Location = record["location"]
+                self.den.SpawnData.PopulationDefName = record["definition"]
+                old, = self.prepare_native_den(1)
+                self.mod._actors[old._get_address()] = (lambda: None, self.den._get_address())
+                self.den.SpawnedDenMembers = []
+                self.den.SpawnData.NumActiveActors = 0
+                self.world.TimeSeconds = 110
+                self.mod.poll_tick(None, None, None, None)
+                entry = self.mod._dens[self.den._get_address()]
+                self.assertTrue(entry["suspended"])
+                replacement = Object("Loader.TheWorld:PersistentLevel.ReplacementPawn")
+                replacement.bIsDead = False
+                replacement.Allegiance = old.Allegiance
+                self.den.SpawnedDenMembers = [replacement]
+                self.den.SpawnData.NumActiveActors = 1
+                self.world.TimeSeconds = 120
+                self.mod.poll_tick(None, None, None, None)
+                self.assertFalse(entry["suspended"])
+                self.native_kill(replacement, 130)
+                self.world.TimeSeconds = 190
+                self.mod.poll_tick(None, None, None, None)
+                self.assertEqual(self.mod._counts["rearmed_groups"], 1)
+                recovery = [e for e in self.mod._events if e["event"] == "tracking_recovered"][-1]
+                self.assertEqual(recovery["definition"], record["definition"])
+                self.assertEqual(recovery["location"], record["location"])
+
+    def test_empty_uncertain_den_waits_then_recovers_when_native_members_return(self):
+        old, = self.prepare_native_den(1)
+        self.mod._actors[old._get_address()] = (lambda: None, self.den._get_address())
+        self.den.SpawnedDenMembers = []
+        self.den.SpawnData.NumActiveActors = 0
+        self.world.TimeSeconds = 110
+        self.mod.poll_tick(None, None, None, None)
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertTrue(entry["suspended"])
+        self.world.TimeSeconds = 300
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.mod._counts["cleared_groups"], 0)
+        self.assertEqual(self.den.SpawnData.NumTotalActors, 1)
+        self.den.SpawnedDenMembers = [old]
+        self.den.SpawnData.NumActiveActors = 1
+        self.world.TimeSeconds = 301
+        self.mod.poll_tick(None, None, None, None)
+        self.assertFalse(entry["suspended"])
+        self.native_kill(old, 310)
+        self.assertEqual(entry["group"].deadline("1 minute"), 370)
+
+    def test_still_valid_actor_removed_from_native_den_is_reconciled(self):
+        old, = self.prepare_native_den(1)
+        self.den.SpawnedDenMembers = []
+        self.den.SpawnData.NumActiveActors = 0
+        self.world.TimeSeconds = 110
+        self.mod.poll_tick(None, None, None, None)
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertTrue(entry["suspended"])
+        self.assertNotIn(old._get_address(), self.mod._actors)
+        self.assertIsNone(entry["group"].cleared_at)
+
+    def test_incomplete_native_list_cannot_resume_or_start_cooldown(self):
+        old, survivor = self.prepare_native_den(2)
+        self.mod._actors[old._get_address()] = (lambda: None, self.den._get_address())
+        self.den.SpawnedDenMembers = [survivor]
+        # Native count still reports two: one known pawn is insufficient.
+        self.world.TimeSeconds = 110
+        self.mod.poll_tick(None, None, None, None)
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertTrue(entry["suspended"])
+        self.native_kill(survivor, 120)
+        self.assertEqual(self.mod._counts["cleared_groups"], 0)
+        self.assertIsNone(entry["group"].cleared_at)
+
+    def test_forever_cooldown_survives_native_member_absence(self):
+        pawn, = self.prepare_native_den(1)
+        self.mod.respawn_delay.value = "Forever (until reload)"
+        self.native_kill(pawn, 110)
+        self.world.TimeSeconds = 10000
+        self.mod.poll_tick(None, None, None, None)
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertFalse(entry["suspended"])
+        self.assertTrue(entry["group"].blocked(10000, self.mod.respawn_delay.value))
+        self.assertEqual(self.den.SpawnData.NumTotalActors, 1)
+
+    def remove_without_dead_flag(self, pawn, when, returned=None, remove=True):
+        self.world.TimeSeconds = when
+        self.mod.record_death(pawn, None, returned, None)
+        if remove:
+            self.den.SpawnedDenMembers.remove(pawn)
+            self.den.SpawnData.NumActiveActors -= 1
+        self.mod.poll_tick(None, None, None, None)
+
+    def test_turret_death_callback_plus_native_removal_starts_cooldown(self):
+        self.den.SpawnData.PopulationDefName = "AutoTurret_Gatling"
+        first, second = self.prepare_native_den()
+        self.remove_without_dead_flag(first, 110)
+        self.assertEqual(self.mod._counts["cleared_groups"], 0)
+        self.remove_without_dead_flag(second, 120)
+        self.assertEqual(self.mod._counts["cleared_groups"], 1)
+        self.assertEqual(self.mod._counts["deaths_confirmed_by_native_removal"], 2)
+        self.assertEqual(self.den.SpawnData.NextSpawnTime, 180)
+        self.assertFalse(first.bIsDead)
+        self.assertFalse(second.bIsDead)
+        self.world.TimeSeconds = 180
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.mod._counts["rearmed_groups"], 1)
+
+    def test_death_evidence_survives_pawn_expiring_before_poll(self):
+        pawn, = self.prepare_native_den(1)
+        self.world.TimeSeconds = 110
+        self.mod.record_death(pawn, None, True, None)
+        self.mod._actors[pawn._get_address()] = (lambda: None, self.den._get_address())
+        self.den.SpawnedDenMembers = []
+        self.den.SpawnData.NumActiveActors = 0
+        self.world.TimeSeconds = 110.5
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.den.SpawnData.NextSpawnTime, 170)
+        self.assertEqual(self.mod._counts["cleared_groups"], 1)
+
+    def test_rejected_death_return_cannot_turn_disappearance_into_clear(self):
+        pawn, = self.prepare_native_den(1)
+        self.remove_without_dead_flag(pawn, 110, returned=False)
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertTrue(entry["suspended"])
+        self.assertEqual(self.mod._counts["cleared_groups"], 0)
+
+    def test_death_callback_with_still_living_native_member_is_not_a_kill(self):
+        pawn, = self.prepare_native_den(1)
+        self.remove_without_dead_flag(pawn, 110, remove=False)
+        self.world.TimeSeconds = 113
+        self.mod.poll_tick(None, None, None, None)
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertEqual(entry["death_evidence"], {})
+        self.den.SpawnedDenMembers = []
+        self.den.SpawnData.NumActiveActors = 0
+        self.world.TimeSeconds = 114
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.mod._counts["cleared_groups"], 0)
+        self.assertTrue(entry["suspended"])
+
+    def test_native_count_mismatch_does_not_confirm_candidate_death(self):
+        pawn, = self.prepare_native_den(1)
+        self.world.TimeSeconds = 110
+        self.mod.record_death(pawn, None, True, None)
+        self.den.SpawnedDenMembers = []
+        # Active count remains 1: no corroborating removal.
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.mod._counts["cleared_groups"], 0)
+
+    def test_late_confirmation_uses_last_kill_time_not_earlier_callback(self):
+        first, second = self.prepare_native_den()
+        self.world.TimeSeconds = 110
+        self.mod.record_death(first, None, None, None)
+        self.den.SpawnedDenMembers.remove(first)
+        self.den.SpawnData.NumActiveActors -= 1
+        self.world.TimeSeconds = 111
+        second.bIsDead = True
+        self.den.SpawnedDenMembers.remove(second)
+        self.den.SpawnData.NumActiveActors -= 1
+        self.mod.record_death(second, None, None, None)
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.den.SpawnData.NextSpawnTime, 171)
+
+    def test_forever_never_releases_native_quota(self):
+        pawn, = self.prepare_native_den(1)
+        self.mod.respawn_delay.value = "Forever (until reload)"
+        self.native_kill(pawn, 110)
+        self.world.TimeSeconds = 1_000_000_000
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.den.SpawnData.NumTotalActors, 1)
+        self.assertEqual(self.mod._counts["rearmed_groups"], 0)
+
+    def test_disable_restores_unconsumed_quota_but_preserves_new_native_spawns(self):
+        for spawned in (False, True):
+            with self.subTest(spawned=spawned):
+                self.setUp()
+                pawn, = self.prepare_native_den(1)
+                self.native_kill(pawn, 110)
+                self.world.TimeSeconds = 170
+                self.mod.poll_tick(None, None, None, None)
+                self.assertEqual(self.den.SpawnData.NumTotalActors, 0)
+                if spawned:
+                    self.den.SpawnData.NumTotalActors = 3
+                self.mod.on_disable()
+                self.assertEqual(self.den.SpawnData.NumTotalActors, 3 if spawned else 1)
+
+    def test_poll_is_throttled_by_game_time_and_rejects_clients(self):
+        self.prepare_native_den()
+        polls = self.mod._counts["den_polls"]
+        for i in range(10):
+            self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.mod._counts["den_polls"], polls)
+        self.world.TimeSeconds += 1
+        self.world.NetMode = 3
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.mod._counts["den_polls"], polls)
 
     def test_all_factory_and_death_observers_are_unconditional_post_hooks(self):
         for path, kind in self.mod.testing.registrations:
@@ -381,7 +972,7 @@ class RespawnTests(unittest.TestCase):
                 self.assertEqual(kind, "pre")
             else:
                 self.assertEqual(kind, "post-always")
-        self.assertEqual(len(self.mod.testing.registrations), 6)
+        self.assertEqual(len(self.mod.testing.registrations), 7)
 
 
 if __name__ == "__main__":

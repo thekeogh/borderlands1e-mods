@@ -1,0 +1,48 @@
+{
+  "source": "respawn-20261109-153814-498517.json",
+  "map": "Rust Commons West",
+  "records": [
+    {
+      "den": "Scrap_POI.TheWorld:PersistentLevel.PopulationOpportunityDen_2",
+      "definition": "BanditSquad_Mixture",
+      "location": "{X: -3518.51513671875, Y: -46481.69921875, Z: 3846.71630859375}",
+      "lost_at": 76.01341247558594,
+      "later_native_alive": 2
+    },
+    {
+      "den": "scrap_p.TheWorld:PersistentLevel.PopulationOpportunityDen_32",
+      "definition": "BanditSquad_Mixture",
+      "location": "{X: -32515.947265625, Y: -8450.04296875, Z: 2531.652587890625}",
+      "lost_at": 76.01341247558594,
+      "later_native_alive": 0
+    },
+    {
+      "den": "scrap_p.TheWorld:PersistentLevel.PopulationOpportunityDen_29",
+      "definition": "BanditSquad_Mixture",
+      "location": "{X: -33405.98046875, Y: -2537.69873046875, Z: 2738.0}",
+      "lost_at": 76.01341247558594,
+      "later_native_alive": 0
+    },
+    {
+      "den": "Scrap_POI.TheWorld:PersistentLevel.PopulationOpportunityDen_3",
+      "definition": "BanditSquad_Mixture",
+      "location": "{X: -19340.673828125, Y: 1342.6612548828125, Z: 1981.8447265625}",
+      "lost_at": 466.5558166503906,
+      "later_native_alive": 0
+    },
+    {
+      "den": "Scrap_POI.TheWorld:PersistentLevel.PopulationOpportunityDen_8",
+      "definition": "AutoTurret_Gatling",
+      "location": "{X: -19483.484375, Y: 387.60760498046875, Z: 1974.273681640625}",
+      "lost_at": 466.5558166503906,
+      "later_native_alive": 0
+    },
+    {
+      "den": "Scrap_POI.TheWorld:PersistentLevel.PopulationOpportunityDen_4",
+      "definition": "BanditSquad_Mixture",
+      "location": "{X: -19635.486328125, Y: -14257.20703125, Z: 2051.02294921875}",
+      "lost_at": 466.5558166503906,
+      "later_native_alive": 0
+    }
+  ]
+}

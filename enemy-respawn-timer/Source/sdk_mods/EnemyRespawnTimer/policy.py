@@ -3,14 +3,13 @@
 from dataclasses import dataclass, field
 
 DELAYS = {
-    "5 minutes": 300,
-    "15 minutes": 900,
+    "1 minute": 60,
     "30 minutes": 1800,
     "1 hour": 3600,
     "3 hours": 10800,
     "Forever (until reload)": None,
 }
-FOREVER_SECONDS = 99_999_999.0
+FOREVER_SECONDS = 999_999_999.0
 
 
 @dataclass

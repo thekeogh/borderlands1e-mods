@@ -1,18 +1,18 @@
-"""Delay repeat enemy populations without recreating actors or resetting quests.
+"""Track native den members and rearm cleared enemy groups after a cooldown.
 
-First Windows build: native field names are supported by Reset Enemies' BL1E
-source, while spawn/death correlation needs in-game verification. Every native
-spawn executes normally once; this mod never calls DoSpawning itself.
+BL1E does not dispatch observed native spawns through the DoSpawning hook.
+Membership polling uses weak references; native rules still perform spawning.
 """
 
 from __future__ import annotations
 
+from collections import Counter, deque
 from datetime import datetime, timezone
 from pathlib import Path
 import json
 import math
 
-from mods_base import ButtonOption, SpinnerOption, SETTINGS_DIR, build_mod, get_pc, hook
+from mods_base import ButtonOption, SpinnerOption, SETTINGS_DIR, build_mod, get_pc, hook, keybind
 import unrealsdk
 from unrealsdk import logging
 from unrealsdk.hooks import Block, Type, add_hook, remove_hook
@@ -24,12 +24,28 @@ _enabled = False
 _ready = False
 _world_ref = None
 _last_time = None
+_last_poll = None
 _spawn_path = None
 _stack = []
 _dens = {}
 _actors = {}
 _errors = []
-_counts = {"tracked_spawns": 0, "cleared_groups": 0, "blocked_attempts": 0}
+VERSION = "1.2.8"
+_counts = Counter()
+_skips = Counter()
+_events = deque(maxlen=200)
+
+
+def trace(kind, **details):
+    # Store primitive data only; diagnostics must not keep native actors alive.
+    _events.append({"event": kind, "game_time": _last_time, **details})
+
+
+def object_path(obj):
+    try:
+        return None if obj is None else obj._path_name()
+    except Exception as exc:
+        return f"<path unavailable: {exc}>"
 
 
 def error(exc):
@@ -42,18 +58,24 @@ def error(exc):
 def restore(entry):
     """Restore only our timestamp, never another mod's subsequent edit."""
     den = entry["ref"]()
-    written = entry["written"]
-    if den is None or written is None:
+    if den is None:
+        return
+    if entry["written"] is None and entry.get("original_total") is None:
         return
     data = den.SpawnData
-    if float(data.NextSpawnTime) == written:
+    if entry["written"] is not None and float(data.NextSpawnTime) == entry["written"]:
         data.NextSpawnTime = entry["original"]
-        den.SpawnData = data
+    original_total = entry.get("original_total")
+    if original_total is not None and int(data.NumTotalActors) == 0:
+        data.NumTotalActors = original_total
+    den.SpawnData = data
     entry["written"] = None
+    entry["original_total"] = None
 
 
 def reset_session():
-    global _world_ref, _last_time
+    global _world_ref, _last_time, _last_poll
+    trace("session_reset", dens=len(_dens), actors=len(_actors))
     for entry in _dens.values():
         try:
             restore(entry)
@@ -64,18 +86,22 @@ def reset_session():
     _stack.clear()
     _world_ref = None
     _last_time = None
+    _last_poll = None
 
 
 def host_clock():
     """Use game time; paused gameplay does not advance cooldowns."""
     global _world_ref, _last_time
     if not _enabled or not _ready:
+        _skips["disabled_or_not_ready"] += 1
         return None
     pc = get_pc()
     if pc is None or pc.Pawn is None:
+        _skips["no_player_pawn"] += 1
         return None
     world = pc.WorldInfo
     if world.NetMode == 3:
+        _skips["client_world"] += 1
         return None
     now = float(world.TimeSeconds)
     if not math.isfinite(now):
@@ -89,17 +115,50 @@ def host_clock():
     return world, now
 
 
-def valid_den(den, world):
-    # Aspected/one-shot opportunities can drive mission waves or scripted fights.
-    # Preserve their native behavior rather than stalling a quest.
-    if (str(den.Name).startswith("Default__") or den.bDeleteMe or den.bPendingDelete
-            or den.bNoRespawning or getattr(den, "Aspect", None) is not None):
+def passive_mission_gate(den, aspect):
+    """Accept all four-slot Enabled/Disabled tables while the native den is enabled.
+
+    Objective/item payloads and native no-respawn flags remain excluded.
+    """
+    try:
+        if aspect.Class._path_name() != "WillowGame.MissionPopulationAspect" or not den.IsEnabled:
+            return False
+        objective = aspect.MissionObjective
+        items = aspect.MissionItems
+        if (objective.MissionDefinition is not None or int(objective.ObjectiveIndex) != -1
+                or items.MissionDefinition is not None or items.MissionItemPool is not None):
+            return False
+        reactions = aspect.MissionReactions
+        states = tuple(int(state) for state in reactions.MissionStatusOpportunityReaction)
+        # User requested every combination, including configurations not yet seen.
+        # Captured enum values: Enabled=0, Disabled=1. Keep unknown layouts native.
+        return len(states) == 4 and all(state in (0, 1) for state in states)
+    except (AttributeError, TypeError, ValueError):
         return False
+
+
+def den_skip_reason(den, world):
+    # These exclusions preserve mission waves, NPCs and one-shot encounters.
+    for field in ("bDeleteMe", "bPendingDelete", "bNoRespawning"):
+        if getattr(den, field):
+            return field
+    if str(den.Name).startswith("Default__"):
+        return "default_object"
+    aspect = getattr(den, "Aspect", None)
+    if aspect is not None and not passive_mission_gate(den, aspect):
+        return "scripted_aspect"
     if den.WorldInfo._get_address() != world._get_address():
-        return False
+        return "different_world"
     data = den.SpawnData
-    return (str(data.PopulationDefName) not in ("", "None")
-            and int(data.MaxActiveActors) > 0)
+    if str(data.PopulationDefName) in ("", "None"):
+        return "no_population_definition"
+    if int(data.MaxActiveActors) <= 0:
+        return "no_active_actor_capacity"
+    return None
+
+
+def valid_den(den, world):
+    return den_skip_reason(den, world) is None
 
 
 def entry_for(den, world):
@@ -112,14 +171,20 @@ def entry_for(den, world):
             _actors.pop(actor, None)
         _dens.pop(address, None)
         entry = None
-    if not valid_den(den, world):
+    reason = den_skip_reason(den, world)
+    if reason is not None:
+        _skips[reason] += 1
+        if _skips[reason] <= 5:
+            trace("den_skipped", den=object_path(den), reason=reason)
         if entry is not None:
             restore(entry)
             entry["ignored"] = True
         return None
     if entry is None:
         entry = {"ref": WeakPointer(den), "definition": definition, "group": Group(),
-                 "original": None, "written": None, "ignored": False}
+                 "original": None, "written": None, "ignored": False,
+                 "released": False, "original_total": None, "suspended": False,
+                 "death_evidence": {}, "last_death_at": None}
         _dens[address] = entry
     return None if entry["ignored"] else entry
 
@@ -141,6 +206,7 @@ def set_deadline(entry, choice):
 def before_spawning(obj, _args, _ret, _func):
     # A placeholder is necessary even for blocked/skipped calls: the matching
     # unconditional post hook must unwind exactly one frame, including nesting.
+    _counts["den_spawn_calls"] += 1
     frame = {"ref": WeakPointer(obj), "entry": None}
     try:
         clock = host_clock()
@@ -152,6 +218,9 @@ def before_spawning(obj, _args, _ret, _func):
                 set_deadline(entry, respawn_delay.value)
                 if entry["group"].blocked(now, respawn_delay.value):
                     _counts["blocked_attempts"] += 1
+                    if _counts["blocked_attempts"] <= 10:
+                        trace("spawn_blocked", den=object_path(obj),
+                              deadline=entry["group"].deadline(respawn_delay.value))
                     _stack.append(frame)
                     return Block
     except Exception as exc:
@@ -172,33 +241,62 @@ def after_spawning(obj, _args, _ret, _func):
 
 
 def record_spawn(obj, _args, pawn, _func):
-    if not _enabled or not _ready or pawn is None or not _stack:
+    _counts["factory_callbacks"] += 1
+    if not _enabled or not _ready:
+        return
+    if pawn is None:
+        _skips["factory_returned_none"] += 1
+        return
+    if not _stack:
+        _skips["factory_outside_den"] += 1
+        if _skips["factory_outside_den"] <= 10:
+            trace("uncorrelated_spawn", factory=object_path(obj), pawn=object_path(pawn))
         return
     entry = _stack[-1]["entry"]
     if entry is None or entry["ignored"]:
+        _skips["factory_without_eligible_den"] += 1
+        return
+    track_spawn(entry, pawn, getattr(obj, "SpawnAllegiance", None))
+
+
+def track_spawn(entry, pawn, allegiance=None):
+    if entry["ignored"]:
         return
     try:
-        allegiance = getattr(obj, "SpawnAllegiance", None) or getattr(pawn, "Allegiance", None)
-        path = allegiance._path_name().lower() if allegiance is not None else ""
+        allegiance = allegiance or getattr(pawn, "Allegiance", None)
+        path = allegiance._path_name().lower().replace(":", ".") if allegiance is not None else ""
+        # Windows bandit captures use gd_allegiance.HumanoidEnemy.BanditAllegiance.
+        # Keep exact namespace segments; a broad "enemy" substring is unsafe.
         enemy = (not any(word in path for word in ("friendly", "player", "neutral"))
-                 and any(word in path for word in (".creatureenemy.", ".humanenemy.", ".enemy.", ".enemies.")))
+                 and any(word in path for word in (
+                     ".creatureenemy.", ".humanoidenemy.", ".humanenemy.", ".enemy.", ".enemies.")))
         if not enemy:
             # Mixed NPC/enemy dens and unknown allegiances stay native.
             restore(entry)
             entry["ignored"] = True
+            entry["ignore_reason"] = "unknown_or_non_enemy_allegiance"
+            _skips["unknown_or_non_enemy_allegiance"] += 1
+            trace("allegiance_skipped", pawn=object_path(pawn), allegiance=path)
             return
         den = entry["ref"]()
         if den is None:
             return
         address = pawn._get_address()
+        if address in entry["group"].members:
+            return
         if entry["group"].cleared_at is not None:
             # A new native generation now owns its scheduling. Capture a fresh
             # native timestamp if/when this generation is subsequently cleared.
             entry["original"] = None
             entry["written"] = None
+            entry["original_total"] = None
+            entry["released"] = False
+        if not entry["group"].members:
+            entry["last_death_at"] = None
         entry["group"].spawned(address)
         _actors[address] = (WeakPointer(pawn), den._get_address())
         _counts["tracked_spawns"] += 1
+        trace("spawn_tracked", den=object_path(den), pawn=object_path(pawn), allegiance=path)
     except Exception as exc:
         entry["ignored"] = True
         try:
@@ -209,22 +307,171 @@ def record_spawn(obj, _args, pawn, _func):
 
 
 def record_death(obj, _args, _ret, _func):
+    _counts["death_callbacks"] += 1
+    process_death(obj, native_callback=True, returned=_ret)
+
+
+def process_death(obj, native_callback=False, returned=None):
     try:
         clock = host_clock()
-        if clock is None or not obj.bIsDead:
+        if clock is None:
             return
         address = obj._get_address()
-        actor = _actors.pop(address, None)
+        actor = _actors.get(address)
+        if not obj.bIsDead:
+            _skips["death_callback_not_dead"] += 1
+            if native_callback and actor is not None:
+                entry = _dens.get(actor[1])
+                if entry is not None and not entry["ignored"]:
+                    trace("death_callback_without_dead_flag", **den_context(entry["ref"]()),
+                          pawn=object_path(obj), returned=str(returned))
+                    # An explicit rejected Died return is not death evidence.
+                    if returned is not False:
+                        entry["death_evidence"][address] = {
+                            "time": clock[1], "pawn": object_path(obj), "returned": str(returned)}
+            return
         if actor is None or actor[0]() is None:
+            _skips["death_not_tracked"] += 1
             return
         entry = _dens.get(actor[1])
         if entry is None or entry["ignored"]:
             return
-        if entry["group"].died(address, clock[1]):
-            den = entry["ref"]()
-            if den is not None and valid_den(den, clock[0]):
+        trace("death_tracked", pawn=object_path(obj))
+        finish_death(address, entry, clock[0], clock[1])
+    except Exception as exc:
+        error(exc)
+
+
+def finish_death(address, entry, world, when):
+    """Called only for a dead flag or a recent native death plus den removal."""
+    _actors.pop(address, None)
+    entry["death_evidence"].pop(address, None)
+    previous = entry["last_death_at"]
+    entry["last_death_at"] = when if previous is None else max(when, previous)
+    if entry["group"].died(address, entry["last_death_at"]):
+        if entry["suspended"]:
+            entry["group"].cleared_at = None
+            return
+        den = entry["ref"]()
+        if den is not None and any(not member.bIsDead for member in getattr(den, "SpawnedDenMembers", ())):
+            entry["group"].cleared_at = None
+            return
+        if den is not None and valid_den(den, world):
+            entry["released"] = False
+            set_deadline(entry, respawn_delay.value)
+            _counts["cleared_groups"] += 1
+            trace("group_cleared", den=object_path(den),
+                  deadline=entry["group"].deadline(respawn_delay.value), written=entry["written"])
+
+
+def den_context(den):
+    """Primitive location metadata makes future lifecycle issues reproducible."""
+    return {"den": object_path(den), "definition": str(den.SpawnData.PopulationDefName),
+            "location": str(getattr(den, "Location", None))}
+
+
+def poll_dens(world, now):
+    """Read native membership; DoSpawning is not dispatched through our hook on BL1E."""
+    _counts["den_polls"] += 1
+    for den in unrealsdk.find_all("PopulationOpportunityDen"):
+        try:
+            if str(den.Name).startswith("Default__"):
+                continue
+            entry = entry_for(den, world)
+            if entry is None:
+                continue
+            native_members = list(den.SpawnedDenMembers)
+            # Register all living members before processing any missed deaths.
+            for pawn in native_members:
+                if not pawn.bIsDead:
+                    track_spawn(entry, pawn)
+            if entry["ignored"]:
+                continue
+            native_addresses = {pawn._get_address() for pawn in native_members}
+            live_addresses = {pawn._get_address() for pawn in native_members if not pawn.bIsDead}
+            # Death callbacks can arrive while the turret's dead flag stays false.
+            # Confirm only after native membership and active count also agree.
+            for address, evidence in sorted(list(entry["death_evidence"].items()),
+                                            key=lambda pair: pair[1]["time"]):
+                age = now - evidence["time"]
+                if age > 2.0 or age < 0:
+                    entry["death_evidence"].pop(address, None)
+                    trace("death_evidence_expired", **den_context(den), pawn=evidence["pawn"])
+                elif (address not in native_addresses
+                      and int(den.SpawnData.NumActiveActors) == len(live_addresses)):
+                    trace("death_confirmed_by_native_removal", **den_context(den),
+                          pawn=evidence["pawn"], death_time=evidence["time"])
+                    _counts["deaths_confirmed_by_native_removal"] += 1
+                    finish_death(address, entry, world, evidence["time"])
+            missing = []
+            dead = []
+            for address in list(entry["group"].members):
+                actor = _actors.get(address)
+                pawn = actor[0]() if actor is not None else None
+                if pawn is not None and pawn.bIsDead:
+                    dead.append(pawn)
+                elif pawn is None or address not in live_addresses:
+                    # Native membership can change without a Died callback.
+                    # Discard obsolete members without counting them as kills.
+                    _actors.pop(address, None)
+                    entry["group"].members.discard(address)
+                    missing.append(address)
+            if missing:
+                entry["suspended"] = True
+                _counts["lost_members"] += len(missing)
+                trace("tracking_suspended", **den_context(den), missing_count=len(missing),
+                      native_alive=int(den.SpawnData.NumActiveActors))
+            if (entry["suspended"] and live_addresses
+                    and int(den.SpawnData.NumActiveActors) == len(live_addresses)):
+                # A complete native living list is a new reliable baseline.
+                entry["suspended"] = False
+                _counts["recovered_groups"] += 1
+                trace("tracking_recovered", **den_context(den), native_alive=len(live_addresses))
+            for pawn in dead:
+                _counts["polled_deaths"] += 1
+                process_death(pawn)
+            if entry["suspended"]:
+                continue
+            if entry["ignored"] or entry["group"].cleared_at is None:
+                continue
+            if entry["group"].blocked(now, respawn_delay.value):
                 set_deadline(entry, respawn_delay.value)
-                _counts["cleared_groups"] += 1
+            elif not entry["released"]:
+                # Logs show NumTotalActors == MaxTotalActors after the clear.
+                # Expiring NextSpawnTime alone cannot make that den eligible.
+                if int(den.SpawnData.NumActiveActors) != 0 or any(not p.bIsDead for p in native_members):
+                    continue
+                data = den.SpawnData
+                entry["original_total"] = int(data.NumTotalActors)
+                data.NumTotalActors = 0
+                data.NextSpawnTime = 0.0
+                den.SpawnData = data
+                entry["written"] = float(den.SpawnData.NextSpawnTime)
+                entry["released"] = True
+                _counts["rearmed_groups"] += 1
+                trace("group_rearmed", den=object_path(den), original_total=entry["original_total"])
+        except Exception as exc:
+            error(exc)
+    # Drop expired native references after streamed-out dens disappear.
+    for address, entry in list(_dens.items()):
+        if entry["ref"]() is None:
+            for actor in entry["group"].members:
+                _actors.pop(actor, None)
+            _dens.pop(address, None)
+
+
+@hook("Engine.GameViewportClient:PostRender", Type.POST_UNCONDITIONAL)
+def poll_tick(_obj, _args, _ret, _func):
+    global _last_poll
+    try:
+        clock = host_clock()
+        if clock is None:
+            return
+        world, now = clock
+        if _last_poll is not None and now - _last_poll < 0.5:
+            return
+        _last_poll = now
+        poll_dens(world, now)
     except Exception as exc:
         error(exc)
 
@@ -234,6 +481,9 @@ def change_delay(_option, value):
         if host_clock() is None:
             return
         for entry in _dens.values():
+            if entry["released"]:
+                restore(entry)
+                entry["released"] = False
             set_deadline(entry, value)
         logging.info(f"[Enemy Respawn Timer] Delay: {value}.")
     except Exception as exc:
@@ -241,12 +491,21 @@ def change_delay(_option, value):
 
 
 respawn_delay = SpinnerOption(
-    "Respawn Delay", "15 minutes", list(DELAYS),
-    description=("Wait after the last enemy in a tracked group dies: 5/15/30 minutes, "
+    "Respawn Delay", "30 minutes", list(DELAYS),
+    description=("Wait after the last enemy in a tracked group dies: 1/30 minutes, "
                  "1/3 hours, or Forever until map reload. Uses gameplay time. "
                  "Native proximity/mission rules still decide whether a group can spawn."),
     on_change_while_enabled=change_delay,
 )
+
+
+def spawn_hook_path(function):
+    # SDK paths may already use ':' before the function. Splitting only on '.'
+    # turned WillowGame.PopulationOpportunityDen:DoSpawning into the invalid
+    # WillowGame:PopulationOpportunityDen:DoSpawning seen in the Windows logs.
+    path = function._path_name().replace(":", ".")
+    owner, _, name = path.rpartition(".")
+    return owner + ":" + name
 
 
 def resolve_spawn_function():
@@ -259,14 +518,11 @@ def resolve_spawn_function():
             # The SDK raises for missing objects; try the next declaring class.
             continue
         if function is not None:
-            path = function._path_name()
-            owner, _, name = path.rpartition(".")
-            return owner + ":" + name
+            return spawn_hook_path(function)
     for function in unrealsdk.find_all("Function"):
-        path = function._path_name()
-        if path.endswith(".PopulationOpportunityDen.DoSpawning"):
-            owner, _, name = path.rpartition(".")
-            return owner + ":" + name
+        path = spawn_hook_path(function)
+        if path.endswith(".PopulationOpportunityDen:DoSpawning"):
+            return path
     raise RuntimeError("Native PopulationOpportunityDen.DoSpawning not found; export diagnostics")
 
 
@@ -274,8 +530,14 @@ def on_enable():
     global _enabled, _ready, _spawn_path
     reset_session()
     _errors.clear()
-    for key in _counts:
-        _counts[key] = 0
+    _counts.clear()
+    _counts.update(tracked_spawns=0, cleared_groups=0, blocked_attempts=0,
+                   den_spawn_calls=0, factory_callbacks=0, death_callbacks=0)
+    _skips.clear()
+    _events.clear()
+    # Old releases offered 5/15 minutes; fall back if saved settings retain them.
+    if respawn_delay.value not in DELAYS:
+        respawn_delay.value = "30 minutes"
     _enabled = True
     _ready = False
     try:
@@ -291,6 +553,8 @@ def on_enable():
             remove_hook(_spawn_path, Type.PRE, "EnemyRespawnTimer.Pre")
             remove_hook(_spawn_path, Type.POST_UNCONDITIONAL, "EnemyRespawnTimer.Post")
         error(exc)
+        # Membership polling is independent of this optional spawn observer.
+        _ready = True
 
 
 def on_disable():
@@ -311,46 +575,128 @@ def map_change(_obj, _args, _ret, _func):
 
 def snapshot():
     pc = get_pc()
-    result = {"version": "1.0.0", "enabled": _enabled, "ready": _ready,
+    result = {"version": VERSION, "captured_utc": datetime.now(timezone.utc).isoformat(), "enabled": _enabled, "ready": _ready,
               "delay": respawn_delay.value, "spawn_hook": _spawn_path,
-              "counts": dict(_counts), "errors": list(_errors), "dens": []}
-    if pc is not None:
-        result["game_time"] = float(pc.WorldInfo.TimeSeconds)
-        result["net_mode"] = int(pc.WorldInfo.NetMode)
+              "tracking_mode": "native_den_members", "last_poll": _last_poll,
+              "counts": dict(_counts), "skip_counts": dict(_skips),
+              "recent_events": list(_events), "stack_depth": len(_stack),
+              "errors": list(_errors), "dens": []}
+    try:
+        if pc is not None:
+            result["game_time"] = float(pc.WorldInfo.TimeSeconds)
+            result["net_mode"] = int(pc.WorldInfo.NetMode)
+            result["world"] = object_path(pc.WorldInfo)
+            result["player_pawn"] = object_path(pc.Pawn)
+    except Exception as exc:
+        result.setdefault("read_errors", []).append(str(exc))
     for entry in _dens.values():
         den = entry["ref"]()
         if den is None:
             continue
         try:
             result["dens"].append({"den": den._path_name(), "definition": entry["definition"],
-                                   "ignored": entry["ignored"], "alive_tracked": len(entry["group"].members),
+                                   "ignored": entry["ignored"], "ignore_reason": entry.get("ignore_reason"),
+                                   "released": entry["released"], "tracking_suspended": entry["suspended"],
+                                   "pending_death_evidence": list(entry["death_evidence"].values()),
+                                   "alive_tracked": len(entry["group"].members),
+                                   "actors": [actor_snapshot(address) for address in entry["group"].members],
+                                   "original_next_spawn": entry["original"],
+                                   "written_next_spawn": entry["written"],
                                    "cleared_at": entry["group"].cleared_at,
                                    "deadline": entry["group"].deadline(respawn_delay.value),
                                    "native_next_spawn": float(den.SpawnData.NextSpawnTime)})
         except Exception as exc:
             result.setdefault("read_errors", []).append(str(exc))
-    # Explicit user export only: read class schemas to resolve BL1E differences.
-    result["schemas"] = {}
-    for name in ("PopulationOpportunityDen", "WillowPopulationMaster", "PopulationFactoryBalancedAIPawn"):
+    # Explicit read-only inventory also works when no spawn context was observed.
+    result["native_dens"] = []
+    try:
+        for den in unrealsdk.find_all("PopulationOpportunityDen"):
+            if len(result["native_dens"]) >= 300:
+                result["native_dens_truncated"] = True
+                break
+            if str(den.Name).startswith("Default__"):
+                continue
+            row = {"den": object_path(den)}
+            result["native_dens"].append(row)
+            try:
+                row["tracked"] = den._get_address() in _dens
+                row["fields"] = read_fields(den, (
+                    "bNoRespawning", "bDeleteMe", "bPendingDelete", "Aspect",
+                    "MaxTotalActors", "RespawnDelay", "RespawnDelayAfterDeath",
+                    "DenSpawningState", "IsEnabled", "Location", "SpawnedDenMembers"))
+                row["spawn_data"] = read_fields(den.SpawnData, (
+                    "PopulationDefName", "NextSpawnTime", "MaxActiveActors", "NumActiveActors",
+                    "NumTotalActors"))
+                row["aspect"] = aspect_snapshot(getattr(den, "Aspect", None))
+                row["skip_reason"] = den_skip_reason(den, pc.WorldInfo) if pc else "no_player"
+            except Exception as exc:
+                row["error"] = str(exc)
+    except Exception as exc:
+        result.setdefault("read_errors", []).append(str(exc))
+    result["observer_hooks"] = {}
+    for index, observer in enumerate([map_change, poll_tick, *spawn_hooks, *death_hooks]):
         try:
-            cls = unrealsdk.find_class(name)
-            if cls is not None:
-                result["schemas"][name] = {"path": cls._path_name(), "fields": [str(prop.Name) for prop in cls._properties()]}
+            result["observer_hooks"][f"{index}:{observer.hook_identifier}"] = observer.get_active_count()
         except Exception as exc:
             result.setdefault("read_errors", []).append(str(exc))
     return result
 
 
+def aspect_snapshot(aspect):
+    """Read metadata only: an attached aspect does not establish quest status."""
+    if aspect is None:
+        return None
+    result = {"object": object_path(aspect)}
+    try:
+        cls = aspect.Class
+        result["class"] = object_path(cls)
+        # Keep useful mission conditions; omit exploratory UObject/memory dumps.
+        result["fields"] = read_fields(aspect, (
+            "MissionReactions", "MissionItems", "MissionObjective"))
+    except Exception as exc:
+        result["read_error"] = str(exc)
+    return result
+
+
+def actor_snapshot(address):
+    actor = _actors.get(address)
+    pawn = actor[0]() if actor is not None else None
+    if pawn is None:
+        return {"address": address, "valid": False}
+    return {"pawn": object_path(pawn), "valid": True,
+            "fields": read_fields(pawn, ("bIsDead", "bDeleteMe", "bPendingDelete"))}
+
+
+def read_fields(obj, names):
+    result = {}
+    for name in names:
+        try:
+            value = getattr(obj, name)
+            result[name] = value if value is None or isinstance(value, (str, int, float, bool)) else str(value)
+        except Exception as exc:
+            result[name] = {"read_error": str(exc)}
+    return result
+
+
 def export_diagnostics(_option=None):
+    logging.info("[Enemy Respawn Timer] Diagnostics requested.")
     try:
         folder = SETTINGS_DIR / "EnemyRespawnTimer"
         folder.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S-%f")
         path = folder / f"respawn-{stamp}.json"
-        path.write_text(json.dumps(snapshot(), indent=2, allow_nan=False))
+        path.write_text(json.dumps(snapshot(), indent=2, allow_nan=False), encoding="utf-8")
         logging.info(f"[Enemy Respawn Timer] Exported to {path}")
+        return path
     except Exception as exc:
         error(exc)
+        logging.error(f"[Enemy Respawn Timer] Diagnostics export failed: {exc}")
+        return None
+
+
+@keybind("Export respawn diagnostics", "F8")
+def export_key():
+    export_diagnostics()
 
 
 def post_hook(path, callback):
@@ -369,7 +715,8 @@ death_hooks = [post_hook(path, record_death) for path in (
 build_mod(
     options=[respawn_delay, ButtonOption("Export respawn diagnostics", on_press=export_diagnostics,
                                         description="Write current timers, counters and native fields to SDK settings.")],
-    hooks=[map_change, *spawn_hooks, *death_hooks],
+    hooks=[map_change, poll_tick, *spawn_hooks, *death_hooks],
+    keybinds=[export_key],
     settings_file=Path(SETTINGS_DIR) / "EnemyRespawnTimer.json",
     on_enable=on_enable,
     on_disable=on_disable,
