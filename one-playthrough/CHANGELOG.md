@@ -1,5 +1,16 @@
 # One Playthrough changelog
 
+## 4.6.2 — 2026-11-09
+
+- Retune Very Hard ordinary spawns to +3 42%, +4 55%, +5 3%; remove its +2 roll.
+  Preserve the higher-of-player/area base and naturally higher native levels.
+- Keep Easy/Normal/Hard, named/boss rules, player-level loot floor and mission
+  scaling unchanged. Existing spawned enemies retain their levels.
+- Synchronize option help, F10 weights and the full difficulty table.
+- Validation: 252 local tests pass, including all 100 tickets per difficulty,
+  exact +3/+4/+5 boundaries, player/area floors, higher native levels and saved
+  difficulty selection. Native Windows behavior requires in-game testing.
+
 ## 4.6.1 — 2026-11-07
 
 - Raise the optional equipment loot minimum from player level minus two to the

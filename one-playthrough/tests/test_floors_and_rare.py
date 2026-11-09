@@ -177,7 +177,7 @@ class Rare(unittest.TestCase):
             "Easy": {21: 90, 22: 9, 23: 1},
             "Normal": {21: 70, 22: 25, 23: 5},
             "Hard": {21: 25, 22: 55, 23: 20},
-            "Very Hard": {22: 10, 23: 40, 24: 45, 25: 5},
+            "Very Hard": {23: 42, 24: 55, 25: 3},
         }
         for difficulty, counts in expected.items():
             with self.subTest(difficulty=difficulty):
@@ -188,16 +188,16 @@ class Rare(unittest.TestCase):
                 self.assertEqual(report["difficulty"], difficulty)
                 self.assertEqual(sum(report["ordinary_tickets"].values()), 100)
 
-    def test_very_hard_player_36_rolls_38_through_41_at_agreed_percentages(self):
+    def test_very_hard_player_36_rolls_39_through_41_at_agreed_percentages(self):
         self.h.enable(36)
         self.h.mod.enemy_difficulty.value = 'Very Hard'
         levels = [self.spawn(ticket).level for ticket in range(100)]
         self.assertEqual({level:levels.count(level) for level in set(levels)},
-                         {38:10,39:40,40:45,41:5})
+                         {39:42,40:55,41:3})
 
     def test_every_preset_keeps_max_player_vanilla_area_as_spawn_base(self):
         policies = {"Easy": (70, 20, 9, 1), "Normal": (50, 20, 25, 5),
-                    "Hard": (20, 5, 55, 20), "Very Hard": (0, 0, 10, 40, 45, 5)}
+                    "Hard": (20, 5, 55, 20), "Very Hard": (0, 0, 0, 42, 55, 3)}
         for difficulty, weights in policies.items():
             self.h.mod.enemy_difficulty.value = difficulty
             for player, area in ((8, 30), (40, 12)):
@@ -233,10 +233,10 @@ class Rare(unittest.TestCase):
     def test_very_hard_reports_plus_five_and_keeps_rare_spawn_above_player_cap(self):
         self.h.mod.enemy_difficulty.value = "Very Hard"
         self.assertEqual(self.h.runtime.spawns.snapshot()["ordinary_tickets"],
-                         {"native": 0, "+1": 0, "+2": 10, "+3": 40, "+4": 45, "+5": 5})
+                         {"native": 0, "+1": 0, "+2": 0, "+3": 42, "+4": 55, "+5": 3})
         self.h.enable(69)
         self.args.GameStage = 69
-        for ticket, level in ((0, 71), (9, 71), (10, 72), (49, 72), (50, 73), (94, 73), (95, 74), (99, 74)):
+        for ticket, level in ((0, 72), (41, 72), (42, 73), (96, 73), (97, 74), (99, 74)):
             self.assertEqual(self.spawn(ticket).level, level)
 
     def test_invalid_difficulty_falls_back_to_normal(self):
@@ -260,7 +260,7 @@ class Rare(unittest.TestCase):
                     self.args.GameStage = player
                     self.definition.DefaultExpLevel = aid(player)
                     self.definition.Grades[0].GradeModifiers.ExpLevel = 0
-                    extra = 2 if difficulty == "Very Hard" else 0
+                    extra = 3 if difficulty == "Very Hard" else 0
                     self.assertEqual(self.spawn(0).level, player + (extra or 1))
                     self.assertEqual(self.calls[-1][4], player + extra)
 

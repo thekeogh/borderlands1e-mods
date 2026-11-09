@@ -17,8 +17,8 @@ its remaining rewards. Existing unpaid missions adopt this automatically.
 Choose Easy, Normal (default), Hard or Very Hard for ordinary enemies. Each keeps native
 variety and the higher of your level and the vanilla area level, with different
 chances of tougher spawns. New ordinary enemies spawn at least one level above you;
-Easy/Normal/Hard extra rolls stop at +3; Very Hard rolls +2/+3/+4/+5 at
-10%/40%/45%/5%, retaining naturally higher levels. The choice is saved
+Easy/Normal/Hard extra rolls stop at +3; Very Hard rolls +3/+4/+5 at
+42%/55%/3%, retaining naturally higher levels. The choice is saved
 and affects new spawns only.
 Named enemies and bosses keep their existing scaling and receive no extra roll.
 The optional loot level floor targets new world drops, containers and vendor
