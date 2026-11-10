@@ -1,0 +1,94 @@
+{
+  "note": "Captured 2.0.0 failure: live native evaluator without context produced bonus 1; UI changed native 40 to 41. Resolver operands captured from these exports; enum values also validated against bl1e_levels.json.",
+  "definition": {
+    "object": "gd_weap_repeater_pistol.A_Weapon.WeaponType_repeater_pistol",
+    "constant": 1.0,
+    "scale": 1.0,
+    "attribute": "gd_Balance.LevelLimits.Proficiency_Pistol_LevelBonus",
+    "initialization": null,
+    "uses_player_level_requirement": true,
+    "context_class": null,
+    "simple": true,
+    "contexts": [
+      "NoContextNeededAttributeContextResolver"
+    ],
+    "resolvers": [
+      {
+        "class": "SimpleMathValueResolver",
+        "object": "gd_Balance.LevelLimits.Proficiency_Pistol_LevelBonus:SimpleMathValueResolver_0",
+        "Arg1Attribute": {
+          "constant": 0.0,
+          "scale": 0.25,
+          "attribute": "gd_skills_common.SkillGrades.SkillGrade_WeapProficiency_Pistol",
+          "initialization": null
+        },
+        "Argument": {
+          "constant": 2.0,
+          "scale": 1.0,
+          "attribute": null,
+          "initialization": null
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "source": "logs/weapon-levels-20261110-144037-146361.json",
+      "weapon": {
+        "object": "Loader.TheWorld:PersistentLevel.WillowWeapon_29",
+        "equipped": true,
+        "current_weapon": false,
+        "internal_level": 42,
+        "name": "HRD4.2 Static Repeater",
+        "native_level_with_controller": 40,
+        "ordinary_required_level": 41,
+        "can_be_used_by_player": true,
+        "native_level_requirement_check": [
+          true,
+          40
+        ],
+        "definition": "gd_weap_repeater_pistol.A_Weapon.WeaponType_repeater_pistol"
+      },
+      "card": {
+        "movie": "Transient.StatusMenuExGFxMovie_1",
+        "card": "topLevel_mc.card1",
+        "weapon": "Loader.TheWorld:PersistentLevel.WillowWeapon_29",
+        "internal_level": 42,
+        "ordinary_required_level": 41,
+        "field_name": "requirement",
+        "before": "LEVEL REQUIREMENT: 40",
+        "result": "text_writes",
+        "after": "LEVEL REQUIREMENT: 41"
+      }
+    },
+    {
+      "source": "logs/weapon-levels-20261110-144052-320978.json",
+      "weapon": {
+        "object": "Loader.TheWorld:PersistentLevel.WillowWeapon_30",
+        "equipped": false,
+        "current_weapon": false,
+        "internal_level": 42,
+        "name": "HRD4.2 Static Repeater",
+        "native_level_with_controller": 40,
+        "ordinary_required_level": 41,
+        "can_be_used_by_player": true,
+        "native_level_requirement_check": [
+          true,
+          40
+        ],
+        "definition": "gd_weap_repeater_pistol.A_Weapon.WeaponType_repeater_pistol"
+      },
+      "card": {
+        "movie": "Transient.StatusMenuExGFxMovie_2",
+        "card": "topLevel_mc.card1",
+        "weapon": "Loader.TheWorld:PersistentLevel.WillowWeapon_30",
+        "internal_level": 42,
+        "ordinary_required_level": 41,
+        "field_name": "requirement",
+        "before": "LEVEL REQUIREMENT: 40",
+        "result": "text_writes",
+        "after": "LEVEL REQUIREMENT: 41"
+      }
+    }
+  ]
+}

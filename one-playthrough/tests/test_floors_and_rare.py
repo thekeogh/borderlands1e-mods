@@ -177,7 +177,7 @@ class Rare(unittest.TestCase):
             "Easy": {21: 90, 22: 9, 23: 1},
             "Normal": {21: 70, 22: 25, 23: 5},
             "Hard": {21: 25, 22: 55, 23: 20},
-            "Very Hard": {23: 42, 24: 55, 25: 3},
+            "Very Hard": {23: 40, 24: 55, 25: 5},
         }
         for difficulty, counts in expected.items():
             with self.subTest(difficulty=difficulty):
@@ -193,11 +193,11 @@ class Rare(unittest.TestCase):
         self.h.mod.enemy_difficulty.value = 'Very Hard'
         levels = [self.spawn(ticket).level for ticket in range(100)]
         self.assertEqual({level:levels.count(level) for level in set(levels)},
-                         {39:42,40:55,41:3})
+                         {39:40,40:55,41:5})
 
     def test_every_preset_keeps_max_player_vanilla_area_as_spawn_base(self):
         policies = {"Easy": (70, 20, 9, 1), "Normal": (50, 20, 25, 5),
-                    "Hard": (20, 5, 55, 20), "Very Hard": (0, 0, 0, 42, 55, 3)}
+                    "Hard": (20, 5, 55, 20), "Very Hard": (0, 0, 0, 40, 55, 5)}
         for difficulty, weights in policies.items():
             self.h.mod.enemy_difficulty.value = difficulty
             for player, area in ((8, 30), (40, 12)):
@@ -233,10 +233,10 @@ class Rare(unittest.TestCase):
     def test_very_hard_reports_plus_five_and_keeps_rare_spawn_above_player_cap(self):
         self.h.mod.enemy_difficulty.value = "Very Hard"
         self.assertEqual(self.h.runtime.spawns.snapshot()["ordinary_tickets"],
-                         {"native": 0, "+1": 0, "+2": 0, "+3": 42, "+4": 55, "+5": 3})
+                         {"native": 0, "+1": 0, "+2": 0, "+3": 40, "+4": 55, "+5": 5})
         self.h.enable(69)
         self.args.GameStage = 69
-        for ticket, level in ((0, 72), (41, 72), (42, 73), (96, 73), (97, 74), (99, 74)):
+        for ticket, level in ((0, 72), (39, 72), (40, 73), (94, 73), (95, 74), (99, 74)):
             self.assertEqual(self.spawn(ticket).level, level)
 
     def test_invalid_difficulty_falls_back_to_normal(self):
@@ -264,14 +264,15 @@ class Rare(unittest.TestCase):
                     self.assertEqual(self.spawn(0).level, player + (extra or 1))
                     self.assertEqual(self.calls[-1][4], player + extra)
 
-    def test_named_enemy_equal_player_keeps_existing_player_floor(self):
+    def test_named_enemy_equal_player_gets_plus_three_floor(self):
         self.definition.path = "gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Bonehead"
         self.definition.DefaultExpLevel = aid(20)
         self.definition.Grades[0].GradeModifiers.ExpLevel = 20
         self.h.runtime.spawns.roll = lambda: self.fail("named enemy must not roll")
         stage, clone = self.h.runtime.spawns.plan(self.factory,20,20)
         self.assertEqual(stage,20)
-        self.assertIsNone(clone)
+        self.assertEqual(clone.DefaultExpLevel.BaseValueConstant,23)
+        self.assertTrue(all(g.GradeModifiers.ExpLevel == 23 for g in clone.Grades))
 
     def test_native_floor_preserves_area_stage_and_native_grade_selection_bands(self):
         self.h.enable(20)
@@ -345,11 +346,11 @@ class Rare(unittest.TestCase):
         self.definition.Grades[0].GradeModifiers.ExpLevel = 3
         self.assertEqual([self.spawn(t).level for t in (0, 50, 70, 95, 99)], [21, 21, 22, 23, 23])
 
-    def test_named_low_fixed_grade_floors_to_player_while_native_higher_grades_survive(self):
+    def test_named_floor_raises_low_fixed_grade_and_preserves_higher_grade(self):
         self.definition.path = "gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Bonehead"
         self.definition.DefaultExpLevel.BaseValueAttribute = Object("gd_Balance.EnemyLevel.EnemyLevel_GameStage_plus2")
         self.definition.Grades[0].GradeModifiers.ExpLevel = 12
-        self.assertEqual(self.spawn(99).level, 20)
+        self.assertEqual(self.spawn(99).level, 23)
         self.definition.Grades[0].GradeModifiers.ExpLevel = 25
         self.assertEqual(self.spawn(99).level, 25)
 
@@ -388,13 +389,118 @@ class Rare(unittest.TestCase):
                 self.assertEqual(stage, 30)
                 self.assertIsNone(clone)
 
-    def test_low_native_named_enemy_gets_player_floor_not_fixed_level(self):
+    def test_named_plus_three_floor_tracks_player_without_lowering_native_level(self):
         self.definition.path = "gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Bonehead"
         self.definition.DefaultExpLevel = aid(12)
-        self.assertEqual(self.spawn(99).level, 20)
+        self.assertEqual(self.spawn(99).level, 23)
         self.h.enable(8)
         self.args.GameStage = 8
         self.assertEqual(self.spawn(99).level, 12)
+
+    def test_bone_head_native_ten_or_twelve_stays_higher_than_level_five_floor(self):
+        self.definition.path = 'gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Bonehead'
+        self.h.enable(5)
+        self.args.GameStage = 5
+        for native,expected in ((10,10),(12,12),(6,8)):
+            self.definition.DefaultExpLevel = aid(native)
+            self.definition.Grades[0].GradeModifiers.ExpLevel = native
+            self.assertEqual(self.spawn().level,expected)
+        self.h.enable(12)
+        self.args.GameStage = 12
+        self.assertEqual(self.spawn().level,15)
+
+    def test_unknown_named_level_formula_is_preserved_and_reported(self):
+        self.definition.path = 'Custom_Enemies.Boss.NewGuy'
+        dynamic = Object('Custom.DynamicLevel')
+        self.definition.DefaultExpLevel.InitializationDefinition = dynamic
+        self.h.runtime.spawns.roll = lambda:self.fail('Named enemy used RNG')
+        stage,clone = self.h.runtime.spawns.plan(self.factory,20,20)
+        self.assertEqual(stage,20)
+        self.assertIsNone(clone)
+        self.assertIs(self.definition.DefaultExpLevel.InitializationDefinition,dynamic)
+        self.assertIn('Native formula retained',str(self.h.runtime.problems))
+
+    def test_named_floor_preserves_high_grades_offsets_and_combat_modifiers(self):
+        self.definition.path = 'gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Bonehead'
+        second = deepcopy(self.definition.Grades[0])
+        second.GradeModifiers.ExpLevel = 25
+        self.definition.Grades[0].GradeModifiers.ExpLevel = 12
+        self.definition.Grades.append(second)
+        self.h.runtime.spawns.roll = lambda:self.fail('Named enemy used RNG')
+        stage,clone = self.h.runtime.spawns.plan(self.factory,20,20)
+        self.assertEqual(stage,20)
+        self.assertEqual([g.GradeModifiers.ExpLevel for g in clone.Grades],[23,25])
+        self.assertEqual(clone.Grades[0].GradeModifiers.HealthMultiplier,3)
+        self.assertEqual(clone.Grades[0].GradeModifiers.DamageMultiplier,2)
+        self.assertEqual([g.GradeModifiers.ExpLevel for g in self.definition.Grades],[12,25])
+        self.definition.DefaultExpLevel.BaseValueAttribute = Object('gd_Balance.EnemyLevel.EnemyLevel_GameStage_plus9')
+        self.definition.Grades[0].GradeModifiers.ExpLevel = 0
+        stage,clone = self.h.runtime.spawns.plan(self.factory,20,20)
+        self.assertEqual(stage,20)
+        self.assertIsNone(clone)
+
+    def test_named_without_grades_preserves_high_default_and_floors_low_default(self):
+        self.definition.path = 'Custom_Enemies.Boss.NewGuy'
+        self.definition.Grades = []
+        self.definition.DefaultExpLevel = aid(99)
+        stage,clone = self.h.runtime.spawns.plan(self.factory,36,20)
+        self.assertEqual(stage,36)
+        self.assertIsNone(clone)
+        self.definition.DefaultExpLevel = aid(1)
+        stage,clone = self.h.runtime.spawns.plan(self.factory,36,20)
+        self.assertEqual(clone.DefaultExpLevel.BaseValueConstant,39)
+        self.assertEqual(clone.Grades,[])
+
+    def test_named_private_clone_keeps_old_spawn_and_source_unchanged(self):
+        self.definition.path = 'gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Bonehead'
+        before = vars(self.definition.DefaultExpLevel).copy()
+        first = self.spawn()
+        self.h.enable(40)
+        second = self.spawn()
+        self.assertEqual((first.level,second.level),(23,43))
+        self.assertEqual(first.definition.Grades[0].GradeModifiers.ExpLevel,23)
+        self.assertIs(self.factory.PawnBalanceDefinition,self.definition)
+        self.assertEqual(vars(self.definition.DefaultExpLevel),before)
+        self.h.mod.on_disable()
+        self.assertEqual(first.definition.Grades[0].GradeModifiers.ExpLevel,23)
+
+    def test_named_vehicle_boss_gets_plus_three_floor_and_factory_restored(self):
+        self.definition.path = 'Native.VehicleBalance'
+        archetype = self.definition.AIPawnArchetype
+        archetype.path = 'gd_cheetahspaw.vehiclearchetype.mad_mel'
+        factory = NS(VehicleBalanceDefinition=self.definition,VehicleArchetype=archetype)
+        self.h.runtime.spawns.roll = lambda:self.fail('Named vehicle used RNG')
+        calls=[]
+        def native(*args):
+            calls.append(args)
+            clone = factory.VehicleBalanceDefinition
+            self.assertEqual(args[4],20)
+            self.assertEqual(clone.DefaultExpLevel.BaseValueConstant,23)
+            self.assertTrue(all(g.GradeModifiers.ExpLevel==23 for g in clone.Grades))
+            return 'spawned boss'
+        result = self.h.mod.create_vehicle(factory,self.args,None,native)
+        self.assertEqual(result,(self.h.mod.Block,'spawned boss'))
+        self.assertEqual(len(calls),1)
+        self.assertIs(factory.VehicleBalanceDefinition,self.definition)
+
+    def test_ordinary_vehicle_still_keeps_native_stage_and_no_rng(self):
+        factory = NS(VehicleBalanceDefinition=self.definition,VehicleArchetype=self.definition.AIPawnArchetype)
+        self.h.runtime.spawns.roll = lambda:self.fail('Ordinary vehicle used RNG')
+        stage,clone = self.h.runtime.spawns.plan(factory,20,30,vehicle=True)
+        self.assertEqual(stage,30)
+        self.assertIsNone(clone)
+
+    def test_unsupported_named_layout_records_reason_without_native_mutation(self):
+        definition = Object('Custom_Enemies.Boss.Unsupported')
+        definition.Grades = []
+        archetype = self.definition.AIPawnArchetype
+        definition.AIPawnArchetype = archetype
+        factory = NS(PawnBalanceDefinition=definition)
+        stage,clone = self.h.runtime.spawns.plan(factory,20,30)
+        self.assertEqual(stage,30)
+        self.assertIsNone(clone)
+        self.assertIn('Unsupported named balance layout',str(self.h.runtime.problems))
+        self.assertIs(factory.PawnBalanceDefinition,definition)
 
     def test_friendly_neutral_and_unknown_allegiance_do_not_roll(self):
         for allegiance in ("Native.Friendly.Bandit", "Native.Neutral", "Native.Player", None):

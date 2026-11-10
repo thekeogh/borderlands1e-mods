@@ -1,8 +1,8 @@
 [project]
 name = "ConsistentWeaponLevels"
-version = "1.0.1"
+version = "2.0.1"
 authors = [{ name = "keogh" }]
-description = "Shows the ordinary weapon level on equipped and comparison cards, without the proficiency-based reduction."
+description = "Corrects weapon-card level text after native rendering. Leaves gameplay level queries and weapon definitions untouched."
 
 [tool.sdkmod]
 name = "Consistent Weapon Levels"

@@ -59,14 +59,18 @@ Keep SDU progression upgrades and non-levelled consumables native.
 Enemy difficulty is a saved Easy / Normal / Hard / Very Hard selector, default Normal.
 Ordinary hostile roll weights (native / +1 / +2 / +3): Easy 70/20/9/1,
 Normal 50/20/25/5, Hard 20/5/55/20. Very Hard adds +4 and +5 slots and uses
-0/0/0/42/55/3 (native / +1 / +2 / +3 / +4 / +5). All preserve max(player, vanilla area)
+0/0/0/40/55/5 (native / +1 / +2 / +3 / +4 / +5). All preserve max(player, vanilla area)
 as their base. Native ordinary levels floor at player level +1; keep the original
 factory GameStage/grade bands when applying that floor. Native/+1 rolls overlap
-at the +1 minimum; keep raw weights and named/boss player-level floors unchanged.
+at the +1 minimum; keep the other presets unchanged; named/boss floors are player level +3.
 Only Very Hard has extra +4/+5 rolls; Easy/Normal/Hard stay unchanged.
 Retain naturally higher levels without stacking or capping them at a preset's maximum bonus.
 Difficulty changes affect new spawns only; never rewrite existing pawn data.
-Named enemies/bosses never use that roll. No fixed boss levels or completion
+Named enemies/bosses never use that roll. Floor at player level +3, preserving
+higher native defaults, offsets and fixed grade levels; never cap them to +3.
+Preserve native factory stage/grade identity when flooring named enemies. Apply
+the same policy to supported named hostile vehicle balances. Leave unknown level
+formulas/layouts native and record a diagnostic reason. No fixed boss levels or completion
 flags to enable scaling. Keep rare-level data private to those spawns.
 Only log the loading/version line automatically. A manually requested diagnostic
 export must log its request, saved path or failure; never swallow export errors.

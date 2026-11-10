@@ -15,7 +15,7 @@ DIFFICULTIES = {
     "Easy": (70, 20, 9, 1),
     "Normal": (50, 20, 25, 5),
     "Hard": (20, 5, 55, 20),
-    "Very Hard": (0, 0, 0, 42, 55, 3),
+    "Very Hard": (0, 0, 0, 40, 55, 5),
 }
 
 
@@ -126,16 +126,25 @@ class Spawns:
         # exact-ID list. Unknown identities never receive the ordinary bonus.
         paths = " ".join(obj._path_name().lower() for obj in (definition, archetype) if obj is not None)
         named = name is not None or ".named." in paths or "boss" in paths
-        if vehicle or not hostile(factory, definition, archetype):
+        if not hostile(factory, definition, archetype):
             return base, None
-        natural = native_level(definition.DefaultExpLevel, base)
         if named:
+            if definition is None or not hasattr(definition,'DefaultExpLevel') or not hasattr(definition,'Grades'):
+                self.runtime.problem('named enemy level',ValueError(f'Unsupported named balance layout: {paths}'))
+                return base,None
+            natural = native_level(definition.DefaultExpLevel,base)
+            if natural is None:
+                self.runtime.problem('named enemy level',ValueError(f'Native formula retained: {paths}'))
+                return base,None
+            minimum = player+3
             eligible = [g for g in definition.Grades
                         if g.GameStageRequirement.MinGameStage <= base <= g.GameStageRequirement.MaxGameStage]
-            if natural is not None and (natural < player or any(
-                    grade_level(natural, g.GradeModifiers.ExpLevel) < player for g in eligible)):
-                return base, self.exact_definition(definition, base, player, preserve_stage=True)
-            return base, None
+            if natural < minimum or any(grade_level(natural,g.GradeModifiers.ExpLevel) < minimum for g in eligible):
+                return base,self.exact_definition(definition,base,minimum,preserve_stage=True)
+            return base,None
+        if vehicle:
+            return base,None
+        natural = native_level(definition.DefaultExpLevel, base)
         extra = bonus(self.roll(), self.selected_difficulty())
         if natural is None:
             self.runtime.problem("enemy level", ValueError(f"Native formula retained: {paths}"))
@@ -166,4 +175,5 @@ class Spawns:
                 "ordinary_tickets": {"native" if extra == 0 else f"+{extra}": weight
                                      for extra, weight in enumerate(DIFFICULTIES[difficulty])},
                 "native_floor": "max(player level + 1, native spawn level)",
-                "named_bonus": False, "private_definitions": len(self.clones)}
+                "named_bonus": False, "named_level": "max(player level + 3, native spawn level)",
+                "private_definitions": len(self.clones)}

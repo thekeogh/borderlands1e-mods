@@ -1,8 +1,9 @@
 """Exact named-enemy IDs; never guess from a name substring or call pawn methods.
 
 Identifiers cross-checked against Dedicated Drops SDK (RedxYeti) and Boss Bars
-(-Ry, BL1/BL1E). Pinned source URLs are below. Used only to exclude these
-enemies from the ordinary-enemy bonus; never assigns a fixed boss level.
+(-Ry, BL1/BL1E). Pinned source URLs are below. Identifies enemies for the
+player-level +3 floor, preserving higher native levels and excluding ordinary
+bonus rolls; never assigns a fixed boss level.
 """
 
 SOURCES = ('https://raw.githubusercontent.com/RedxYeti/Yeti-BL1-SDK-Mods/315f9ea9d0b8b419bf45a0873721fc54c5bb0444/DedicatedDropsSDK/enemies.py',

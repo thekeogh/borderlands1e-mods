@@ -1,0 +1,18 @@
+[project]
+name = "Economy Buster"
+version = "0.1.0"
+authors = [{ name = "keogh" }]
+description = """Keep money at level-1 values throughout Borderlands GOTY Enhanced.
+
+Cash drops, mission payouts, equipment buying/selling, SDUs, bank upgrades,
+respecs and the death-fee ceiling use level-1 monetary scaling.
+Item and mission levels, combat stats and your existing wallet are retained.
+Works across all playthroughs. Export diagnostics from this mod's options menu.
+"""
+
+[tool.sdkmod]
+name = "Economy Buster"
+supported_games = ["BL1E"]
+coop_support = "Unknown"
+auto_enable = true
+license = { name = "GPL3", url = "https://choosealicense.com/licenses/gpl-3.0/" }

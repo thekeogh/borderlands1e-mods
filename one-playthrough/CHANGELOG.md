@@ -1,5 +1,25 @@
 # One Playthrough changelog
 
+## 4.7.0 — 2026-11-10
+
+- Very Hard ordinary spawns: +3 40%, +4 55%, +5 5%, using the higher of player
+  level and native area stage as the base. Keep +2 disabled.
+- Raise the named/boss minimum to player level +3 in every difficulty. Preserve
+  higher native levels, offsets and fixed grade levels; do not add three to an
+  already higher native result or cap it. At player level 5, native level 10/12
+  remains 10/12; native level 6 becomes 8. No random named/boss bonus.
+- Preserve native factory stage, grade-selection bands, combat modifiers and
+  identities. Use private level definitions only when a floor is needed, restoring
+  the original factory after one native spawn call. Supported named hostile
+  vehicle balances use the same floor; unknown layouts/formulas remain native
+  with an F10 reason. Existing spawned enemies retain their initialized levels.
+- Keep Easy/Normal/Hard ordinary weights, mission rewards, player-level equipment
+  floor, loot probabilities and money formulas unchanged. Update help/F10/docs.
+- Validation: 260 local tests pass, including exact 100-ticket distributions,
+  base-game/DLC names, higher native offsets/grades, Bone Head examples, unchanged
+  combat modifiers, factory restoration, named vehicle models and unknown-format
+  fallback. Native Windows behavior still requires in-game testing.
+
 ## 4.6.2 — 2026-11-09
 
 - Retune Very Hard ordinary spawns to +3 42%, +4 55%, +5 3%; remove its +2 roll.

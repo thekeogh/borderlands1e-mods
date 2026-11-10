@@ -18,9 +18,10 @@ Choose Easy, Normal (default), Hard or Very Hard for ordinary enemies. Each keep
 variety and the higher of your level and the vanilla area level, with different
 chances of tougher spawns. New ordinary enemies spawn at least one level above you;
 Easy/Normal/Hard extra rolls stop at +3; Very Hard rolls +3/+4/+5 at
-42%/55%/3%, retaining naturally higher levels. The choice is saved
+40%/55%/5%, retaining naturally higher levels. The choice is saved
 and affects new spawns only.
-Named enemies and bosses keep their existing scaling and receive no extra roll.
+Named enemies and bosses retain higher native levels/offsets, with a minimum of
+your level +3 in every difficulty and no random roll.
 The optional loot level floor targets new world drops, containers and vendor
 stock at least at your level for all equipment (minimum level 1). Rarity and legendary chances stay vanilla. Carried enemy equipment receives the floor when dropped on death. Existing player
 equipment stays unchanged; mission rewards follow the mission level at turn-in. Economy follows the game's normal rules.

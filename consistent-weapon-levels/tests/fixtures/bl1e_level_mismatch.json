@@ -1,0 +1,20 @@
+{
+  "sources": [
+    "logs/weapon-levels-20261110-142140-196537.json",
+    "logs/weapon-levels-20261110-142407-961764.json"
+  ],
+  "note": "Unmodified weapon rows from user exports. Player level 40/equipped status reported by user; exports did not record equipment state or native evaluator output.",
+  "player_level_reported": 40,
+  "before_equipping": {
+    "object": "Loader.TheWorld:PersistentLevel.WillowWeapon_88",
+    "internal_level": 42,
+    "native_level_with_controller": 40,
+    "card_level_without_proficiency": 41
+  },
+  "after_equipping": {
+    "object": "Loader.TheWorld:PersistentLevel.WillowWeapon_116",
+    "internal_level": 42,
+    "native_level_with_controller": 40,
+    "card_level_without_proficiency": 41
+  }
+}

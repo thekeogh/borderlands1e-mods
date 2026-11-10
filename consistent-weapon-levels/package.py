@@ -8,7 +8,8 @@ source = root / "Source/sdk_mods/ConsistentWeaponLevels"
 output = root / "dist/ConsistentWeaponLevels.sdkmod"
 output.parent.mkdir(exist_ok=True)
 with ZipFile(output, "w", ZIP_DEFLATED) as archive:
-    for name in ("__init__.py", "pyproject.toml", "LICENSE"):
+    for name in ("__init__.py", "levels.py", "diagnostics.py", "pyproject.toml", "LICENSE"):
         archive.write(source / name, "ConsistentWeaponLevels/" + name)
     archive.write(root / "README.md", "ConsistentWeaponLevels/README.md")
+    archive.write(root / "CHANGELOG.md", "ConsistentWeaponLevels/CHANGELOG.md")
 print(output)

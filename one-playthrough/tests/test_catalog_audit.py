@@ -87,13 +87,13 @@ class CatalogAudit(unittest.TestCase):
             self.assertEqual([g.GradeModifiers.ExpLevel for g in eligible],[32])
             self.assertIs(factory.PawnBalanceDefinition,original)
 
-    def test_named_floor_raises_low_moe_grades_without_changing_native_bands(self):
+    def test_named_plus_three_floor_raises_low_moe_grades_without_changing_native_bands(self):
         factory = self.data['z0_missiondata.population.pd_alphaskag_named1:populationfactorybalancedaipawn_20']
         original = factory.PawnBalanceDefinition
         before = deepcopy(original.Grades)
         stage,clone = self.svc.plan(factory,60,80)
         self.assertEqual(stage,80)
-        self.assertTrue(all(g.GradeModifiers.ExpLevel ==60 for g in clone.Grades))
+        self.assertTrue(all(g.GradeModifiers.ExpLevel ==63 for g in clone.Grades))
         self.assertEqual([(g.GameStageRequirement.MinGameStage,g.GameStageRequirement.MaxGameStage) for g in clone.Grades],
                          [(g.GameStageRequirement.MinGameStage,g.GameStageRequirement.MaxGameStage) for g in original.Grades])
         self.assertEqual([g.GradeModifiers.ExpLevel for g in original.Grades],

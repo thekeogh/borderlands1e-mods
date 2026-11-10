@@ -31,8 +31,8 @@ runtime = Runtime(unrealsdk, MissionLevels(
 enemy_difficulty = SpinnerOption(
     "Enemy difficulty", value="Normal", choices=["Easy", "Normal", "Hard", "Very Hard"], wrap_enabled=True,
     description="Ordinary enemies only. Base is always the higher of your level and the vanilla area level. "
-                "Ordinary native levels floor at your level +1. Very Hard rolls +3/+4/+5 at 42%/55%/3%; "
-                "other difficulties stop their extra rolls at +3. New spawns only; bosses unchanged.",
+                "Ordinary native levels floor at your level +1. Very Hard rolls +3/+4/+5 at 40%/55%/5%; "
+                "other difficulties stop their extra rolls at +3. New spawns only. Named/bosses keep higher native levels with a your-level +3 minimum.",
 )
 # Read the saved/live option at spawn time; changing it never edits existing pawns.
 runtime.spawns.difficulty = lambda: enemy_difficulty.value
