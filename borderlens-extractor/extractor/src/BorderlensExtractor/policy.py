@@ -9,12 +9,17 @@ SKIP_FIELDS = frozenset((
     'HashOuterNext','StateFrame','Linker','LinkerIndex','ObjectInternalInteger','NetIndex',
 ))
 BINDING_TERMS = ('definition','balance','inventory','itempool','loot','drop','weapon',
-                 'allegiance','behavior','population','spawn','displayname','charactername','location')
-WORLD_CLASSES = ('WillowInteractiveObject','WillowAIPawn','PopulationOpportunityDen')
+                 'allegiance','behavior','population','spawn','displayname','charactername',
+                 'aipawnname','menuname','vehiclename','callername','outpost','stationname','location')
+WORLD_CLASSES = ('WillowInteractiveObject','WillowAIPawn','PopulationOpportunityDen','WillowVehicle')
 LIMITS = {'depth': 14, 'array': 16384, 'string': 131072, 'nodes': 60000,
-          'objects': 40000, 'bindings': 1000, 'references': 200000,
+          'objects': 100000, 'bindings': 10000, 'references': 500000,
+          'identities': 150000, 'installation_files': 30000,
+          'installation_directories': 4000, 'localisation_bytes': 16 * 1024 * 1024,
           'chunk_records': 128, 'chunk_bytes': 4 * 1024 * 1024,
           'frame_ms': 4.0, 'frame_records': 3}
+EXTRA_DATA_PACKAGES = frozenset(('z0_echos','z1_echos','z2_echos','dlc1_echos',
+    'dlc3_echos','dlc3_missionnpcs','dlc4_echoes','dlc4_echocallerids','dlc5_registrationstationlist'))
 
 
 def data_class(name):
@@ -24,7 +29,7 @@ def data_class(name):
             or value.startswith(('seqact_', 'seqcond_', 'populationfactory',
                                  'expressiontree', 'expressionnode', 'attributeexpression'))
             or value.endswith('expressionevaluator')
-            or value == 'gearboxaifactory')
+            or value in ('gearboxaifactory','teleportoutpostlookupobject','leveldependencylist'))
 
 
 def binding_field(name):
@@ -37,9 +42,10 @@ def valid_package(name):
     value = name.lower()
     if value.endswith(('_p','_dynamic','_vista','_art','_env')):
         return False
-    return (value.startswith('gd_') or re.match(r'dlc[1-4]_(gd_|packagedefinition$)',value) is not None
+    return (value in EXTRA_DATA_PACKAGES or value.startswith('gd_') or re.match(r'dlc[1-4]_(gd_|packagedefinition$)',value) is not None
             or re.fullmatch(r'[a-z][0-9]_missions',value) is not None
-            or re.fullmatch(r'[a-z][0-9]_missiondata',value) is not None)
+            or re.fullmatch(r'[a-z][0-9]_missiondata',value) is not None
+            or re.fullmatch(r'dlc[1-4]_(?:[a-z0-9]+_)*(?:missions|missiondata|mainmissions|mainmissiondata|sidemissions|sidemissiondata|circlemissions|circlemissionsdata|registrationstationlist|itemgrades)',value) is not None)
 
 
 def validate_plan(data):

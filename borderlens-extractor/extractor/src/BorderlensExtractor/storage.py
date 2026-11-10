@@ -33,6 +33,7 @@ class Dataset:
         self.max_records, self.max_bytes = max_records, max_bytes
         self.ids, self.buffer, self.buffer_bytes = set(), [], 0
         self.counts = {}
+        self.catalogue = {'categories':{}, 'named_records':0, 'unnamed_records':0}
         self.capture_complete = False
         if resume:
             self.manifest = json.loads((self.directory/'manifest.json').read_text(encoding='utf-8'))
@@ -63,6 +64,7 @@ class Dataset:
                     self.ids.add(key)
                     kind = row['record_type']
                     self.counts[kind] = self.counts.get(kind,0)+1
+                    self.count_identity(row)
             previous = self.manifest.get('sessions', [])
             if previous and previous[-1].get('mods') != metadata['session'].get('mods'):
                 self.manifest['coverage']['limitations'].append('Enabled mod snapshot changed between sessions; data provenance is mixed.')
@@ -76,6 +78,7 @@ class Dataset:
                 'sessions':[metadata['session']],'chunks':[],'counts':{},
                 'coverage':{'catalogue_complete':False,'resumed':False,
                             'limitations':['Loaded/curated data packages only; not every map/script source.',
+                                           'Installed English localisation adds unverified crawl candidates; unavailable/packed text may be absent.',
                                            'Raw definitions/formulas only; no generated stat extrema or final family JSON.']}}
         self.manifest['counts'] = dict(self.counts)
         self.checkpoint()
@@ -91,9 +94,18 @@ class Dataset:
         self.buffer_bytes += raw_size
         kind = row['record_type']
         self.counts[kind] = self.counts.get(kind,0)+1
+        self.count_identity(row)
         if len(self.buffer)>=self.max_records:
             self.flush()
         return True
+
+    def count_identity(self, row):
+        if row['record_type'] != 'catalogue_identity':return
+        category = row['category']
+        counts = self.catalogue['categories']
+        counts[category] = counts.get(category, 0)+1
+        key = 'named_records' if row.get('names') else 'unnamed_records'
+        self.catalogue[key] += 1
 
     def flush(self):
         if not self.buffer:return

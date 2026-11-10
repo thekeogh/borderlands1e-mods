@@ -1,6 +1,6 @@
 # Enemy Respawn Timer
 
-Private mod for Borderlands GOTY Enhanced. Author: keogh. Version 1.2.8.
+Private mod for Borderlands GOTY Enhanced. Author: keogh. Version 1.2.10.
 Validated in selected BL1E encounters: bandits, skags, spiderants/spiderantlings
 and gatling turrets at 1 minute; Rust Commons West bandits and spiderantlings
 stayed cleared for over 35 minutes on Forever. Map travel reset tracking as intended.
@@ -28,9 +28,11 @@ Native default respawn timing is not established here; it can vary by opportunit
 
 Paused game time does not count. Changing the option updates cleared groups from
 their original clear time. Entering a different map or reloading clears tracking.
-Forever uses both a session-only guard and a native timestamp 999,999,999 seconds
-after the clear time, never a saved permanent deletion. Disabling restores owned
-timestamps and any reset tally still at zero (before a new native generation).
+During cooldown the mod also holds the den's native no-respawn flag, preventing
+native reset paths from bypassing the timestamp. Forever uses a timestamp
+999,999,999 seconds after clearing and keeps this native guard until map reload
+or disable. Finite delays release the guard at expiry. Disabling restores owned
+flags, timestamps and any reset tally still at zero (before a new generation).
 Native member lists also allow tracking enemies already alive when enabled.
 Use a fresh map for repeatable tests. Settings persist; enemy timers do not.
 
@@ -66,8 +68,9 @@ The DoSpawning/factory hooks remain supplementary observers; tracking does not
 depend on them firing or installing successfully.
 
 No native spawn calls, pawn-wide scans, health/level changes, corpse manipulation,
-or quest flag changes. Native no-respawn flags remain untouched. Missing layouts
-are logged and skipped. All native object reads occur synchronously.
+or quest flag changes. Pre-existing native no-respawn flags remain untouched;
+only eligible cleared dens acquire a temporary flag owned by the mod. Missing
+layouts are logged and skipped. All native object reads occur synchronously.
 
 Field names and native reset behavior were checked against
 [Reset Enemies source](https://github.com/EerieGoesD/borderlands-1-goty-mods/blob/main/ResetEnemies/__init__.py)
@@ -237,3 +240,43 @@ state, relevant mission conditions, counters, errors and the last 200 events.
 Normal play writes no diagnostic files automatically. The in-memory event buffer
 is bounded; lifecycle/error console messages remain useful for troubleshooting.
 Saved settings persist, including Forever. Install the updated SDKMOD and restart.
+
+## 1.2.9 Native reset bypass of Forever
+
+The capture `respawn-20261109-211258-389217.json` retains a complete failure:
+Aqueduct gatling den 7 cleared at 670.637 gameplay seconds and received its
+Forever deadline. Two new turrets appeared at 1631.006 seconds, about 16 minutes
+later, with no intervening map reset or mod rearm. Bandit den 15 also respawned
+later. This proves the timestamp-only approach can be bypassed; the export does
+not identify the exact native reset caller. Previous shorter Forever successes
+did not establish coverage for this reset path.
+
+Eligible cleared dens now hold `bNoRespawning = true` throughout their cooldown,
+in addition to the existing timestamp. The original eligible value is restored
+at finite expiry, disable or map reset. Pre-existing no-respawn dens are still
+excluded; the mod recognizes its own flag so it can continue managing cooldowns.
+Unexpected enemy spawns during an active cooldown no longer silently erase that
+cooldown; F8 records `spawn_during_cooldown` events and guard ownership/state.
+No actors are deleted if a bypass occurs. No survivor-restoration calls were added.
+
+69 mocked tests pass, including the recorded turret timeline, late scheduling
+resets, expiry/cleanup, existing native flags, and unexpected spawns. In-game
+validation of the native guard is pending. Install this build, restart, clear the
+gatling turrets and bandits on Forever, F8 after clearing, and F8 again on return
+after at least 20 minutes of gameplay in the same map. Map travel still resets
+Forever, as requested.
+
+## 1.2.10 Missing native references
+
+A reported `NoneType ... _get_address` error pointed only to the shared logger,
+so the exact caller could not be established from that line. Known null-access
+paths are now guarded: missing player/den world references, missing callback
+targets and null native member/inventory slots. Transient missing worlds skip
+processing without marking the den ignored, clearing its timer or releasing its
+native no-respawn guard. Unresolved member slots do not count as kills/removal.
+Future caught errors include their original source function and line.
+
+74 mocked tests pass, including missing-world cooldown preservation, recovery
+when references return, null actor slots/callbacks and contextual error reporting.
+Includes the 1.2.9 native no-respawn guard; its longer in-game verification is
+still separate from this null-reference fix. F8 and saved settings are retained.

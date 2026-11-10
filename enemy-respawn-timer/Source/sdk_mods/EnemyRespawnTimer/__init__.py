@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 import json
 import math
+import traceback
 
 from mods_base import ButtonOption, SpinnerOption, SETTINGS_DIR, build_mod, get_pc, hook, keybind
 import unrealsdk
@@ -30,7 +31,7 @@ _stack = []
 _dens = {}
 _actors = {}
 _errors = []
-VERSION = "1.2.8"
+VERSION = "1.2.10"
 _counts = Counter()
 _skips = Counter()
 _events = deque(maxlen=200)
@@ -50,13 +51,29 @@ def object_path(obj):
 
 def error(exc):
     message = f"{type(exc).__name__}: {exc}"
+    frames = traceback.extract_tb(exc.__traceback__)
+    if frames:
+        frame = frames[-1]
+        message += f" [{Path(frame.filename).name}:{frame.lineno} in {frame.name}]"
     if message not in _errors and len(_errors) < 16:
         _errors.append(message)
         logging.error(f"[Enemy Respawn Timer] {message}")
 
 
+def release_native_guard(entry):
+    """Undo the no-respawn flag only if we acquired it from an eligible den."""
+    original = entry["original_no_respawn"]
+    if original is None:
+        return
+    den = entry["ref"]()
+    if den is not None and bool(den.bNoRespawning):
+        den.bNoRespawning = original
+    entry["original_no_respawn"] = None
+
+
 def restore(entry):
-    """Restore only our timestamp, never another mod's subsequent edit."""
+    """Restore owned scheduling fields and release our native guard."""
+    release_native_guard(entry)
     den = entry["ref"]()
     if den is None:
         return
@@ -100,6 +117,9 @@ def host_clock():
         _skips["no_player_pawn"] += 1
         return None
     world = pc.WorldInfo
+    if world is None:
+        _skips["missing_player_world"] += 1
+        return None
     if world.NetMode == 3:
         _skips["client_world"] += 1
         return None
@@ -139,15 +159,26 @@ def passive_mission_gate(den, aspect):
 
 def den_skip_reason(den, world):
     # These exclusions preserve mission waves, NPCs and one-shot encounters.
-    for field in ("bDeleteMe", "bPendingDelete", "bNoRespawning"):
+    if den is None:
+        return "missing_den"
+    if world is None:
+        return "missing_player_world"
+    for field in ("bDeleteMe", "bPendingDelete"):
         if getattr(den, field):
             return field
+    if den.bNoRespawning:
+        entry = _dens.get(den._get_address())
+        if entry is None or entry["original_no_respawn"] is None:
+            return "bNoRespawning"
     if str(den.Name).startswith("Default__"):
         return "default_object"
     aspect = getattr(den, "Aspect", None)
     if aspect is not None and not passive_mission_gate(den, aspect):
         return "scripted_aspect"
-    if den.WorldInfo._get_address() != world._get_address():
+    den_world = den.WorldInfo
+    if den_world is None:
+        return "missing_den_world"
+    if den_world._get_address() != world._get_address():
         return "different_world"
     data = den.SpawnData
     if str(data.PopulationDefName) in ("", "None"):
@@ -162,6 +193,9 @@ def valid_den(den, world):
 
 
 def entry_for(den, world):
+    if den is None or world is None:
+        _skips["missing_den" if den is None else "missing_player_world"] += 1
+        return None
     address = den._get_address()
     entry = _dens.get(address)
     definition = str(den.SpawnData.PopulationDefName)
@@ -176,6 +210,10 @@ def entry_for(den, world):
         _skips[reason] += 1
         if _skips[reason] <= 5:
             trace("den_skipped", den=object_path(den), reason=reason)
+        # A streamed actor can temporarily have no world. Keep any existing
+        # cooldown/owned guard so it can resume when the reference returns.
+        if reason == "missing_den_world":
+            return None
         if entry is not None:
             restore(entry)
             entry["ignored"] = True
@@ -184,7 +222,8 @@ def entry_for(den, world):
         entry = {"ref": WeakPointer(den), "definition": definition, "group": Group(),
                  "original": None, "written": None, "ignored": False,
                  "released": False, "original_total": None, "suspended": False,
-                 "death_evidence": {}, "last_death_at": None}
+                 "death_evidence": {}, "last_death_at": None,
+                 "original_no_respawn": None, "unexpected_spawns": set()}
         _dens[address] = entry
     return None if entry["ignored"] else entry
 
@@ -194,6 +233,9 @@ def set_deadline(entry, choice):
     deadline = entry["group"].deadline(choice)
     if den is None or deadline is None or entry["ignored"]:
         return
+    # A native pre-existing no-respawn flag is outside our ownership.
+    if entry["original_no_respawn"] is None and den.bNoRespawning:
+        return
     data = den.SpawnData
     if entry["written"] is None:
         entry["original"] = float(data.NextSpawnTime)
@@ -201,13 +243,18 @@ def set_deadline(entry, choice):
     den.SpawnData = data
     # Read back the engine's float32 value for ownership-aware restoration.
     entry["written"] = float(den.SpawnData.NextSpawnTime)
+    # Vanilla reset paths can erase NextSpawnTime and NumTotalActors together.
+    # Hold the den's native no-respawn flag throughout the actual cooldown.
+    if entry["original_no_respawn"] is None:
+        entry["original_no_respawn"] = False
+    den.bNoRespawning = True
 
 
 def before_spawning(obj, _args, _ret, _func):
     # A placeholder is necessary even for blocked/skipped calls: the matching
     # unconditional post hook must unwind exactly one frame, including nesting.
     _counts["den_spawn_calls"] += 1
-    frame = {"ref": WeakPointer(obj), "entry": None}
+    frame = {"ref": WeakPointer(obj) if obj is not None else None, "entry": None}
     try:
         clock = host_clock()
         if clock is not None:
@@ -215,8 +262,8 @@ def before_spawning(obj, _args, _ret, _func):
             entry = entry_for(obj, world)
             frame["entry"] = entry
             if entry is not None and entry["group"].cleared_at is not None:
-                set_deadline(entry, respawn_delay.value)
                 if entry["group"].blocked(now, respawn_delay.value):
+                    set_deadline(entry, respawn_delay.value)
                     _counts["blocked_attempts"] += 1
                     if _counts["blocked_attempts"] <= 10:
                         trace("spawn_blocked", den=object_path(obj),
@@ -234,6 +281,8 @@ def after_spawning(obj, _args, _ret, _func):
     if not _stack:
         return
     frame = _stack.pop()
+    if obj is None or frame["ref"] is None:
+        return
     den = frame["ref"]()
     if den is None or den._get_address() != obj._get_address():
         _stack.clear()
@@ -260,6 +309,9 @@ def record_spawn(obj, _args, pawn, _func):
 
 
 def track_spawn(entry, pawn, allegiance=None):
+    if pawn is None:
+        _skips["missing_spawn_actor"] += 1
+        return
     if entry["ignored"]:
         return
     try:
@@ -284,7 +336,21 @@ def track_spawn(entry, pawn, allegiance=None):
         address = pawn._get_address()
         if address in entry["group"].members:
             return
+        if (entry["group"].cleared_at is not None and _last_time is not None
+                and entry["group"].blocked(_last_time, respawn_delay.value)):
+            # Never silently replace a live cooldown if a native/script path
+            # bypasses it. Retain the evidence so F8 can diagnose that path.
+            if address not in entry["unexpected_spawns"]:
+                if len(entry["unexpected_spawns"]) < 64:
+                    entry["unexpected_spawns"].add(address)
+                    trace("spawn_during_cooldown", **den_context(den), pawn=object_path(pawn),
+                          native_no_respawn=bool(den.bNoRespawning),
+                          deadline=entry["group"].deadline(respawn_delay.value))
+                _counts["cooldown_bypasses"] += 1
+            return
         if entry["group"].cleared_at is not None:
+            release_native_guard(entry)
+            entry["unexpected_spawns"].clear()
             # A new native generation now owns its scheduling. Capture a fresh
             # native timestamp if/when this generation is subsequently cleared.
             entry["original"] = None
@@ -312,6 +378,9 @@ def record_death(obj, _args, _ret, _func):
 
 
 def process_death(obj, native_callback=False, returned=None):
+    if obj is None:
+        _skips["missing_death_actor"] += 1
+        return
     try:
         clock = host_clock()
         if clock is None:
@@ -353,7 +422,7 @@ def finish_death(address, entry, world, when):
             entry["group"].cleared_at = None
             return
         den = entry["ref"]()
-        if den is not None and any(not member.bIsDead for member in getattr(den, "SpawnedDenMembers", ())):
+        if den is not None and any(member is None or not member.bIsDead for member in getattr(den, "SpawnedDenMembers", ())):
             entry["group"].cleared_at = None
             return
         if den is not None and valid_den(den, world):
@@ -366,7 +435,8 @@ def finish_death(address, entry, world, when):
 
 def den_context(den):
     """Primitive location metadata makes future lifecycle issues reproducible."""
-    return {"den": object_path(den), "definition": str(den.SpawnData.PopulationDefName),
+    return {"den": object_path(den),
+            "definition": str(den.SpawnData.PopulationDefName) if den is not None else None,
             "location": str(getattr(den, "Location", None))}
 
 
@@ -375,12 +445,21 @@ def poll_dens(world, now):
     _counts["den_polls"] += 1
     for den in unrealsdk.find_all("PopulationOpportunityDen"):
         try:
+            if den is None:
+                _skips["missing_den"] += 1
+                continue
             if str(den.Name).startswith("Default__"):
                 continue
             entry = entry_for(den, world)
             if entry is None:
                 continue
-            native_members = list(den.SpawnedDenMembers)
+            raw_members = list(den.SpawnedDenMembers)
+            null_members = sum(pawn is None for pawn in raw_members)
+            if null_members:
+                _skips["null_native_members"] += null_members
+                # An unresolved slot is not evidence of death or removal.
+                continue
+            native_members = raw_members
             # Register all living members before processing any missed deaths.
             for pawn in native_members:
                 if not pawn.bIsDead:
@@ -441,6 +520,7 @@ def poll_dens(world, now):
                 # Expiring NextSpawnTime alone cannot make that den eligible.
                 if int(den.SpawnData.NumActiveActors) != 0 or any(not p.bIsDead for p in native_members):
                     continue
+                release_native_guard(entry)
                 data = den.SpawnData
                 entry["original_total"] = int(data.NumTotalActors)
                 data.NumTotalActors = 0
@@ -598,6 +678,9 @@ def snapshot():
                                    "ignored": entry["ignored"], "ignore_reason": entry.get("ignore_reason"),
                                    "released": entry["released"], "tracking_suspended": entry["suspended"],
                                    "pending_death_evidence": list(entry["death_evidence"].values()),
+                                   "owns_no_respawn_guard": entry["original_no_respawn"] is not None,
+                                   "original_no_respawn": entry["original_no_respawn"],
+                                   "native_no_respawn": bool(den.bNoRespawning),
                                    "alive_tracked": len(entry["group"].members),
                                    "actors": [actor_snapshot(address) for address in entry["group"].members],
                                    "original_next_spawn": entry["original"],
@@ -611,6 +694,8 @@ def snapshot():
     result["native_dens"] = []
     try:
         for den in unrealsdk.find_all("PopulationOpportunityDen"):
+            if den is None:
+                continue
             if len(result["native_dens"]) >= 300:
                 result["native_dens_truncated"] = True
                 break

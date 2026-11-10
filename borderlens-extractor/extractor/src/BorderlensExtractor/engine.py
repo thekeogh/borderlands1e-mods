@@ -69,6 +69,24 @@ class Engine:
     def scan(self, cls):
         return self.sdk.find_all(cls, exact=True)
 
+    def binding_classes(self):
+        """Exact subclasses, including templates not reached through a balance."""
+        bases = []
+        for name in policy.WORLD_CLASSES:
+            try:bases.append(self.sdk.find_class(name))
+            except (ValueError, StopIteration):pass
+        return sorted(cls._path_name() for cls in self.sdk.find_all('Class')
+                      if any(cls._inherits(base) for base in bases))
+
+    def binding_category(self, obj):
+        for name, category in (('WillowAIPawn','character'), ('WillowVehicle','vehicle'),
+                               ('PopulationOpportunityDen','population_source'),
+                               ('WillowInteractiveObject','interactive_object')):
+            try:
+                if obj.Class._inherits(self.sdk.find_class(name)):return category
+            except (ValueError, StopIteration):pass
+        return None
+
     def package(self, name):
         # A Package object may be a linker placeholder, not a fully loaded
         # package. Explicitly load each reviewed root even when it is present.

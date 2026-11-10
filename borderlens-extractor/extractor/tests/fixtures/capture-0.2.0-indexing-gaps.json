@@ -1,0 +1,255 @@
+{
+  "source_capture": "borderlens-20261023-153827-931444.zip",
+  "description": "Selected real fields and first travel-array entries from the 0.2.0 capture. The same missing CallerName/MissionGiver/travel indexing was confirmed in the 0.3.1 audit; these are source fixtures, not full object dumps.",
+  "records": [
+    {
+      "record_type": "object",
+      "id": "object:gd_echocallerids.ecid_zed",
+      "path": "gd_EchoCallerIDs.ECID_Zed",
+      "class": "WillowGame.EchoCallerIDDefinition",
+      "name": "ECID_Zed",
+      "outer": "gd_EchoCallerIDs",
+      "is_default": false,
+      "context": {
+        "session": 0,
+        "map": "Loader",
+        "source_package": "gd_EchoCallerIDs"
+      },
+      "properties": {
+        "CallerName": "Dr. Zed"
+      },
+      "issues": [],
+      "complete": true
+    },
+    {
+      "record_type": "object",
+      "id": "object:gd_echocallerids.ecid_markus",
+      "path": "gd_EchoCallerIDs.ECID_Markus",
+      "class": "WillowGame.EchoCallerIDDefinition",
+      "name": "ECID_Markus",
+      "outer": "gd_EchoCallerIDs",
+      "is_default": false,
+      "context": {
+        "session": 0,
+        "map": "Loader",
+        "source_package": "gd_EchoCallerIDs"
+      },
+      "properties": {
+        "CallerName": "Marcus Kincaid"
+      },
+      "issues": [],
+      "complete": true
+    },
+    {
+      "record_type": "object",
+      "id": "object:gd_echocallerids.ecid_scooter",
+      "path": "gd_EchoCallerIDs.ECID_Scooter",
+      "class": "WillowGame.EchoCallerIDDefinition",
+      "name": "ECID_Scooter",
+      "outer": "gd_EchoCallerIDs",
+      "is_default": false,
+      "context": {
+        "session": 0,
+        "map": "Loader",
+        "source_package": "gd_EchoCallerIDs"
+      },
+      "properties": {
+        "CallerName": "Scooter"
+      },
+      "issues": [],
+      "complete": true
+    },
+    {
+      "record_type": "object",
+      "id": "object:gd_echocallerids.ecid_drtannis",
+      "path": "gd_EchoCallerIDs.ECID_DrTannis",
+      "class": "WillowGame.EchoCallerIDDefinition",
+      "name": "ECID_DrTannis",
+      "outer": "gd_EchoCallerIDs",
+      "is_default": false,
+      "context": {
+        "session": 0,
+        "map": "Loader",
+        "source_package": "gd_EchoCallerIDs"
+      },
+      "properties": {
+        "CallerName": "Patricia Tannis"
+      },
+      "issues": [],
+      "complete": true
+    },
+    {
+      "record_type": "object",
+      "id": "object:gd_echocallerids.ecid_vog",
+      "path": "gd_EchoCallerIDs.ECID_VoG",
+      "class": "WillowGame.EchoCallerIDDefinition",
+      "name": "ECID_VoG",
+      "outer": "gd_EchoCallerIDs",
+      "is_default": false,
+      "context": {
+        "session": 0,
+        "map": "Loader",
+        "source_package": "gd_EchoCallerIDs"
+      },
+      "properties": {
+        "CallerName": "Guardian Angel"
+      },
+      "issues": [],
+      "complete": true
+    },
+    {
+      "record_type": "object",
+      "id": "object:dlc3_echos.callerids.dlc3_ecid_moxxi",
+      "path": "dlc3_echos.CallerIDs.dlc3_ECID_Moxxi",
+      "class": "WillowGame.EchoCallerIDDefinition",
+      "name": "dlc3_ECID_Moxxi",
+      "outer": "dlc3_echos.CallerIDs",
+      "is_default": false,
+      "context": {
+        "session": 0,
+        "map": "Loader",
+        "source_package": "dlc3_echos"
+      },
+      "properties": {
+        "CallerName": "Moxxi"
+      },
+      "issues": [],
+      "complete": true
+    },
+    {
+      "record_type": "object",
+      "id": "object:z0_missions.missions.m_exterminateskag",
+      "path": "Z0_Missions.Missions.M_ExterminateSkag",
+      "class": "WillowGame.MissionDefinition",
+      "name": "M_ExterminateSkag",
+      "outer": "Z0_Missions.Missions",
+      "is_default": false,
+      "context": {
+        "session": 0,
+        "map": "Loader",
+        "source_package": "Z0_Missions"
+      },
+      "properties": {
+        "MissionName": "Nine-Toes: T.K.'s Food",
+        "MissionGiver": "T.K. Baha",
+        "PickUpMapName": "arid_p",
+        "TargetFastTravelStation": "Fyrestone",
+        "TurnInFastTravelStation": "Fyrestone"
+      },
+      "issues": [],
+      "complete": true
+    },
+    {
+      "record_type": "object",
+      "id": "object:z0_missions.missions.m_circlemeatandgreet",
+      "path": "Z0_Missions.Missions.M_CircleMeatAndGreet",
+      "class": "WillowGame.MissionDefinition",
+      "name": "M_CircleMeatAndGreet",
+      "outer": "Z0_Missions.Missions",
+      "is_default": false,
+      "context": {
+        "session": 0,
+        "map": "Loader",
+        "source_package": "Z0_Missions"
+      },
+      "properties": {
+        "MissionName": "Circle Of Death: Meat And Greet",
+        "MissionGiver": "Fyrestone Bounty Board",
+        "PickUpMapName": "arid_p",
+        "TargetFastTravelStation": "SkullBandit",
+        "TurnInFastTravelStation": "SkullBandit"
+      },
+      "issues": [],
+      "complete": true
+    },
+    {
+      "record_type": "object",
+      "id": "object:dlc3_mainmissions.mainmissions.m_dlc3_meetinformant",
+      "path": "dlc3_MainMissions.MainMissions.M_dlc3_MeetInformant",
+      "class": "WillowGame.MissionDefinition",
+      "name": "M_dlc3_MeetInformant",
+      "outer": "dlc3_MainMissions.MainMissions",
+      "is_default": false,
+      "context": {
+        "session": 0,
+        "map": "Loader",
+        "source_package": "dlc3_MainMissions"
+      },
+      "properties": {
+        "MissionName": "Rendezvous",
+        "MissionGiver": "Athena",
+        "PickUpMapName": "",
+        "TargetFastTravelStation": "TBoneJunc",
+        "TurnInFastTravelStation": "TBoneJunc"
+      },
+      "issues": [],
+      "complete": true
+    },
+    {
+      "record_type": "object",
+      "id": "object:gd_missionnpcs.drzed",
+      "path": "gd_MissionNPCs.DrZed",
+      "class": "WillowGame.InteractiveNPCDefinition",
+      "name": "DrZed",
+      "outer": "gd_MissionNPCs",
+      "is_default": false,
+      "context": {
+        "session": 0,
+        "map": "Loader",
+        "source_package": "gd_MissionNPCs"
+      },
+      "properties": {
+        "DisplayName": ""
+      },
+      "issues": [],
+      "complete": true
+    },
+    {
+      "record_type": "object",
+      "id": "object:gd_registrationstationlist.lookups.registrationstationlookup",
+      "path": "gd_RegistrationStationList.Lookups.RegistrationStationLookup",
+      "class": "WillowGame.EmergencyTeleportOutpostLookup",
+      "name": "RegistrationStationLookup",
+      "outer": "gd_RegistrationStationList.Lookups",
+      "is_default": false,
+      "context": {
+        "session": 0,
+        "map": "Loader",
+        "source_package": "gd_RegistrationStationList"
+      },
+      "properties": {
+        "OutpostMasterList": {
+          "$type": "array",
+          "length": 1,
+          "items": [
+            {
+              "$type": "struct",
+              "struct": "WillowGame.EmergencyTeleportOutpostLookup:TeleportOutpostLookupData",
+              "fields": {
+                "OutpostName": "SkullBandit",
+                "OutpostDisplayImage": null,
+                "OutpostPathName": "arid_p.TheWorld:PersistentLevel.EmergencyTeleportOutpost_0",
+                "bInitiallyActive": false,
+                "bCheckpointOnly": false
+              }
+            }
+          ],
+          "truncated": false
+        },
+        "OutpostLookupList": {
+          "$type": "array",
+          "length": 1,
+          "items": [
+            {
+              "$ref": "gd_RegistrationStationList.Lookups.RegistrationStationLookup:Tunnel",
+              "class": "WillowGame.TeleportOutpostLookupObject"
+            }
+          ],
+          "truncated": false
+        }
+      },
+      "issues": [],
+      "complete": true
+    }
+  ]
+}

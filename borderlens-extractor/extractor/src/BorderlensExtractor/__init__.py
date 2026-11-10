@@ -20,6 +20,7 @@ from unrealsdk import logging
 from unrealsdk.hooks import Type
 
 from .job import Job
+from .installation import game_root
 from .policy import FORMAT_VERSION, LIMITS, validate_plan
 from .storage import atomic, encoded, utc
 
@@ -31,7 +32,7 @@ __version__: str
 __version_info__: tuple[int, ...]
 job = None
 world_token = None
-last_status = 0.0
+last_world_check = 0.0
 last_log = 0.0
 
 scope = SpinnerOption('Export scope', value='Catalogue packages',
@@ -41,6 +42,13 @@ scope = SpinnerOption('Export scope', value='Catalogue packages',
 
 def report(message, error=False):
     (logging.error if error else logging.info)(f'{LABEL} {message}')
+
+
+def remove_obsolete_status_files():
+    for name in ('status.json', 'status.json.tmp'):
+        try:(SETTINGS/name).unlink(missing_ok=True)
+        except OSError as exc:
+            report(f'Could not delete obsolete {name}: {exc}. Ignoring it; status files are no longer written.')
 
 
 def safe(callback):
@@ -100,16 +108,10 @@ def metadata(session):
     raw = files(__package__).joinpath('package-plan.json').read_bytes()
     packages = validate_plan(json.loads(raw))
     config = {'scope':'catalogue' if scope.value == 'Catalogue packages' else 'loaded',
+              'catalogue_identity_version':2, 'installation_scan':'english-localisation-and-package-inventory-v1',
               'package_plan_sha256':sha256(raw).hexdigest(), 'limits':LIMITS}
     return {'format_version':FORMAT_VERSION, 'extractor_version':__version__,
             'configuration':config, 'session':session}, packages
-
-
-def publish():
-    if job is None:return
-    status = job.progress()
-    if job.state == 'complete':status['archive'] = str(job.bundle.output)
-    atomic(SETTINGS/'status.json', encoded(status))
 
 
 def previous_export():
@@ -135,19 +137,18 @@ def previous_export():
 
 @safe
 def start(fresh=False):
-    global job, world_token, last_status, last_log
+    global job, world_token, last_world_check, last_log
     session, token = context()
     meta, packages = metadata(session)
     directory = None if fresh else previous_export()
     if job is not None:job.close()
     if directory is None:
         directory = EXPORTS/('borderlens-'+datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-%f'))
-    job = Job(unrealsdk, directory, meta, packages, resume=directory.exists())
+    job = Job(unrealsdk, directory, meta, packages, resume=directory.exists(), installation_root=game_root())
     world_token = token
     atomic(SETTINGS/'latest.json', encoded({'directory':directory.name}))
-    last_status = last_log = time.monotonic()
-    publish()
-    report(f'Export started: {directory}. Stay on this map. F9 pauses/resumes; progress is in status.json.')
+    last_world_check = last_log = time.monotonic()
+    report(f'Export started: {directory}. Stay on this map. F9 pauses/resumes; progress is reported here in the SDK log.')
 
 
 @keybind('Start / pause / resume raw export', 'F9')
@@ -158,14 +159,12 @@ def export_key():
         start()
     elif job.state == 'running':
         job.pause()
-        publish()
         report('Paused. F9 resumes.')
     else:
         _, token = context()
         if token != world_token:
             raise ValueError('World changed; use Start fresh export in the mod menu.')
         job.resume()
-        publish()
         report('Resumed.')
 
 
@@ -179,7 +178,6 @@ def show_status(_option=None):
     if job is None:
         report(f'No active job. Load a character, close menus, then press F9. Output: {EXPORTS}')
     else:
-        publish()
         report(json.dumps(job.progress(), ensure_ascii=False))
 
 
@@ -187,27 +185,24 @@ def show_status(_option=None):
 def finish_early(_option=None):
     if job is not None and job.state in ('running','paused'):
         job.finish('User ended capture early; remaining work was not scanned.')
-        publish()
         report('Finishing partial export ZIP; close menus and wait for completion.')
 
 
 @hook('Engine.GameViewportClient:PostRender', Type.POST)
 @safe
 def on_render(_obj, _args, _ret, _func):
-    global last_status, last_log, job
+    global last_world_check, last_log, job
     if job is None or job.state != 'running':return
     now = time.monotonic()
-    if now-last_status >= 1:
+    if now-last_world_check >= 1:
         _, token = context()
         if token != world_token:
             stop_for_travel()
             return
-        publish()
-        last_status = now
+        last_world_check = now
     before = job.state
     job.tick()
     if job.state != before:
-        publish()
         if job.state == 'complete':report(f'Export ZIP ready: {job.bundle.output}')
         elif job.state == 'failed':report(f'Export failed; see {job.dataset.directory}/manifest.json', True)
     elif now-last_log >= 10:
@@ -243,4 +238,5 @@ build_mod(options=[scope,
                    ButtonOption('Finish partial export now', on_press=finish_early)],
           keybinds=[export_key], hooks=[on_render, on_travel],
           on_disable=on_disable, settings_file=SETTINGS/'mod.json')
+remove_obsolete_status_files()
 report(f'Loaded {__version__}. Load a solo character, then F9 to export.')

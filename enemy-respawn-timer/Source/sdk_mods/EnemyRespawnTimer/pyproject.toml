@@ -1,6 +1,6 @@
 [project]
 name = "Enemy Respawn Timer"
-version = "1.2.8"
+version = "1.2.10"
 authors = [{ name = "keogh" }]
 description = """Choose how long cleared enemy groups wait before respawning.
 

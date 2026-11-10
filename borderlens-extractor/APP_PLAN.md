@@ -71,16 +71,32 @@ research and Codex integration intentionally use the internet.
 
 ### Extractor
 
-Borderlens Extractor is implemented. The current build is **0.2.1**:
+Borderlens Extractor is implemented. The current build is **0.3.2** (native test capture pending):
 
 - SDK mod: `extractor/dist/BorderlensExtractor.sdkmod`.
 - Source: `extractor/src/BorderlensExtractor/`.
 - Raw format: `extractor/FORMAT.md`.
 - F9 starts/pauses/resumes; the mod menu can start fresh or finish a partial capture.
+- 0.3.2 adds NPC/contact, mission-giver and map/travel indexing. Source-field
+  candidates remain distinct from reflected asset identities; callers/quest givers
+  are not assumed to be people. Travel lookup objects and level dependency lists
+  are now reflected without loading their maps. The reviewed plan has 219 roots,
+  including additional DLC enemy/population and ECHO/NPC packages identified in
+  the 0.3.1 capture. Resume repairs seeds missing at source/chunk boundaries.
+- 0.3.1 removes all `status.json` writes after a Windows access-denied failure.
+  Progress and manual status go to the SDK log. Stale status/temp files are deleted
+  on startup when possible; deletion failures do not stop extraction.
 - Export ZIPs contain `manifest.json` and checksummed JSON record chunks.
 - Captures include definitions, reflected schemas, typed references, parts,
   manufacturers, grade tables, formulas, naming conditions, loot pools,
   expression evaluators, population factories and limited map/archetype bindings.
+- 0.3.0 adds evidence-linked `catalogue_identity` records, 172 reviewed data roots,
+  unreferenced character-template discovery and installed English localisation
+  candidates. Package-file metadata is inventoried without loading maps. These
+  records seed later research; they are not deduplicated item families or a proven
+  complete boss/enemy/NPC catalogue. The existing workshop still discovers item
+  families from raw object records; this release does not add character UI/compiler
+  support. Bring back the complete current extractor ZIP to assess coverage gaps.
 - Work is incremental on the game thread. The extractor does not generate items
   or change gameplay values/saves. Its temporary static-asset liveness pins are
   released on completion, disable, failure or travel.
@@ -88,12 +104,18 @@ Borderlens Extractor is implemented. The current build is **0.2.1**:
 A new character is **not required**. An existing/copied solo save works. For a
 clean capture, disable gameplay mods and fully restart the game before extraction.
 
-The two reviewed captures are:
+Reviewed captures include:
 
 | Capture | Extractor | Data objects | Observations |
 | --- | --- | ---: | --- |
 | `borderlens-20261023-150958-597989.zip` | 0.1.0 | 15,097 | Initial capture; nine missing nested objects; two candidate packages unconfirmed |
 | `borderlens-20261023-153827-931444.zip` | 0.2.0 | 20,508 | All 69 planned package roots loaded; all nine old missing objects recovered |
+| `borderlens-20261110-121438-265785.zip` | 0.3.1 | 24,939 | All 172 roots loaded; 280 English files; 6,367 identity records and 643 distinct character labels; 80 cinematic-cache read errors, no truncation/missing lookups; gameplay mods enabled |
+
+The 0.3.1 capture confirmed missing friendly-NPC/caller/travel indexing despite
+relevant raw records already being present. It is not a verified vanilla stats
+baseline. Its audit is under `temp/reviews/` when available; 0.3.2 needs a fresh
+capture after other mods are disabled and the game is restarted.
 
 These object counts are **not item-family counts**. The second capture has no
 missing-object entries or serialization truncation, but retains 278 unsupported

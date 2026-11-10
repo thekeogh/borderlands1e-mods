@@ -1,0 +1,61 @@
+{
+  "source": "respawn-20261109-211258-389217.json",
+  "version": "1.2.8",
+  "delay": "Forever (until reload)",
+  "den": "Trash_Aquaduct.TheWorld:PersistentLevel.PopulationOpportunityDen_7",
+  "events": [
+    {
+      "event": "spawn_tracked",
+      "game_time": 60.562564849853516,
+      "den": "Trash_Aquaduct.TheWorld:PersistentLevel.PopulationOpportunityDen_7",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_18",
+      "allegiance": "gd_allegiance.humanoidenemy.banditallegiance"
+    },
+    {
+      "event": "spawn_tracked",
+      "game_time": 60.562564849853516,
+      "den": "Trash_Aquaduct.TheWorld:PersistentLevel.PopulationOpportunityDen_7",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_20",
+      "allegiance": "gd_allegiance.humanoidenemy.banditallegiance"
+    },
+    {
+      "event": "death_confirmed_by_native_removal",
+      "game_time": 552.2079467773438,
+      "den": "Trash_Aquaduct.TheWorld:PersistentLevel.PopulationOpportunityDen_7",
+      "definition": "AutoTurret_Gatling",
+      "location": "{X: -33277.0390625, Y: 31017.236328125, Z: 1548.9984130859375}",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_18",
+      "death_time": 552.1552124023438
+    },
+    {
+      "event": "death_confirmed_by_native_removal",
+      "game_time": 670.8192138671875,
+      "den": "Trash_Aquaduct.TheWorld:PersistentLevel.PopulationOpportunityDen_7",
+      "definition": "AutoTurret_Gatling",
+      "location": "{X: -33277.0390625, Y: 31017.236328125, Z: 1548.9984130859375}",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_20",
+      "death_time": 670.6365966796875
+    },
+    {
+      "event": "group_cleared",
+      "game_time": 670.8192138671875,
+      "den": "Trash_Aquaduct.TheWorld:PersistentLevel.PopulationOpportunityDen_7",
+      "deadline": 1000000669.6365967,
+      "written": 1000000640.0
+    },
+    {
+      "event": "spawn_tracked",
+      "game_time": 1631.005615234375,
+      "den": "Trash_Aquaduct.TheWorld:PersistentLevel.PopulationOpportunityDen_7",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_56",
+      "allegiance": "gd_allegiance.humanoidenemy.banditallegiance"
+    },
+    {
+      "event": "spawn_tracked",
+      "game_time": 1631.005615234375,
+      "den": "Trash_Aquaduct.TheWorld:PersistentLevel.PopulationOpportunityDen_7",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_57",
+      "allegiance": "gd_allegiance.humanoidenemy.banditallegiance"
+    }
+  ]
+}

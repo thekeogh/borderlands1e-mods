@@ -21,7 +21,7 @@ def build():
     with ZipFile(sdkmod) as archive:
         if archive.testzip() is not None:raise ValueError('Invalid SDKmod ZIP')
         names = archive.namelist()
-        for required in ('__init__.py','pyproject.toml','package-plan.json','job.py'):
+        for required in ('__init__.py','pyproject.toml','package-plan.json','job.py','catalogue.py','installation.py'):
             if 'BorderlensExtractor/'+required not in names:raise ValueError('Missing '+required)
         if any('__pycache__' in n or n.startswith('/') or '..' in Path(n).parts for n in names):
             raise ValueError('Unsafe package entry')

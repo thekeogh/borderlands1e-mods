@@ -1,16 +1,19 @@
 """Incremental data-only export; no actor/value wrappers survive a frame."""
 
 from collections import deque
+import json
 import time
 
 from . import policy
 from .codec import Reflector
 from .engine import Engine
+from .catalogue import identities, localisation_identities
+from .installation import InstallationScan
 from .storage import Dataset, Bundle, utc
 
 
 class Job:
-    def __init__(self, sdk, directory, metadata, packages, resume=False, limits=None):
+    def __init__(self, sdk, directory, metadata, packages, resume=False, limits=None, installation_root=None):
         self.limits = dict(policy.LIMITS,**(limits or {}))
         self.engine = Engine(sdk)
         self.dataset = Dataset(directory,metadata,self.limits['chunk_records'],self.limits['chunk_bytes'],resume)
@@ -26,12 +29,16 @@ class Job:
         prior_lookup = self.dataset.manifest.get('lookup', {})
         self.engine.lookup_counts.update(prior_lookup.get('counts', {}))
         self.engine.lookup_recoveries = list(prior_lookup.get('recoveries', []))
-        self.binding_count = 0
+        self.binding_count = sum(self.dataset.counts.get(k, 0) for k in ('world_binding','archetype_binding'))
+        self.object_count = self.dataset.counts.get('object', 0)
+        self.identity_count = self.dataset.counts.get('catalogue_identity', 0)
+        self.catalogue = dict(self.dataset.manifest.get('catalogue', {}))
+        self.catalogue.update(self.dataset.catalogue)
         self.read_count = 0
         self.phase = 'discover'
         self.state = 'running'
         self.scans = deque()
-        self.worlds = deque(policy.WORLD_CLASSES)
+        self.worlds = deque()
         self.package_index = 0
         self.package_results = list(self.dataset.manifest.get('package_results',[]))
         self.quarantined = {r['name'].casefold() for r in self.package_results if r['status']=='loading'}
@@ -43,6 +50,19 @@ class Job:
         self.busy = False
         self.note = ''
         self.class_inventory = set(self.dataset.manifest.get('discovered_classes', []))
+        self.installation = None
+        self.reindex = None
+        if metadata['configuration']['scope'] == 'catalogue' and not self.dataset.capture_complete:
+            for scan in self.dataset.manifest.get('installation_scans', []):
+                if scan['status'] in ('pending','running'):scan['status'] = 'interrupted'
+            self.installation = InstallationScan(installation_root, self.limits,
+                                                len(self.dataset.manifest['sessions'])-1)
+            self.dataset.manifest.setdefault('installation_scans', []).append(self.installation.summary)
+            self.phase = 'installation'
+        if resume and not self.dataset.capture_complete:
+            self.after_reindex = self.phase
+            self.reindex = self.recover_identities()
+            self.phase = 'reindex'
         try:
             inventory = sorted(obj._path_name() for obj in self.engine.sdk.find_all('Package'))
             self.dataset.manifest.setdefault('package_inventory', []).append(
@@ -64,11 +84,13 @@ class Job:
         if kind != 'object':key += '@'+str(self.context.get('map', '')).casefold()
         if key in self.dataset.ids or key in self.queued:return
         cap = self.limits['bindings'] if kind!='object' else self.limits['objects']
-        count = self.binding_count if kind!='object' else len(self.queued)
+        count = self.binding_count if kind!='object' else self.object_count
         if count>=cap:
             self.external['object/binding limit'] = self.external.get('object/binding limit',0)+1
             return
-        if kind=='object':self.engine.pin(obj)
+        if kind=='object':
+            self.engine.pin(obj)
+            self.object_count += 1
         else:self.binding_count += 1
         self.queue.append(descriptor)
         self.queued.add(key)
@@ -93,12 +115,14 @@ class Job:
     def progress(self):
         return {'state':self.state,'phase':self.phase,'note':self.note,'records':dict(self.dataset.counts),
                 'queued':len(self.queue),'packages_processed':self.package_index,'packages_planned':len(self.packages),
-                'directory':str(self.dataset.directory),'max_step_ms':round(self.max_step_ms,2)}
+                'directory':str(self.dataset.directory),'max_step_ms':round(self.max_step_ms,2),
+                'installation':dict(self.installation.summary) if self.installation is not None else None}
 
     def checkpoint(self, status=None):
         self.dataset.checkpoint(status=status or self.state,phase=self.phase,
             package_results=self.package_results,failures=list(self.failures),missing_objects=list(self.missing),
             external_references=dict(self.external),serialization=dict(self.codec.stats),
+            catalogue=self.catalogue,
             discovered_classes=sorted(self.class_inventory),
             lookup={'counts':dict(self.engine.lookup_counts),
                     'recoveries':list(self.engine.lookup_recoveries)},progress=self.progress())
@@ -108,10 +132,25 @@ class Job:
         classes = self.engine.classes()
         self.class_inventory.update(classes)
         self.scans = deque(classes)
+        self.worlds = deque(self.engine.binding_classes())
         self.phase = 'scan'
         self.note = 'discovering loaded data classes'
 
     def step(self):
+        if self.phase=='reindex':
+            try:self.add_record(next(self.reindex))
+            except StopIteration:
+                self.reindex = None
+                self.phase = self.after_reindex
+            return
+        if self.phase=='installation':
+            try:
+                row = next(self.installation.iterator)
+                if row is not None:
+                    self.add_record(row)
+                    self.note = row.get('file', row.get('source_file', 'installed content'))
+            except StopIteration:self.phase = 'discover'
+            return
         if self.phase=='discover':
             self.discover()
             return
@@ -127,7 +166,9 @@ class Job:
                                         'source_package':row['path'].split('.',1)[0]})
             if row['kind'] != 'object':
                 record['id'] += '@'+str(self.context.get('map', '')).casefold()
-            self.dataset.add(record)
+                record['binding_category'] = self.engine.binding_category(obj)
+            self.add_record(record)
+            for seed in identities(record):self.add_record(seed)
             self.read_count += 1
             self.note = row['path']
             return
@@ -143,8 +184,11 @@ class Job:
             name = self.worlds.popleft()
             self.note = 'map bindings '+name
             try:
-                for obj in self.engine.sdk.find_all(name):
-                    if not str(obj.Name).startswith('Default__'):self.enqueue(obj,'world_binding')
+                for obj in self.engine.scan(name):
+                    if str(obj.Name).startswith('Default__'):continue
+                    root = obj._path_name().split('.', 1)[0]
+                    kind = 'archetype_binding' if policy.valid_package(root) else 'world_binding'
+                    self.enqueue(obj,kind)
             except Exception as exc:self.record_failure('map binding scan',name,exc)
             return
         if self.package_index<len(self.packages):
@@ -171,6 +215,25 @@ class Job:
             return
         self.finish()
 
+    def recover_identities(self):
+        """A committed source may precede its seeds at a crash/chunk boundary."""
+        for chunk in list(self.dataset.manifest['chunks']):
+            for row in json.loads((self.dataset.directory/chunk['file']).read_bytes()):
+                if row['record_type'] in ('object','archetype_binding','world_binding'):
+                    yield from identities(row)
+                elif row['record_type']=='catalogue_identity' and row.get('identity_status')=='localisation_candidate':
+                    yield from localisation_identities(row)
+
+    def add_record(self, row):
+        if row['record_type'] == 'catalogue_identity':
+            if row['id'] in self.dataset.ids:return
+            if self.identity_count >= self.limits['identities']:
+                self.external['identity limit'] = self.external.get('identity limit', 0)+1
+                return
+            self.identity_count += 1
+        self.dataset.add(row)
+        self.catalogue.update(self.dataset.catalogue)
+
     def tick(self):
         if self.state!='running' or self.busy:return
         self.busy = True
@@ -190,6 +253,7 @@ class Job:
             self.record_failure('export',self.note,exc)
             self.state = 'failed'
             self.engine.release()
+            if self.installation:self.installation.close('failed')
             if self.bundle:self.bundle.close()
             try:self.checkpoint('failed')
             except Exception:pass  # Preserve the original failure even if disk writes fail.
@@ -205,7 +269,7 @@ class Job:
             return
         if release:
             self.engine.release()
-            self.phase = 'discover'
+            if self.phase not in ('installation','reindex'):self.phase = 'discover'
         self.checkpoint('paused')
 
     def resume(self):
@@ -215,17 +279,31 @@ class Job:
         if self.phase=='archive' or self.state=='complete':return
         if reason:
             self.dataset.manifest['coverage']['limitations'].append(reason)
+        if self.installation:
+            self.installation.close('partial')
+        if self.reindex:
+            self.reindex.close()
+            self.reindex = None
         releases = self.engine.release()
         if releases:self.failures.extend(releases)
         self.phase, self.state = 'archive','running'
         coverage = self.dataset.manifest['coverage']
-        coverage['data_issues'] = bool(self.failures or self.missing or any(self.codec.stats.values()))
+        coverage['data_issues'] = bool(self.failures or self.missing or any(self.codec.stats.values())
+                                      or (self.installation and (self.installation.summary['errors']
+                                          or self.installation.summary['limits_hit'])))
         coverage['unconfirmed_packages'] = sum(r['status'] not in ('loaded','already_present') for r in self.package_results)
         coverage['limits_hit'] = sorted(k for k in self.external if 'limit' in k)
         coverage['catalogue_complete'] = False
+        self.catalogue.update({
+            'identity_records':self.dataset.counts.get('catalogue_identity', 0),
+            'purpose':'Crawl seeds linked to assets, English localisation or explicit source fields; not deduplicated entities/families.',
+            'character_classification':'Boss/named-enemy/NPC roles are unknown unless independently established.',
+            'complete':False})
         self.checkpoint('complete')
         self.bundle = Bundle(self.dataset)
 
     def close(self):
+        if self.reindex:self.reindex.close()
+        if self.installation:self.installation.close()
         if self.bundle:self.bundle.close()
         self.engine.release()

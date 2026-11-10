@@ -1,6 +1,6 @@
 {
   "format_version": 1,
-  "description": "Data roots only. Missing candidates are reported; no map packages are loaded. This is not a full package inventory.",
+  "description": "Reviewed data roots for equipment, characters, missions, skills and locations. Installed files are inventoried separately and never automatically loaded. No map packages are loaded; coverage remains unverified.",
   "packages": [
     {
       "name": "gd_globals",
@@ -346,6 +346,756 @@
       "name": "dlc4_gd_items",
       "group": "dlc4",
       "evidence": "item/source data namespace confirmed in BL1E capture borderlens-20261023-150958-597989"
+    },
+    {
+      "name": "dlc1_MissionData",
+      "group": "dlc1",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "dlc1_Missions",
+      "group": "dlc1",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "dlc1_registrationstationlist",
+      "group": "dlc1",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "dlc2_missions",
+      "group": "dlc2",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "dlc2_registrationstationlist",
+      "group": "dlc2",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "dlc3_CircleMissions",
+      "group": "dlc3",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "dlc3_CircleMissionsData",
+      "group": "dlc3",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "dlc3_MainMissionData",
+      "group": "dlc3",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "dlc3_MainMissions",
+      "group": "dlc3",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "dlc3_registrationstationlist",
+      "group": "dlc3",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "dlc3_SideMissionData",
+      "group": "dlc3",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "dlc3_SideMissions",
+      "group": "dlc3",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "DLC4_D_Faults_MissionData",
+      "group": "dlc4",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "DLC4_D_Faults_Missions",
+      "group": "dlc4",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "DLC4_Hyperion_Dump_MissionData",
+      "group": "dlc4",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "DLC4_Hyperion_Dump_Missions",
+      "group": "dlc4",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "dlc4_registrationstationlist",
+      "group": "dlc4",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "DLC4_Sanders_Gorge_MissionData",
+      "group": "dlc4",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "DLC4_Sanders_Gorge_Missions",
+      "group": "dlc4",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "DLC4_SS_Canyon_MissionData",
+      "group": "dlc4",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "DLC4_SS_Canyon_Missions",
+      "group": "dlc4",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "DLC4_Tartarus_Stat_MissionData",
+      "group": "dlc4",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "DLC4_Tartarus_Stat_Missions",
+      "group": "dlc4",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "DLC4_Wayward_Pass_MissionData",
+      "group": "dlc4",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "DLC4_Wayward_Pass_Missions",
+      "group": "dlc4",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_AutomatedTurret",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Balance_Enemies_Creatures",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Balance_Indigenous_Animals",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Balance_SkillActors",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_BanditBadasses",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_BanditCaptain1",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_BanditCaptain2",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_BanditCaptain3",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_BanditCrimsonLanceEngineer",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_BanditCrimsonLanceGrunt",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_BanditCrimsonLanceHeavy",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_BanditElite",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_BanditGrunt",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_BanditHeavy",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_banditkromboss",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_BaronBoss",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Bodyguards",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Brick",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_BrigadierInsane",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_BunkerBoss",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_challenges",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_CheetahsPaw",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_COEMissions",
+      "group": "missions",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_CrabWorms",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_CrimsonLanceBadasses",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_emergencyteleportoutpost",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_FirePsycho",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_gamestages_vs",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_GuardianBadasses",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Guardians",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Highwaymen",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Indigenous_Creatures",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Kobb_Brothers",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Lancer",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_lightrunner",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_lilith",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_MidgetBandit",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_MidgetKing",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_MidgetPsycho",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_MissionDirectors",
+      "group": "missions",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_MissionNPCs",
+      "group": "missions",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_mordecai",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_NPC",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_NPCTKBaha",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_NPCZed",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_outrider",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_PlayerShared",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_rakkhive",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Rakks",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Reaver",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_RegistrationStationList",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Roland",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Scythids",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Sera",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Skags",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Skills2_Brick",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Skills2_Lilith",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_skills2_Mordecai",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_skills2_Roland",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Skills_Brick",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_skills_common",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_skills_Enemy",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Skills_Lilith",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_skills_Mordecai",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_SledgeBoss",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Slow",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_Spiderants",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_turrets",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_VehicleSpawnStation",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_VillagerNPCs",
+      "group": "catalogue",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "I1_MissionData",
+      "group": "missions",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "I1_Missions",
+      "group": "missions",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "I2_MissionData",
+      "group": "missions",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "I2_Missions",
+      "group": "missions",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "Z1_MissionData",
+      "group": "missions",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "Z1_Missions",
+      "group": "missions",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "Z2_MissionData",
+      "group": "missions",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "Z2_Missions",
+      "group": "missions",
+      "evidence": "identity/source namespace observed in BL1E capture borderlens-20261023-153827-931444; reviewed for catalogue discovery"
+    },
+    {
+      "name": "gd_EchoCallerIDs",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Echos/gd_EchoCallerIDs.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "Z0_Echos",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Echos/Z0_Echos.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "Z1_Echos",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Echos/Z1_Echos.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "Z2_Echos",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Echos/Z2_Echos.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "gd_echo_caller",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Echo/gd_echo_caller.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "gd_z0_echo",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Echo/gd_z0_echo.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "gd_NPCBrock",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Characters/gd_NPCBrock.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "gd_NPCCrazy_Earl",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Characters/gd_NPCCrazy_Earl.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "gd_NPCHelena",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Characters/gd_NPCHelena.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "gd_NPCMarcus",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Characters/gd_NPCMarcus.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "gd_NPCSalix",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Characters/gd_NPCSalix.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "gd_NPCSettler",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Characters/gd_NPCSettler.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "gd_NPCTannis",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Characters/gd_NPCTannis.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc1_gd_npctkbaha",
+      "group": "dlc1",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC1/Packages/GameData/Characters/dlc1_gd_npctkbaha.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "gd_NewHaven_NPC",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/InteractiveObjects/gd_NewHaven_NPC.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "gd_MapChangeObjects",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/InteractiveObjects/gd_MapChangeObjects.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc1_gd_missionnpcs",
+      "group": "dlc1",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC1/Packages/GameData/InteractiveObjects/dlc1_gd_missionnpcs.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc1_gd_MapChangeObjects",
+      "group": "dlc1",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC1/Packages/GameData/InteractiveObjects/dlc1_gd_MapChangeObjects.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc2_gd_mapchangeobjects",
+      "group": "dlc2",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC2/Packages/GameData/InteractiveObjects/dlc2_gd_mapchangeobjects.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc3_gd_MapChangeObjects",
+      "group": "dlc3",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC3/Packages/GameData/InteractiveObjects/dlc3_gd_MapChangeObjects.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc4_gd_missionnpcs",
+      "group": "dlc4",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC4/Packages/GameData/InteractiveObjects/dlc4_gd_missionnpcs.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc4_gd_VillagerNPCs",
+      "group": "dlc4",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC4/Packages/GameData/InteractiveObjects/dlc4_gd_VillagerNPCs.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc4_gd_MapChangeObjects",
+      "group": "dlc4",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC4/Packages/GameData/InteractiveObjects/dlc4_gd_MapChangeObjects.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "gd_VaultBoss_Head",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Creatures/gd_VaultBoss_Head.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "gd_VaultBoss_Main",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Creatures/gd_VaultBoss_Main.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "gd_VaultBoss_Tongue",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Creatures/gd_VaultBoss_Tongue.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc4_gd_VaultBoss_Head",
+      "group": "dlc4",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC4/Packages/GameData/Creatures/dlc4_gd_VaultBoss_Head.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc4_gd_VaultBoss_Main",
+      "group": "dlc4",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC4/Packages/GameData/Creatures/dlc4_gd_VaultBoss_Main.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "gd_population_npc",
+      "group": "catalogue",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/Packages/GameData/Population/gd_population_npc.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc1_gd_Balance_Enemies",
+      "group": "dlc1",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC1/Packages/GameData/Population/dlc1_gd_Balance_Enemies.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc1_gd_Balance_Enemies_Humans",
+      "group": "dlc1",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC1/Packages/GameData/Population/dlc1_gd_Balance_Enemies_Humans.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc1_gd_population_enemies",
+      "group": "dlc1",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC1/Packages/GameData/Population/dlc1_gd_population_enemies.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc2_gd_Balance_Creatures",
+      "group": "dlc2",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC2/Packages/GameData/Population/dlc2_gd_Balance_Creatures.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc2_gd_Balance_Enemies_Creatures",
+      "group": "dlc2",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC2/Packages/GameData/Population/dlc2_gd_Balance_Enemies_Creatures.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc2_gd_Balance_Enemies_Humans",
+      "group": "dlc2",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC2/Packages/GameData/Population/dlc2_gd_Balance_Enemies_Humans.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc2_gd_population_enemies",
+      "group": "dlc2",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC2/Packages/GameData/Population/dlc2_gd_population_enemies.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc3_gd_balance_enemies",
+      "group": "dlc3",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC3/Packages/GameData/Population/dlc3_gd_balance_enemies.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc3_gd_Balance_Enemies_Humans",
+      "group": "dlc3",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC3/Packages/GameData/Population/dlc3_gd_Balance_Enemies_Humans.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc3_gd_population_enemies",
+      "group": "dlc3",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC3/Packages/GameData/Population/dlc3_gd_population_enemies.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc4_gd_Balance_Enemies",
+      "group": "dlc4",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC4/Packages/GameData/Population/dlc4_gd_Balance_Enemies.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc4_gd_Population_Enemies",
+      "group": "dlc4",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC4/Packages/GameData/Population/dlc4_gd_Population_Enemies.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc1_Echos",
+      "group": "dlc1",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC1/Packages/GameData/Echos/dlc1_Echos.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc3_echos",
+      "group": "dlc3",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC3/Packages/GameData/Echos/dlc3_echos.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc4_EchoCallerIDs",
+      "group": "dlc4",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC4/Packages/GameData/Echoes/dlc4_EchoCallerIDs.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc4_Echoes",
+      "group": "dlc4",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC4/Packages/GameData/Echoes/dlc4_Echoes.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc3_MissionNPCs",
+      "group": "dlc3",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC3/Packages/GameData/Missions/dlc3_MissionNPCs.upk; captured header reports no map content; native load coverage unverified"
+    },
+    {
+      "name": "dlc5_registrationstationlist",
+      "group": "enhanced",
+      "evidence": "reviewed GameData file in BL1E capture borderlens-20261110-121438-265785: WillowGame/CookedPC/DLC5/Packages/GameData/PackageDef/dlc5_registrationstationlist.upk; captured header reports no map content; native load coverage unverified"
     }
   ]
 }

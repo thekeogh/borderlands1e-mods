@@ -545,6 +545,31 @@
 - Use ChatGPT-authenticated Codex CLI with no API-key fallback.
 - Verify real capture import and one live draft; add API, subprocess, queue, simulation and browser checks.
 
+## Extractor 0.3.2
+
+- Index ECHO caller names and unnamed interactive NPC definitions. Keep contacts, NPC assets and mission-giver candidates separate; callers/givers can also be organisations, bounty boards or devices.
+- Add source/field-linked mission-giver, travel-key and map-package candidates without polluting mission display names or inventing resolved actor IDs, aliases or entity origin. Preserve localised field/line/checksum evidence and repeated field occurrences.
+- Reflect `TeleportOutpostLookupObject` and `LevelDependencyList`; retain station display names plus internal travel/map identifiers. These references never cause map loads.
+- Expand the reviewed data-package plan from 172 to 219 roots using GameData paths/headers observed in the 0.3.1 capture: DLC enemy/population tables, ECHO/NPC definitions, map-transition metadata and the installed Enhanced registration list. No automatic loading of discovered files.
+- On resume, recover missing identities from committed raw sources/localised sections before new scanning; preserve committed records and repair source/seed chunk-boundary gaps.
+- Add real-capture indexing fixtures and modeled tests for source identity, caller/quest-giver categories, travel references, localised field recovery, repeated fields, map-load exclusion and typed names. Keep log-only progress and the F9 workflow. Native 0.3.2 coverage awaits a clean capture.
+
+## Extractor 0.3.1
+
+- Remove every status-file write; keep progress, manual status and completion messages in the SDK log. Retain periodic world-change checks independently of progress reporting.
+- Delete obsolete `status.json` and `status.json.tmp` on startup when possible. A locked/unremovable stale file is logged and ignored, so it cannot stop extraction.
+- Test source/packaged lifecycles with status-file writes forbidden, stale-file cleanup, locked-file failures and world-change detection. Rebuild the SDKmod/player ZIP.
+
+## Extractor 0.3.0
+
+- Export evidence-linked `catalogue_identity` crawl seeds for characters, equipment names/parts/balances, missions, skills, manufacturers, regions, challenges, vehicles and loot sources. Preserve nested enemy grade names and unnamed asset IDs without guessing families or boss/NPC roles.
+- Expand the reviewed data-package plan from 69 to 172 roots using namespaces observed in the 0.2.0 BL1E capture, including enemy/boss templates, NPCs, player skills and DLC missions/registration lists. Installed packages never become automatic load requests.
+- Read installed English INT/ENG localisation without visiting maps, spawning characters or changing saves. Preserve file checksums, section/class hints, label fields, repeated sections and changed-source evidence across resume. Support UTF-16, UTF-8 and Windows-1252.
+- Inventory installed package filenames, sizes and bounded header summaries without loading them. Record missing installations, unsupported summaries, read failures, skipped symlinks and scan limits for follow-up coverage review.
+- Capture `AIPawnName` and rescan exact actor subclasses after package loads, including unreferenced pawn/vehicle templates. Keep actor reads limited and never pin actors.
+- Increase explicit definition/binding/reference budgets; bound identity/file/localisation scans. Recover identity counts from committed records and retain the existing F9, checksummed ZIP and incompatible-version fresh-capture workflow.
+- Add modeled tests for unloaded names, source linkage, encoding, interrupted/changed-source resume, limits, symlinks, subclass templates, ZIP contents and continued rejection of map/unreviewed package loads. Native Enhanced coverage remains unverified until the 0.3.0 test capture.
+
 ## 0.2.1
 
 - Start a fresh capture when the last-export pointer references a deleted folder or missing manifest. Preserve remaining files and continue rejecting corrupt checkpoints.

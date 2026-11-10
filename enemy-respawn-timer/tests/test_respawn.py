@@ -479,7 +479,7 @@ class RespawnTests(unittest.TestCase):
             for file in files:
                 report = json.loads(file.read_text())
                 self.assertFalse(report["ready"])
-                self.assertEqual(report["version"], "1.2.8")
+                self.assertEqual(report["version"], "1.2.10")
                 self.assertNotIn("schemas", report)
 
     def test_event_buffer_is_bounded_and_reports_dead_weak_references(self):
@@ -931,6 +931,162 @@ class RespawnTests(unittest.TestCase):
         self.mod.record_death(second, None, None, None)
         self.mod.poll_tick(None, None, None, None)
         self.assertEqual(self.den.SpawnData.NextSpawnTime, 171)
+
+    def test_captured_forever_clear_retains_native_guard_through_late_timestamp_reset(self):
+        fixture = json.loads((ROOT / "tests/fixtures/forever-native-bypass.json").read_text())
+        cleared = next(e for e in fixture["events"] if e["event"] == "group_cleared")
+        deaths = [e["death_time"] for e in fixture["events"] if e["event"] == "death_confirmed_by_native_removal"]
+        new_spawn = next(e for e in fixture["events"]
+                         if e["event"] == "spawn_tracked" and e["game_time"] > cleared["game_time"])
+        self.den.path = fixture["den"]
+        self.den.SpawnData.PopulationDefName = "AutoTurret_Gatling"
+        first, second = self.prepare_native_den()
+        self.mod.respawn_delay.value = "Forever (until reload)"
+        self.remove_without_dead_flag(first, deaths[0], returned=True)
+        self.remove_without_dead_flag(second, deaths[1], returned=True)
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertTrue(self.den.bNoRespawning)
+        self.assertIsNone(self.mod.den_skip_reason(self.den, self.world))
+        self.assertAlmostEqual(entry["group"].cleared_at, deaths[-1])
+        # Reproduce the native schedule being reset long after the clear.
+        self.den.SpawnData.NextSpawnTime = 0
+        self.den.SpawnData.NumTotalActors = 0
+        self.world.TimeSeconds = new_spawn["game_time"]
+        self.mod.poll_tick(None, None, None, None)
+        self.assertTrue(self.den.bNoRespawning)
+        self.assertGreater(self.den.SpawnData.NextSpawnTime, self.world.TimeSeconds)
+        self.assertEqual(self.mod._counts["rearmed_groups"], 0)
+        self.assertEqual(entry["group"].cleared_at, deaths[-1])
+        report = self.mod.snapshot()
+        self.assertTrue(report["dens"][0]["owns_no_respawn_guard"])
+        self.assertTrue(report["dens"][0]["native_no_respawn"])
+
+    def test_finite_native_guard_is_released_at_expiry_and_disable_or_map_reload(self):
+        for action in ("expiry", "disable", "map"):
+            with self.subTest(action=action):
+                self.setUp()
+                pawn, = self.prepare_native_den(1)
+                self.native_kill(pawn, 110)
+                self.assertTrue(self.den.bNoRespawning)
+                if action == "expiry":
+                    self.world.TimeSeconds = 170
+                    self.mod.poll_tick(None, None, None, None)
+                    self.assertEqual(self.mod._counts["rearmed_groups"], 1)
+                elif action == "disable":
+                    self.mod.on_disable()
+                else:
+                    self.mod.map_change(None, None, None, None)
+                self.assertFalse(self.den.bNoRespawning)
+
+    def test_preexisting_no_respawn_flag_is_never_acquired_or_restored(self):
+        self.den.bNoRespawning = True
+        self.mod.testing.sdk.find_all = lambda cls: [self.den] if cls == "PopulationOpportunityDen" else []
+        self.mod.poll_tick(None, None, None, None)
+        self.assertNotIn(self.den._get_address(), self.mod._dens)
+        self.mod.on_disable()
+        self.assertTrue(self.den.bNoRespawning)
+
+    def test_unexpected_spawn_cannot_silently_erase_forever_cooldown(self):
+        pawn, = self.prepare_native_den(1)
+        self.mod.respawn_delay.value = "Forever (until reload)"
+        self.native_kill(pawn, 110)
+        entry = self.mod._dens[self.den._get_address()]
+        original_clear = entry["group"].cleared_at
+        unexpected = Object("TheWorld.BypassPawn")
+        unexpected.bIsDead = False
+        unexpected.Allegiance = Object("gd_allegiance.HumanoidEnemy.BanditAllegiance")
+        self.den.SpawnedDenMembers = [unexpected]
+        self.den.SpawnData.NumActiveActors = 1
+        self.den.bNoRespawning = False  # External/script bypass of owned guard.
+        self.world.TimeSeconds = 1100
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(entry["group"].cleared_at, original_clear)
+        self.assertEqual(self.mod._counts["cooldown_bypasses"], 1)
+        self.assertTrue(self.den.bNoRespawning)
+        self.assertEqual(self.mod._events[-1]["event"], "spawn_during_cooldown")
+        self.world.TimeSeconds = 1101
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.mod._counts["cooldown_bypasses"], 1)
+
+    def test_changing_forever_to_finite_releases_guard_after_original_clear_delay(self):
+        pawn, = self.prepare_native_den(1)
+        self.mod.respawn_delay.value = "Forever (until reload)"
+        self.native_kill(pawn, 110)
+        self.world.TimeSeconds = 200
+        self.mod.respawn_delay.value = "1 minute"
+        self.mod.change_delay(None, "1 minute")
+        self.mod.poll_tick(None, None, None, None)
+        self.assertFalse(self.den.bNoRespawning)
+        self.assertEqual(self.mod._counts["rearmed_groups"], 1)
+
+    def test_null_den_world_skips_without_losing_forever_timer_or_native_guard(self):
+        pawn, = self.prepare_native_den(1)
+        self.mod.respawn_delay.value = "Forever (until reload)"
+        self.native_kill(pawn, 110)
+        entry = self.mod._dens[self.den._get_address()]
+        self.den.WorldInfo = None
+        self.world.TimeSeconds = 200
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.mod._errors, [])
+        self.assertFalse(entry["ignored"])
+        self.assertEqual(entry["group"].cleared_at, 110)
+        self.assertTrue(self.den.bNoRespawning)
+        self.assertEqual(self.mod._skips["missing_den_world"], 1)
+        self.den.WorldInfo = self.world
+        self.world.TimeSeconds = 201
+        self.mod.poll_tick(None, None, None, None)
+        self.assertFalse(entry["ignored"])
+        self.assertTrue(self.den.bNoRespawning)
+        self.assertEqual(self.mod._errors, [])
+
+    def test_null_player_world_skips_without_resetting_existing_session(self):
+        pawn, = self.prepare_native_den(1)
+        self.native_kill(pawn, 110)
+        before = self.mod._dens[self.den._get_address()]
+        self.mod.testing.pc.WorldInfo = None
+        self.mod.poll_tick(None, None, None, None)
+        self.mod.record_death(pawn, None, None, None)
+        self.assertEqual(self.mod._errors, [])
+        self.assertIs(self.mod._dens[self.den._get_address()], before)
+        self.assertTrue(self.den.bNoRespawning)
+        self.mod.testing.pc.WorldInfo = self.world
+        self.world.TimeSeconds = 170
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.mod._counts["rearmed_groups"], 1)
+
+    def test_null_native_member_does_not_invent_a_kill_or_suspend_tracking(self):
+        pawn, = self.prepare_native_den(1)
+        self.den.SpawnedDenMembers = [None]
+        self.world.TimeSeconds = 110
+        self.mod.poll_tick(None, None, None, None)
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertEqual(entry["group"].members, {pawn._get_address()})
+        self.assertFalse(entry["suspended"])
+        self.assertEqual(self.mod._counts["cleared_groups"], 0)
+        self.assertEqual(self.mod._errors, [])
+        self.den.SpawnedDenMembers = [pawn]
+        self.native_kill(pawn, 120)
+        self.assertEqual(entry["group"].cleared_at, 120)
+
+    def test_null_den_inventory_and_callback_targets_skip_cleanly(self):
+        self.mod.testing.sdk.find_all = lambda name: [None] if name == "PopulationOpportunityDen" else []
+        self.mod.poll_tick(None, None, None, None)
+        self.mod.record_death(None, None, None, None)
+        self.mod.before_spawning(None, None, None, None)
+        self.mod.after_spawning(None, None, None, None)
+        self.assertEqual(self.mod._stack, [])
+        self.assertEqual(self.mod._errors, [])
+        self.assertEqual(self.mod.snapshot()["native_dens"], [])
+        self.assertEqual(self.mod.den_skip_reason(None, self.world), "missing_den")
+        self.assertEqual(self.mod.den_skip_reason(self.den, None), "missing_player_world")
+
+    def test_error_report_includes_original_source_function(self):
+        try:
+            raise RuntimeError("diagnostic source test")
+        except RuntimeError as exc:
+            self.mod.error(exc)
+        self.assertIn("test_error_report_includes_original_source_function", self.mod._errors[0])
+        self.assertIn("test_respawn.py:", self.mod._errors[0])
 
     def test_forever_never_releases_native_quota(self):
         pawn, = self.prepare_native_den(1)
