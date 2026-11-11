@@ -115,7 +115,7 @@ class SettingsTests(unittest.TestCase):
         second = self.boot()
         self.assertEqual(second.mod.enemy_difficulty.value, "Very Hard")
         self.assertEqual(second.runtime.spawns.snapshot()["ordinary_tickets"],
-                         {"native": 0, "+1": 0, "+2": 0, "+3": 40, "+4": 55, "+5": 5})
+                         {"native": 0, "+1": 0, "+2": 0, "+3": 40, "+4": 59, "+5": 1})
 
     def test_saved_keybind_and_mission_levels_survive_enable_and_restart(self):
         self.settings.parent.mkdir(parents=True)

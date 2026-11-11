@@ -31,7 +31,7 @@ _stack = []
 _dens = {}
 _actors = {}
 _errors = []
-VERSION = "1.2.10"
+VERSION = "1.2.13"
 _counts = Counter()
 _skips = Counter()
 _events = deque(maxlen=200)
@@ -61,11 +61,16 @@ def error(exc):
 
 
 def release_native_guard(entry):
-    """Undo the no-respawn flag only if we acquired it from an eligible den."""
+    """Release native flags acquired from an eligible cleared den."""
+    den = entry["ref"]()
+    original_enabled = entry["original_enabled"]
+    if original_enabled is not None:
+        if den is not None and not bool(den.IsEnabled):
+            den.IsEnabled = original_enabled
+        entry["original_enabled"] = None
     original = entry["original_no_respawn"]
     if original is None:
         return
-    den = entry["ref"]()
     if den is not None and bool(den.bNoRespawning):
         den.bNoRespawning = original
     entry["original_no_respawn"] = None
@@ -136,13 +141,17 @@ def host_clock():
 
 
 def passive_mission_gate(den, aspect):
-    """Accept all four-slot Enabled/Disabled tables while the native den is enabled.
+    """Accept known four-slot reaction tables while the native den is enabled.
 
     Objective/item payloads and native no-respawn flags remain excluded.
     """
     try:
-        if aspect.Class._path_name() != "WillowGame.MissionPopulationAspect" or not den.IsEnabled:
+        if aspect.Class._path_name() != "WillowGame.MissionPopulationAspect":
             return False
+        if not den.IsEnabled:
+            entry = _dens.get(den._get_address())
+            if entry is None or entry["original_enabled"] is not True:
+                return False
         objective = aspect.MissionObjective
         items = aspect.MissionItems
         if (objective.MissionDefinition is not None or int(objective.ObjectiveIndex) != -1
@@ -150,11 +159,25 @@ def passive_mission_gate(den, aspect):
             return False
         reactions = aspect.MissionReactions
         states = tuple(int(state) for state in reactions.MissionStatusOpportunityReaction)
-        # User requested every combination, including configurations not yet seen.
-        # Captured enum values: Enabled=0, Disabled=1. Keep unknown layouts native.
-        return len(states) == 4 and all(state in (0, 1) for state in states)
+        # Captured enum values: Enabled=0, Disabled=1, Respawn50Percent=2,
+        # Respawn100Percent=3. Cover all 256 combinations of these known values.
+        # Keep unknown layouts/reactions native rather than guessing semantics.
+        return len(states) == 4 and all(state in (0, 1, 2, 3) for state in states)
     except (AttributeError, TypeError, ValueError):
         return False
+
+
+def activation_guard_allowed(den):
+    """Limit activation ownership to ordinary or persistent, payload-free gates."""
+    aspect = getattr(den, "Aspect", None)
+    if aspect is None:
+        return True
+    if not passive_mission_gate(den, aspect):
+        return False
+    states = tuple(int(state) for state in aspect.MissionReactions.MissionStatusOpportunityReaction)
+    # Once enabled, these gates remain enabled in all subsequent stages.
+    # Keep activation native for staged disable/respawn reactions.
+    return states in ((0, 0, 0, 0), (1, 0, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0))
 
 
 def den_skip_reason(den, world):
@@ -223,7 +246,7 @@ def entry_for(den, world):
                  "original": None, "written": None, "ignored": False,
                  "released": False, "original_total": None, "suspended": False,
                  "death_evidence": {}, "last_death_at": None,
-                 "original_no_respawn": None, "unexpected_spawns": set()}
+                 "original_no_respawn": None, "original_enabled": None, "unexpected_spawns": set()}
         _dens[address] = entry
     return None if entry["ignored"] else entry
 
@@ -248,6 +271,14 @@ def set_deadline(entry, choice):
     if entry["original_no_respawn"] is None:
         entry["original_no_respawn"] = False
     den.bNoRespawning = True
+    # The captured rakk reset ignored the timestamp and no-respawn flag. Stop
+    # ordinary opportunities and persistent mission gates at activation too.
+    # Staged mission disable/respawn patterns retain native activation.
+    if activation_guard_allowed(den):
+        if entry["original_enabled"] is None and bool(den.IsEnabled):
+            entry["original_enabled"] = True
+        if entry["original_enabled"] is not None:
+            den.IsEnabled = False
 
 
 def before_spawning(obj, _args, _ret, _func):
@@ -344,7 +375,7 @@ def track_spawn(entry, pawn, allegiance=None):
                 if len(entry["unexpected_spawns"]) < 64:
                     entry["unexpected_spawns"].add(address)
                     trace("spawn_during_cooldown", **den_context(den), pawn=object_path(pawn),
-                          native_no_respawn=bool(den.bNoRespawning),
+                          native_no_respawn=bool(den.bNoRespawning), native_enabled=bool(den.IsEnabled),
                           deadline=entry["group"].deadline(respawn_delay.value))
                 _counts["cooldown_bypasses"] += 1
             return
@@ -681,6 +712,9 @@ def snapshot():
                                    "owns_no_respawn_guard": entry["original_no_respawn"] is not None,
                                    "original_no_respawn": entry["original_no_respawn"],
                                    "native_no_respawn": bool(den.bNoRespawning),
+                                   "owns_activation_guard": entry["original_enabled"] is not None,
+                                   "original_enabled": entry["original_enabled"],
+                                   "native_enabled": bool(den.IsEnabled),
                                    "alive_tracked": len(entry["group"].members),
                                    "actors": [actor_snapshot(address) for address in entry["group"].members],
                                    "original_next_spawn": entry["original"],

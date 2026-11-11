@@ -98,6 +98,7 @@ class RespawnTests(unittest.TestCase):
         den.WorldInfo = self.world
         den.bDeleteMe = den.bPendingDelete = den.bNoRespawning = False
         den.Aspect = None
+        den.IsEnabled = True
         den.SpawnData = NS(PopulationDefName="gd_Bandits.Population", MaxActiveActors=3,
                            NextSpawnTime=120.0, NumTotalActors=7, CustomField="preserved")
         return den
@@ -479,7 +480,7 @@ class RespawnTests(unittest.TestCase):
             for file in files:
                 report = json.loads(file.read_text())
                 self.assertFalse(report["ready"])
-                self.assertEqual(report["version"], "1.2.10")
+                self.assertEqual(report["version"], "1.2.13")
                 self.assertNotIn("schemas", report)
 
     def test_event_buffer_is_bounded_and_reports_dead_weak_references(self):
@@ -602,7 +603,7 @@ class RespawnTests(unittest.TestCase):
                 elif change == "objective_index": aspect.MissionObjective.ObjectiveIndex = 0
                 elif change == "item_mission": aspect.MissionItems.MissionDefinition = Object()
                 elif change == "item_pool": aspect.MissionItems.MissionItemPool = Object()
-                elif change == "invalid_pattern": aspect.MissionReactions.MissionStatusOpportunityReaction = (1, 0, 2, 0)
+                elif change == "invalid_pattern": aspect.MissionReactions.MissionStatusOpportunityReaction = (1, 0, 4, 0)
                 elif change == "unknown_class": aspect.Class = Object("WillowGame.OtherAspect")
                 elif change == "missing_layout": del aspect.MissionObjective
                 self.prepare_native_den(1, allegiance="gd_allegiance.creatureenemy.skagallegiance")
@@ -644,8 +645,8 @@ class RespawnTests(unittest.TestCase):
         self.assertEqual(reactions.MissionStatusOpportunityReaction, (1, 0, 0, 0))
         self.assertTrue(self.den.IsEnabled)
 
-    def test_all_sixteen_gate_combinations_track_clear_and_rearm(self):
-        for states in product((0, 1), repeat=4):
+    def test_all_256_known_gate_combinations_track_clear_and_rearm(self):
+        for states in product(range(4), repeat=4):
             for linked_mission in (False, True):
                 with self.subTest(states=states, linked_mission=linked_mission):
                     self.setUp()
@@ -664,8 +665,8 @@ class RespawnTests(unittest.TestCase):
                     self.assertEqual(reactions.MissionStatusOpportunityReaction, states)
                     self.assertTrue(self.den.IsEnabled)
 
-    def test_all_sixteen_gate_combinations_preserve_other_exclusions(self):
-        for states in product((0, 1), repeat=4):
+    def test_all_256_known_gate_combinations_preserve_other_exclusions(self):
+        for states in product(range(4), repeat=4):
             for exclusion in ("disabled", "no_respawn", "objective", "items"):
                 with self.subTest(states=states, exclusion=exclusion):
                     self.setUp()
@@ -678,10 +679,39 @@ class RespawnTests(unittest.TestCase):
                     elif exclusion == "items": self.den.Aspect.MissionItems.MissionItemPool = Object()
                     self.assertIsNotNone(self.mod.den_skip_reason(self.den, self.world))
 
+    def test_captured_skag_gully_respawn_reactions_are_tracked_and_guarded_on_forever(self):
+        fixture = json.loads((ROOT / "tests/fixtures/skag-gully-reaction-values.json").read_text())
+        self.assertEqual(len(fixture["records"]), 3)
+        for record in fixture["records"]:
+            with self.subTest(den=record["den"], states=record["states"]):
+                self.setUp()
+                self.den.path = record["den"]
+                self.den.Location = record["location"]
+                self.den.SpawnData.PopulationDefName = record["definition"]
+                self.den.IsEnabled = True
+                self.den.Aspect = self.make_fyrestone_aspect()
+                reactions = self.den.Aspect.MissionReactions
+                reactions.MissionDefinition = Object(record["mission"])
+                reactions.MissionStatusOpportunityReaction = tuple(record["states"])
+                first, second = self.prepare_native_den(2, allegiance="gd_allegiance.CreatureEnemy.SkagAllegiance")
+                self.mod.respawn_delay.value = "Forever (until reload)"
+                self.native_kill(first, 110)
+                self.native_kill(second, 120)
+                entry = self.mod._dens[self.den._get_address()]
+                self.assertEqual(self.mod._counts["cleared_groups"], 1)
+                self.assertTrue(self.den.bNoRespawning)
+                self.assertFalse(entry["ignored"])
+                self.world.TimeSeconds = 2000
+                self.mod.poll_tick(None, None, None, None)
+                self.assertTrue(self.den.bNoRespawning)
+                self.assertEqual(self.mod._counts["rearmed_groups"], 0)
+                self.assertEqual(entry["group"].cleared_at, 120)
+                self.assertEqual(tuple(reactions.MissionStatusOpportunityReaction), tuple(record["states"]))
+
     def test_invalid_gate_table_shapes_and_values_are_excluded(self):
         self.den.IsEnabled = True
         self.den.Aspect = self.make_fyrestone_aspect()
-        for states in ((), (1, 0, 0), (1, 0, 0, 0, 0), (1, 2, 0, 0), (-1, 0, 0, 0), None):
+        for states in ((), (1, 0, 0), (1, 0, 0, 0, 0), (1, 4, 0, 0), (-1, 0, 0, 0), None):
             with self.subTest(states=states):
                 self.den.Aspect.MissionReactions.MissionStatusOpportunityReaction = states
                 self.assertFalse(self.mod.passive_mission_gate(self.den, self.den.Aspect))
@@ -961,6 +991,137 @@ class RespawnTests(unittest.TestCase):
         self.assertTrue(report["dens"][0]["owns_no_respawn_guard"])
         self.assertTrue(report["dens"][0]["native_no_respawn"])
 
+    def test_recorded_rakk_den_is_disabled_after_clear_and_stays_disabled_through_reset(self):
+        fixture = json.loads((ROOT / "tests/fixtures/rakk-guard-bypass.json").read_text())
+        self.den.path = fixture["den"]
+        self.den.SpawnData.PopulationDefName = "RakkSquad_Regular"
+        pawns = self.prepare_native_den(6, allegiance="gd_allegiance.CreatureEnemy.RakkAllegiance")
+        self.mod.respawn_delay.value = "Forever (until reload)"
+        deaths = fixture["deaths"]
+        self.assertEqual(len(deaths), 6)
+        self.assertTrue(self.den.IsEnabled)
+        for pawn, death in zip(pawns, deaths):
+            self.native_kill(pawn, death["game_time"])
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertFalse(self.den.IsEnabled)
+        self.assertTrue(self.den.bNoRespawning)
+        self.assertTrue(entry["original_enabled"])
+        bypass = next(e for e in fixture["events"] if e["event"] == "spawn_during_cooldown")
+        self.world.TimeSeconds = bypass["game_time"]
+        # Original capture changed quota/active limit despite the no-respawn flag.
+        self.den.SpawnData.NumTotalActors = 0
+        self.den.SpawnData.MaxActiveActors = 5
+        self.mod.poll_tick(None, None, None, None)
+        self.assertFalse(self.den.IsEnabled)
+        self.assertEqual(self.mod._counts["rearmed_groups"], 0)
+        self.assertEqual(entry["group"].cleared_at, deaths[-1]["game_time"])
+        report = self.mod.snapshot()
+        self.assertTrue(report["dens"][0]["owns_activation_guard"])
+        self.assertFalse(report["dens"][0]["native_enabled"])
+
+    def test_guard_reapplies_activation_if_native_state_is_reset(self):
+        pawn, = self.prepare_native_den(1)
+        self.mod.respawn_delay.value = "Forever (until reload)"
+        self.native_kill(pawn, 110)
+        self.den.IsEnabled = True
+        self.den.bNoRespawning = False
+        self.world.TimeSeconds = 1100
+        self.mod.poll_tick(None, None, None, None)
+        self.assertFalse(self.den.IsEnabled)
+        self.assertTrue(self.den.bNoRespawning)
+        self.assertEqual(self.mod._counts["rearmed_groups"], 0)
+
+    def test_preexisting_disabled_activation_is_preserved_on_cleanup(self):
+        pawn, = self.prepare_native_den(1)
+        self.den.IsEnabled = False  # A native/script change before the clear.
+        self.native_kill(pawn, 110)
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertIsNone(entry["original_enabled"])
+        self.mod.on_disable()
+        self.assertFalse(self.den.IsEnabled)
+
+    def test_staged_mission_aspect_activation_is_not_overridden(self):
+        self.den.IsEnabled = True
+        self.den.Aspect = self.make_fyrestone_aspect()
+        self.den.Aspect.MissionReactions.MissionStatusOpportunityReaction = (1, 0, 1, 0)
+        pawn, = self.prepare_native_den(1)
+        self.mod.respawn_delay.value = "Forever (until reload)"
+        self.native_kill(pawn, 110)
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertTrue(self.den.IsEnabled)
+        self.assertTrue(self.den.bNoRespawning)
+        self.assertIsNone(entry["original_enabled"])
+        self.world.TimeSeconds = 1100
+        self.mod.poll_tick(None, None, None, None)
+        self.assertFalse(entry["ignored"])
+        self.assertTrue(self.den.IsEnabled)
+        self.mod.on_disable()
+        self.assertTrue(self.den.IsEnabled)
+        self.assertFalse(self.den.bNoRespawning)
+
+    def test_recorded_fyrestone_skag_gate_holds_activation_through_late_reset(self):
+        fixture = json.loads((ROOT / "tests/fixtures/fyrestone-mission-guard-bypass.json").read_text())
+        self.den.path = fixture["den"]
+        self.den.Aspect = self.make_fyrestone_aspect()
+        self.den.SpawnData.PopulationDefName = "SkagDen_Regular"
+        pawns = self.prepare_native_den(5, allegiance="gd_allegiance.CreatureEnemy.SkagAllegiance")
+        self.mod.respawn_delay.value = "Forever (until reload)"
+        deaths = fixture["deaths"]
+        self.assertEqual(len(deaths), 5)
+        for pawn, death in zip(pawns, deaths):
+            self.native_kill(pawn, death["game_time"])
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertTrue(entry["original_enabled"])
+        self.assertFalse(self.den.IsEnabled)
+        self.assertIsNone(self.mod.den_skip_reason(self.den, self.world))
+        bypass = next(e for e in fixture["events"] if e["event"] == "spawn_during_cooldown")
+        self.world.TimeSeconds = bypass["game_time"]
+        self.den.SpawnData.NumTotalActors = 0
+        self.mod.poll_tick(None, None, None, None)
+        self.assertFalse(self.den.IsEnabled)
+        self.assertTrue(self.den.bNoRespawning)
+        self.assertFalse(entry["ignored"])
+        self.assertEqual(entry["group"].cleared_at, deaths[-1]["game_time"])
+        self.assertEqual(self.mod._counts["rearmed_groups"], 0)
+
+    def test_persistent_gate_activation_is_restored_on_expiry_disable_and_map_reload(self):
+        for states in ((0, 0, 0, 0), (1, 0, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0)):
+            for action in ("expiry", "disable", "map"):
+                with self.subTest(states=states, action=action):
+                    self.setUp()
+                    self.den.Aspect = self.make_fyrestone_aspect()
+                    self.den.Aspect.MissionReactions.MissionStatusOpportunityReaction = states
+                    pawn, = self.prepare_native_den(1)
+                    self.native_kill(pawn, 110)
+                    self.assertFalse(self.den.IsEnabled)
+                    self.world.TimeSeconds = 120
+                    self.mod.poll_tick(None, None, None, None)
+                    entry = self.mod._dens[self.den._get_address()]
+                    self.assertFalse(entry["ignored"])
+                    if action == "expiry":
+                        self.world.TimeSeconds = 170
+                        self.mod.poll_tick(None, None, None, None)
+                    elif action == "disable":
+                        self.mod.on_disable()
+                    else:
+                        self.mod.map_change(None, None, None, None)
+                    self.assertTrue(self.den.IsEnabled)
+                    self.assertFalse(self.den.bNoRespawning)
+                    self.assertEqual(tuple(self.den.Aspect.MissionReactions.MissionStatusOpportunityReaction), states)
+
+    def test_staged_disable_or_respawn_gate_does_not_acquire_activation(self):
+        for states in ((1, 0, 1, 0), (0, 0, 2, 0), (0, 0, 3, 0), (0, 0, 0, 3)):
+            with self.subTest(states=states):
+                self.setUp()
+                self.den.Aspect = self.make_fyrestone_aspect()
+                self.den.Aspect.MissionReactions.MissionStatusOpportunityReaction = states
+                pawn, = self.prepare_native_den(1)
+                self.native_kill(pawn, 110)
+                entry = self.mod._dens[self.den._get_address()]
+                self.assertTrue(self.den.IsEnabled)
+                self.assertIsNone(entry["original_enabled"])
+                self.assertTrue(self.den.bNoRespawning)
+
     def test_finite_native_guard_is_released_at_expiry_and_disable_or_map_reload(self):
         for action in ("expiry", "disable", "map"):
             with self.subTest(action=action):
@@ -968,6 +1129,7 @@ class RespawnTests(unittest.TestCase):
                 pawn, = self.prepare_native_den(1)
                 self.native_kill(pawn, 110)
                 self.assertTrue(self.den.bNoRespawning)
+                self.assertFalse(self.den.IsEnabled)
                 if action == "expiry":
                     self.world.TimeSeconds = 170
                     self.mod.poll_tick(None, None, None, None)
@@ -977,6 +1139,7 @@ class RespawnTests(unittest.TestCase):
                 else:
                     self.mod.map_change(None, None, None, None)
                 self.assertFalse(self.den.bNoRespawning)
+                self.assertTrue(self.den.IsEnabled)
 
     def test_preexisting_no_respawn_flag_is_never_acquired_or_restored(self):
         self.den.bNoRespawning = True

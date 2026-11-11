@@ -1,0 +1,69 @@
+{
+  "source": "respawn-20261111-130628-239917.json",
+  "version": "1.2.10",
+  "records": [
+    {
+      "den": "Arid_SkagGully_P.TheWorld:PersistentLevel.PopulationOpportunityDen_9",
+      "definition": "SkagDen_Regular",
+      "location": "{X: 1938.0, Y: 17788.0, Z: 1142.0}",
+      "states": [
+        0,
+        0,
+        2,
+        0
+      ],
+      "state_names": [
+        "OPPORTUNITY_STATUS_Enabled",
+        "OPPORTUNITY_STATUS_Enabled",
+        "OPPORTUNITY_STATUS_Respawn50Percent",
+        "OPPORTUNITY_STATUS_Enabled"
+      ],
+      "mission": "Z0_Missions.Missions.M_OpenGatetoSkag",
+      "native_alive": 0,
+      "mission_items": "{MissionDefinition: None, MissionItemPool: None}",
+      "mission_objective": "{MissionDefinition: None, ObjectiveIndex: -1}"
+    },
+    {
+      "den": "Arid_SkagGully_P.TheWorld:PersistentLevel.PopulationOpportunityDen_8",
+      "definition": "SkagDen_Regular",
+      "location": "{X: 6515.595703125, Y: 18823.47265625, Z: 590.0}",
+      "states": [
+        0,
+        0,
+        3,
+        0
+      ],
+      "state_names": [
+        "OPPORTUNITY_STATUS_Enabled",
+        "OPPORTUNITY_STATUS_Enabled",
+        "OPPORTUNITY_STATUS_Respawn100Percent",
+        "OPPORTUNITY_STATUS_Enabled"
+      ],
+      "mission": "Z0_Missions.Missions.M_OpenGatetoSkag",
+      "native_alive": 0,
+      "mission_items": "{MissionDefinition: None, MissionItemPool: None}",
+      "mission_objective": "{MissionDefinition: None, ObjectiveIndex: -1}"
+    },
+    {
+      "den": "Arid_SkagGully_P.TheWorld:PersistentLevel.PopulationOpportunityDen_7",
+      "definition": "SkagDen_Regular",
+      "location": "{X: 11185.7197265625, Y: 19175.333984375, Z: 178.69122314453125}",
+      "states": [
+        0,
+        0,
+        3,
+        0
+      ],
+      "state_names": [
+        "OPPORTUNITY_STATUS_Enabled",
+        "OPPORTUNITY_STATUS_Enabled",
+        "OPPORTUNITY_STATUS_Respawn100Percent",
+        "OPPORTUNITY_STATUS_Enabled"
+      ],
+      "mission": "Z0_Missions.Missions.M_OpenGatetoSkag",
+      "native_alive": 2,
+      "mission_items": "{MissionDefinition: None, MissionItemPool: None}",
+      "mission_objective": "{MissionDefinition: None, ObjectiveIndex: -1}"
+    }
+  ]
+}

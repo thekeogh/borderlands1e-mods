@@ -1,0 +1,121 @@
+{
+  "source": "respawn-20261111-173101-317135.json",
+  "scope": "after last session reset before bypass",
+  "den": "Arid_Firestone.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+  "events": [
+    {
+      "event": "spawn_tracked",
+      "game_time": 77.56062316894531,
+      "den": "Arid_Firestone.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_28",
+      "allegiance": "gd_allegiance.creatureenemy.skagallegiance"
+    },
+    {
+      "event": "spawn_tracked",
+      "game_time": 130.7732696533203,
+      "den": "Arid_Firestone.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_33",
+      "allegiance": "gd_allegiance.creatureenemy.skagallegiance"
+    },
+    {
+      "event": "spawn_tracked",
+      "game_time": 135.2961883544922,
+      "den": "Arid_Firestone.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_35",
+      "allegiance": "gd_allegiance.creatureenemy.skagallegiance"
+    },
+    {
+      "event": "spawn_tracked",
+      "game_time": 139.8181915283203,
+      "den": "Arid_Firestone.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_37",
+      "allegiance": "gd_allegiance.creatureenemy.skagallegiance"
+    },
+    {
+      "event": "spawn_tracked",
+      "game_time": 149.36849975585938,
+      "den": "Arid_Firestone.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_39",
+      "allegiance": "gd_allegiance.creatureenemy.skagallegiance"
+    },
+    {
+      "event": "group_cleared",
+      "game_time": 177.546630859375,
+      "den": "Arid_Firestone.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+      "deadline": 1000000176.5466309,
+      "written": 1000000192.0
+    },
+    {
+      "event": "spawn_during_cooldown",
+      "game_time": 1138.0657958984375,
+      "den": "Arid_Firestone.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+      "definition": "SkagDen_Regular",
+      "location": "{X: -21146.359375, Y: 32802.453125, Z: -159.11029052734375}",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_58",
+      "native_no_respawn": true,
+      "native_enabled": true,
+      "deadline": 1000000176.5466309
+    }
+  ],
+  "deaths": [
+    {
+      "event": "death_tracked",
+      "game_time": 130.8074188232422,
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_28"
+    },
+    {
+      "event": "death_tracked",
+      "game_time": 149.1241455078125,
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_35"
+    },
+    {
+      "event": "death_tracked",
+      "game_time": 159.93011474609375,
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_33"
+    },
+    {
+      "event": "death_tracked",
+      "game_time": 167.88973999023438,
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_39"
+    },
+    {
+      "event": "death_tracked",
+      "game_time": 177.546630859375,
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_37"
+    }
+  ],
+  "native_after": {
+    "den": "Arid_Firestone.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+    "tracked": true,
+    "fields": {
+      "bNoRespawning": true,
+      "bDeleteMe": false,
+      "bPendingDelete": false,
+      "Aspect": "MissionPopulationAspect'Arid_Firestone.TheWorld:PersistentLevel.PopulationOpportunityDen_25.MissionPopulationAspect_0'",
+      "MaxTotalActors": 5,
+      "RespawnDelay": 1.5,
+      "RespawnDelayAfterDeath": 0.0,
+      "DenSpawningState": 0,
+      "IsEnabled": true,
+      "Location": "{X: -21146.359375, Y: 32802.453125, Z: -159.11029052734375}",
+      "SpawnedDenMembers": "[WillowAIPawn'Loader.TheWorld:PersistentLevel.WillowAIPawn_58']"
+    },
+    "spawn_data": {
+      "PopulationDefName": "SkagDen_Regular",
+      "NextSpawnTime": 1000000192.0,
+      "MaxActiveActors": 1,
+      "NumActiveActors": 1,
+      "NumTotalActors": 1
+    },
+    "aspect": {
+      "object": "Arid_Firestone.TheWorld:PersistentLevel.PopulationOpportunityDen_25.MissionPopulationAspect_0",
+      "class": "WillowGame.MissionPopulationAspect",
+      "fields": {
+        "MissionReactions": "{MissionDefinition: MissionDefinition'Z0_Missions.Missions.M_RepairClapTrap_02', MissionStatusOpportunityReaction: (<EOpportunityStatus.OPPORTUNITY_STATUS_Disabled: 1>, <EOpportunityStatus.OPPORTUNITY_STATUS_Disabled: 1>, <EOpportunityStatus.OPPORTUNITY_STATUS_Disabled: 1>, <EOpportunityStatus.OPPORTUNITY_STATUS_Enabled: 0>)}",
+        "MissionItems": "{MissionDefinition: None, MissionItemPool: None}",
+        "MissionObjective": "{MissionDefinition: None, ObjectiveIndex: -1}"
+      }
+    },
+    "skip_reason": null
+  }
+}

@@ -1,6 +1,6 @@
 # Enemy Respawn Timer
 
-Private mod for Borderlands GOTY Enhanced. Author: keogh. Version 1.2.10.
+Private mod for Borderlands GOTY Enhanced. Author: keogh. Version 1.2.13.
 Validated in selected BL1E encounters: bandits, skags, spiderants/spiderantlings
 and gatling turrets at 1 minute; Rust Commons West bandits and spiderantlings
 stayed cleared for over 35 minutes on Forever. Map travel reset tracking as intended.
@@ -28,20 +28,24 @@ Native default respawn timing is not established here; it can vary by opportunit
 
 Paused game time does not count. Changing the option updates cleared groups from
 their original clear time. Entering a different map or reloading clears tracking.
-During cooldown the mod also holds the den's native no-respawn flag, preventing
-native reset paths from bypassing the timestamp. Forever uses a timestamp
-999,999,999 seconds after clearing and keeps this native guard until map reload
-or disable. Finite delays release the guard at expiry. Disabling restores owned
-flags, timestamps and any reset tally still at zero (before a new generation).
+During cooldown the mod holds the den's native no-respawn flag and temporarily
+disables ordinary spawn opportunities and persistent, payload-free mission gates.
+The no-respawn flag alone did not prevent the recorded rakk bypass. Forever uses
+a timestamp 999,999,999 seconds after clearing and keeps these native guards until
+map reload or disable. Finite delays release the guards at expiry. Disabling
+restores owned flags, activation, timestamps and any reset tally still at zero
+(before a new generation). Staged mission disable/respawn patterns retain native
+activation control.
 Native member lists also allow tracking enemies already alive when enabled.
 Use a fresh map for repeatable tests. Settings persist; enemy timers do not.
 
 Quest objective/item opportunities, unknown scripted aspects, native no-respawn
 flags, friendly or mixed NPC/enemy groups, unknown allegiances and unsupported
 layouts stay native. Enabled MissionPopulationAspect gates are allowed only when
-they have no objective or item payload and their reaction table contains four
-Enabled/Disabled slots. All 16 combinations are accepted, including combinations
-not yet seen in-game. Native activation is preserved. This protects first encounters, quest NPCs and scripted waves; it means
+they have no objective or item payload and their four-slot reaction table uses
+known values: Enabled, Disabled, Respawn50Percent or Respawn100Percent. All 256
+combinations of those four values are accepted, including combinations not yet
+seen in-game. Native activation is preserved. This protects first encounters, quest NPCs and scripted waves; it means
 the mod cannot guarantee every enemy in the game follows your selected timer.
 Applies on the host. Co-op behavior is not verified. A manual Reset Enemies mod
 can override timestamps/counters, so avoid manually resetting during timer tests.
@@ -280,3 +284,70 @@ Future caught errors include their original source function and line.
 when references return, null actor slots/callbacks and contextual error reporting.
 Includes the 1.2.9 native no-respawn guard; its longer in-game verification is
 still separate from this null-reference fix. F8 and saved settings are retained.
+
+## 1.2.11 Skag Gully reaction values
+
+`respawn-20261111-130628-239917.json` shows three cleared Skag Gully skag dens
+(10, 11 and 22) still guarded on Forever, with no recorded cooldown bypass. It
+also shows den 7 containing two live skags while excluded as `scripted_aspect`.
+Dens 7 and 8 use reaction table (0,0,3,0), with 3 named Respawn100Percent; den 9
+uses (0,0,2,0), with 2 named Respawn50Percent. These ordinary skag dens carry no
+mission objective/item payload. The previous filter accepted only 0 and 1, so
+they were outside the timer's coverage. The capture cannot associate their earlier
+untracked deaths with particular dens, so the player's complete respawn sequence
+is not independently established.
+
+The filter now accepts all 256 four-slot combinations of the four observed enum
+values. Disabled dens, objective/item payloads, native no-respawn flags and unknown
+values/layouts remain excluded. Mission tables are not rewritten. Regressions
+cover all 256 combinations plus the three actual captured Skag Gully tables.
+Install/restart and reclear the previously respawned group on Forever; F8 after
+clearing and on returning. Coverage of these reaction values is newly implemented;
+in-game validation is pending.
+
+## 1.2.12 Rakk activation guard
+
+The 1.2.11 captures show all six original rakk from Skag Gully den 25 killed by
+569.535 gameplay seconds, with one new rakk at 1529.803 seconds. The distant
+NextSpawnTime and bNoRespawning guard were both still set. This is a confirmed
+native spawn bypass, not a leftover original rakk. The actual native caller is
+not established by the export.
+
+Cleared ordinary dens (Aspect is None) now additionally hold IsEnabled = false
+throughout the cooldown. Only activation acquired from an enabled den is restored
+at finite expiry, map reset or disable. A native re-enable is corrected on the
+next poll while the owned cooldown remains active. Pre-existing disabled values
+are preserved. Mission aspects are excluded from this activation override so
+quest-controlled activation remains native. The existing timestamp/no-respawn
+guards, mission objective/item exclusions and bypass diagnostics remain in place.
+No native spawn calls, survivor restoration or actor deletion were added.
+
+F8 now reports native_enabled, original_enabled and owns_activation_guard, and
+includes native activation in bypass events. 79 mocked tests pass, including the
+recorded rakk timeline, activation reassertion, finite/map/disable restoration,
+pre-existing disabled activation and preservation of mission-linked activation.
+The stronger guard still requires in-game verification. Install on the next
+restart, continue playing with Forever, and export after a clear and if anything
+returns in the same loaded map session. Map travel still clears the cooldown.
+
+## 1.2.13 Persistent mission-gate activation
+
+The 1.2.12 Fyrestone captures show skag den 25 cleared at 177.547 gameplay seconds,
+then a new skag at 1138.066 seconds (16 minutes later). Its timestamp/no-respawn
+guard remained set, but owns_activation_guard was false: the 1.2.12 activation
+hold intentionally excluded every mission aspect. The attached gate is for
+`Z0_Missions.Missions.M_RepairClapTrap_02`, has reaction table (1,1,1,0), and no
+mission objective or item payload. This exposes an activation-guard coverage gap.
+
+Activation ownership now also applies to eligible mission gates with an Enabled
+suffix: (0,0,0,0), (1,0,0,0), (1,1,0,0), (1,1,1,0). Once natively enabled, these
+gates remain enabled through subsequent mission stages. Eligibility recognizes
+the mod's owned disabled state, preventing the next poll from dropping its own
+guard. Staged disable/respawn reactions keep native activation. Objective/item
+payloads and native no-respawn exclusions remain intact. Mission tables/statuses
+are never changed. Owned activation is restored on expiry, disable and map reset.
+
+82 mocked tests pass, including the recorded Fyrestone sequence, persistent gate
+cleanup and preservation of staged mission activation. In-game verification is
+pending. Restart with this build and reclear that group on Forever; export after
+clearing and if anything returns. No map travel is needed for the retest.

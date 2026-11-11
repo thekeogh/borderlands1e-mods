@@ -59,7 +59,7 @@ Keep SDU progression upgrades and non-levelled consumables native.
 Enemy difficulty is a saved Easy / Normal / Hard / Very Hard selector, default Normal.
 Ordinary hostile roll weights (native / +1 / +2 / +3): Easy 70/20/9/1,
 Normal 50/20/25/5, Hard 20/5/55/20. Very Hard adds +4 and +5 slots and uses
-0/0/0/40/55/5 (native / +1 / +2 / +3 / +4 / +5). All preserve max(player, vanilla area)
+0/0/0/40/59/1 (native / +1 / +2 / +3 / +4 / +5). All preserve max(player, vanilla area)
 as their base. Native ordinary levels floor at player level +1; keep the original
 factory GameStage/grade bands when applying that floor. Native/+1 rolls overlap
 at the +1 minimum; keep the other presets unchanged; named/boss floors are player level +3.

@@ -1,17 +1,9 @@
 [project]
 name = "Enemy Respawn Timer"
-version = "1.2.10"
+version = "1.2.13"
 authors = [{ name = "keogh" }]
-description = """Choose how long cleared enemy groups wait before respawning.
-
-1 minute (testing) / 30 minutes / 1 hour / 3 hours / Forever (until reload).
-Default: 30 minutes. Timer starts after the last tracked enemy in a group dies.
-Uses gameplay time; map reload clears timers. First spawns remain native.
-Native proximity/mission rules still apply. Scripted/quest waves stay native.
-F8: export respawn diagnostics (rebindable).
-Enable before loading the map. Native den membership tracking.
-Validated in selected BL1E encounters at 1 minute and Forever.
-"""
+description = """Choose the respawn delay for cleared enemy groups.
+Forever keeps them cleared until the map reloads."""
 
 [tool.sdkmod]
 name = "Enemy Respawn Timer"

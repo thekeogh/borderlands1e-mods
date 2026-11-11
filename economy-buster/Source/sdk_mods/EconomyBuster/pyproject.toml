@@ -2,13 +2,8 @@
 name = "Economy Buster"
 version = "0.1.0"
 authors = [{ name = "keogh" }]
-description = """Keep money at level-1 values throughout Borderlands GOTY Enhanced.
-
-Cash drops, mission payouts, equipment buying/selling, SDUs, bank upgrades,
-respecs and the death-fee ceiling use level-1 monetary scaling.
-Item and mission levels, combat stats and your existing wallet are retained.
-Works across all playthroughs. Export diagnostics from this mod's options menu.
-"""
+description = """Keep cash rewards and prices at level-1 values.
+Applies across all playthroughs."""
 
 [tool.sdkmod]
 name = "Economy Buster"

@@ -1,5 +1,16 @@
 # One Playthrough changelog
 
+## 4.7.1 — 2026-11-11
+
+- Reduce Very Hard ordinary +5 rolls from 5% to 1%; move the four percentage
+  points into +4. Final weights: +3 40%, +4 59%, +5 1%. No +2 roll.
+- Preserve the higher-of-player/area base, naturally higher native levels,
+  named/boss player-level +3 floor, other difficulties, loot and missions.
+  Apply only to new spawns. Synchronize option help, F10 policy and full guide table.
+- Validation: 260 local tests pass, including exact 100-ticket counts, the single
+  +5 ticket, boundary levels, saved selection and named/boss floor regressions.
+  Native Windows behavior requires in-game testing.
+
 ## 4.7.0 — 2026-11-10
 
 - Very Hard ordinary spawns: +3 40%, +4 55%, +5 5%, using the higher of player

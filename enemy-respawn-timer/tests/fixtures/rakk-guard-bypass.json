@@ -1,0 +1,123 @@
+{
+  "source": "respawn-20261111-135238-724098.json",
+  "den": "Arid_SkagGully_P.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+  "events": [
+    {
+      "event": "spawn_tracked",
+      "game_time": 530.7993774414062,
+      "den": "Arid_SkagGully_P.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_31",
+      "allegiance": "gd_allegiance.creatureenemy.rakkallegiance"
+    },
+    {
+      "event": "spawn_tracked",
+      "game_time": 530.7993774414062,
+      "den": "Arid_SkagGully_P.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_32",
+      "allegiance": "gd_allegiance.creatureenemy.rakkallegiance"
+    },
+    {
+      "event": "spawn_tracked",
+      "game_time": 530.7993774414062,
+      "den": "Arid_SkagGully_P.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_33",
+      "allegiance": "gd_allegiance.creatureenemy.rakkallegiance"
+    },
+    {
+      "event": "spawn_tracked",
+      "game_time": 534.3128662109375,
+      "den": "Arid_SkagGully_P.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_34",
+      "allegiance": "gd_allegiance.creatureenemy.rakkallegiance"
+    },
+    {
+      "event": "spawn_tracked",
+      "game_time": 534.3128662109375,
+      "den": "Arid_SkagGully_P.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_35",
+      "allegiance": "gd_allegiance.creatureenemy.rakkallegiance"
+    },
+    {
+      "event": "spawn_tracked",
+      "game_time": 534.8143920898438,
+      "den": "Arid_SkagGully_P.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_36",
+      "allegiance": "gd_allegiance.creatureenemy.rakkallegiance"
+    },
+    {
+      "event": "group_cleared",
+      "game_time": 569.5353393554688,
+      "den": "Arid_SkagGully_P.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+      "deadline": 1000000568.5353394,
+      "written": 1000000576.0
+    },
+    {
+      "event": "spawn_during_cooldown",
+      "game_time": 1529.803466796875,
+      "den": "Arid_SkagGully_P.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+      "definition": "RakkSquad_Regular",
+      "location": "{X: 25475.70703125, Y: 31593.03515625, Z: -271.89300537109375}",
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_57",
+      "native_no_respawn": true,
+      "deadline": 1000000568.5353394
+    }
+  ],
+  "deaths": [
+    {
+      "event": "death_tracked",
+      "game_time": 548.1264038085938,
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_32"
+    },
+    {
+      "event": "death_tracked",
+      "game_time": 554.3958129882812,
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_31"
+    },
+    {
+      "event": "death_tracked",
+      "game_time": 554.6780395507812,
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_35"
+    },
+    {
+      "event": "death_tracked",
+      "game_time": 556.503173828125,
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_33"
+    },
+    {
+      "event": "death_tracked",
+      "game_time": 563.17333984375,
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_34"
+    },
+    {
+      "event": "death_tracked",
+      "game_time": 569.5353393554688,
+      "pawn": "Loader.TheWorld:PersistentLevel.WillowAIPawn_36"
+    }
+  ],
+  "native_after": {
+    "den": "Arid_SkagGully_P.TheWorld:PersistentLevel.PopulationOpportunityDen_25",
+    "tracked": true,
+    "fields": {
+      "bNoRespawning": true,
+      "bDeleteMe": false,
+      "bPendingDelete": false,
+      "Aspect": null,
+      "MaxTotalActors": 6,
+      "RespawnDelay": 0.0,
+      "RespawnDelayAfterDeath": 2.0,
+      "DenSpawningState": 0,
+      "IsEnabled": true,
+      "Location": "{X: 25475.70703125, Y: 31593.03515625, Z: -271.89300537109375}",
+      "SpawnedDenMembers": "[]"
+    },
+    "spawn_data": {
+      "PopulationDefName": "RakkSquad_Regular",
+      "NextSpawnTime": 1000000576.0,
+      "MaxActiveActors": 3,
+      "NumActiveActors": 0,
+      "NumTotalActors": 1
+    },
+    "aspect": null,
+    "skip_reason": null
+  }
+}
