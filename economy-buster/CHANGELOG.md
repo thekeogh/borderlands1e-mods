@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1 — 2026-11-12
+
+- Remove background transaction/wallet audit records and audit-only POST hooks.
+  Keep the existing price refreshes, activation failure reporting and manual
+  diagnostic export. Money formulas and transaction behavior unchanged.
+- Validation: 34 local tests pass.
+
 ## 0.1.0 — 2026-11-10
 
 - First standalone Economy Buster release; author keogh; GOTY Enhanced only.

@@ -33,7 +33,7 @@ _dens = {}
 _actors = {}
 _named_spawns = {}
 _errors = []
-VERSION = "1.3.0"
+VERSION = "1.3.1"
 _counts = Counter()
 _skips = Counter()
 _events = deque(maxlen=200)
@@ -376,8 +376,6 @@ def record_spawn(obj, _args, pawn, _func):
         error(exc)
     if not _stack:
         _skips["factory_outside_den"] += 1
-        if _skips["factory_outside_den"] <= 10:
-            trace("uncorrelated_spawn", factory=object_path(obj), pawn=object_path(pawn))
         return
     entry = _stack[-1]["entry"]
     if entry is None or entry["ignored"]:
@@ -674,7 +672,6 @@ def change_delay(_option, value):
                 restore(entry)
                 entry["released"] = False
             set_deadline(entry, value)
-        logging.info(f"[Enemy Respawn Timer] Delay: {value}.")
     except Exception as exc:
         error(exc)
 
@@ -736,7 +733,6 @@ def on_enable():
         if not add_hook(_spawn_path, Type.POST_UNCONDITIONAL, "EnemyRespawnTimer.Post", after_spawning):
             raise RuntimeError("Could not install respawn post hook")
         _ready = True
-        logging.info(f"[Enemy Respawn Timer] Enabled; {respawn_delay.value}; {_spawn_path}.")
     except Exception as exc:
         if _spawn_path is not None:
             remove_hook(_spawn_path, Type.PRE, "EnemyRespawnTimer.Pre")
@@ -754,7 +750,6 @@ def on_disable():
         remove_hook(_spawn_path, Type.PRE, "EnemyRespawnTimer.Pre")
         remove_hook(_spawn_path, Type.POST_UNCONDITIONAL, "EnemyRespawnTimer.Post")
     reset_session()
-    logging.info("[Enemy Respawn Timer] Disabled; owned native timestamps restored.")
 
 
 @hook("WillowGame.WillowGameInfo:PreCommitMapChange", Type.PRE)
@@ -878,7 +873,6 @@ def read_fields(obj, names):
 
 
 def export_diagnostics(_option=None):
-    logging.info("[Enemy Respawn Timer] Diagnostics requested.")
     try:
         folder = SETTINGS_DIR / "EnemyRespawnTimer"
         folder.mkdir(parents=True, exist_ok=True)
@@ -889,7 +883,6 @@ def export_diagnostics(_option=None):
         return path
     except Exception as exc:
         error(exc)
-        logging.error(f"[Enemy Respawn Timer] Diagnostics export failed: {exc}")
         return None
 
 

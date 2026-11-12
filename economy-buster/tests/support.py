@@ -172,8 +172,8 @@ def load_mod(tempdir):
     def build_mod(**kw):
         mods.registration = kw
         caller = inspect.currentframe().f_back.f_globals
-        caller["__version__"] = "0.1.0"
-        caller["__version_info__"] = (0, 1, 0)
+        caller["__version__"] = "0.1.1"
+        caller["__version_info__"] = (0, 1, 1)
     mods.build_mod = build_mod
     stack.enter_context(patch.dict(sys.modules, {"unrealsdk": sdk_module, "unrealsdk.hooks": hooks_module, "mods_base": mods}))
     for key in list(sys.modules):

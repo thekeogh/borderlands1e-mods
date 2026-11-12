@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.2 — 2026-11-12
+
+- Remove automatic overflow notices and runtime developer-warning messages.
+  Keep the latest warning in manual F11 diagnostics, startup/version logging
+  and manual export messages. Wallet correction, HUD drawing and settings unchanged.
+- Validation: 24 local tests pass.
+
 ## 3.0.1 — 2026-10-20
 
 - Address missing money elements when the live HUD uses a compiled movie that

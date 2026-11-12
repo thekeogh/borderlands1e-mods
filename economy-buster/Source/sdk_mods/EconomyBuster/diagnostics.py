@@ -1,8 +1,8 @@
-"""Bounded, synchronous, read-only economy evidence. No inventory generation."""
+"""Manual, read-only economy inspection. No background transaction history."""
 
 from __future__ import annotations
 
-from collections import Counter, deque
+from collections import deque
 from datetime import datetime, timezone
 import json
 import math
@@ -32,73 +32,6 @@ def wallet(pc: Any) -> int | None:
         return int(pc.PlayerReplicationInfo.CurrencyOnHand)
     except Exception:
         return None
-
-
-def item_summary(item: Any) -> dict[str, Any] | None:
-    if item is None:
-        return None
-    result = {}
-    for name, getter in (("path", lambda: item._path_name()),
-                         ("cash_value", lambda: int(item.CashValue)),
-                         ("internal_level", lambda: int(item.ExpLevel))):
-        try:
-            result[name] = getter()
-        except Exception as exc:
-            result[name + "_error"] = repr(exc)
-    return result
-
-
-class Audit:
-    """Observe calls without changing their arguments, return values or wallet."""
-    def __init__(self) -> None:
-        self.counts: Counter[str] = Counter()
-        self.recent: deque[dict[str, Any]] = deque(maxlen=100)
-        self.pending: dict[str, list[dict[str, Any]]] = {}
-        self.sequence = 0
-
-    def begin(self, path: str, obj: Any, args: Any, pc: Any) -> None:
-        self.counts[path + ":pre"] += 1
-        self.sequence += 1
-        record = {"sequence": self.sequence, "function": path, "wallet_before": wallet(pc)}
-        if path.endswith(":AddCurrencyOnHand"):
-            record["wallet_before"] = int(obj.CurrencyOnHand)
-        for name in ("Quantity", "AddValue"):
-            value = getattr(args, name, None)
-            if isinstance(value, (int, float, bool)):
-                record[name] = value
-        item = getattr(args, "InventoryForSale", None)
-        if item is None:
-            item = getattr(args, "Item", None)
-        if item is not None:
-            record["item"] = item_summary(item)
-        try:
-            record["object"] = obj._path_name()
-        except Exception:
-            pass
-        self.pending.setdefault(path, []).append(record)
-
-    def finish(self, path: str, ret: Any, pc: Any, obj: Any = None) -> None:
-        self.counts[path + ":post"] += 1
-        stack = self.pending.get(path)
-        if not stack:
-            return
-        record = stack.pop()
-        if not stack:
-            del self.pending[path]
-        record["wallet_after"] = wallet(pc)
-        if path.endswith(":AddCurrencyOnHand"):
-            record["wallet_after"] = int(obj.CurrencyOnHand)
-        if record["wallet_before"] is not None and record["wallet_after"] is not None:
-            record["wallet_delta"] = record["wallet_after"] - record["wallet_before"]
-        if ret is None or isinstance(ret, (str, int, float, bool)):
-            record["return_value"] = ret
-        # POST_UNCONDITIONAL also runs for blocked functions. Deltas are observed,
-        # not proof of which mod/native implementation performed a transaction.
-        self.recent.append(record)
-
-    def snapshot(self) -> dict[str, Any]:
-        return {"counts": dict(self.counts), "recent_calls": list(self.recent),
-                "pending_calls": {path: len(stack) for path, stack in self.pending.items()}}
 
 
 class Reader:
@@ -175,16 +108,16 @@ class Reader:
             self.definitions[path] = {"class": str(obj.Class.Name), "fields": self.fields(obj, names)}
 
 
-def collect(sdk: Any, pc: Any, economy: Any, audit: Audit, *, version: str,
+def collect(sdk: Any, pc: Any, economy: Any, *, version: str,
             mods: list[Any], hooks: list[Any], game: str) -> dict[str, Any]:
     reader = Reader()
-    # Capture the policy and small histories before following bounded item graphs.
+    # Capture the policy before following bounded item graphs.
     # No packages are loaded and no native item/price/reward functions are called.
     result = {
         "format_version": 1, "captured_utc": datetime.now(timezone.utc).isoformat(),
         "mod": {"name": "Economy Buster", "version": version, "author": "keogh"},
         "game": game, "sdk_version": getattr(sdk, "__version__", "unknown"),
-        "economy": reader.value(economy.snapshot()), "audit": reader.value(audit.snapshot()),
+        "economy": reader.value(economy.snapshot()),
         "context": {"character_loaded": pc is not None and getattr(pc, "Pawn", None) is not None,
                     "wallet": wallet(pc)},
         "loaded_mods": [], "hooks": [], "runtime_inventory": [], "runtime_vendors": [],

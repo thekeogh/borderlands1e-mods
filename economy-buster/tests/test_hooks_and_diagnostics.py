@@ -30,7 +30,6 @@ class HookAndExportTests(unittest.TestCase):
         result = self.sdk.dispatch(path, Object("Map.Vendor"), args, lambda: self.item.CashValue * 7 * args.Quantity)
         self.assertEqual(result, 924)
         self.assertEqual(vars(args), before)
-        self.assertEqual(self.mod.audit.recent[-1]["return_value"], 924)
         self.assertEqual(self.item.ExpLevel, 69)
         self.assertEqual(self.item.slot_calls, 0)
 
@@ -41,7 +40,7 @@ class HookAndExportTests(unittest.TestCase):
         self.assertEqual(self.item.CashValue, 44)
         self.assertEqual(self.pc.PlayerReplicationInfo.CurrencyOnHand, 1234567)
 
-    def test_buy_sell_buyback_native_wallet_deltas_observed_once(self):
+    def test_buy_sell_buyback_native_wallet_deltas_unchanged(self):
         pri = self.pc.PlayerReplicationInfo
         for function, delta in (("PlayerBuyItem", -308), ("PlayerSellItem", 44), ("PlayerBuyBackItem", -44)):
             with self.subTest(function=function):
@@ -57,16 +56,13 @@ class HookAndExportTests(unittest.TestCase):
                                            Object("Map.Vendor"), args, native)
                 self.assertIs(result, True)
                 self.assertEqual(pri.CurrencyOnHand, before + delta)
-                self.assertEqual(self.mod.audit.recent[-1]["wallet_delta"], delta)
-                self.assertFalse(self.mod.audit.pending)
 
-    def test_currency_observer_records_the_target_wallet_without_rescaling(self):
+    def test_currency_addition_keeps_target_wallet_without_rescaling(self):
         foreign = Object("Map.OtherPRI", CurrencyOnHand=1000)
         args = Struct(AddValue=37)
         def native(): foreign.CurrencyOnHand += args.AddValue
         self.sdk.dispatch("WillowGame.WillowPlayerReplicationInfo:AddCurrencyOnHand", foreign, args, native)
-        record = self.mod.audit.recent[-1]
-        self.assertEqual((record["AddValue"], record["wallet_before"], record["wallet_after"], record["wallet_delta"]), (37, 1000, 1037, 37))
+        self.assertEqual(foreign.CurrencyOnHand, 1037)
         self.assertEqual(args.AddValue, 37)
         self.assertEqual(self.pc.PlayerReplicationInfo.CurrencyOnHand, 1234567)
 
@@ -105,29 +101,25 @@ class HookAndExportTests(unittest.TestCase):
         self.assertEqual(cash, 560)
         self.assertEqual((mission.GameStage, mission.ExpLevel), (70, 70))
 
-    def test_unconditional_post_unwinds_a_blocked_call_without_wallet_change(self):
+    def test_price_refresh_does_not_block_or_change_wallet(self):
         path = "WillowGame.WillowVendingMachine:PlayerBuyItem"
-        before, after = [c for c in self.mod.HOOKS if any(p == path for p, _ in c.specs)]
+        callbacks = [c for c in self.mod.HOOKS if any(p == path for p, _ in c.specs)]
+        self.assertEqual(len(callbacks), 1)
+        before = self.pc.PlayerReplicationInfo.CurrencyOnHand
+        self.item.CashValue = 999999
         args = Struct(Item=self.item, WPC=self.pc, Quantity=1)
-        self.assertIsNone(before(Object("Vendor"), args, None, None))
-        # Simulate another mod blocking the native function.
-        self.assertIsNone(after(Object("Vendor"), args, False, None))
-        self.assertFalse(self.mod.audit.pending)
-        self.assertEqual(self.mod.audit.recent[-1]["wallet_delta"], 0)
-        self.assertFalse(self.mod.audit.recent[-1]["return_value"])
+        self.assertIsNone(callbacks[0](Object("Vendor"), args, None, None))
+        self.assertEqual(self.item.CashValue, 44)
+        self.assertEqual(self.pc.PlayerReplicationInfo.CurrencyOnHand, before)
 
-    def test_nested_calls_and_bounded_observation_history(self):
-        audit = self.mod.audit
+    def test_repeated_transactions_stay_quiet_without_audit_history(self):
+        messages = list(self.messages)
         for _ in range(120):
-            audit.begin("query", Object(), Struct(), self.pc)
-            audit.finish("query", 3, self.pc)
-        self.assertEqual(len(audit.recent), 100)
-        audit.begin("nested", Object(), Struct(), self.pc)
-        audit.begin("nested", Object(), Struct(), self.pc)
-        audit.finish("nested", 2, self.pc)
-        audit.finish("nested", 1, self.pc)
-        self.assertGreater(audit.recent[-2]["sequence"], audit.recent[-1]["sequence"])
-        self.assertFalse(audit.pending)
+            self.sdk.dispatch("WillowGame.WillowVendingMachine:PlayerSellItem",
+                              Object("Map.Vendor"), Struct(Item=self.item, WPC=self.pc, Quantity=1),
+                              lambda: True)
+        self.assertEqual(self.messages, messages)
+        self.assertFalse(hasattr(self.mod, "audit"))
 
     def test_native_transaction_contracts_match_capture(self):
         expected = {
@@ -151,11 +143,12 @@ class HookAndExportTests(unittest.TestCase):
             path = self.mods.registration["options"][0].on_press(None)
         self.assertIsNotNone(path)
         result = json.loads(path.read_text())
-        self.assertEqual(result["mod"], {"name": "Economy Buster", "version": "0.1.0", "author": "keogh"})
+        self.assertEqual(result["mod"], {"name": "Economy Buster", "version": "0.1.1", "author": "keogh"})
         self.assertEqual(result["context"]["wallet"], before_wallet)
         self.assertTrue(all(f["level_one"] for f in result["economy"]["formula_inputs"]))
         self.assertEqual(result["loaded_mods"][0]["name"], "One Playthrough")
         self.assertTrue(result["hooks"])
+        self.assertNotIn("audit", result)
         self.assertEqual(before_counts, dict(self.mod.runtime.counts))
         self.assertEqual(before_loads, self.sdk.loads)
         self.assertEqual(before_wallet, self.pc.PlayerReplicationInfo.CurrencyOnHand)

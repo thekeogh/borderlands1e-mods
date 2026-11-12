@@ -1,6 +1,6 @@
 # Economy Buster
 
-**Version 0.1.0 · Author: keogh · Borderlands GOTY Enhanced**
+**Version 0.1.1 · Author: keogh · Borderlands GOTY Enhanced**
 
 Keep monetary scaling at level 1, from a new character through level 69,
 across every playthrough and the DLCs.

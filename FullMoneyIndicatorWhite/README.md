@@ -1,6 +1,6 @@
 # Full Money Indicator White
 
-**3.0.1 · keogh · Borderlands / GOTY Enhanced**
+**3.0.2 · keogh · Borderlands / GOTY Enhanced**
 
 Shows your full wallet with the inventory’s **gold dollar symbol with a black outline** and crisp
 white **LV-label lettering with a black edge**, including at 4K. Money handling

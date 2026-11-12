@@ -1,5 +1,42 @@
 # One Playthrough changelog
 
+## 4.9.2 — 2026-11-12
+
+- Remove legacy per-call loot event/argument/equipment sampling from generation
+  and initialization hooks, plus unused broad trace-hook discovery code.
+- Keep F10 and menu diagnostic exports, manual chest inspection, initializer
+  signatures, bounded gameplay counters/errors and carried-loot safety records.
+  Manual loot metadata now appears under diagnostics instead of trace.
+- Keep the single automatic loading/version message; exports log only on request.
+- No difficulty, spawn timing/count, loot, mission or HUD skull behavior changes.
+- Validation: 288 local tests pass, including manual-only chest inspection and
+  export failure handling; obsolete trace-observer tests replaced.
+
+## 4.9.1 — 2026-11-12
+
+- Lower Debug enemies to max(1, player level - 30): level 40 spawns level 10.
+- Keep spawn timing/counts, other difficulties, missions and loot rules unchanged.
+- Validation: 292 local tests pass, including the level-30 boundary and level 40.
+
+## 4.9.0 — 2026-11-12
+
+- Add saved Debug enemy difficulty for mod testing: supported hostile spawns,
+  including named enemies/bosses and hostile vehicles, use exactly
+  max(1, player level - 10). No random roll or native level floor/offset in Debug.
+- Preserve original factory GameStage, grade-selection bands, identity and combat
+  modifiers. Supply the low level using private cloned default/grade inputs and
+  initialize natively once; restore the original factory afterward. No changes to
+  existing spawned enemies, friendly/neutral/player actors, missions or loot rules.
+- Append Debug to the selector without changing existing option positions or the
+  Normal default. Retain all four play difficulties, including Very Hard
+  +3 40%, +4 58%, +5 2% and normal named/boss player-level +3 floors.
+- F10 reports the fixed Debug rule and no ordinary RNG tickets. Document area
+  reloads when changing modes and the saved Debug selection.
+- Validation: 292 local tests pass, covering low-level clamping, level 16/36/69,
+  every named ID, high/dynamic grade inputs, hostile vehicles, preserved identity,
+  no RNG, save/restart, native failure cleanup and returning to play difficulties.
+  Native Windows behavior requires in-game testing.
+
 ## 4.8.0 — 2026-11-12
 
 - Add a presentation-only skull for enemies exactly player level +5. The supplied

@@ -15,7 +15,6 @@ from .storage import MissionLevels
 from .diagnostics import export as export_snapshot
 from .reward_encoding import initializer_specs, prepare_definition_data
 from .loot import pool_specs
-from .loot_trace import specs as loot_trace_specs
 from .native_loot import spec as native_loot_spec
 
 SETTINGS = SETTINGS_DIR / "OnePlaythrough"
@@ -29,10 +28,11 @@ runtime = Runtime(unrealsdk, MissionLevels(
 
 
 enemy_difficulty = SpinnerOption(
-    "Enemy difficulty", value="Normal", choices=["Easy", "Normal", "Hard", "Very Hard"], wrap_enabled=True,
-    description="Ordinary enemies only. Base is always the higher of your level and the vanilla area level. "
+    "Enemy difficulty", value="Normal", choices=["Easy", "Normal", "Hard", "Very Hard", "Debug"], wrap_enabled=True,
+    description="Easy/Normal/Hard/Very Hard affect ordinary enemies. Their base is the higher of your level and the vanilla area level. "
                 "Ordinary native levels floor at your level +1. Very Hard rolls +3/+4/+5 at 40%/58%/2%; "
-                "other difficulties stop their extra rolls at +3. New spawns only. Named/bosses keep higher native levels with a your-level +3 minimum.",
+                "other play difficulties stop their extra rolls at +3. Named/bosses normally keep higher native levels with a your-level +3 minimum. "
+                "Debug is for mod testing: all supported hostile spawns, including bosses, are your level minus 30 (minimum 1), ignoring level floors. New spawns only.",
 )
 # Read the saved/live option at spawn time; changing it never edits existing pawns.
 runtime.spawns.difficulty = lambda: enemy_difficulty.value
@@ -178,7 +178,6 @@ def reward_initializer_hook(path, parameters, inputs, has_return):
     def before(_obj, args, _ret, func):
         stack.append(runtime.loot.native.enter_definition())
         invoked, result = False, None
-        runtime.loot.trace.initializer(_obj, args, parameters, inputs)
         try:
             changes = {}
             for parameter in parameters:
@@ -238,13 +237,12 @@ def native_loot_hook(path, inputs, has_return):
     return before
 
 
-def loot_pool_hooks(path, context, inputs=()):
+def loot_pool_hooks(path, context):
     stack = []
 
     @hook(path)
     @safe
     def before(_obj, args, _ret, _func):
-        runtime.loot.trace.event(path, _obj, args, inputs)
         stack.append(None)
         source = getattr(args, context) if context is not None else None
         stack[-1] = runtime.loot.enter(source, get_pc())
@@ -257,14 +255,6 @@ def loot_pool_hooks(path, context, inputs=()):
             runtime.loot.exit(token)
 
     return [before, after]
-
-
-def loot_trace_hook(path, inputs):
-    @hook(path)
-    def observe(obj, args, _ret, _func):
-        runtime.loot.trace.event(path, obj, args, inputs)
-        return None
-    return observe
 
 
 def loot_death_hooks(path):
@@ -404,7 +394,7 @@ HOOKS = [applying_profile, applied_profile, player_ready, world_ready, accepting
          create_vehicle, grade_boundary, enemy_skull_icon]
 try:
     specs = initializer_specs(unrealsdk)
-    runtime.loot.trace.initializer_signatures = [
+    runtime.loot.diagnostics.initializer_signatures = [
         {"path": path, "data": parameters, "inputs": inputs, "returns_value": has_return}
         for path, parameters, inputs, has_return in specs]
     runtime.missions.item_encoding["initializer_hooks"] = [spec[0] for spec in specs]
@@ -421,7 +411,7 @@ try:
                           for path, context, inputs in specs]
     for path, context, _inputs in specs:
         if context is not None:
-            HOOKS.extend(loot_pool_hooks(path, context, _inputs))
+            HOOKS.extend(loot_pool_hooks(path, context))
     if not specs or any(context is None for _, context, _ in specs):
         runtime.problem("loot pool discovery", ValueError("No compatible context for one or more native loot pool functions"))
 except Exception as exc:

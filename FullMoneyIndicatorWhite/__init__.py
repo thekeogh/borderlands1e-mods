@@ -54,7 +54,6 @@ def read_money() -> int | None:
         if amount < 0:
             pri.CurrencyOnHand = MOST_MONEY
             amount = MOST_MONEY
-            logging.info(f"[{LABEL}] money had gone past the top and turned negative, put back to ${MOST_MONEY:,}")
         return amount
     except Exception:
         return None
@@ -64,7 +63,6 @@ def warn_once(exc):
     global last_warning
     message = str(exc)
     if message != last_warning:
-        logging.dev_warning(f"[{LABEL}] {message}")
         last_warning = message
 
 

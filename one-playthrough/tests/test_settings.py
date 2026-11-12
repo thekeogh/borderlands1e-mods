@@ -100,7 +100,7 @@ class SettingsTests(unittest.TestCase):
         self.settings.write_text(json.dumps({"enabled": True}))
         first = self.boot()
         self.assertEqual(first.mod.enemy_difficulty.value, "Normal")
-        self.assertEqual(first.mod.enemy_difficulty.choices, ["Easy", "Normal", "Hard", "Very Hard"])
+        self.assertEqual(first.mod.enemy_difficulty.choices, ["Easy", "Normal", "Hard", "Very Hard", "Debug"])
         first.mod.enemy_difficulty.value = "Hard"
         first.registered_mod.save_settings()
         second = self.boot()

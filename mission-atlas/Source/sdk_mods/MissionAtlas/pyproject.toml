@@ -1,6 +1,6 @@
 [project]
 name = "Mission Atlas"
-version = "0.1.9"
+version = "0.1.10"
 authors = [{ name = "keogh" }]
 description = """Show markers for other accepted missions on the current map.
 Hover over markers to see mission names."""

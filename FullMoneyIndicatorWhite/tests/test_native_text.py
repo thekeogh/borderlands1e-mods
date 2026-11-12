@@ -1,6 +1,7 @@
 """Synthetic Flash/native API models; no game assets are redistributed."""
 
 import ast
+import __future__
 from contextlib import nullcontext
 import importlib
 from pathlib import Path
@@ -281,6 +282,22 @@ class NativeTests(unittest.TestCase):
         self.assertIs(self.movie.MovieInfo, private)  # No live HUD reload.
         self.renderer.prepare()
         self.assertIsNot(self.renderer.movie_asset, private)
+
+    def test_wallet_overflow_and_warning_capture_stay_quiet(self):
+        tree = ast.parse((ROOT / "__init__.py").read_text())
+        callbacks = [node for node in tree.body if isinstance(node, ast.FunctionDef)
+                     and node.name in ("read_money", "warn_once")]
+        wallet = NS(CurrencyOnHand=-100)
+        namespace = {"get_pc": lambda: NS(PlayerReplicationInfo=wallet),
+                     "MOST_MONEY": 2147483647, "last_warning": None}
+        # No logging object: either runtime path logging would fail this test.
+        exec(compile(ast.Module(body=callbacks, type_ignores=[]), "callbacks", "exec",
+                     flags=__future__.annotations.compiler_flag), namespace)
+        self.assertEqual(namespace["read_money"](), 2147483647)
+        self.assertEqual(wallet.CurrencyOnHand, 2147483647)
+        namespace["warn_once"](ValueError("HUD unavailable"))
+        namespace["warn_once"](ValueError("HUD unavailable"))
+        self.assertEqual(namespace["last_warning"], "HUD unavailable")
 
     def test_registered_lifecycle_callbacks_redirect_once_and_skip_other_movies(self):
         tree = ast.parse((ROOT / "__init__.py").read_text())

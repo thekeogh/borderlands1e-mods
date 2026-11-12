@@ -1,6 +1,6 @@
 [project]
 name = "FullMoneyIndicatorWhite"
-version = "3.0.1"
+version = "3.0.2"
 authors = [{ name = "keogh" }]
 description = "Displays your full wallet using the game's own HUD styling and positioning, so it feels like part of the game. Includes an adjustable Y offset."
 

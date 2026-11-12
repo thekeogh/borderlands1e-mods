@@ -1,6 +1,6 @@
 # Enemy Respawn Timer
 
-Private mod for Borderlands GOTY Enhanced. Author: keogh. Version 1.3.0.
+Private mod for Borderlands GOTY Enhanced. Author: keogh. Version 1.3.1.
 Validated in selected BL1E encounters: bandits, skags, spiderants/spiderantlings
 and gatling turrets at 1 minute; Rust Commons West bandits and spiderantlings
 stayed cleared for over 35 minutes on Forever. Map travel reset tracking as intended.
@@ -391,3 +391,17 @@ reset; DLC archetype/factory identification; exact catalogue matches; mixed-den
 kills; and disappearance handling. In-game named-boss and scripted multi-phase
 behavior still require verification. Install/restart, select Forever, kill Bone
 Head, F8, then F8 if he returns without map travel. Map exit/re-entry is the reset.
+
+## 1.3.1 Diagnostic cleanup
+
+Removed routine enable/disable/delay status logging, the redundant diagnostics
+request line and duplicate export-failure logging. Successful manual exports still
+log their file path; genuine errors remain deduplicated and bounded to 16 entries.
+Expected factory callbacks outside the optional DoSpawning observer no longer
+occupy the event buffer; their counter remains available in F8 reports.
+
+F8/the export button, the last 200 in-memory events, counters and native inventory
+remain available. No automatic diagnostic file writes were present or added.
+Respawn scheduling, native guards, hooks and polling are unchanged from 1.3.0.
+91 mocked tests pass, including quiet gameplay with retained clear history,
+explicit F8/button exports and a failed export preserving the respawn guard.

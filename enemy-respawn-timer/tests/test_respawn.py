@@ -482,8 +482,38 @@ class RespawnTests(unittest.TestCase):
             for file in files:
                 report = json.loads(file.read_text())
                 self.assertFalse(report["ready"])
-                self.assertEqual(report["version"], "1.3.0")
+                self.assertEqual(report["version"], "1.3.1")
                 self.assertNotIn("schemas", report)
+            self.assertEqual(len(self.mod.testing.messages), 2)
+            self.assertTrue(all("Exported to" in message for message in self.mod.testing.messages))
+
+    def test_normal_gameplay_keeps_diagnostic_history_without_log_or_file_writes(self):
+        with patch.object(Path, "write_text", side_effect=AssertionError("No automatic exports")):
+            pawn, = self.prepare_native_den(1)
+            self.native_kill(pawn, 110)
+            self.world.TimeSeconds = 120
+            self.mod.poll_tick(None, None, None, None)
+            self.mod.change_delay(self.mod.respawn_delay, "Forever (until reload)")
+            report = self.mod.snapshot()
+            self.assertEqual(report["counts"]["cleared_groups"], 1)
+            self.assertTrue(any(event["event"] == "group_cleared" for event in report["recent_events"]))
+            self.assertTrue(report["dens"][0]["owns_no_respawn_guard"])
+            self.mod.on_disable()
+            self.mod.on_enable()
+        self.assertEqual(self.mod.testing.messages, [])
+
+    def test_failed_manual_export_reports_error_once_and_keeps_respawn_guard(self):
+        pawn, = self.prepare_native_den(1)
+        self.native_kill(pawn, 110)
+        with tempfile.TemporaryDirectory() as folder:
+            self.mod.SETTINGS_DIR = Path(folder)
+            with patch.object(Path, "write_text", side_effect=OSError("disk unavailable")):
+                self.assertIsNone(self.mod.export_diagnostics())
+        self.assertEqual(len(self.mod.testing.messages), 1)
+        self.assertIn("disk unavailable", self.mod.testing.messages[0])
+        self.assertEqual(len(self.mod._errors), 1)
+        self.assertTrue(self.den.bNoRespawning)
+        self.assertFalse(self.den.IsEnabled)
 
     def test_event_buffer_is_bounded_and_reports_dead_weak_references(self):
         pawn, = self.spawn(count=1)

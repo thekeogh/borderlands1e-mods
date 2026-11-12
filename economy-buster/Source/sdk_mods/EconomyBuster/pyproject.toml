@@ -1,6 +1,6 @@
 [project]
 name = "Economy Buster"
-version = "0.1.0"
+version = "0.1.1"
 authors = [{ name = "keogh" }]
 description = """Keep cash rewards and prices at level-1 values.
 Applies across all playthroughs."""

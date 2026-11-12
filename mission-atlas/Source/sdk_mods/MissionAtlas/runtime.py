@@ -15,7 +15,7 @@ from .native import hook_path, kind, path_of, signature, flash_function
 from .policy import waypoint_for, select_waypoint
 from .renderer import Renderer
 
-VERSION = '0.1.9'
+VERSION = '0.1.10'
 CLASSES = ('StatusMenuExGFxMovie','WillowGFxHelperMap','MissionTracker',
            'WillowWaypoint','WillowPlayerController','WaypointDefinition','WillowPlayerReplicationInfo')
 MAP_METHODS = {'SetupMapPage','extUpdateMapPage','MapUpdateBehavior','PanMap',
@@ -66,8 +66,8 @@ class Atlas:
         self.get_pc, self.include_turn_ins, self.opacity = get_pc, include_turn_ins, opacity
         self.enabled = False
         self.installed, self.seen, self.cleaned = [], set(), set()
-        self.schemas, self.errors, self.samples = {}, [], []
-        self.counts, self.sample_counts = Counter(), Counter()
+        self.schemas, self.errors = {}, []
+        self.counts = Counter()
         self.export_callback = None
         self.last_discovery = -1e10
         self.scanning, self.ready, self.rendering = False, False, False
@@ -225,25 +225,11 @@ class Atlas:
         except Exception as exc:
             self.problem('render after native map ApplyFlash',exc)
 
-    def record_call(self, path, obj, args, ret, fields):
-        self.counts[path] += 1
-        self.sample_counts[path] += 1
-        if self.sample_counts[path] > 3:
-            return
-        try:
-            if len(self.samples) >= 100:
-                self.samples.pop(0)
-            self.samples.append({'function':path,'object':path_of(obj),
-                                 'args':{p['name']:brief(getattr(args,p['name'])) for p in fields if not p['flags'] & 0x400},
-                                 'return':brief(ret)})
-        except Exception as exc:
-            self.problem('sample map call',exc)
-
     def map_callback(self, path, name, fields):
         def after(movie,args,ret,_func):
             if not self.enabled:
                 return
-            self.record_call(path,movie,args,ret,fields)
+            self.counts[path] += 1
             try:
                 if (name == 'HandleMapInputKey' and str(args.ukey).lower() == 'f9'
                         and int(args.uevent) == 0 and self.export_callback is not None):
@@ -452,7 +438,7 @@ class Atlas:
         pc = self.get_pc()
         result = {'version':VERSION,'enabled':self.enabled,'ready':self.ready,'native_rendering_verified':False,
                   'hooks':[{'path':p,'timing':str(t),'identifier':i} for p,t,i in self.installed],
-                  'schemas':self.schemas,'counts':dict(self.counts),'samples':list(self.samples),'errors':list(self.errors),
+                  'schemas':self.schemas,'counts':dict(self.counts),'errors':list(self.errors),
                   'cached_points':list(self.points),'waypoint_selection':list(self.selection_details),
                   'pending_initial_render':self.pending_movie is not None,'renderer':{'plan':self.renderer.plan,'clips':dict(self.renderer.clips),
                                                             'last_error':self.renderer.last_error,

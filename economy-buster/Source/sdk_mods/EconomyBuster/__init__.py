@@ -11,10 +11,9 @@ from unrealsdk.hooks import Type
 from mods_base import SETTINGS_DIR, ButtonOption, Game, build_mod, get_ordered_mod_list, get_pc, hook
 
 from .economy import Economy
-from .diagnostics import Audit, collect, write_snapshot
+from .diagnostics import collect, write_snapshot
 
 runtime = Economy(unrealsdk)
-audit = Audit()
 
 
 def safe(callback):
@@ -35,7 +34,6 @@ def on_enable() -> None:
 
 def on_disable() -> None:
     runtime.disable()
-    audit.pending.clear()
 
 
 @hook("WillowGame.WillowPlayerController:ClientSetProfileLoaded", Type.POST)
@@ -68,32 +66,16 @@ def vendor_display(_obj, args, _ret, _func):
         runtime.refresh_item(args.Thing)
 
 
-def observed_hooks(path, *, item_field=None):
+def price_hook(path, *, item_field=None):
     @hook(path, Type.PRE, hook_identifier=f"EconomyBuster.before:{path}")
     @safe
-    def before(obj, args, _ret, _func):
+    def before(_obj, args, _ret, _func):
         if not runtime.enabled:
             return
         if runtime.ensure(path) and item_field is not None:
             runtime.refresh_item(getattr(args, item_field, None))
-        pc = getattr(args, "WPC", None)
-        if pc is None:
-            pc = getattr(args, "InWPC", None)
-        if pc is None:
-            pc = get_pc()
-        audit.begin(path, obj, args, pc)
 
-    @hook(path, Type.POST_UNCONDITIONAL, hook_identifier=f"EconomyBuster.after:{path}")
-    @safe
-    def after(obj, args, ret, _func):
-        pc = getattr(args, "WPC", None)
-        if pc is None:
-            pc = getattr(args, "InWPC", None)
-        if pc is None:
-            pc = get_pc()
-        audit.finish(path, ret, pc, obj)
-
-    return before, after
+    return before
 
 
 HOOKS = [player_ready, world_ready, cash_calculation, vendor_display]
@@ -106,13 +88,13 @@ for _path, _item in (
     ("WillowGame.WillowVendingMachine:PlayerBuyBackItem", "Item"),
     ("WillowGame.WillowPlayerReplicationInfo:AddCurrencyOnHand", None),
 ):
-    HOOKS.extend(observed_hooks(_path, item_field=_item))
+    HOOKS.append(price_hook(_path, item_field=_item))
 
 
 def export_diagnostics(_option=None):
     logging.info("[Economy Buster] Diagnostics export requested.")
     try:
-        snapshot = collect(unrealsdk, get_pc(), runtime, audit, version=__version__,
+        snapshot = collect(unrealsdk, get_pc(), runtime, version=__version__,
                            mods=list(get_ordered_mod_list()), hooks=HOOKS, game=str(Game.get_current()))
         path = write_snapshot(snapshot, Path(SETTINGS_DIR) / "EconomyBuster" / "diagnostics")
     except Exception as exc:

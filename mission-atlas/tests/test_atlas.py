@@ -195,7 +195,8 @@ class AtlasTests(unittest.TestCase):
         self.h.atlas.points_for(self.h.pc,10)
         with tempfile.TemporaryDirectory() as folder:
             report=json.loads(self.h.atlas.export(folder).read_text())
-        self.assertEqual(report['version'],'0.1.9')
+        self.assertEqual(report['version'],'0.1.10')
+        self.assertNotIn('samples',report)
         self.assertEqual(len(report['cached_points']),1)
         self.assertIn('renderer',report)
         self.assertEqual(len(report['waypoints']),2)

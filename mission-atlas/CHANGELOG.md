@@ -1,5 +1,12 @@
 # Mission Atlas changelog
 
+## 0.1.10 — 2026-11-12
+
+- Remove leftover automatic map-call argument/return sampling. Keep manual
+  F9/menu diagnostics and lightweight counters/errors. Marker rendering, native
+  tooltip registration and map event behavior unchanged.
+- Validation: 96 local tests pass.
+
 ## 0.1.9 — 2026-11-06
 
 - User confirmed the 0.1.8 tooltip registration works in game.

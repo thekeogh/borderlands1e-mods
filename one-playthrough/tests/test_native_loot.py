@@ -329,7 +329,7 @@ class NativeLootTests(unittest.TestCase):
         signature = self.h.runtime.loot.native.signature
         self.assertEqual(signature["path"], self.fixture["native_signature"]["path"])
         self.assertEqual(list(signature["inputs"]), self.fixture["native_signature"]["inputs"])
-        self.assertEqual(self.h.runtime.loot.trace.hooks, [])
+        self.assertFalse(hasattr(self.h.mod, "loot_trace_hook"))
         self.assertNotIn(("Engine.WillowInventory:GetInventoryDefinition", "PRE"), self.h.callbacks)
 
     def test_query_npc_health_is_never_called_during_native_item_construction(self):

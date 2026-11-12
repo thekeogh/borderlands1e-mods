@@ -1,6 +1,6 @@
 # Mission Atlas
 
-**0.1.9 · keogh · Borderlands GOTY Enhanced**
+**0.1.10 · keogh · Borderlands GOTY Enhanced**
 
 Show one faded diamond per other accepted mission on your current map. Your tracked
 mission keeps its normal marker. Ready-to-turn-in missions use their hand-in

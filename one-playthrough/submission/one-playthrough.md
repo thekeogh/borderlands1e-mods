@@ -21,7 +21,11 @@ Easy/Normal/Hard extra rolls stop at +3; Very Hard rolls +3/+4/+5 at
 40%/58%/2%, retaining naturally higher levels. The choice is saved
 and affects new spawns only.
 Named enemies and bosses retain higher native levels/offsets, with a minimum of
-your level +3 in every difficulty and no random roll.
+your level +3 in the four play difficulties and no random roll.
+An additional **Debug** option for mod testing puts supported hostile enemies,
+including bosses and hostile vehicles, at your level minus 30 (minimum 1),
+bypassing normal level floors. Reload the area after changing modes. Normal
+remains the default; Debug is saved until you change it.
 Enemies exactly five levels above you use the native skull warning on their
 health bar. This is cosmetic; their levels and combat rules are unchanged.
 The optional loot level floor targets new world drops, containers and vendor

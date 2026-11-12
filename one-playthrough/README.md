@@ -1,6 +1,6 @@
 # One Playthrough
 
-**4.8.0 · keogh · Borderlands GOTY Enhanced**
+**4.9.2 · keogh · Borderlands GOTY Enhanced**
 
 Play from level **1 to 69** in one continuous journey through Pandora. Enemies
 and missions scale with you across the main story and all four DLCs,
@@ -16,6 +16,16 @@ payout does not change its remaining rewards; SDU upgrades keep their native beh
 Choose **Enemy difficulty** in the mod options. **Normal** is the default;
 the setting is saved and applies to new spawns.
 
+**Debug** is an extra option for testing mods and travelling through fights quickly.
+It sets supported hostile enemies—including named enemies, bosses and hostile
+vehicles—to **max(1, your level − 30)**, ignoring their normal level floors and
+offsets. At level 40, enemies spawn at level 10; at levels 1–31 they spawn at level 1.
+Choose Debug, then reload the area for fresh enemies. Switch back to a play
+difficulty and reload again when finished testing. Debug is saved like the other
+settings; Normal remains the default. It changes enemy levels, not mission
+progress, reward rules or your existing gear.
+
+
 | Ordinary-enemy roll | Easy | Normal | Hard | Very Hard |
 | --- | ---: | ---: | ---: | ---: |
 | Native, minimum your level +1 | 70% | 50% | 20% | 0% |
@@ -25,7 +35,7 @@ the setting is saved and applies to new spawns.
 | At least +4 | 0% | 0% | 0% | 58% |
 | At least +5 | 0% | 0% | 0% | 2% |
 
-The base remains **max(your level, vanilla area level)** in every difficulty.
+For the four play difficulties, the base remains **max(your level, vanilla area level)**.
 New ordinary spawns also floor native level variation at **your level +1**. The mod's
 extra boosts stop at +3 for Easy, Normal and Hard. **Very Hard** rolls +3/+4/+5
 at **40%/58%/2%**, with no native, +1 or +2 roll. Naturally higher enemies and
@@ -35,7 +45,7 @@ chances are Easy **90%**, Normal **70%**, Hard **25%**; naturally higher enemies
 and areas retain their higher levels.
 Naturally stronger enemies keep their strength; bonuses do not stack. Named
 enemies and bosses keep their native levels and offsets, with a minimum of
-**your level +3 in every difficulty** and no random bonus. This is a floor, not
+**your level +3 in the four play difficulties** and no random bonus. This is a floor, not
 a cap: at player level 5, a native level-10 boss stays 10; a level-6 boss becomes 8.
 
 Enemies exactly **five levels above you** show the native skull beside their

@@ -56,7 +56,7 @@ ownership. Never call health methods on NPCs during native item construction;
 require a confirmed death/loot scope for NPC query sources.
 Leave unknown/interpolated/dynamic formats native and record skip reasons in F10.
 Keep SDU progression upgrades and non-levelled consumables native.
-Enemy difficulty is a saved Easy / Normal / Hard / Very Hard selector, default Normal.
+Enemy difficulty is a saved Easy / Normal / Hard / Very Hard / Debug selector, default Normal.
 Ordinary hostile roll weights (native / +1 / +2 / +3): Easy 70/20/9/1,
 Normal 50/20/25/5, Hard 20/5/55/20. Very Hard adds +4 and +5 slots and uses
 0/0/0/40/58/2 (native / +1 / +2 / +3 / +4 / +5). All preserve max(player, vanilla area)
@@ -77,9 +77,11 @@ export must log its request, saved path or failure; never swallow export errors.
 Keep the legacy Playthrough3 settings path only for migration. Preserve historical
 names in credits, changelog entries and captured-fixture provenance.
 
-4.5.1's broad read-only trace hooks are no longer registered. Keep bounded native
-initializer signatures/counters/samples in F10 until actual Windows generation,
-copying and reload persistence have been checked. Local engine models are not
+4.5.1's broad read-only trace hooks are no longer registered. Keep native
+initializer signatures and bounded gameplay counters/failure records
+in F10. Legacy per-call loot argument/event/equipment sampling and broad trace
+discovery are removed in 4.9.2; chest inspection runs only on manual export.
+Local engine models are not
 proof of native Windows behavior. Never claim unsupported loot paths are fixed.
 
 4.5.5 temporarily records Bone Head/Bone Shredder initialization decisions and
@@ -97,3 +99,18 @@ Flash signatures/enums, cache primitive metadata only, and avoid per-frame objec
 scans/reflection. Restore only owned current-target overrides on disable/context
 exit. Unsupported layouts remain native and appear in manual F10 diagnostics.
 Never bundle supplied game assets or decompiled scripts in the release.
+
+4.9.0 adds Debug for mod testing. Only this explicit mode bypasses hostile level
+floors and higher native level inputs: exact max(1, player - 30) for supported
+ordinary/named/boss/vehicle hostile spawns, with no RNG. Keep factory GameStage
+and grade-selection bands/identity intact; use private cloned defaults and fixed
+grade levels so native offsets cannot raise/lower the Debug target. Never alter
+friendly/neutral/player actors or live spawned actors. Preserve all four play
+difficulty policies, missions and loot rules. Append Debug to existing choices;
+keep Normal as the default and preserve saved settings. Unknown layouts remain
+native with an F10 reason. The exact-level override is confined to Debug.
+
+4.9.2 removes obsolete background loot tracing. Keep F10/menu exports, the single
+loading/version log, bounded gameplay counters and failure/retirement records.
+Do not reintroduce per-call diagnostic payload sampling or broad trace hooks.
+HUD per-frame work implements the +5 skull and is gameplay, not a debug probe.

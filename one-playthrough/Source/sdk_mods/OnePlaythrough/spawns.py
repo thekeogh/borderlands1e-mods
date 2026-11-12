@@ -70,31 +70,32 @@ class Spawns:
         self.pins = Patches()
         self.active = False
 
-    def exact_definition(self, definition, base, target, preserve_stage=False):
+    def exact_definition(self, definition, base, target, preserve_stage=False, force_exact=False):
         """Private persistent data; later spawns never change an existing pawn.
 
         Keep the original grade-selection bands and combat modifiers. Only the
         experience input changes, retaining any naturally higher grade level.
+        Debug alone replaces all level inputs, including higher native levels.
         The clone stays referenced by the native pawn after factory restoration.
         """
-        native = native_level(definition.DefaultExpLevel, base)
-        if native is None:
+        native = None if force_exact else native_level(definition.DefaultExpLevel, base)
+        if native is None and not force_exact:
             raise ValueError(f"Unsupported native enemy level formula: {definition._path_name()}")
         # Positive ExpLevel is a fixed level, not an additive bonus. A retained
         # higher fixed value must remain absolute, never become a small +offset
         # that the engine would interpret as a low-level override.
-        levels = tuple(max(target, grade_level(native, g.GradeModifiers.ExpLevel))
+        levels = tuple(target if force_exact else max(target, grade_level(native, g.GradeModifiers.ExpLevel))
                        for g in definition.Grades)
-        overrides = tuple(level if preserve_stage or level > target else 0 for level in levels)
+        overrides = tuple(level if force_exact or preserve_stage or level > target else 0 for level in levels)
         # A native floor must keep the original area GameStage for grade/type
         # selection. Use absolute level inputs, not a reduced factory stage.
-        default = max(target, native) if preserve_stage or not definition.Grades else None
+        default = target if force_exact else (max(target, native) if preserve_stage or not definition.Grades else None)
         key = (definition._get_address(), overrides, default)
         if key in self.clones:
             return self.clones[key]
         sdk = self.runtime.sdk
-        exact = sdk.find_object("AttributeDefinition", EXACT_STAGE)
-        if exact is None:
+        exact = None if force_exact else sdk.find_object("AttributeDefinition", EXACT_STAGE)
+        if exact is None and not force_exact:
             raise ValueError(f"Missing native level attribute: {EXACT_STAGE}")
         clone = sdk.construct_object(definition.Class, definition.Outer,
                                      name=f"OnePlaythrough_Level_{next(NAMES)}",
@@ -103,7 +104,8 @@ class Spawns:
         # map unload cannot recycle its address for a different enemy definition.
         self.pins.pin(definition)
         self.pins.pin(clone)
-        self.pins.pin(exact)
+        if exact is not None:
+            self.pins.pin(exact)
         data = clone.DefaultExpLevel
         data.BaseValueConstant = float(default) if default is not None else 0.0
         data.BaseValueAttribute = None if default is not None else exact
@@ -128,6 +130,13 @@ class Spawns:
         named = name is not None or ".named." in paths or "boss" in paths
         if not hostile(factory, definition, archetype):
             return base, None
+        if self.selected_difficulty() == 'Debug':
+            if definition is None or not hasattr(definition,'DefaultExpLevel') or not hasattr(definition,'Grades'):
+                self.runtime.problem('debug enemy level',ValueError(f'Unsupported balance layout: {paths}'))
+                return base,None
+            # Preserve grade-selection stage and identity, but bypass level
+            # floors/offsets for testing. No random roll, even for bosses.
+            return base,self.exact_definition(definition,base,max(1,player-30),force_exact=True)
         if named:
             if definition is None or not hasattr(definition,'DefaultExpLevel') or not hasattr(definition,'Grades'):
                 self.runtime.problem('named enemy level',ValueError(f'Unsupported named balance layout: {paths}'))
@@ -167,13 +176,14 @@ class Spawns:
 
     def selected_difficulty(self):
         value = self.difficulty()
-        return value if value in DIFFICULTIES else "Normal"
+        return value if value in DIFFICULTIES or value == 'Debug' else "Normal"
 
     def snapshot(self):
         difficulty = self.selected_difficulty()
+        debug_rule = 'exactly max(1, player level - 30)'
         return {"difficulty": difficulty,
                 "ordinary_tickets": {"native" if extra == 0 else f"+{extra}": weight
-                                     for extra, weight in enumerate(DIFFICULTIES[difficulty])},
-                "native_floor": "max(player level + 1, native spawn level)",
-                "named_bonus": False, "named_level": "max(player level + 3, native spawn level)",
+                                     for extra, weight in enumerate(DIFFICULTIES.get(difficulty,()))},
+                "native_floor": debug_rule if difficulty == 'Debug' else "max(player level + 1, native spawn level)",
+                "named_bonus": False, "named_level": debug_rule if difficulty == 'Debug' else "max(player level + 3, native spawn level)",
                 "private_definitions": len(self.clones)}

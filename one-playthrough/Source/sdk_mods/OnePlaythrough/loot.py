@@ -11,7 +11,7 @@ from copy import deepcopy
 from .rewards import inherited, internal_level
 from .reward_encoding import pack_level
 from .spawns import hostile
-from .loot_trace import LootTrace
+from .loot_diagnostics import LootDiagnostics
 from .native_loot import NativeLoot
 from .carried_loot import CarriedLoot
 
@@ -53,7 +53,7 @@ class Loot:
         self.skipped = {}
         self.contexts = {}
         self.recent = []
-        self.trace = LootTrace(runtime)
+        self.diagnostics = LootDiagnostics(runtime)
         self.native = NativeLoot(runtime, self)
         self.carried = CarriedLoot(runtime, self)
 
@@ -190,4 +190,4 @@ class Loot:
                 "skipped": dict(self.skipped), "recent": list(self.recent),
                 "native_initializer": self.native.snapshot(),
                 "carried_death_loot": self.carried.snapshot(),
-                "trace": self.trace.snapshot()}
+                "diagnostics": self.diagnostics.snapshot()}
