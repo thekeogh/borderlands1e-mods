@@ -1,0 +1,21 @@
+{
+  "source": "User-supplied logs/GfxHUD.upk",
+  "package_sha256": "07db64f4853cd8d38f9de04cc46e0c95976156983da52002ca26f42bc66e6cb7",
+  "gfx_sha256": "4c5e523b4d2662c29bcb5014f16129a290154768eeebe099139dbbb42157dec7",
+  "gfx_offset": 13683,
+  "gfx_length": 738541,
+  "icon_path": "p1.ring.dangerous",
+  "enemy_level_path": "p1.ring.elevel.text",
+  "name_path": "p1.ring.dangerous.ename.text",
+  "icon_sprite": 491,
+  "ring_sprite": 495,
+  "skull_sprite": 490,
+  "frames": {
+    "normal": 1,
+    "dangerous": 2,
+    "deadly": 3,
+    "friendly": 4
+  },
+  "skull_parent_frame": 3,
+  "note": "Derived clip/frame metadata only. No game assets or scripts bundled. Windows execution is not modeled."
+}

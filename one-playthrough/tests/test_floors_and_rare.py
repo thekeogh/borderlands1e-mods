@@ -177,7 +177,7 @@ class Rare(unittest.TestCase):
             "Easy": {21: 90, 22: 9, 23: 1},
             "Normal": {21: 70, 22: 25, 23: 5},
             "Hard": {21: 25, 22: 55, 23: 20},
-            "Very Hard": {23: 40, 24: 59, 25: 1},
+            "Very Hard": {23: 40, 24: 58, 25: 2},
         }
         for difficulty, counts in expected.items():
             with self.subTest(difficulty=difficulty):
@@ -193,11 +193,11 @@ class Rare(unittest.TestCase):
         self.h.mod.enemy_difficulty.value = 'Very Hard'
         levels = [self.spawn(ticket).level for ticket in range(100)]
         self.assertEqual({level:levels.count(level) for level in set(levels)},
-                         {39:40,40:59,41:1})
+                         {39:40,40:58,41:2})
 
     def test_every_preset_keeps_max_player_vanilla_area_as_spawn_base(self):
         policies = {"Easy": (70, 20, 9, 1), "Normal": (50, 20, 25, 5),
-                    "Hard": (20, 5, 55, 20), "Very Hard": (0, 0, 0, 40, 59, 1)}
+                    "Hard": (20, 5, 55, 20), "Very Hard": (0, 0, 0, 40, 58, 2)}
         for difficulty, weights in policies.items():
             self.h.mod.enemy_difficulty.value = difficulty
             for player, area in ((8, 30), (40, 12)):
@@ -233,10 +233,10 @@ class Rare(unittest.TestCase):
     def test_very_hard_reports_plus_five_and_keeps_rare_spawn_above_player_cap(self):
         self.h.mod.enemy_difficulty.value = "Very Hard"
         self.assertEqual(self.h.runtime.spawns.snapshot()["ordinary_tickets"],
-                         {"native": 0, "+1": 0, "+2": 0, "+3": 40, "+4": 59, "+5": 1})
+                         {"native": 0, "+1": 0, "+2": 0, "+3": 40, "+4": 58, "+5": 2})
         self.h.enable(69)
         self.args.GameStage = 69
-        for ticket, level in ((0, 72), (39, 72), (40, 73), (98, 73), (99, 74)):
+        for ticket, level in ((0, 72), (39, 72), (40, 73), (97, 73), (98, 74), (99, 74)):
             self.assertEqual(self.spawn(ticket).level, level)
 
     def test_invalid_difficulty_falls_back_to_normal(self):

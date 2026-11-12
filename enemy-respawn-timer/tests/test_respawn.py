@@ -74,15 +74,17 @@ def load():
     package.__package__ = package.__name__
     package.__path__ = [str(SOURCE)]
     policy = ModuleType("respawn_test.policy")
+    named = ModuleType("respawn_test.named_enemies")
     modules = {"mods_base": base, "unrealsdk": sdk, "unrealsdk.hooks": hooks,
-               "unrealsdk.unreal": unreal, package.__name__: package, policy.__name__: policy}
+               "unrealsdk.unreal": unreal, package.__name__: package, policy.__name__: policy, named.__name__: named}
     with patch.dict(sys.modules, modules):
+        exec(compile((SOURCE / "named_enemies.py").read_text(), "named_enemies.py", "exec"), named.__dict__)
         exec(compile((SOURCE / "policy.py").read_text(), "policy.py", "exec"), policy.__dict__)
         exec(compile((SOURCE / "__init__.py").read_text(), "__init__.py", "exec"), package.__dict__)
         package.on_enable()
     package.testing = NS(sdk=sdk, hooks=hooks, base=base, world=world, pc=pc,
                          messages=messages, additions=additions, removals=removals,
-                         registrations=registrations, build=build, policy=policy)
+                         registrations=registrations, build=build, policy=policy, named=named)
     return package
 
 
@@ -480,7 +482,7 @@ class RespawnTests(unittest.TestCase):
             for file in files:
                 report = json.loads(file.read_text())
                 self.assertFalse(report["ready"])
-                self.assertEqual(report["version"], "1.2.13")
+                self.assertEqual(report["version"], "1.3.0")
                 self.assertNotIn("schemas", report)
 
     def test_event_buffer_is_bounded_and_reports_dead_weak_references(self):
@@ -1121,6 +1123,119 @@ class RespawnTests(unittest.TestCase):
                 self.assertTrue(self.den.IsEnabled)
                 self.assertIsNone(entry["original_enabled"])
                 self.assertTrue(self.den.bNoRespawning)
+
+    def bonehead_den(self):
+        self.den.SpawnData.PopulationDefName = "Bandit_Bonehead"
+        self.den.bNoRespawning = True
+        self.den.Aspect = self.make_fyrestone_aspect()
+        self.den.Aspect.MissionObjective.MissionDefinition = Object("Z0_Missions.Missions.M_FixVSS")
+        self.den.Aspect.MissionObjective.ObjectiveIndex = 0
+        self.den.Aspect.MissionReactions.MissionStatusOpportunityReaction = (1, 0, 1, 0)
+        return self.prepare_native_den(1)
+
+    def test_bonehead_first_spawn_and_mission_kill_are_allowed_then_guarded(self):
+        pawn, = self.bonehead_den()
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertEqual(entry["named_enemy"], "Bone Head")
+        self.assertTrue(self.den.IsEnabled)
+        self.assertEqual(self.mod._counts["tracked_spawns"], 1)
+        objective = self.den.Aspect.MissionObjective.MissionDefinition
+        self.mod.respawn_delay.value = "Forever (until reload)"
+        self.native_kill(pawn, 110)
+        self.assertTrue(entry["named_killed"])
+        self.assertTrue(entry["original_no_respawn"])
+        self.assertFalse(self.den.IsEnabled)
+        self.assertEqual(entry["group"].cleared_at, 110)
+        self.assertIs(self.den.Aspect.MissionObjective.MissionDefinition, objective)
+        self.world.TimeSeconds = 1200
+        self.mod.poll_tick(None, None, None, None)
+        self.assertFalse(entry["ignored"])
+        self.assertFalse(self.den.IsEnabled)
+        self.assertEqual(self.mod._counts["rearmed_groups"], 0)
+        self.mod.map_change(None, None, None, None)
+        self.assertTrue(self.den.IsEnabled)
+        self.assertTrue(self.den.bNoRespawning)  # Original native flag restored.
+        self.assertEqual(self.mod._dens, {})
+
+    def test_bonehead_finite_expiry_restores_native_flags_without_forcing_spawns(self):
+        pawn, = self.bonehead_den()
+        self.native_kill(pawn, 110)
+        self.world.TimeSeconds = 170
+        self.mod.poll_tick(None, None, None, None)
+        self.assertTrue(self.den.IsEnabled)
+        self.assertTrue(self.den.bNoRespawning)
+        self.assertEqual(self.mod._counts["rearmed_groups"], 1)
+
+    def test_exact_catalogue_id_recognizes_dlc_named_enemy_without_population_alias(self):
+        self.den.SpawnData.PopulationDefName = "UnaliasedDlcPopulation"
+        self.den.bNoRespawning = True
+        self.den.Aspect = self.make_fyrestone_aspect()
+        self.den.Aspect.MissionObjective.MissionDefinition = Object()
+        self.prepare_native_den(0)
+        pawn = Object("TheWorld.Knoxx")
+        pawn.bIsDead = False
+        pawn.Allegiance = Object("gd_allegiance.HumanoidEnemy.Lance")
+        pawn.ObjectArchetype = Object("dlc3_gd_clmecha.knoxx.character.pawn_knoxx")
+        self.den.SpawnedDenMembers = [pawn]
+        self.den.SpawnData.NumActiveActors = self.den.SpawnData.NumTotalActors = 1
+        self.world.TimeSeconds = 110
+        self.mod.poll_tick(None, None, None, None)
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertEqual(entry["named_enemy"], "General Knoxx")
+        self.native_kill(pawn, 120)
+        self.assertFalse(self.den.IsEnabled)
+        self.assertTrue(entry["named_killed"])
+
+    def test_factory_balance_identifies_named_actor_when_archetype_is_unavailable(self):
+        pawn, = self.prepare_native_den(1)
+        self.mod.reset_session()
+        self.den.SpawnData.PopulationDefName = "UnaliasedPopulation"
+        self.den.bNoRespawning = True
+        factory = Object("TheWorld.NamedFactory")
+        factory.PawnBalanceDefinition = Object("gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Bonehead")
+        self.mod.record_spawn(factory, None, pawn, None)
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(self.mod._dens[self.den._get_address()]["named_enemy"], "Bone Head")
+
+    def test_named_kill_starts_cooldown_without_waiting_for_grunts_in_same_den(self):
+        boss, grunt = self.prepare_native_den(2)
+        boss.ObjectArchetype = Object("gd_banditcaptain1.pawnarchetype.pawn_banditcaptain1")
+        entry = self.mod._dens[self.den._get_address()]
+        # Late native identity metadata is reconciled on the following poll.
+        self.world.TimeSeconds = 105
+        self.mod.poll_tick(None, None, None, None)
+        self.assertIn(boss._get_address(), entry["named_members"])
+        self.assertEqual(entry["named_enemy"], "Bone Head")
+        self.mod.respawn_delay.value = "Forever (until reload)"
+        self.native_kill(boss, 110)
+        self.assertEqual(entry["group"].cleared_at, 110)
+        self.assertFalse(self.den.IsEnabled)
+        self.assertEqual(len(entry["group"].members), 1)
+        self.native_kill(grunt, 120)
+        self.assertEqual(entry["group"].cleared_at, 110)
+        self.assertEqual(self.mod._counts["cleared_groups"], 1)
+
+    def test_named_catalogue_uses_exact_ids_and_excludes_friendly_variants(self):
+        for path, label in self.mod.testing.named.BALANCE_NAMES.items():
+            self.assertEqual(self.mod.named_enemy(Object(path), None), label)
+            self.assertIsNone(self.mod.named_enemy(Object(path + "_unknown"), None))
+        for path, label in self.mod.testing.named.ARCHETYPE_NAMES.items():
+            self.assertEqual(self.mod.named_enemy(None, Object(path)), label)
+        self.den.SpawnData.PopulationDefName = "Bandit_Bonehead"
+        self.spawn(count=1, allegiance="gd_allegiance.Friendly.NPC")
+        self.assertTrue(self.mod._dens[self.den._get_address()]["ignored"])
+
+    def test_named_disappearance_without_death_still_does_not_count_as_a_kill(self):
+        pawn, = self.bonehead_den()
+        self.mod._actors[pawn._get_address()] = (lambda: None, self.den._get_address())
+        self.den.SpawnedDenMembers = []
+        self.den.SpawnData.NumActiveActors = 0
+        self.world.TimeSeconds = 110
+        self.mod.poll_tick(None, None, None, None)
+        entry = self.mod._dens[self.den._get_address()]
+        self.assertFalse(entry["named_killed"])
+        self.assertIsNone(entry["group"].cleared_at)
+        self.assertTrue(self.den.IsEnabled)
 
     def test_finite_native_guard_is_released_at_expiry_and_disable_or_map_reload(self):
         for action in ("expiry", "disable", "map"):

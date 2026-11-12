@@ -1,6 +1,6 @@
 # Enemy Respawn Timer
 
-Private mod for Borderlands GOTY Enhanced. Author: keogh. Version 1.2.13.
+Private mod for Borderlands GOTY Enhanced. Author: keogh. Version 1.3.0.
 Validated in selected BL1E encounters: bandits, skags, spiderants/spiderantlings
 and gatling turrets at 1 minute; Rust Commons West bandits and spiderantlings
 stayed cleared for over 35 minutes on Forever. Map travel reset tracking as intended.
@@ -19,17 +19,20 @@ Playthrough 3 enabled. No existing mod, save, reference file or UPK is changed.
 | 3 hours | 10,800 |
 | Forever (until reload) | Blocked for the current loaded map session |
 
-The timer starts when the last tracked enemy in a spawn group dies, rather than
-one global timer for the whole map. First encounters spawn normally. After expiry,
+For ordinary groups, the timer starts when the last tracked enemy in that group
+dies. Recognized named enemies start their den's timer on their own confirmed kill,
+even if existing grunts from that den are still alive. First encounters spawn normally. After expiry,
 the group is eligible to respawn; native distance, visibility, population quotas
 and mission conditions still apply. This mod does not forcibly summon enemies
-at the instant a timer ends or make normally non-respawning bosses respawn.
+at the instant a timer ends. Named enemies are also suppressed after confirmed
+kills; their initial native spawn and mission death handling still execute.
 Native default respawn timing is not established here; it can vary by opportunity.
 
 Paused game time does not count. Changing the option updates cleared groups from
 their original clear time. Entering a different map or reloading clears tracking.
 During cooldown the mod holds the den's native no-respawn flag and temporarily
-disables ordinary spawn opportunities and persistent, payload-free mission gates.
+disables ordinary spawn opportunities, persistent payload-free mission gates, and
+recognized named-enemy dens after a confirmed named kill.
 The no-respawn flag alone did not prevent the recorded rakk bypass. Forever uses
 a timestamp 999,999,999 seconds after clearing and keeps these native guards until
 map reload or disable. Finite delays release the guards at expiry. Disabling
@@ -39,9 +42,12 @@ activation control.
 Native member lists also allow tracking enemies already alive when enabled.
 Use a fresh map for repeatable tests. Settings persist; enemy timers do not.
 
-Quest objective/item opportunities, unknown scripted aspects, native no-respawn
-flags, friendly or mixed NPC/enemy groups, unknown allegiances and unsupported
-layouts stay native. Enabled MissionPopulationAspect gates are allowed only when
+For ordinary groups, quest objective/item opportunities, unknown scripted aspects,
+native no-respawn flags, friendly/mixed groups, unknown allegiances and unsupported
+layouts stay native. Recognized named-enemy dens are an explicit exception to the
+mission/no-respawn exclusions: they are observed normally and guarded only after
+a confirmed named kill. Native no-respawn flags are restored to their original
+values, including True, on cleanup. Enabled MissionPopulationAspect gates are allowed only when
 they have no objective or item payload and their four-slot reaction table uses
 known values: Enabled, Disabled, Respawn50Percent or Respawn100Percent. All 256
 combinations of those four values are accepted, including combinations not yet
@@ -72,9 +78,11 @@ The DoSpawning/factory hooks remain supplementary observers; tracking does not
 depend on them firing or installing successfully.
 
 No native spawn calls, pawn-wide scans, health/level changes, corpse manipulation,
-or quest flag changes. Pre-existing native no-respawn flags remain untouched;
-only eligible cleared dens acquire a temporary flag owned by the mod. Missing
-layouts are logged and skipped. All native object reads occur synchronously.
+or quest flag changes. Ordinary pre-existing native no-respawn dens stay native.
+Eligible cleared dens acquire a temporary flag owned by the mod. Missing
+layouts are logged and skipped. Named kills may acquire a guard over a native
+no-respawn flag already set to True; that original True is preserved on cleanup.
+All native object reads occur synchronously.
 
 Field names and native reset behavior were checked against
 [Reset Enemies source](https://github.com/EerieGoesD/borderlands-1-goty-mods/blob/main/ResetEnemies/__init__.py)
@@ -351,3 +359,35 @@ are never changed. Owned activation is restored on expiry, disable and map reset
 cleanup and preservation of staged mission activation. In-game verification is
 pending. Restart with this build and reclear that group on Forever; export after
 clearing and if anything returns. No map travel is needed for the retest.
+
+## 1.3.0 Named-enemy cooldowns
+
+At the user's request, recognized named enemies are covered even when their dens
+carry native no-respawn flags or mission objectives. Bone Head and the other
+previously observed named population aliases are recognized before spawning.
+A standalone catalogue of exact native balance/archetype IDs covers base-game and
+DLC named enemies; it is bundled locally and does not require another mod. Factory
+balance observations and native pawn archetypes identify names without display-name
+substring guesses or native IsBoss calls. The identity data reuses this repository's
+verified named catalogue, with its pinned Dedicated Drops SDK/Boss Bars sources
+retained in `named_enemies.py`. Unknown named identities and scripted spawns outside
+the native den system cannot be guaranteed; F8 remains available for those cases.
+
+Nothing is disabled merely because a named enemy exists. The first native spawn,
+fight, loot and mission death callbacks run normally. On a confirmed named kill,
+its den gets the selected cooldown and activation guard. A named kill in a mixed
+den starts the timer immediately; later grunt deaths do not restart it. Existing
+living grunts are not deleted. The mod does not accept/complete/reset missions or
+edit saved mission states. Named disappearance alone is not a kill.
+
+With Forever, guards last until map reload, travel or disable. Finite expiry
+restores native activation/no-respawn settings; it never forces a one-shot boss to
+respawn. Leaving and returning allows whatever fresh native spawns that map and
+mission state normally permit. Guards and named kill history are session-only.
+
+89 mocked tests pass, including Bone Head's initial spawn/mission objective,
+original True no-respawn ownership, confirmed kill/Forever, finite expiry and map
+reset; DLC archetype/factory identification; exact catalogue matches; mixed-den
+kills; and disappearance handling. In-game named-boss and scripted multi-phase
+behavior still require verification. Install/restart, select Forever, kill Bone
+Head, F8, then F8 if he returns without map travel. Map exit/re-entry is the reset.

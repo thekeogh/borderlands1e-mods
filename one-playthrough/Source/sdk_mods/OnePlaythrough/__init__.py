@@ -31,7 +31,7 @@ runtime = Runtime(unrealsdk, MissionLevels(
 enemy_difficulty = SpinnerOption(
     "Enemy difficulty", value="Normal", choices=["Easy", "Normal", "Hard", "Very Hard"], wrap_enabled=True,
     description="Ordinary enemies only. Base is always the higher of your level and the vanilla area level. "
-                "Ordinary native levels floor at your level +1. Very Hard rolls +3/+4/+5 at 40%/59%/1%; "
+                "Ordinary native levels floor at your level +1. Very Hard rolls +3/+4/+5 at 40%/58%/2%; "
                 "other difficulties stop their extra rolls at +3. New spawns only. Named/bosses keep higher native levels with a your-level +3 minimum.",
 )
 # Read the saved/live option at spawn time; changing it never edits existing pawns.
@@ -63,6 +63,12 @@ def on_enable():
 
 def on_disable():
     runtime.disable()
+
+
+@hook('Engine.GameViewportClient:PostRender',Type.POST)
+@safe
+def enemy_skull_icon(_obj,_args,_ret,_func):
+    runtime.hud_icons.update(get_pc())
 
 
 @hook("WillowGame.WillowPlayerController:ApplyMissionProfileData")
@@ -395,7 +401,7 @@ def export_key():
 
 HOOKS = [applying_profile, applied_profile, player_ready, world_ready, accepting, accepted,
          eligibility, mission_level, refreshed_mission, create_pawn, restore_pawn,
-         create_vehicle, grade_boundary]
+         create_vehicle, grade_boundary, enemy_skull_icon]
 try:
     specs = initializer_specs(unrealsdk)
     runtime.loot.trace.initializer_signatures = [

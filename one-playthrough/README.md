@@ -1,6 +1,6 @@
 # One Playthrough
 
-**4.7.1 · keogh · Borderlands GOTY Enhanced**
+**4.8.0 · keogh · Borderlands GOTY Enhanced**
 
 Play from level **1 to 69** in one continuous journey through Pandora. Enemies
 and missions scale with you across the main story and all four DLCs,
@@ -22,13 +22,13 @@ the setting is saved and applies to new spawns.
 | At least +1 | 20% | 20% | 5% | 0% |
 | At least +2 | 9% | 25% | 55% | 0% |
 | At least +3 | 1% | 5% | 20% | 40% |
-| At least +4 | 0% | 0% | 0% | 59% |
-| At least +5 | 0% | 0% | 0% | 1% |
+| At least +4 | 0% | 0% | 0% | 58% |
+| At least +5 | 0% | 0% | 0% | 2% |
 
 The base remains **max(your level, vanilla area level)** in every difficulty.
 New ordinary spawns also floor native level variation at **your level +1**. The mod's
 extra boosts stop at +3 for Easy, Normal and Hard. **Very Hard** rolls +3/+4/+5
-at **40%/59%/1%**, with no native, +1 or +2 roll. Naturally higher enemies and
+at **40%/58%/2%**, with no native, +1 or +2 roll. Naturally higher enemies and
 higher-level areas can still exceed these boosts. Existing spawned enemies keep their levels.
 Native and +1 rolls now share a +1 minimum. Around your level, their combined
 chances are Easy **90%**, Normal **70%**, Hard **25%**; naturally higher enemies
@@ -37,6 +37,11 @@ Naturally stronger enemies keep their strength; bonuses do not stack. Named
 enemies and bosses keep their native levels and offsets, with a minimum of
 **your level +3 in every difficulty** and no random bonus. This is a floor, not
 a cap: at player level 5, a native level-10 boss stays 10; a level-6 boss becomes 8.
+
+Enemies exactly **five levels above you** show the native skull beside their
+health bar. This changes only the HUD warning icon; +6-or-higher native skulls,
+enemy stats and damage rules remain native. Disabling the mod restores its owned
+icon override. The new visual change needs an in-game check.
 
 **Loot level floor** is enabled by default. New equipment from world drops,
 containers (including chests and skag piles) and vending-machine stock targets

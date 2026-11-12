@@ -59,7 +59,7 @@ Keep SDU progression upgrades and non-levelled consumables native.
 Enemy difficulty is a saved Easy / Normal / Hard / Very Hard selector, default Normal.
 Ordinary hostile roll weights (native / +1 / +2 / +3): Easy 70/20/9/1,
 Normal 50/20/25/5, Hard 20/5/55/20. Very Hard adds +4 and +5 slots and uses
-0/0/0/40/59/1 (native / +1 / +2 / +3 / +4 / +5). All preserve max(player, vanilla area)
+0/0/0/40/58/2 (native / +1 / +2 / +3 / +4 / +5). All preserve max(player, vanilla area)
 as their base. Native ordinary levels floor at player level +1; keep the original
 factory GameStage/grade bands when applying that floor. Native/+1 rolls overlap
 at the +1 minimum; keep the other presets unchanged; named/boss floors are player level +3.
@@ -87,3 +87,13 @@ before/after death/drop ownership using properties only. Do not change gameplay,
 call actor methods or reinitialize carried items for these probes. Keep records
 bounded and indexed as primitive maps so F10 preserves nested detail. Remove the
 targeted probes after the carried-unique path has been diagnosed and resolved.
+
+4.8.0's +5 skull is presentation-only. Use the supplied GfxHUD contract:
+p1.ring.dangerous frame 2 is a native warning, frame 3 is deadly/skull, frame 4
+is friendly; p1.ring.elevel.text is the target level. Override only a visible
+warning at exactly player +5. Preserve friendly/normal and +6-or-higher native
+skulls, scaling, enemy data and Globals difficulty thresholds. Reflect/check
+Flash signatures/enums, cache primitive metadata only, and avoid per-frame object
+scans/reflection. Restore only owned current-target overrides on disable/context
+exit. Unsupported layouts remain native and appear in manual F10 diagnostics.
+Never bundle supplied game assets or decompiled scripts in the release.

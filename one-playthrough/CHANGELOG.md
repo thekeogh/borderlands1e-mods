@@ -1,5 +1,35 @@
 # One Playthrough changelog
 
+## 4.8.0 — 2026-11-12
+
+- Add a presentation-only skull for enemies exactly player level +5. The supplied
+  GfxHUD asset identifies p1.ring.dangerous warning frame 2 and native deadly/skull
+  frame 3. Select the skull only for visible warning-state +5 targets. Preserve
+  friendly/normal icons and existing +6-or-higher native skulls/scaling.
+- Read the HUD target level and keep gameplay levels, damage, XP, drop rates and
+  shared difficulty thresholds untouched. Retain Very Hard +3 40%, +4 58%, +5 2%.
+- Reflect/check native Flash signatures and the ASValue string enum. Cache only
+  primitive movie identity/API metadata; use named object lookup on subsequent
+  frames, with bounded discovery/backoff when the HUD is unavailable.
+- Restore owned icon changes on disable/context exit when the same target still
+  has the overridden frame. Skip unsupported layouts and expose bounded HUD
+  status/readback errors in manual F10 diagnostics. No automatic debug logging.
+- Validation: 279 local tests pass, including +5-only selection, friendly/native
+  skull preservation, target changes, level-up/disable restoration, signature
+  checks, readback failures, HUD reload, caching and presentation-only behavior.
+  Clip/frame metadata was verified in the user-supplied HUD package. Windows
+  rendering/timing still requires in-game testing; no game asset is bundled.
+
+## 4.7.2 — 2026-11-12
+
+- Set Very Hard ordinary rolls to +3 40%, +4 58%, +5 2%, moving one percentage
+  point from +4 to +5. Apply to new spawns only.
+- Keep named/boss floors, naturally higher native levels, other difficulties,
+  loot and mission behavior unchanged. No HUD/icon changes in this release.
+- Synchronize option help, F10 policy, full difficulty table and submission text.
+- Validation: 260 local tests pass, including all 100 tickets per difficulty,
+  both +5 tickets, transition boundaries and saved difficulty selection.
+
 ## 4.7.1 — 2026-11-11
 
 - Reduce Very Hard ordinary +5 rolls from 5% to 1%; move the four percentage

@@ -4,6 +4,7 @@ from .missions import Missions
 from .scaling import Grades, Regions, player_level
 from .spawns import Spawns
 from .loot import Loot
+from .hud_icons import HudIcons
 
 
 class Runtime:
@@ -16,6 +17,7 @@ class Runtime:
         self.missions = Missions(self, store)
         self.spawns = Spawns(self)
         self.loot = Loot(self)
+        self.hud_icons = HudIcons(self)
         self.problems = []
         self.syncing = False
 
@@ -62,6 +64,7 @@ class Runtime:
         return level
 
     def restore(self):
+        self.hud_icons.restore()
         self.loot.clear()
         for error in self.missions.restore() + self.grades.restore() + self.spawns.restore():
             self.problem("restore", error)
@@ -80,4 +83,5 @@ class Runtime:
                 "item_reward_level": "mission level at turn-in, frozen during payout (equipment only; native SDUs)",
                 "reward_item_encoding": self.missions.item_encoding, "settings_error": self.store.error,
                 "loot_level_floor": self.loot.snapshot(),
+                "hud_icons": self.hud_icons.snapshot(),
                 "problems": list(self.problems)}
