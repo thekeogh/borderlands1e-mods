@@ -99,7 +99,7 @@ class DebugDifficultyTests(unittest.TestCase):
         self.assertEqual((old.level,new.level),(1,25))
         self.assertEqual(old.definition.DefaultExpLevel.BaseValueConstant,1)
         self.assertEqual(self.svc.snapshot()['ordinary_tickets'],
-                         {'native':0,'+1':0,'+2':0,'+3':40,'+4':58,'+5':2})
+                         {'native':0,'+1':0,'+2':0,'+3':25,'+4':72,'+5':3})
         self.h.mod.enemy_difficulty.value='Debug'
         self.assertEqual(self.rig.spawn().level,1)
         self.assertEqual(new.definition.Grades[0].GradeModifiers.ExpLevel,0)

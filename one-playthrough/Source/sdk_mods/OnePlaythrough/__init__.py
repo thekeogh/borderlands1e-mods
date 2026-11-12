@@ -30,7 +30,7 @@ runtime = Runtime(unrealsdk, MissionLevels(
 enemy_difficulty = SpinnerOption(
     "Enemy difficulty", value="Normal", choices=["Easy", "Normal", "Hard", "Very Hard", "Debug"], wrap_enabled=True,
     description="Easy/Normal/Hard/Very Hard affect ordinary enemies. Their base is the higher of your level and the vanilla area level. "
-                "Ordinary native levels floor at your level +1. Very Hard rolls +3/+4/+5 at 40%/58%/2%; "
+                "Ordinary native levels floor at your level +1. Very Hard rolls +3/+4/+5 at 25%/72%/3%; "
                 "other play difficulties stop their extra rolls at +3. Named/bosses normally keep higher native levels with a your-level +3 minimum. "
                 "Debug is for mod testing: all supported hostile spawns, including bosses, are your level minus 30 (minimum 1), ignoring level floors. New spawns only.",
 )

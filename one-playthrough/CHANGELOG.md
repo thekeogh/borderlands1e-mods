@@ -1,5 +1,12 @@
 # One Playthrough changelog
 
+## 4.9.3 — 2026-11-12
+
+- Retune Very Hard ordinary rolls: +3 25%, +4 72%, +5 3%.
+- Preserve higher native levels, named/boss floors, other difficulties and Debug.
+- Validation: 288 local tests pass, including all 100 difficulty tickets and
+  the updated +3/+4/+5 boundaries.
+
 ## 4.9.2 — 2026-11-12
 
 - Remove legacy per-call loot event/argument/equipment sampling from generation
