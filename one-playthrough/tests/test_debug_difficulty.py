@@ -99,16 +99,16 @@ class DebugDifficultyTests(unittest.TestCase):
         self.assertEqual((old.level,new.level),(1,25))
         self.assertEqual(old.definition.DefaultExpLevel.BaseValueConstant,1)
         self.assertEqual(self.svc.snapshot()['ordinary_tickets'],
-                         {'native':0,'+1':0,'+2':0,'+3':25,'+4':72,'+5':3})
+                         {'native':0,'+1':0,'+2':0,'+3':20,'+4':75,'+5':5})
         self.h.mod.enemy_difficulty.value='Debug'
         self.assertEqual(self.rig.spawn().level,1)
         self.assertEqual(new.definition.Grades[0].GradeModifiers.ExpLevel,0)
 
-    def test_switching_back_restores_named_plus_three_minimum(self):
+    def test_switching_back_restores_normal_named_fixed_plus_two(self):
         self.rig.definition.path='gd_Balance_Enemies_Humans.Bandits.Named.Pawn_Balance_Bonehead'
         old=self.rig.spawn()
-        self.h.mod.enemy_difficulty.value='Normal'
-        self.assertEqual(self.rig.spawn().level,23)
+        self.h.mod.enemy_difficulty.value='Medium'
+        self.assertEqual(self.rig.spawn().level,22)
         self.assertEqual(old.definition.Grades[0].GradeModifiers.ExpLevel,1)
 
     def test_disable_and_native_failure_restore_factory_without_retry(self):
@@ -133,7 +133,7 @@ class DebugDifficultyTests(unittest.TestCase):
     def test_debug_setting_persists_and_normal_remains_default(self):
         with tempfile.TemporaryDirectory() as folder:
             first=Harness(folder,registration_factory=SDKSettingsMod,in_menu=True)
-            self.assertEqual(first.mod.enemy_difficulty.value,'Normal')
+            self.assertEqual(first.mod.enemy_difficulty.value,'Medium')
             first.mod.enemy_difficulty.value='Debug'
             first.registered_mod.save_settings()
             second=Harness(folder,registration_factory=SDKSettingsMod,in_menu=True)

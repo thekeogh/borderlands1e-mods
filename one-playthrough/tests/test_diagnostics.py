@@ -58,7 +58,7 @@ class DiagnosticTests(unittest.TestCase):
         row = next(r for r in rows if r["region"] == self.h.mission.GameStageRegion.path.lower())
         self.assertEqual(row["native_default"]["BaseValueConstant"], 16)
         self.assertEqual(row["current_default"], 20)
-        self.assertEqual(report["enemy_policy"]["ordinary_tickets"], {"native": 50, "+1": 20, "+2": 25, "+3": 5})
+        self.assertEqual(report["enemy_policy"]["ordinary_tickets"], {"native": 0, "+1": 0, "+2": 60, "+3": 40})
 
     def test_unreadable_region_does_not_prevent_basic_and_mission_report(self):
         self.h.runtime.regions.levels_snapshot = lambda: (_ for _ in ()).throw(RuntimeError("bad region"))

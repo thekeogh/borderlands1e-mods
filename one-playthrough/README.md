@@ -1,6 +1,6 @@
 # One Playthrough
 
-**4.9.3 · keogh · Borderlands GOTY Enhanced**
+**5.0.0 · keogh · Borderlands GOTY Enhanced**
 
 Play from level **1 to 69** in one continuous journey through Pandora. Enemies
 and missions scale with you across the main story and all four DLCs,
@@ -13,7 +13,7 @@ awaiting turn-in. Equipment rewards, XP and cash use the mission level when you
 turn it in, preserving higher vanilla mission levels. A level gained from that
 payout does not change its remaining rewards; SDU upgrades keep their native behaviour.
 
-Choose **Enemy difficulty** in the mod options. **Normal** is the default;
+Choose **Enemy difficulty** in the mod options. **Medium** is the default;
 the setting is saved and applies to new spawns.
 
 **Debug** is an extra option for testing mods and travelling through fights quickly.
@@ -22,31 +22,63 @@ vehicles—to **max(1, your level − 30)**, ignoring their normal level floors 
 offsets. At level 40, enemies spawn at level 10; at levels 1–31 they spawn at level 1.
 Choose Debug, then reload the area for fresh enemies. Switch back to a play
 difficulty and reload again when finished testing. Debug is saved like the other
-settings; Normal remains the default. It changes enemy levels, not mission
+settings; Medium remains the default. It changes enemy levels, not mission
 progress, reward rules or your existing gear.
 
 
-| Ordinary-enemy roll | Easy | Normal | Hard | Very Hard |
+| Ordinary-enemy roll | Easy | Medium | Hard | Very Hard |
 | --- | ---: | ---: | ---: | ---: |
-| Native, minimum your level +1 | 70% | 50% | 20% | 0% |
-| At least +1 | 20% | 20% | 5% | 0% |
-| At least +2 | 9% | 25% | 55% | 0% |
-| At least +3 | 1% | 5% | 20% | 25% |
-| At least +4 | 0% | 0% | 0% | 72% |
-| At least +5 | 0% | 0% | 0% | 3% |
+| Native, minimum your level +1 | 0% | 0% | 0% | 0% |
+| At least +1 | 40% | 0% | 0% | 0% |
+| At least +2 | 60% | 60% | 0% | 0% |
+| At least +3 | 0% | 40% | 80% | 20% |
+| At least +4 | 0% | 0% | 20% | 75% |
+| At least +5 | 0% | 0% | 0% | 5% |
 
-For the four play difficulties, the base remains **max(your level, vanilla area level)**.
-New ordinary spawns also floor native level variation at **your level +1**. The mod's
-extra boosts stop at +3 for Easy, Normal and Hard. **Very Hard** rolls +3/+4/+5
-at **25%/72%/3%**, with no native, +1 or +2 roll. Naturally higher enemies and
-higher-level areas can still exceed these boosts. Existing spawned enemies keep their levels.
-Native and +1 rolls now share a +1 minimum. Around your level, their combined
-chances are Easy **90%**, Normal **70%**, Hard **25%**; naturally higher enemies
-and areas retain their higher levels.
-Naturally stronger enemies keep their strength; bonuses do not stack. Named
-enemies and bosses keep their native levels and offsets, with a minimum of
-**your level +3 in the four play difficulties** and no random bonus. This is a floor, not
-a cap: at player level 5, a native level-10 boss stays 10; a level-6 boss becomes 8.
+Ordinary enemies use **max(your level, vanilla area level)** as their base,
+retaining naturally higher levels without stacking bonuses. Easy rolls +1/+2 at **40%/60%**, with no native/on-level roll. Medium rolls +2/+3 at **60%/40%**. Hard rolls +3/+4 at **80%/20%**; Very Hard rolls
++3/+4/+5 at **20%/75%/5%**. Existing spawned enemies keep their levels.
+
+Named enemies and bosses do not roll: **Easy and Medium fix them at your level +2**,
+**Hard fixes them at your level +3**;
+**Very Hard fixes them at your level +4**, overriding higher native level inputs.
+This includes supported named hostile vehicles. Native grade-selection
+bands, identities and combat modifiers are preserved in every mode.
+
+**Adaptive** is an additional saved option. It gradually raises ordinary-enemy
+bonuses as you level. Each row below is reached at its **anchor level**; weights
+blend every level between anchors. Levels 1–5 keep the first row and levels 65+
+keep the last. Bracket names are guides, not abrupt cutoffs: a small chance of
+an adjacent bracket's enemy levels appears during the transition.
+
+| Target bracket | Anchor level | Base +1 | Base +2 | Base +3 | Base +4 | Base +5 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1–10 | 5 | 20% | 80% | 0% | 0% | 0% |
+| 11–20 | 15 | 0% | 80% | 20% | 0% | 0% |
+| 21–30 | 25 | 0% | 40% | 60% | 0% | 0% |
+| 31–40 | 35 | 0% | 20% | 70% | 10% | 0% |
+| 41–50 | 45 | 0% | 0% | 70% | 30% | 0% |
+| 51–60 | 55 | 0% | 0% | 45% | 52% | 3% |
+| 61–69 | 65 | 0% | 0% | 20% | 75% | 5% |
+
+For example, at level 30 the ordinary rolls are +2 **30%**, +3 **65%** and +4
+**5%**. Adaptive still uses the higher of your level and the native area level as
+the spawn base and retains naturally higher ordinary enemies. Your character
+level determines the percentages, even when visiting a higher-level area.
+
+Adaptive named enemies/bosses, including supported named hostile vehicles,
+remain fixed and receive their increases two levels after the bracket boundary:
+
+| Player level | Fixed named/boss level |
+| --- | --- |
+| 1–22 | Player +2 |
+| 23–52 | Player +3 |
+| 53+ | Player +4 |
+
+Select **Adaptive** in Enemy difficulty, then reload the area for fresh spawns.
+Existing enemies keep their levels. Medium remains the default; all existing
+presets retain their rules. F10 reports your current Adaptive weights and boss
+offset. This mode follows character level, not equipment strength or deaths.
 
 Enemies exactly **five levels above you** show the native skull beside their
 health bar. This changes only the HUD warning icon; +6-or-higher native skulls,

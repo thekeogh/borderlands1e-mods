@@ -1,0 +1,15 @@
+[project]
+name = "SmoothFPS"
+version = "0.1.1"
+authors = [{ name = "keogh" }]
+description = "BL1 Enhanced frame pacing and camera diagnostics. F5 records up to 30 seconds and exports JSON. No performance settings changed."
+
+[tool.sdkmod]
+name = "Smooth FPS Diagnostics"
+supported_games = ["BL1E"]
+coop_support = "ClientSide"
+auto_enable = true
+
+[tool.sdkmod.license]
+name = "MIT"
+url = "https://opensource.org/licenses/MIT"

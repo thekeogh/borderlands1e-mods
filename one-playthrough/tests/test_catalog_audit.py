@@ -76,7 +76,7 @@ class CatalogAudit(unittest.TestCase):
         original = factory.PawnBalanceDefinition
         self.assertTrue(self.hostile(factory,original,original.AIPawnArchetype))
         self.svc.roll = lambda:self.fail('Mission-specific Moe must not use ordinary bonus RNG')
-        for difficulty in ('Easy','Normal','Hard','Very Hard'):
+        for difficulty in ('Easy','Medium','Hard','Very Hard'):
             self.h.mod.enemy_difficulty.value = difficulty
             stage,clone = self.svc.plan(factory,10,30)
             self.assertEqual(stage,30)  # Keep the native 29-35 Moe grade eligible.
@@ -84,16 +84,18 @@ class CatalogAudit(unittest.TestCase):
             eligible = [g for g in definition.Grades
                         if g.GameStageRequirement.MinGameStage <= stage <= g.GameStageRequirement.MaxGameStage]
             self.assertEqual([g.GradeModifiers.DisplayName for g in eligible],['Moe'])
-            self.assertEqual([g.GradeModifiers.ExpLevel for g in eligible],[32])
+            expected = {'Easy':12,'Medium':12,'Hard':13,'Very Hard':14}.get(difficulty,32)
+            self.assertEqual([g.GradeModifiers.ExpLevel for g in eligible],[expected])
             self.assertIs(factory.PawnBalanceDefinition,original)
 
-    def test_named_plus_three_floor_raises_low_moe_grades_without_changing_native_bands(self):
+    def test_easy_named_fixed_plus_two_preserves_native_moe_bands(self):
+        self.h.mod.enemy_difficulty.value = "Easy"
         factory = self.data['z0_missiondata.population.pd_alphaskag_named1:populationfactorybalancedaipawn_20']
         original = factory.PawnBalanceDefinition
         before = deepcopy(original.Grades)
         stage,clone = self.svc.plan(factory,60,80)
         self.assertEqual(stage,80)
-        self.assertTrue(all(g.GradeModifiers.ExpLevel ==63 for g in clone.Grades))
+        self.assertTrue(all(g.GradeModifiers.ExpLevel ==62 for g in clone.Grades))
         self.assertEqual([(g.GameStageRequirement.MinGameStage,g.GameStageRequirement.MaxGameStage) for g in clone.Grades],
                          [(g.GameStageRequirement.MinGameStage,g.GameStageRequirement.MaxGameStage) for g in original.Grades])
         self.assertEqual([g.GradeModifiers.ExpLevel for g in original.Grades],

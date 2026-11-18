@@ -28,10 +28,11 @@ runtime = Runtime(unrealsdk, MissionLevels(
 
 
 enemy_difficulty = SpinnerOption(
-    "Enemy difficulty", value="Normal", choices=["Easy", "Normal", "Hard", "Very Hard", "Debug"], wrap_enabled=True,
-    description="Easy/Normal/Hard/Very Hard affect ordinary enemies. Their base is the higher of your level and the vanilla area level. "
-                "Ordinary native levels floor at your level +1. Very Hard rolls +3/+4/+5 at 25%/72%/3%; "
-                "other play difficulties stop their extra rolls at +3. Named/bosses normally keep higher native levels with a your-level +3 minimum. "
+    "Enemy difficulty", value="Medium", choices=["Easy", "Medium", "Hard", "Very Hard", "Debug", "Adaptive"], wrap_enabled=True,
+    description="Easy/Medium/Hard/Very Hard affect ordinary enemies. Their base is the higher of your level and the vanilla area level. "
+                "Medium rolls +2/+3 at 60%/40%. Hard rolls +3/+4 at 80%/20%; Very Hard rolls +3/+4/+5 at 20%/75%/5%. "
+                "Easy rolls +1/+2 at 40%/60%. Named/bosses are fixed at your level +2 on Easy/Medium, +3 on Hard and +4 on Very Hard. "
+                "Adaptive smoothly increases ordinary spawn difficulty with your level, blending at levels 5/15/25/35/45/55/65. Its named/bosses are fixed at your level +2 through 22, +3 through 52 and +4 from 53. "
                 "Debug is for mod testing: all supported hostile spawns, including bosses, are your level minus 30 (minimum 1), ignoring level floors. New spawns only.",
 )
 # Read the saved/live option at spawn time; changing it never edits existing pawns.
@@ -57,6 +58,8 @@ def safe(callback):
 
 
 def on_enable():
+    if enemy_difficulty.value == "Normal":
+        enemy_difficulty.value = "Medium"
     runtime.enabled = True
     runtime.sync(get_pc())
 
@@ -442,4 +445,7 @@ build_mod(hooks=HOOKS, options=[enemy_difficulty, loot_floor,
                               ButtonOption("Export diagnostics", on_press=export_diagnostics)],
           keybinds=[export_key], on_enable=on_enable,
           on_disable=on_disable, settings_file=Path(SETTINGS / "mod.json"))
+# Migrate a saved disabled mod too; enabled settings migrate before SDK saving.
+if enemy_difficulty.value == "Normal":
+    enemy_difficulty.value = "Medium"
 logging.info(f"One Playthrough Loaded: {__version__}, {__version_info__}; enabled={runtime.enabled}")

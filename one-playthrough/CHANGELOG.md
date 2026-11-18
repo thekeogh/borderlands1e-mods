@@ -1,5 +1,64 @@
 # One Playthrough changelog
 
+## 5.0.0 — 2026-11-18
+
+- Add saved Adaptive enemy difficulty, smoothly interpolating the agreed weights
+  between player levels 5/15/25/35/45/55/65. Clamp endpoints and keep fractional
+  chances with 1,000 uniform tickets; weight selection uses player level while
+  ordinary enemies retain the existing native/area-level protections.
+- Delay Adaptive named/boss increases: fixed player +2 through 22, +3 through
+  52 and +4 from 53, including supported named hostile vehicles. Preserve factory
+  stage, grade bands, combat modifiers and original identities via private clones.
+- Append Adaptive after existing choices. Keep Medium default, saved presets,
+  legacy Normal migration, keybinds, all fixed difficulties and Debug unchanged.
+- F10 reports current Adaptive percentages, anchors and delayed boss offset.
+  No new background tracing, gear/death tracking or automatic diagnostic work.
+- Keep existing enemies, spawn counts/timing, loot, missions and HUD rules unchanged.
+- Validation: 303 local tests pass, including all 1,000 tickets at every level
+  1–69, monotonic blending, fractional chances, delayed named/vehicle thresholds,
+  save/restart, diagnostics and mode changes. Native Windows testing remains required.
+
+## 4.12.0 — 2026-11-18
+
+- Change Easy ordinary rolls to +1 40% / +2 60%, removing native and +3 rolls.
+- Fix Easy named enemies/bosses and supported named hostile vehicles at exactly
+  player +2, including those with higher native levels. Preserve private clone
+  identity, grade bands, factory stage and combat modifiers.
+- Medium, Hard, Very Hard and Debug policies unchanged. Spawn timing/counts,
+  missions, loot, HUD, settings and manual diagnostics unchanged.
+- Validation: 291 local tests pass, including every difficulty ticket, fixed
+  named levels and vehicles, native area protection and existing-spawn isolation.
+
+## 4.11.1 — 2026-11-17
+
+- Rename Normal to Medium in the selector, defaults, descriptions and diagnostics.
+- Migrate saved Normal selections to Medium, preserving +2 60% / +3 40% rolls
+  and fixed player +2 named enemies/bosses. No gameplay changes.
+- Validation: 291 local tests pass, including saved enabled/disabled migration.
+
+## 4.11.0 — 2026-11-17
+
+- Normal ordinary rolls: +2 60%, +3 40%; remove native/+1 rolls.
+- Fix Normal named enemies/bosses and supported named hostile vehicles at
+  exactly player +2, overriding native level inputs without RNG. Preserve
+  factory stage, grade bands, identity and combat modifiers.
+- Keep Easy, Hard, Very Hard, Debug, ordinary native/area protections, spawn
+  timing/counts, loot and mission rules unchanged. Existing spawns retain levels.
+- Validation: 290 local tests pass, including all 100 difficulty tickets, fixed
+  named levels above/below native inputs, manual diagnostics and mode changes.
+
+## 4.10.0 — 2026-11-15
+
+- Hard ordinary rolls: +3 80%, +4 20%. Very Hard: +3 20%, +4 75%, +5 5%.
+- Fix named enemies/bosses, including supported named hostile vehicles, at
+  exactly player +3 on Hard and player +4 on Very Hard, with no RNG. Override
+  higher native level inputs using private clones; preserve grade bands, factory
+  GameStage, identity and combat modifiers. Existing spawns remain unchanged.
+- Keep ordinary higher native/area levels, Easy/Normal, Debug, loot, missions,
+  spawn timing/counts and HUD behavior unchanged.
+- Validation: 290 local tests pass, including every roll ticket, named IDs, fixed
+  native high/low levels, vehicle bosses and switching modes without live edits.
+
 ## 4.9.3 — 2026-11-12
 
 - Retune Very Hard ordinary rolls: +3 25%, +4 72%, +5 3%.

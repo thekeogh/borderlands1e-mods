@@ -99,14 +99,26 @@ class SettingsTests(unittest.TestCase):
         self.settings.parent.mkdir(parents=True)
         self.settings.write_text(json.dumps({"enabled": True}))
         first = self.boot()
-        self.assertEqual(first.mod.enemy_difficulty.value, "Normal")
-        self.assertEqual(first.mod.enemy_difficulty.choices, ["Easy", "Normal", "Hard", "Very Hard", "Debug"])
+        self.assertEqual(first.mod.enemy_difficulty.value, "Medium")
+        self.assertEqual(first.mod.enemy_difficulty.choices, ["Easy", "Medium", "Hard", "Very Hard", "Debug", "Adaptive"])
         first.mod.enemy_difficulty.value = "Hard"
         first.registered_mod.save_settings()
         second = self.boot()
         self.assertEqual(second.mod.enemy_difficulty.value, "Hard")
         self.assertEqual(second.runtime.spawns.snapshot()["difficulty"], "Hard")
         self.assertTrue(second.registered_mod.is_enabled)
+
+    def test_legacy_normal_setting_migrates_to_medium_without_changing_policy(self):
+        for enabled in (False, True):
+            self.settings.parent.mkdir(parents=True, exist_ok=True)
+            self.settings.write_text(json.dumps({"enabled": enabled, "options": {"Enemy difficulty": "Normal"}}))
+            current = self.boot()
+            self.assertEqual(current.mod.enemy_difficulty.value, "Medium")
+            self.assertEqual(current.runtime.spawns.snapshot()["ordinary_tickets"],
+                             {"native":0,"+1":0,"+2":60,"+3":40})
+            self.assertEqual(current.runtime.spawns.snapshot()["named_level"],"exactly player level + 2")
+            current.registered_mod.save_settings()
+            self.assertEqual(json.loads(self.settings.read_text())["options"]["Enemy difficulty"],"Medium")
 
     def test_very_hard_setting_survives_restart(self):
         first = self.boot()
@@ -115,7 +127,7 @@ class SettingsTests(unittest.TestCase):
         second = self.boot()
         self.assertEqual(second.mod.enemy_difficulty.value, "Very Hard")
         self.assertEqual(second.runtime.spawns.snapshot()["ordinary_tickets"],
-                         {"native": 0, "+1": 0, "+2": 0, "+3": 25, "+4": 72, "+5": 3})
+                         {"native": 0, "+1": 0, "+2": 0, "+3": 20, "+4": 75, "+5": 5})
 
     def test_saved_keybind_and_mission_levels_survive_enable_and_restart(self):
         self.settings.parent.mkdir(parents=True)

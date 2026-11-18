@@ -12,16 +12,58 @@ NAMES = count()
 
 
 DIFFICULTIES = {
-    "Easy": (70, 20, 9, 1),
-    "Normal": (50, 20, 25, 5),
-    "Hard": (20, 5, 55, 20),
-    "Very Hard": (0, 0, 0, 25, 72, 3),
+    "Easy": (0, 40, 60),
+    "Medium": (0, 0, 60, 40),
+    "Hard": (0, 0, 0, 80, 20),
+    "Very Hard": (0, 0, 0, 20, 75, 5),
 }
 
 
-def bonus(ticket, difficulty="Normal"):
+FIXED_NAMED_OFFSETS = {"Easy": 2, "Medium": 2, "Hard": 3, "Very Hard": 4}
+
+# Percentages at bracket midpoints. Integer tenths retain every interpolated
+# probability exactly: ten levels between anchors, 1,000 equally likely tickets.
+ADAPTIVE_ANCHORS = (
+    (5,  (0, 20, 80, 0, 0, 0)),
+    (15, (0, 0, 80, 20, 0, 0)),
+    (25, (0, 0, 40, 60, 0, 0)),
+    (35, (0, 0, 20, 70, 10, 0)),
+    (45, (0, 0, 0, 70, 30, 0)),
+    (55, (0, 0, 0, 45, 52, 3)),
+    (65, (0, 0, 0, 20, 75, 5)),
+)
+
+
+def adaptive_weights(player):
+    """Return 1,000-ticket weights, blending by player level, never area level."""
+    if player <= ADAPTIVE_ANCHORS[0][0]:
+        return tuple(weight * 10 for weight in ADAPTIVE_ANCHORS[0][1])
+    for (lower, left), (upper, right) in zip(ADAPTIVE_ANCHORS, ADAPTIVE_ANCHORS[1:]):
+        if player <= upper:
+            return tuple(a * (upper - player) + b * (player - lower)
+                         for a, b in zip(left, right))
+    return tuple(weight * 10 for weight in ADAPTIVE_ANCHORS[-1][1])
+
+
+def adaptive_bonus(ticket, player):
+    if not 0 <= ticket < 1000:
+        raise ValueError("Adaptive enemy ticket must be between 0 and 999")
+    for extra, weight in enumerate(adaptive_weights(player)):
+        if ticket < weight:
+            return extra
+        ticket -= weight
+    raise ValueError("Invalid Adaptive enemy weights")
+
+
+def named_offset(difficulty, player):
+    if difficulty == "Adaptive":
+        return 2 if player < 23 else 3 if player < 53 else 4
+    return FIXED_NAMED_OFFSETS.get(difficulty)
+
+
+def bonus(ticket, difficulty="Medium"):
     """Map one of 100 equally likely tickets to the selected ordinary bonus."""
-    for extra, weight in enumerate(DIFFICULTIES.get(difficulty, DIFFICULTIES["Normal"])):
+    for extra, weight in enumerate(DIFFICULTIES.get(difficulty, DIFFICULTIES["Medium"])):
         if ticket < weight:
             return extra
         ticket -= weight
@@ -65,7 +107,8 @@ class Spawns:
     def __init__(self, runtime):
         self.runtime = runtime
         self.roll = lambda: randrange(100)
-        self.difficulty = lambda: "Normal"
+        self.adaptive_roll = lambda: randrange(1000)
+        self.difficulty = lambda: "Medium"
         self.clones = {}
         self.pins = Patches()
         self.active = False
@@ -75,7 +118,7 @@ class Spawns:
 
         Keep the original grade-selection bands and combat modifiers. Only the
         experience input changes, retaining any naturally higher grade level.
-        Debug alone replaces all level inputs, including higher native levels.
+        Debug and fixed named/boss policies replace higher native levels.
         The clone stays referenced by the native pawn after factory restoration.
         """
         native = None if force_exact else native_level(definition.DefaultExpLevel, base)
@@ -141,6 +184,9 @@ class Spawns:
             if definition is None or not hasattr(definition,'DefaultExpLevel') or not hasattr(definition,'Grades'):
                 self.runtime.problem('named enemy level',ValueError(f'Unsupported named balance layout: {paths}'))
                 return base,None
+            fixed = named_offset(self.selected_difficulty(), player)
+            if fixed is not None:
+                return base,self.exact_definition(definition,base,player+fixed,force_exact=True)
             natural = native_level(definition.DefaultExpLevel,base)
             if natural is None:
                 self.runtime.problem('named enemy level',ValueError(f'Native formula retained: {paths}'))
@@ -154,7 +200,8 @@ class Spawns:
         if vehicle:
             return base,None
         natural = native_level(definition.DefaultExpLevel, base)
-        extra = bonus(self.roll(), self.selected_difficulty())
+        extra = (adaptive_bonus(self.adaptive_roll(), player) if self.selected_difficulty() == 'Adaptive'
+                 else bonus(self.roll(), self.selected_difficulty()))
         if natural is None:
             self.runtime.problem("enemy level", ValueError(f"Native formula retained: {paths}"))
             return base, None
@@ -176,14 +223,33 @@ class Spawns:
 
     def selected_difficulty(self):
         value = self.difficulty()
-        return value if value in DIFFICULTIES or value == 'Debug' else "Normal"
+        if value == "Normal":
+            value = "Medium"
+        return value if value in DIFFICULTIES or value in ('Debug', 'Adaptive') else "Medium"
 
     def snapshot(self):
         difficulty = self.selected_difficulty()
         debug_rule = 'exactly max(1, player level - 30)'
-        return {"difficulty": difficulty,
+        report = {"difficulty": difficulty,
                 "ordinary_tickets": {"native" if extra == 0 else f"+{extra}": weight
                                      for extra, weight in enumerate(DIFFICULTIES.get(difficulty,()))},
                 "native_floor": debug_rule if difficulty == 'Debug' else "max(player level + 1, native spawn level)",
-                "named_bonus": False, "named_level": debug_rule if difficulty == 'Debug' else "max(player level + 3, native spawn level)",
+                "named_bonus": False, "named_level": (debug_rule if difficulty == 'Debug' else
+                    f"exactly player level + {FIXED_NAMED_OFFSETS[difficulty]}"
+                    if difficulty in FIXED_NAMED_OFFSETS else "max(player level + 3, native spawn level)"),
                 "private_definitions": len(self.clones)}
+        if difficulty == 'Adaptive':
+            player = self.runtime.regions.level
+            report['ordinary_tickets'] = ({"native" if extra == 0 else f"+{extra}": weight / 10
+                                          for extra, weight in enumerate(adaptive_weights(player))}
+                                         if player is not None else {})
+            report['named_level'] = (f"exactly player level + {named_offset(difficulty, player)}"
+                                     if player is not None else "player +2 through 22; +3 through 52; +4 from 53")
+            report['adaptive'] = {
+                'player_level': player, 'ticket_count': 1000, 'weight_unit': 'percent',
+                'blend': 'linear between player levels 5, 15, 25, 35, 45, 55, 65; endpoints clamped',
+                'anchors': [{'player_level': level, 'percentages': list(weights)}
+                            for level, weights in ADAPTIVE_ANCHORS],
+                'named_thresholds': {'1-22': 2, '23-52': 3, '53+': 4},
+            }
+        return report
