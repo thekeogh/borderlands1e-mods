@@ -1,6 +1,6 @@
 # Enemy Respawn Timer
 
-Private mod for Borderlands GOTY Enhanced. Author: keogh. Version 1.3.1.
+Private mod for Borderlands GOTY Enhanced. Author: keogh. Version 1.3.3.
 Validated in selected BL1E encounters: bandits, skags, spiderants/spiderantlings
 and gatling turrets at 1 minute; Rust Commons West bandits and spiderantlings
 stayed cleared for over 35 minutes on Forever. Map travel reset tracking as intended.
@@ -13,11 +13,11 @@ Playthrough 3 enabled. No existing mod, save, reference file or UPK is changed.
 
 | Respawn Delay | Gameplay seconds after clearing a group |
 |---|---:|
-| 1 minute (testing) | 60 |
-| **30 minutes (default)** | **1,800** |
-| 1 hour | 3,600 |
+| **50 minutes (default)** | **3,000** |
 | 3 hours | 10,800 |
 | Forever (until reload) | Blocked for the current loaded map session |
+
+Saved choices from older versions that no longer appear in the menu use 50 minutes.
 
 For ordinary groups, the timer starts when the last tracked enemy in that group
 dies. Recognized named enemies start their den's timer on their own confirmed kill,
@@ -91,10 +91,10 @@ is separate; it does not import that mod's forced spawning or corpse logic.
 
 ## Diagnostic test
 
-1. Install the updated SDKMOD, restart the game, enable the mod, select **1 minute**.
+1. Install the updated SDKMOD, restart the game, enable the mod, select **50 minutes**.
 2. Load a fresh map. Press **F8** before approaching an ordinary bandit/skag group.
 3. Clear the whole group. Press **F8** again immediately after the last kill.
-4. Stay on the same map. Move away, let at least 60 seconds of unpaused gameplay
+4. Stay on the same map. Move away, let at least 50 minutes of unpaused gameplay
    pass, then revisit the spawn area. Press **F8** again, whether it respawned or not.
 5. Send all three JSON files, the area/enemy names, and what happened.
 
@@ -405,3 +405,12 @@ remain available. No automatic diagnostic file writes were present or added.
 Respawn scheduling, native guards, hooks and polling are unchanged from 1.3.0.
 91 mocked tests pass, including quiet gameplay with retained clear history,
 explicit F8/button exports and a failed export preserving the respawn guard.
+
+## 1.3.2 Render and den polling performance
+
+Render callbacks check the player and world at most every 50 milliseconds of
+real time. Den scans remain scheduled every half second of gameplay, with up to
+one clock-check interval of extra delay. Death callbacks still process immediately.
+The den scan reuses spawn data and membership reads. Active cooldowns rewrite
+native timestamps and flags only when they differ, including after a game reset
+of those fields. F8 still exports the current state and recent events.

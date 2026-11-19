@@ -1,8 +1,8 @@
 [project]
 name = "OnePlaythrough"
-version = "5.0.0"
+version = "6.2.0"
 authors = [{ name = "keogh" }]
-description = "One journey, levels 1–69. Adaptive or fixed enemy difficulty, scaling missions across all DLCs and delayed Adaptive boss offsets. Optional loot level floor; vanilla rarities and economy."
+description = "One journey, levels 1–69. Native enemy levels with PT2 combat formulas, scaling missions across all DLCs, and equipment drops at your level or higher."
 
 [project.urls]
 Source = "https://github.com/thekeogh/borderlands1e-mods/tree/main/one-playthrough"

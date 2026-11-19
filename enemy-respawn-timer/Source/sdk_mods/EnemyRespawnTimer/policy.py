@@ -2,10 +2,9 @@
 
 from dataclasses import dataclass, field
 
+DEFAULT_DELAY = "50 minutes"
 DELAYS = {
-    "1 minute": 60,
-    "30 minutes": 1800,
-    "1 hour": 3600,
+    DEFAULT_DELAY: 3000,
     "3 hours": 10800,
     "Forever (until reload)": None,
 }

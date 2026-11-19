@@ -51,6 +51,35 @@ class DiagnosticTests(unittest.TestCase):
     def files(self):
         return list((Path(self.tmp.name) / "OnePlaythrough/diagnostics").glob("*.json"))
 
+    def test_manual_combat_export_reads_live_hostile_stats_with_mod_on_or_off(self):
+        alien = Object("Native.HumanoidEnemy.Bandit")
+        definition = Object("Native.Enemies.Grunt")
+        pawn = Object("Map.LiveGrunt")
+        pawn.WorldInfo = self.h.pc.WorldInfo
+        pawn.Allegiance = alien
+        pawn.BalanceDefinitionState = NS(BalanceDefinition=definition, GradeIndex=2)
+        pawn.AIPawnName = "Outlaw"
+        pawn.ExpLevel = 16
+        pawn.HealthMaxVar = 1200
+        pawn.ShieldMaxVar = 25
+        pawn.bHasShieldVar = True
+        dead = Object("Map.DeadGrunt")
+        vars(dead).update({k: v for k, v in vars(pawn).items() if k != "path"})
+        dead.bIsDead = True
+        original_find_all = self.h.sdk.find_all
+        self.h.sdk.find_all = lambda name, exact=False: (
+            [dead, pawn] if name == "WillowAIPawn" else original_find_all(name, exact=exact))
+
+        for enabled in (True, False):
+            if not enabled:
+                self.h.mod.on_disable()
+            report = json.loads(self.h.mod.export_diagnostics().read_text())
+            self.assertEqual(report["enabled"], enabled)
+            self.assertEqual(report["live_enemy_combat"], [{
+                "pawn": "Map.LiveGrunt", "name": "Outlaw", "balance": definition.path,
+                "grade": 2, "level": 16, "max_health": 1200, "max_shield": 25, "has_shield": True,
+            }])
+
     def test_regional_report_includes_original_and_current_floors(self):
         path = self.h.mod.export_diagnostics()
         report = json.loads(path.read_text())
@@ -58,7 +87,8 @@ class DiagnosticTests(unittest.TestCase):
         row = next(r for r in rows if r["region"] == self.h.mission.GameStageRegion.path.lower())
         self.assertEqual(row["native_default"]["BaseValueConstant"], 16)
         self.assertEqual(row["current_default"], 20)
-        self.assertEqual(report["enemy_policy"]["ordinary_tickets"], {"native": 0, "+1": 0, "+2": 60, "+3": 40})
+        self.assertIn("native enemy rules", report["enemy_policy"]["levels"])
+        self.assertIn("pt2_branches_applied", report["combat"])
 
     def test_unreadable_region_does_not_prevent_basic_and_mission_report(self):
         self.h.runtime.regions.levels_snapshot = lambda: (_ for _ in ()).throw(RuntimeError("bad region"))

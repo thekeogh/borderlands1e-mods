@@ -14,28 +14,13 @@ missions for later and their levels keep pace, even after acceptance or finishin
 their objectives. Equipment rewards, XP and cash use the mission level at turn-in,
 preserving higher vanilla levels. Gaining a level from that payout does not change
 its remaining rewards. Existing unpaid missions adopt this automatically.
-Choose Easy, Medium (default), Hard or Very Hard for ordinary enemies. Each keeps native
-variety and the higher of your level and the vanilla area level, with different
-chances of tougher spawns. New ordinary enemies spawn at least one level above you;
-Easy rolls +1/+2 at 40%/60%; Medium rolls +2/+3 at 60%/40%; Hard rolls +3/+4 at 80%/20%, and Very Hard
-rolls +3/+4/+5 at 20%/75%/5%, retaining naturally higher ordinary levels. The
-choice is saved and affects new spawns only.
-Named enemies and bosses have no random roll: exactly your level +2 on Easy/Medium,
-+3 on Hard and +4 on Very Hard, overriding higher native levels.
-**Adaptive** is an additional saved difficulty: smoothly blend ordinary bonuses
-between player-level anchors 5/15/25/35/45/55/65, from +1/+2 at 20%/80% to
-+3/+4/+5 at 20%/75%/5%. Small fractional chances are retained. Higher native
-ordinary levels remain protected; existing spawns stay unchanged. Adaptive bosses
-are fixed at player +2 through level 22, +3 through 52 and +4 from 53. Select
-Adaptive and reload the area; Medium remains the default.
-An additional **Debug** option for mod testing puts supported hostile enemies,
-including bosses and hostile vehicles, at your level minus 30 (minimum 1),
-bypassing normal level floors. Reload the area after changing modes. Medium
-remains the default; Debug is saved until you change it.
+Native enemy level and naming rules run at the scaled area stage. Captured PT2
+enemy health, AI damage and Guardian shield formulas apply from level 1.
+The story remains in its first playthrough.
 Enemies exactly five levels above you use the native skull warning on their
 health bar. This is cosmetic; their levels and combat rules are unchanged.
-The optional loot level floor targets new world drops, containers and vendor
-stock at least at your level for all equipment (minimum level 1). Rarity and legendary chances stay vanilla. Carried enemy equipment receives the floor when dropped on death. Existing player
+The loot level floor targets new world drops, containers and vendor stock at
+your level or higher. Rarity and legendary chances stay vanilla. Carried enemy equipment receives the floor when dropped on death. Existing player
 equipment stays unchanged; mission rewards follow the mission level at turn-in. Economy follows the game's normal rules.
 
 Scaling covers the main story and all four DLCs: The Zombie Island of Dr. Ned,

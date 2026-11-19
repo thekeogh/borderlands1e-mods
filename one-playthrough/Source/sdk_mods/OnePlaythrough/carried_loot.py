@@ -45,7 +45,7 @@ class CarriedLoot:
         return None
 
     def prepare(self, obj, args, pc):
-        if not self.runtime.enabled or not self.loot.selected():
+        if not self.runtime.enabled:
             return None
         if self.runtime.missions.scopes:
             return self.skip("mission reward scope")
@@ -84,7 +84,8 @@ class CarriedLoot:
         if kind not in self.initializers:
             return self.skip("unsupported carried initializer")
         current = int(obj.ExpLevel)
-        target = internal_level(definition, self.loot.minimum(player, data))
+        floor = self.loot.minimum(player)
+        target = internal_level(definition, floor)
         if current >= target:
             return None
         encoded = deepcopy(data)
@@ -92,7 +93,7 @@ class CarriedLoot:
         self.prepared += 1
         return {"token": death[0], "owner": death[1], "original": obj._path_name(),
                 "balance": balance._path_name(), "data": encoded, "kind": kind,
-                "floor": self.loot.minimum(player, data), "old_internal_level": current,
+                "floor": floor, "old_internal_level": current,
                 "target_internal_level": target,
                 "location": deepcopy(args.StartLocation), "velocity": deepcopy(args.StartVelocity),
                 "no_physics": args.bForceNoRBPhysics,
@@ -180,7 +181,7 @@ class CarriedLoot:
             self.runtime.problem("carried loot cleanup", RuntimeError("Replacement inventory could not be removed"))
 
     def finish_drop(self, original, plan, pc):
-        if plan is None or not self.runtime.enabled or not self.loot.selected():
+        if plan is None or not self.runtime.enabled:
             return
         clone = None
         try:
@@ -234,7 +235,7 @@ class CarriedLoot:
         for entry in self.pending.pop(token, []):
             committed = False
             try:
-                if not self.runtime.enabled or not self.loot.selected():
+                if not self.runtime.enabled:
                     self.cleanup_copy(entry["clone"])
                     continue
                 if self.dead(entry["new_pickup"]) or self.dead(entry["clone"]):

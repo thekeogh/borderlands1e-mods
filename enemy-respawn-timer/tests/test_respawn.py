@@ -1,8 +1,9 @@
 """Event/cooldown regression model; cannot reproduce UE3 native faults."""
 
 import json
-from itertools import product
+from itertools import count, product
 from pathlib import Path
+import struct
 import sys
 import tempfile
 from types import ModuleType, SimpleNamespace as NS
@@ -12,6 +13,7 @@ import weakref
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "Source/sdk_mods/EnemyRespawnTimer"
+REPLAY_DELAY = "Fixture cooldown"
 
 
 class Object:
@@ -81,6 +83,7 @@ def load():
         exec(compile((SOURCE / "named_enemies.py").read_text(), "named_enemies.py", "exec"), named.__dict__)
         exec(compile((SOURCE / "policy.py").read_text(), "policy.py", "exec"), policy.__dict__)
         exec(compile((SOURCE / "__init__.py").read_text(), "__init__.py", "exec"), package.__dict__)
+        package.monotonic = count(step=1).__next__
         package.on_enable()
     package.testing = NS(sdk=sdk, hooks=hooks, base=base, world=world, pc=pc,
                          messages=messages, additions=additions, removals=removals,
@@ -130,10 +133,10 @@ class RespawnTests(unittest.TestCase):
         self.mod.after_spawning(den, None, None, None)
         return result
 
-    def test_exact_five_choices_default_and_settings(self):
-        self.assertEqual(self.mod.respawn_delay.value, "30 minutes")
+    def test_exact_three_choices_default_and_settings(self):
+        self.assertEqual(self.mod.respawn_delay.value, "50 minutes")
         self.assertEqual(self.mod.respawn_delay.choices,
-                         ["1 minute", "30 minutes", "1 hour", "3 hours", "Forever (until reload)"])
+                         ["50 minutes", "3 hours", "Forever (until reload)"])
         self.assertEqual(self.mod.testing.build[0]["settings_file"].name, "EnemyRespawnTimer.json")
 
     def test_default_starts_after_last_enemy_not_first_kill(self):
@@ -141,14 +144,14 @@ class RespawnTests(unittest.TestCase):
         self.die(first, 110)
         self.assertEqual(self.den.SpawnData.NextSpawnTime, 120)
         self.die(second, 130)
-        self.assertEqual(self.den.SpawnData.NextSpawnTime, 1930)
-        self.world.TimeSeconds = 1929
+        self.assertEqual(self.den.SpawnData.NextSpawnTime, 3130)
+        self.world.TimeSeconds = 3129
         self.assertIs(self.attempt(), self.mod.Block)
-        self.world.TimeSeconds = 1930
+        self.world.TimeSeconds = 3130
         self.assertIsNone(self.attempt())
 
     def test_every_finite_choice_deadline_and_exact_expiry(self):
-        for choice, seconds in [("1 minute", 60), ("30 minutes", 1800), ("1 hour", 3600), ("3 hours", 10800)]:
+        for choice, seconds in [("50 minutes", 3000), ("3 hours", 10800)]:
             self.mod.reset_session()
             self.world.TimeSeconds = 100
             self.mod.respawn_delay.value = choice
@@ -176,7 +179,7 @@ class RespawnTests(unittest.TestCase):
         b, = self.spawn(other, count=1)
         self.die(a, 130)
         self.die(b, 200)
-        self.world.TimeSeconds = 1930
+        self.world.TimeSeconds = 3130
         self.assertIsNone(self.attempt())
         self.assertIs(self.attempt(other), self.mod.Block)
         self.assertIsNone(self.attempt(self.make_den("Untouched")))
@@ -188,19 +191,19 @@ class RespawnTests(unittest.TestCase):
         self.mod.change_delay(None, "3 hours")
         self.assertEqual(self.den.SpawnData.NextSpawnTime, 10930)
         self.mod.respawn_delay.value = "3 hours"
-        self.mod.change_delay(None, "1 minute")
-        self.mod.respawn_delay.value = "1 minute"
-        self.assertEqual(self.den.SpawnData.NextSpawnTime, 190)
-        self.world.TimeSeconds = 200
+        self.mod.change_delay(None, "50 minutes")
+        self.mod.respawn_delay.value = "50 minutes"
+        self.assertEqual(self.den.SpawnData.NextSpawnTime, 3130)
+        self.world.TimeSeconds = 3130
         self.assertIsNone(self.attempt())
 
     def test_change_forever_to_finite_keeps_clear_time(self):
         self.mod.respawn_delay.value = "Forever (until reload)"
         pawn, = self.spawn(count=1)
         self.die(pawn, 150)
-        self.mod.change_delay(None, "1 minute")
-        self.mod.respawn_delay.value = "1 minute"
-        self.world.TimeSeconds = 210
+        self.mod.change_delay(None, "50 minutes")
+        self.mod.respawn_delay.value = "50 minutes"
+        self.world.TimeSeconds = 3150
         self.assertIsNone(self.attempt())
 
     def test_disable_restores_only_timestamp_and_drops_weak_tracking(self):
@@ -307,7 +310,7 @@ class RespawnTests(unittest.TestCase):
         pawn, = self.spawn(count=1)
         self.die(pawn, 130)
         self.die(pawn, 200)
-        self.assertEqual(self.den.SpawnData.NextSpawnTime, 1930)
+        self.assertEqual(self.den.SpawnData.NextSpawnTime, 3130)
         self.assertEqual(self.mod._counts["cleared_groups"], 1)
 
     def test_blocked_death_with_alive_flag_does_not_start_timer(self):
@@ -318,12 +321,12 @@ class RespawnTests(unittest.TestCase):
     def test_respawn_generation_gets_fresh_native_restore_baseline(self):
         first, = self.spawn(count=1)
         self.die(first, 130)
-        self.world.TimeSeconds = 1930
+        self.world.TimeSeconds = 3130
         second, = self.spawn(count=1)
-        self.den.SpawnData.NextSpawnTime = 2000  # Native second-generation schedule.
-        self.die(second, 1940)
+        self.den.SpawnData.NextSpawnTime = 3200  # Native second-generation schedule.
+        self.die(second, 3140)
         self.mod.on_disable()
-        self.assertEqual(self.den.SpawnData.NextSpawnTime, 2000)
+        self.assertEqual(self.den.SpawnData.NextSpawnTime, 3200)
 
     def test_untracked_deaths_and_spawns_outside_den_do_not_change_behavior(self):
         pawn = Object(); pawn.Allegiance = Object("gd_allegiance.HumanEnemy.Bandit"); pawn.bIsDead = True
@@ -408,20 +411,19 @@ class RespawnTests(unittest.TestCase):
         result = self.mod.snapshot()
         json.dumps(result, allow_nan=False)
         self.assertEqual(result["counts"]["tracked_spawns"], 1)
-        self.assertEqual(result["dens"][0]["deadline"], 1930)
+        self.assertEqual(result["dens"][0]["deadline"], 3130)
         self.assertEqual((dict(vars(self.den.SpawnData)), dict(self.mod._counts)), before)
 
-    def test_one_minute_diagnostics_explain_full_lifecycle(self):
-        self.mod.respawn_delay.value = "1 minute"
+    def test_diagnostics_explain_full_lifecycle(self):
         pawn, = self.spawn(count=1)
         self.die(pawn, 130)
-        self.world.TimeSeconds = 189
+        self.world.TimeSeconds = 3129
         self.assertIs(self.attempt(), self.mod.Block)
         report = self.mod.snapshot()
         self.assertEqual(report["counts"]["den_spawn_calls"], 2)
         self.assertEqual(report["counts"]["factory_callbacks"], 1)
         self.assertEqual(report["counts"]["death_callbacks"], 1)
-        self.assertEqual(report["dens"][0]["deadline"], 190)
+        self.assertEqual(report["dens"][0]["deadline"], 3130)
         self.assertEqual([e["event"] for e in report["recent_events"]],
                          ["session_reset", "spawn_tracked", "death_tracked", "group_cleared", "spawn_blocked"])
 
@@ -482,7 +484,7 @@ class RespawnTests(unittest.TestCase):
             for file in files:
                 report = json.loads(file.read_text())
                 self.assertFalse(report["ready"])
-                self.assertEqual(report["version"], "1.3.1")
+                self.assertEqual(report["version"], "1.3.3")
                 self.assertNotIn("schemas", report)
             self.assertEqual(len(self.mod.testing.messages), 2)
             self.assertTrue(all("Exported to" in message for message in self.mod.testing.messages))
@@ -524,11 +526,20 @@ class RespawnTests(unittest.TestCase):
         self.assertEqual(len(report["recent_events"]), 200)
         self.assertFalse(report["dens"][0]["actors"][0]["valid"])
 
-    def test_removed_saved_choice_falls_back_to_thirty_minutes(self):
-        self.mod.on_disable()
-        self.mod.respawn_delay.value = "15 minutes"
-        self.mod.on_enable()
-        self.assertEqual(self.mod.respawn_delay.value, "30 minutes")
+    def test_saved_choices_migrate_only_when_removed(self):
+        for saved, expected in [
+            ("1 minute", "50 minutes"),
+            ("30 minutes", "50 minutes"),
+            ("1 hour", "50 minutes"),
+            ("15 minutes", "50 minutes"),
+            ("3 hours", "3 hours"),
+            ("Forever (until reload)", "Forever (until reload)"),
+        ]:
+            with self.subTest(saved=saved):
+                self.mod.on_disable()
+                self.mod.respawn_delay.value = saved
+                self.mod.on_enable()
+                self.assertEqual(self.mod.respawn_delay.value, expected)
 
     def prepare_native_den(self, count=2, allegiance="gd_allegiance.HumanoidEnemy.BanditAllegiance"):
         self.den.SpawnData.NumActiveActors = count
@@ -542,7 +553,9 @@ class RespawnTests(unittest.TestCase):
             self.den.SpawnedDenMembers.append(pawn)
             self.pawns.append(pawn)
         self.mod.testing.sdk.find_all = lambda cls: [self.den] if cls == "PopulationOpportunityDen" else []
-        self.mod.respawn_delay.value = "1 minute"
+        # Keep the historical native replay timelines on a one-minute cooldown.
+        self.mod.DELAYS[REPLAY_DELAY] = 60
+        self.mod.respawn_delay.value = REPLAY_DELAY
         self.mod.poll_tick(None, None, None, None)
         return list(self.den.SpawnedDenMembers)
 
@@ -878,7 +891,7 @@ class RespawnTests(unittest.TestCase):
         self.mod.poll_tick(None, None, None, None)
         self.assertFalse(entry["suspended"])
         self.native_kill(old, 310)
-        self.assertEqual(entry["group"].deadline("1 minute"), 370)
+        self.assertEqual(entry["group"].deadline(REPLAY_DELAY), 370)
 
     def test_still_valid_actor_removed_from_native_den_is_reconciled(self):
         old, = self.prepare_native_den(1)
@@ -1062,6 +1075,41 @@ class RespawnTests(unittest.TestCase):
         self.assertFalse(self.den.IsEnabled)
         self.assertTrue(self.den.bNoRespawning)
         self.assertEqual(self.mod._counts["rearmed_groups"], 0)
+
+    def test_unchanged_guards_are_not_rewritten_after_float32_rounding(self):
+        writes = []
+
+        class NativeDen(Object):
+            def __setattr__(self, name, value):
+                if name in ("SpawnData", "bNoRespawning", "IsEnabled"):
+                    writes.append(name)
+                if name == "SpawnData":
+                    value.NextSpawnTime = struct.unpack("f", struct.pack("f", value.NextSpawnTime))[0]
+                super().__setattr__(name, value)
+
+        self.den.__class__ = NativeDen
+        pawn, = self.prepare_native_den(1)
+        self.mod.respawn_delay.value = "Forever (until reload)"
+        self.native_kill(pawn, 110.125)
+        entry = self.mod._dens[self.den._get_address()]
+        expected = self.den.SpawnData.NextSpawnTime
+        self.assertNotEqual(expected, entry["group"].deadline(self.mod.respawn_delay.value))
+        writes.clear()
+
+        self.world.TimeSeconds = 112
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(writes, [])
+
+        self.den.SpawnData.NextSpawnTime = 0
+        self.den.bNoRespawning = False
+        self.den.IsEnabled = True
+        writes.clear()
+        self.world.TimeSeconds = 113
+        self.mod.poll_tick(None, None, None, None)
+        self.assertEqual(writes, ["SpawnData", "bNoRespawning", "IsEnabled"])
+        self.assertEqual(self.den.SpawnData.NextSpawnTime, expected)
+        self.assertTrue(self.den.bNoRespawning)
+        self.assertFalse(self.den.IsEnabled)
 
     def test_preexisting_disabled_activation_is_preserved_on_cleanup(self):
         pawn, = self.prepare_native_den(1)
@@ -1320,9 +1368,9 @@ class RespawnTests(unittest.TestCase):
         pawn, = self.prepare_native_den(1)
         self.mod.respawn_delay.value = "Forever (until reload)"
         self.native_kill(pawn, 110)
-        self.world.TimeSeconds = 200
-        self.mod.respawn_delay.value = "1 minute"
-        self.mod.change_delay(None, "1 minute")
+        self.mod.respawn_delay.value = "50 minutes"
+        self.world.TimeSeconds = 3110
+        self.mod.change_delay(None, "50 minutes")
         self.mod.poll_tick(None, None, None, None)
         self.assertFalse(self.den.bNoRespawning)
         self.assertEqual(self.mod._counts["rearmed_groups"], 1)
@@ -1429,6 +1477,24 @@ class RespawnTests(unittest.TestCase):
         self.world.NetMode = 3
         self.mod.poll_tick(None, None, None, None)
         self.assertEqual(self.mod._counts["den_polls"], polls)
+
+    def test_render_clock_gate_skips_unreal_reads_between_checks(self):
+        wall_now = 10.0
+        self.mod.monotonic = lambda: wall_now
+        with patch.object(self.mod, "get_pc", wraps=self.mod.get_pc) as get_pc:
+            self.mod.poll_tick(None, None, None, None)
+            for frame in range(1, 12):
+                wall_now = 10.0 + frame / 240
+                self.mod.poll_tick(None, None, None, None)
+            self.assertEqual(get_pc.call_count, 1)
+            wall_now = 10.05
+            self.mod.poll_tick(None, None, None, None)
+            self.assertEqual(get_pc.call_count, 2)
+            self.assertEqual(self.mod._counts["den_polls"], 1)  # Game time stayed still.
+            self.mod.map_change(None, None, None, None)
+            self.mod.poll_tick(None, None, None, None)
+            self.assertEqual(get_pc.call_count, 3)
+            self.assertEqual(self.mod._counts["den_polls"], 2)
 
     def test_all_factory_and_death_observers_are_unconditional_post_hooks(self):
         for path, kind in self.mod.testing.registrations:

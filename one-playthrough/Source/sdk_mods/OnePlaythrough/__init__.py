@@ -6,7 +6,7 @@ from functools import wraps
 from pathlib import Path
 
 import unrealsdk
-from mods_base import SETTINGS_DIR, BoolOption, ButtonOption, SpinnerOption, build_mod, get_pc, hook, keybind
+from mods_base import SETTINGS_DIR, ButtonOption, build_mod, get_pc, hook, keybind
 from unrealsdk import logging
 from unrealsdk.hooks import Block, Type, prevent_hooking_direct_calls
 
@@ -27,25 +27,6 @@ runtime = Runtime(unrealsdk, MissionLevels(
 ))
 
 
-enemy_difficulty = SpinnerOption(
-    "Enemy difficulty", value="Medium", choices=["Easy", "Medium", "Hard", "Very Hard", "Debug", "Adaptive"], wrap_enabled=True,
-    description="Easy/Medium/Hard/Very Hard affect ordinary enemies. Their base is the higher of your level and the vanilla area level. "
-                "Medium rolls +2/+3 at 60%/40%. Hard rolls +3/+4 at 80%/20%; Very Hard rolls +3/+4/+5 at 20%/75%/5%. "
-                "Easy rolls +1/+2 at 40%/60%. Named/bosses are fixed at your level +2 on Easy/Medium, +3 on Hard and +4 on Very Hard. "
-                "Adaptive smoothly increases ordinary spawn difficulty with your level, blending at levels 5/15/25/35/45/55/65. Its named/bosses are fixed at your level +2 through 22, +3 through 52 and +4 from 53. "
-                "Debug is for mod testing: all supported hostile spawns, including bosses, are your level minus 30 (minimum 1), ignoring level floors. New spawns only.",
-)
-# Read the saved/live option at spawn time; changing it never edits existing pawns.
-runtime.spawns.difficulty = lambda: enemy_difficulty.value
-
-loot_floor = BoolOption(
-    "Loot level floor", value=True,
-    description="New drops, containers and vendor stock: all equipment at least your level. "
-                "Rarity chances stay vanilla. Existing gear and mission rewards are unchanged.",
-)
-runtime.loot.selected = lambda: loot_floor.value
-
-
 def safe(callback):
     @wraps(callback)
     def wrapped(*args, **kwargs):
@@ -58,8 +39,6 @@ def safe(callback):
 
 
 def on_enable():
-    if enemy_difficulty.value == "Normal":
-        enemy_difficulty.value = "Medium"
     runtime.enabled = True
     runtime.sync(get_pc())
 
@@ -146,7 +125,6 @@ def reward_hooks(path, controller_arg=None):
     @hook(path)
     @safe
     def before(obj, args, _ret, _func):
-        token = None
         if controller_arg is None:
             pc, mission = args.InWPC or get_pc(), obj
         else:
@@ -157,8 +135,7 @@ def reward_hooks(path, controller_arg=None):
         # pop the enclosing call's scope in POST_UNCONDITIONAL.
         stack.append(None)
         if runtime.ensure(pc) is not None:
-            token = runtime.missions.enter_reward(mission, pc)
-        stack[-1] = token
+            stack[-1] = runtime.missions.enter_reward(mission, pc)
 
     @hook(path, Type.POST_UNCONDITIONAL)
     @safe
@@ -267,7 +244,7 @@ def loot_death_hooks(path):
     @safe
     def before(obj, _args, _ret, _func):
         stack.append(None)
-        if runtime.enabled and runtime.loot.selected():
+        if runtime.enabled:
             stack[-1] = runtime.loot.dying(obj)
 
     @hook(path, Type.POST_UNCONDITIONAL)
@@ -306,26 +283,17 @@ def native_spawn(obj, args, func, restore=False, vehicle=False):
         return None
     invoked = False
     pawn = None
-    original_definition = None
-    swapped = False
-    field = "VehicleBalanceDefinition" if vehicle else "PawnBalanceDefinition"
     try:
-        level = runtime.ensure(get_pc())
-        if level is None:
+        player = runtime.ensure(get_pc())
+        if player is None:
             return None
-        level, definition = runtime.spawns.plan(obj, level, args.GameStage, vehicle)
-        if args.GameStage == level and definition is None:
+        level = runtime.spawns.plan(obj, player, args.GameStage, vehicle)
+        if args.GameStage == level:
             return None
-        if definition is not None:
-            original_definition = getattr(obj, field)
-            setattr(obj, field, definition)
-            swapped = True
         values = [args.Master, args.SpawnLocationContextObject, args.SpawnLocation,
                   args.SpawnRotation, level, args.AwesomeLevel]
         if restore:
             values.append(args.AIPawnMemento)
-        # The original factory initializes attributes once. A private definition
-        # supplies rare exact levels without changing shared native definitions.
         runtime.spawns.active = True
         with prevent_hooking_direct_calls():
             invoked = True
@@ -337,11 +305,6 @@ def native_spawn(obj, args, func, restore=False, vehicle=False):
         return (Block, pawn) if invoked else None
     finally:
         runtime.spawns.active = False
-        if swapped:
-            try:
-                setattr(obj, field, original_definition)
-            except Exception as exc:
-                runtime.problem("restore native factory", exc)
 
 
 @hook("WillowGame.PopulationFactoryBalancedAIPawn:CreatePopulationActor")
@@ -374,8 +337,6 @@ def grade_boundary(obj, _args, _ret, _func):
 
 
 def export_diagnostics(_option=None):
-    # Manual diagnostics must remain available even if gameplay hooks fail.
-    # Do not wrap this in safe(): that would hide the reason no file was saved.
     logging.info("[One Playthrough Diagnostics] Export requested.")
     try:
         path = export_snapshot(runtime, get_pc(), SETTINGS / "diagnostics", version=__version__)
@@ -441,11 +402,7 @@ HOOKS.extend(reward_hooks("WillowGame.WillowPlayerController:PopulateMissionData
 __version__: str
 __version_info__: tuple[int, ...]
 
-build_mod(hooks=HOOKS, options=[enemy_difficulty, loot_floor,
-                              ButtonOption("Export diagnostics", on_press=export_diagnostics)],
+build_mod(hooks=HOOKS, options=[ButtonOption("Export diagnostics", on_press=export_diagnostics)],
           keybinds=[export_key], on_enable=on_enable,
           on_disable=on_disable, settings_file=Path(SETTINGS / "mod.json"))
-# Migrate a saved disabled mod too; enabled settings migrate before SDK saving.
-if enemy_difficulty.value == "Normal":
-    enemy_difficulty.value = "Medium"
 logging.info(f"One Playthrough Loaded: {__version__}, {__version_info__}; enabled={runtime.enabled}")

@@ -112,7 +112,7 @@ class Regions:
         for definition, i in self.rows.get(name, []):
             row = definition.BalanceByRegion[i]
             self.floor(definition, ("BalanceByRegion", i, "DefaultGameStage"), name)
-            for j, _override in enumerate(row.MissionOverrides):
+            for j in range(len(row.MissionOverrides)):
                 self.floor(definition, ("BalanceByRegion", i, "MissionOverrides", j, "GameStage"), name)
 
     def floor(self, definition, path, name):

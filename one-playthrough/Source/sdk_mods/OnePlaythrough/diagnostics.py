@@ -1,11 +1,13 @@
 """Manual, bounded, read-only snapshots for Windows gameplay verification."""
 
 from datetime import datetime, timezone
+from itertools import islice
 import json
 import math
 
 from .economy_diagnostics import collect as collect_economy
 from .rewards import describe as describe_rewards
+from .spawns import hostile
 
 
 def serialize(value, depth=0, on_reference=None):
@@ -41,6 +43,41 @@ def initialization(value):
     return {name: (item._path_name() if hasattr(item, "_path_name") else item)
             for name in ("BaseValueConstant", "BaseValueAttribute", "InitializationDefinition", "BaseValueScaleConstant")
             for item in (getattr(value, name),)}
+
+
+def live_enemy_combat(sdk, pc, read):
+    """Read the captured BL1E HUD stat fields from live pawns on manual export."""
+    if pc is None or getattr(pc, "Pawn", None) is None:
+        return []
+    world = pc.WorldInfo
+    samples = []
+    pawns = read("find live AI pawns", lambda: sdk.find_all("WillowAIPawn", exact=False), [])
+    for pawn in islice(pawns, 500):
+        def sample():
+            path = pawn._path_name()
+            if (getattr(pawn, "WorldInfo", None) != world or "default__" in path.lower()
+                    or any(getattr(pawn, flag, False)
+                           for flag in ("bDeleteMe", "bPendingDelete", "bIsDead", "bPlayedDeath"))):
+                return None
+            state = getattr(pawn, "BalanceDefinitionState", None)
+            definition = getattr(state, "BalanceDefinition", None)
+            if definition is None or not hostile(pawn, definition, pawn):
+                return None
+            health = getattr(pawn, "HealthMaxVar", None)
+            if health is None or health <= 0:
+                return None  # The HUD fields may not be initialized yet.
+            return {"pawn": path, "name": str(getattr(pawn, "AIPawnName", "")),
+                    "balance": definition._path_name(), "grade": getattr(state, "GradeIndex", None),
+                    "level": pawn.ExpLevel, "max_health": health,
+                    "max_shield": getattr(pawn, "ShieldMaxVar", None),
+                    "has_shield": getattr(pawn, "bHasShieldVar", None)}
+
+        record = read("live AI combat fields", sample)
+        if record is not None:
+            samples.append(record)
+            if len(samples) == 80:
+                break
+    return samples
 
 
 def export(runtime, pc, directory, version="unknown"):
@@ -94,6 +131,7 @@ def export(runtime, pc, directory, version="unknown"):
                 "min": grade.GameStageRequirement.MinGameStage,
                 "max": grade.GameStageRequirement.MaxGameStage,
                 "level_modifier": grade.GradeModifiers.ExpLevel,
+                "display_name": str(getattr(grade.GradeModifiers, "DisplayName", "")),
             }))
         snapshot["enemy_definitions"].append(record)
     if pc is not None:
@@ -105,6 +143,8 @@ def export(runtime, pc, directory, version="unknown"):
             ("save_file_id", lambda: pc.SaveGameFileId),
         ):
             snapshot[name] = read(name, getter)
+    snapshot["live_enemy_combat"] = read(
+        "live enemy combat", lambda: live_enemy_combat(runtime.sdk, pc, read), [])
     snapshot["economy"] = read("economy", lambda: collect_economy(runtime.sdk, pc, serialize, read), {})
     snapshot["export_complete"] = True
     snapshot["partial"] = bool(snapshot["export_errors"])

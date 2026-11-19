@@ -9,7 +9,6 @@ import unittest
 
 from test_one_playthrough import Harness, Object, aid
 from test_item_rewards import balance, grade
-from test_settings import SDKSettingsMod
 
 POOL = "WillowGame.ItemPool:SpawnBalancedInventoryFromPool"
 INIT = "WillowGame.WillowWeapon:InitializeFromDefinitionData"
@@ -198,11 +197,7 @@ class LootFloorTests(unittest.TestCase):
         self.assertEqual(self.h.runtime.loot.scopes, [])
         self.assertEqual(self.initialize().required, 5)
 
-    def test_toggle_and_mod_disabled_leave_loot_native(self):
-        self.h.mod.loot_floor.value = False
-        with self.pool(self.chest):
-            self.assertEqual(self.initialize().required, 5)
-        self.h.mod.loot_floor.value = True
+    def test_disabled_mod_leaves_loot_native(self):
         self.h.mod.on_disable()
         with self.pool(self.chest):
             self.assertEqual(self.initialize().required, 5)
@@ -322,15 +317,6 @@ class LootFloorTests(unittest.TestCase):
         self.h.callbacks[(DEATH, "POST_UNCONDITIONAL")](self.enemy, None, None, None)
         self.assertEqual(self.h.runtime.loot.scopes, [])
         self.assertEqual(self.h.runtime.loot.deaths, [])
-
-    def test_option_persists_across_restarts(self):
-        first = Harness(self.tmp.name, registration_factory=SDKSettingsMod, in_menu=True)
-        self.assertTrue(first.mod.loot_floor.value)
-        first.mod.loot_floor.value = False
-        first.registered_mod.enable()
-        second = Harness(self.tmp.name, registration_factory=SDKSettingsMod, in_menu=True)
-        self.assertFalse(second.mod.loot_floor.value)
-
 
 if __name__ == "__main__":
     unittest.main()

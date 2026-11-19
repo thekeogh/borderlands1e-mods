@@ -252,11 +252,8 @@ class CarriedLootTests(unittest.TestCase):
         self.end()
         self.assertEqual(self.clones,[])
 
-    def test_mod_toggle_or_mission_scope_excludes_carried_floor(self):
+    def test_mission_scope_excludes_carried_floor(self):
         self.begin()
-        self.h.mod.loot_floor.value = False
-        self.assertIsNone(self.svc.prepare(self.original,self.args,self.h.pc))
-        self.h.mod.loot_floor.value = True
         self.h.runtime.missions.scopes.append((object(),None,3,NS()))
         self.assertIsNone(self.svc.prepare(self.original,self.args,self.h.pc))
         self.h.runtime.missions.scopes.clear()
@@ -265,7 +262,7 @@ class CarriedLootTests(unittest.TestCase):
 
     def test_disable_between_drop_and_commit_retires_only_uncommitted_copy(self):
         self.begin(); old = self.drop_original()
-        self.h.mod.loot_floor.value = False
+        self.h.mod.on_disable()
         self.end()
         self.assertEqual(self.live_pickups(),[old])
         self.assertFalse(self.original.bDeleteMe)

@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections import Counter, deque
 from datetime import datetime, timezone
 from pathlib import Path
+from time import monotonic
 import json
 import math
 import traceback
@@ -19,7 +20,7 @@ from unrealsdk import logging
 from unrealsdk.hooks import Block, Type, add_hook, remove_hook
 from unrealsdk.unreal import WeakPointer
 
-from .policy import DELAYS, Group
+from .policy import DEFAULT_DELAY, DELAYS, Group
 from .named_enemies import POPULATION_NAMES, named_enemy
 
 _enabled = False
@@ -27,13 +28,15 @@ _ready = False
 _world_ref = None
 _last_time = None
 _last_poll = None
+_next_clock_check = 0.0
 _spawn_path = None
 _stack = []
 _dens = {}
 _actors = {}
 _named_spawns = {}
 _errors = []
-VERSION = "1.3.1"
+VERSION = "1.3.3"
+RENDER_CLOCK_INTERVAL = 0.05
 _counts = Counter()
 _skips = Counter()
 _events = deque(maxlen=200)
@@ -94,11 +97,12 @@ def restore(entry):
         data.NumTotalActors = original_total
     den.SpawnData = data
     entry["written"] = None
+    entry["requested_deadline"] = None
     entry["original_total"] = None
 
 
 def reset_session():
-    global _world_ref, _last_time, _last_poll
+    global _world_ref, _last_time, _last_poll, _next_clock_check
     trace("session_reset", dens=len(_dens), actors=len(_actors))
     for entry in _dens.values():
         try:
@@ -112,6 +116,7 @@ def reset_session():
     _world_ref = None
     _last_time = None
     _last_poll = None
+    _next_clock_check = 0.0
 
 
 def host_clock():
@@ -154,10 +159,11 @@ def pawn_named_identity(pawn):
                        getattr(pawn, "ObjectArchetype", None))
 
 
-def named_den_identity(den):
+def named_den_identity(den, definition=None):
     # Keep the confirmed identity after its native member list becomes empty.
     entry = _dens.get(den._get_address())
-    definition = str(den.SpawnData.PopulationDefName)
+    if definition is None:
+        definition = str(den.SpawnData.PopulationDefName)
     if (entry is not None and entry["ref"]() is not None
             and entry["definition"] == definition and entry["named_enemy"] is not None):
         return entry["named_enemy"]
@@ -171,49 +177,48 @@ def named_den_identity(den):
     return None
 
 
-def passive_mission_gate(den, aspect):
-    """Accept known four-slot reaction tables while the native den is enabled.
-
-    Objective/item payloads and native no-respawn flags remain excluded.
-    """
+def passive_mission_states(den, aspect):
+    """Return the reaction table of an eligible payload-free mission gate."""
     try:
-        if aspect.Class._path_name() != "WillowGame.MissionPopulationAspect":
-            return False
         if not den.IsEnabled:
             entry = _dens.get(den._get_address())
             if entry is None or entry["original_enabled"] is not True:
-                return False
+                return None
+        if aspect.Class._path_name() != "WillowGame.MissionPopulationAspect":
+            return None
         objective = aspect.MissionObjective
         items = aspect.MissionItems
         if (objective.MissionDefinition is not None or int(objective.ObjectiveIndex) != -1
                 or items.MissionDefinition is not None or items.MissionItemPool is not None):
-            return False
+            return None
         reactions = aspect.MissionReactions
         states = tuple(int(state) for state in reactions.MissionStatusOpportunityReaction)
         # Captured enum values: Enabled=0, Disabled=1, Respawn50Percent=2,
         # Respawn100Percent=3. Cover all 256 combinations of these known values.
         # Keep unknown layouts/reactions native rather than guessing semantics.
-        return len(states) == 4 and all(state in (0, 1, 2, 3) for state in states)
+        if len(states) == 4 and all(state in (0, 1, 2, 3) for state in states):
+            return states
     except (AttributeError, TypeError, ValueError):
-        return False
+        pass
+    return None
+
+
+def passive_mission_gate(den, aspect):
+    return passive_mission_states(den, aspect) is not None
 
 
 def activation_guard_allowed(den):
     """Allow named dens and ordinary or persistent, payload-free gates."""
-    if named_den_identity(den) is not None:
-        return True
     aspect = getattr(den, "Aspect", None)
-    if aspect is None:
+    if aspect is None or named_den_identity(den) is not None:
         return True
-    if not passive_mission_gate(den, aspect):
-        return False
-    states = tuple(int(state) for state in aspect.MissionReactions.MissionStatusOpportunityReaction)
+    states = passive_mission_states(den, aspect)
     # Once enabled, these gates remain enabled in all subsequent stages.
     # Keep activation native for staged disable/respawn reactions.
     return states in ((0, 0, 0, 0), (1, 0, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0))
 
 
-def den_skip_reason(den, world):
+def den_skip_reason(den, world, data=None, definition=None):
     # These exclusions preserve mission waves, NPCs and one-shot encounters.
     if den is None:
         return "missing_den"
@@ -222,23 +227,28 @@ def den_skip_reason(den, world):
     for field in ("bDeleteMe", "bPendingDelete"):
         if getattr(den, field):
             return field
-    named = named_den_identity(den)
-    if den.bNoRespawning and named is None:
-        entry = _dens.get(den._get_address())
-        if entry is None or entry["original_no_respawn"] is None:
-            return "bNoRespawning"
     if str(den.Name).startswith("Default__"):
         return "default_object"
+    needs_named_exception = False
+    if den.bNoRespawning:
+        entry = _dens.get(den._get_address())
+        needs_named_exception = entry is None or entry["original_no_respawn"] is None
+        if needs_named_exception and named_den_identity(den, definition) is None:
+            return "bNoRespawning"
     aspect = getattr(den, "Aspect", None)
-    if aspect is not None and named is None and not passive_mission_gate(den, aspect):
+    if (aspect is not None and not needs_named_exception
+            and not passive_mission_gate(den, aspect) and named_den_identity(den, definition) is None):
         return "scripted_aspect"
     den_world = den.WorldInfo
     if den_world is None:
         return "missing_den_world"
     if den_world._get_address() != world._get_address():
         return "different_world"
-    data = den.SpawnData
-    if str(data.PopulationDefName) in ("", "None"):
+    if data is None:
+        data = den.SpawnData
+    if definition is None:
+        definition = str(data.PopulationDefName)
+    if definition in ("", "None"):
         return "no_population_definition"
     if int(data.MaxActiveActors) <= 0:
         return "no_active_actor_capacity"
@@ -255,14 +265,15 @@ def entry_for(den, world):
         return None
     address = den._get_address()
     entry = _dens.get(address)
-    definition = str(den.SpawnData.PopulationDefName)
+    data = den.SpawnData
+    definition = str(data.PopulationDefName)
     if entry is not None and (entry["ref"]() is None or entry["definition"] != definition):
         restore(entry)
         for actor in entry["group"].members:
             _actors.pop(actor, None)
         _dens.pop(address, None)
         entry = None
-    reason = den_skip_reason(den, world)
+    reason = den_skip_reason(den, world, data, definition)
     if reason is not None:
         _skips[reason] += 1
         if _skips[reason] <= 5:
@@ -277,14 +288,12 @@ def entry_for(den, world):
         return None
     if entry is None:
         entry = {"ref": WeakPointer(den), "definition": definition, "group": Group(),
-                 "original": None, "written": None, "ignored": False,
+                 "original": None, "written": None, "requested_deadline": None, "ignored": False,
                  "released": False, "original_total": None, "suspended": False,
                  "death_evidence": {}, "last_death_at": None,
                  "original_no_respawn": None, "original_enabled": None, "unexpected_spawns": set(),
-                 "named_enemy": named_den_identity(den), "named_members": set(), "named_killed": False}
+                 "named_enemy": named_den_identity(den, definition), "named_members": set(), "named_killed": False}
         _dens[address] = entry
-    if entry["named_enemy"] is None:
-        entry["named_enemy"] = named_den_identity(den)
     return None if entry["ignored"] else entry
 
 
@@ -294,29 +303,31 @@ def set_deadline(entry, choice):
     if den is None or deadline is None or entry["ignored"]:
         return
     # Ordinary pre-existing no-respawn dens stay native; named dens preserve it.
-    if entry["original_no_respawn"] is None and den.bNoRespawning and entry["named_enemy"] is None:
-        return
     original_no_respawn = bool(den.bNoRespawning)
+    if entry["original_no_respawn"] is None and original_no_respawn and entry["named_enemy"] is None:
+        return
     data = den.SpawnData
+    native_next_spawn = float(data.NextSpawnTime)
     if entry["written"] is None:
-        entry["original"] = float(data.NextSpawnTime)
-    data.NextSpawnTime = deadline
-    den.SpawnData = data
-    # Read back the engine's float32 value for ownership-aware restoration.
-    entry["written"] = float(den.SpawnData.NextSpawnTime)
+        entry["original"] = native_next_spawn
+    if deadline != entry["requested_deadline"] or native_next_spawn != entry["written"]:
+        data.NextSpawnTime = deadline
+        den.SpawnData = data
+        # Keep both the requested value and Unreal's rounded float32 value.
+        entry["written"] = float(den.SpawnData.NextSpawnTime)
+        entry["requested_deadline"] = deadline
     # Vanilla reset paths can erase NextSpawnTime and NumTotalActors together.
     # Hold the den's native no-respawn flag throughout the actual cooldown.
     if entry["original_no_respawn"] is None:
         entry["original_no_respawn"] = original_no_respawn
-    den.bNoRespawning = True
+    if not original_no_respawn:
+        den.bNoRespawning = True
     # The captured rakk reset ignored the timestamp and no-respawn flag. Stop
     # ordinary opportunities and persistent mission gates at activation too.
     # Other staged mission disable/respawn patterns retain native activation.
-    if activation_guard_allowed(den):
-        if entry["original_enabled"] is None and bool(den.IsEnabled):
-            entry["original_enabled"] = True
-        if entry["original_enabled"] is not None:
-            den.IsEnabled = False
+    if den.IsEnabled and activation_guard_allowed(den):
+        entry["original_enabled"] = True
+        den.IsEnabled = False
 
 
 def before_spawning(obj, _args, _ret, _func):
@@ -436,6 +447,7 @@ def track_spawn(entry, pawn, allegiance=None):
             # native timestamp if/when this generation is subsequently cleared.
             entry["original"] = None
             entry["written"] = None
+            entry["requested_deadline"] = None
             entry["original_total"] = None
             entry["released"] = False
             entry["named_killed"] = False
@@ -553,21 +565,23 @@ def poll_dens(world, now):
             entry = entry_for(den, world)
             if entry is None:
                 continue
-            raw_members = list(den.SpawnedDenMembers)
-            null_members = sum(pawn is None for pawn in raw_members)
+            native_members = list(den.SpawnedDenMembers)
+            null_members = sum(pawn is None for pawn in native_members)
             if null_members:
                 _skips["null_native_members"] += null_members
                 # An unresolved slot is not evidence of death or removal.
                 continue
-            native_members = raw_members
+            native_addresses = set()
+            live_addresses = set()
             # Register all living members before processing any missed deaths.
             for pawn in native_members:
+                address = pawn._get_address()
+                native_addresses.add(address)
                 if not pawn.bIsDead:
+                    live_addresses.add(address)
                     track_spawn(entry, pawn)
             if entry["ignored"]:
                 continue
-            native_addresses = {pawn._get_address() for pawn in native_members}
-            live_addresses = {pawn._get_address() for pawn in native_members if not pawn.bIsDead}
             # Death callbacks can arrive while the turret's dead flag stays false.
             # Confirm only after native membership and active count also agree.
             for address, evidence in sorted(list(entry["death_evidence"].items()),
@@ -587,9 +601,11 @@ def poll_dens(world, now):
             for address in list(entry["group"].members):
                 actor = _actors.get(address)
                 pawn = actor[0]() if actor is not None else None
+                if pawn is not None and address in live_addresses:
+                    continue
                 if pawn is not None and pawn.bIsDead:
                     dead.append(pawn)
-                elif pawn is None or address not in live_addresses:
+                else:
                     # Native membership can change without a Died callback.
                     # Discard obsolete members without counting them as kills.
                     _actors.pop(address, None)
@@ -631,6 +647,7 @@ def poll_dens(world, now):
                 data.NextSpawnTime = 0.0
                 den.SpawnData = data
                 entry["written"] = float(den.SpawnData.NextSpawnTime)
+                entry["requested_deadline"] = None
                 entry["released"] = True
                 _counts["rearmed_groups"] += 1
                 trace("group_rearmed", den=object_path(den), original_total=entry["original_total"])
@@ -649,7 +666,11 @@ def poll_dens(world, now):
 
 @hook("Engine.GameViewportClient:PostRender", Type.POST_UNCONDITIONAL)
 def poll_tick(_obj, _args, _ret, _func):
-    global _last_poll
+    global _last_poll, _next_clock_check
+    # Most render callbacks can return before touching any Unreal objects.
+    wall_now = monotonic()
+    if wall_now < _next_clock_check:
+        return
     try:
         clock = host_clock()
         if clock is None:
@@ -661,6 +682,8 @@ def poll_tick(_obj, _args, _ret, _func):
         poll_dens(world, now)
     except Exception as exc:
         error(exc)
+    finally:
+        _next_clock_check = wall_now + RENDER_CLOCK_INTERVAL
 
 
 def change_delay(_option, value):
@@ -677,10 +700,9 @@ def change_delay(_option, value):
 
 
 respawn_delay = SpinnerOption(
-    "Respawn Delay", "30 minutes", list(DELAYS),
-    description=("Wait after the last enemy in a tracked group dies: 1/30 minutes, "
-                 "1/3 hours, or Forever until map reload. Uses gameplay time. "
-                 "Native proximity/mission rules still decide whether a group can spawn."),
+    "Respawn Delay", DEFAULT_DELAY, list(DELAYS),
+    description=("Choose how long cleared groups stay gone in gameplay time. "
+                 "Forever lasts until the map reloads."),
     on_change_while_enabled=change_delay,
 )
 
@@ -721,9 +743,9 @@ def on_enable():
                    den_spawn_calls=0, factory_callbacks=0, death_callbacks=0)
     _skips.clear()
     _events.clear()
-    # Old releases offered 5/15 minutes; fall back if saved settings retain them.
+    # Migrate saved choices removed from the menu.
     if respawn_delay.value not in DELAYS:
-        respawn_delay.value = "30 minutes"
+        respawn_delay.value = DEFAULT_DELAY
     _enabled = True
     _ready = False
     try:

@@ -86,7 +86,7 @@ class NativeLoot:
         return kind
 
     def plan(self, obj, args, pc):
-        if not self.runtime.enabled or not self.loot.selected():
+        if not self.runtime.enabled:
             return None
         self.calls += 1
         if self.definition_scopes:
@@ -121,7 +121,7 @@ class NativeLoot:
                 self.loot.count(self.skipped, "definition not ready")
                 return None
             setattr(probe, field, definition)
-        scope = {"kind": kind, "source": obj._path_name(), "floor": self.loot.minimum(player, probe)}
+        scope = {"kind": kind, "source": obj._path_name(), "floor": self.loot.minimum(player)}
         prepared = self.loot.prepare_data(probe, scope)
         if prepared is None:
             return None

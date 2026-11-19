@@ -39,12 +39,11 @@ def pool_specs(sdk):
 
 class Loot:
     @staticmethod
-    def minimum(player, _data=None):
+    def minimum(player):
         return max(1, player)
 
     def __init__(self, runtime):
         self.runtime = runtime
-        self.selected = lambda: True
         self.scopes = []
         self.deaths = []
         self.classes = {}
@@ -108,7 +107,7 @@ class Loot:
     def enter(self, source, pc):
         token, scope = object(), None
         try:
-            if self.runtime.enabled and self.selected() and not self.runtime.missions.scopes:
+            if self.runtime.enabled and not self.runtime.missions.scopes:
                 kind = self.source_kind(source) if source is not None else None
                 label = kind or (str(source.Class.Name) if source is not None else "no context")
                 self.count(self.contexts, label)
@@ -131,13 +130,13 @@ class Loot:
         return None
 
     def prepare(self, data):
-        if (not self.runtime.enabled or not self.selected() or not self.scopes
+        if (not self.runtime.enabled or not self.scopes
                 or self.runtime.missions.scopes):
             return None
         scope = self.scopes[-1][1]
         if scope is None:
             return None
-        return self.prepare_data(data, {**scope, "floor": self.minimum(scope["player_level"], data)})
+        return self.prepare_data(data, scope)
 
     def prepare_data(self, data, scope):
         """Select only a higher explicit level; caller supplies a verified scope."""
@@ -183,7 +182,7 @@ class Loot:
         self.deaths.clear()
 
     def snapshot(self):
-        return {"enabled": self.selected(), "minimum": "max(1, player level) for all equipment",
+        return {"enabled": self.runtime.enabled, "minimum": "max(1, player level) for all equipment",
                 "pool_hooks": self.hooks, "active_scopes": len(self.scopes),
                 "death_scopes": len(self.deaths), "equipment_seen": self.seen,
                 "raised": self.raised, "contexts": dict(self.contexts),

@@ -71,7 +71,6 @@ class HudIcons:
         self.owned = None
         self.changed = 0
         self.restored = 0
-        self.last_state = None
         self.last_error = None
 
     def read(self,movie,method,path):
@@ -115,14 +114,12 @@ class HudIcons:
 
     def context(self,movie):
         frame = self.read(movie,'GetVariableNumber',ICON+'._currentframe')
-        self.last_state = {'frame':frame}
         if frame not in (1,2,3,4):
             return None
         text = str(self.read(movie,'GetVariableString',LEVEL)).strip()
-        self.last_state['level_text'] = text
         if re.fullmatch(r'[0-9]{1,3}',text) is None:
             return None
-        return {'frame':int(frame),'level':int(text),'level_text':text}
+        return {'frame':int(frame),'level':int(text)}
 
     def undo(self,movie,context):
         previous = self.owned
@@ -148,8 +145,6 @@ class HudIcons:
             if movie is None:
                 return
             context = self.context(movie)
-            if context is not None:
-                self.last_state = dict(context,player=player)
             if context is None:
                 self.owned = None
                 return
@@ -192,4 +187,4 @@ class HudIcons:
     def snapshot(self):
         return {'rule':'native warning to small skull at exactly player level +5',
                 'movie':self.movie_path,'changed':self.changed,'restored':self.restored,
-                'last_state':self.last_state,'last_error':self.last_error,'api':self.plan}
+                'last_error':self.last_error,'api':self.plan}

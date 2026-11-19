@@ -1,13 +1,12 @@
 """Captured-definition regressions; native spawning/reward calls are modeled."""
 
-from copy import deepcopy
 import json
 from pathlib import Path
 import tempfile
 from types import SimpleNamespace as NS
 import unittest
 
-from test_one_playthrough import Harness, Object, aid
+from test_one_playthrough import Harness, Object
 
 FIXTURE = json.loads((Path(__file__).parent/'fixtures/bl1e_catalog_audit.json').read_text())
 
@@ -38,16 +37,7 @@ class CatalogAudit(unittest.TestCase):
         self.h.enable(10)
         self.data = captured()
         self.svc = self.h.runtime.spawns
-        self.native_level = self.svc.plan.__globals__['native_level']
         self.hostile = self.svc.plan.__globals__['hostile']
-        self.exact = Object('gd_Balance.EnemyLevel.EnemyLevel_GameStage_exact')
-        self.h.sdk.find_object = lambda *args:self.exact
-        def construct(cls, outer, name, template_obj):
-            clone = Object(outer.path+'.'+name)
-            clone.DefaultExpLevel = deepcopy(template_obj.DefaultExpLevel)
-            clone.Grades = deepcopy(template_obj.Grades)
-            return clone
-        self.h.sdk.construct_object = construct
 
     def test_deferred_death_flags_are_captured_native_boolean_properties(self):
         fields=FIXTURE["native_property_metadata"]["WillowGame.WillowAIPawn"]
@@ -71,50 +61,17 @@ class CatalogAudit(unittest.TestCase):
         self.h.runtime.loot.end_death(token)
         self.assertEqual(self.h.runtime.loot.deaths,[])
 
-    def test_mission_moe_factory_is_named_and_never_rolls_ordinary_bonus(self):
+    def test_mission_moe_keeps_native_name_level_and_stage_band(self):
         factory = self.data['z0_missiondata.population.pd_alphaskag_named1:populationfactorybalancedaipawn_20']
         original = factory.PawnBalanceDefinition
-        self.assertTrue(self.hostile(factory,original,original.AIPawnArchetype))
-        self.svc.roll = lambda:self.fail('Mission-specific Moe must not use ordinary bonus RNG')
-        for difficulty in ('Easy','Medium','Hard','Very Hard'):
-            self.h.mod.enemy_difficulty.value = difficulty
-            stage,clone = self.svc.plan(factory,10,30)
-            self.assertEqual(stage,30)  # Keep the native 29-35 Moe grade eligible.
-            definition = clone or original
-            eligible = [g for g in definition.Grades
-                        if g.GameStageRequirement.MinGameStage <= stage <= g.GameStageRequirement.MaxGameStage]
-            self.assertEqual([g.GradeModifiers.DisplayName for g in eligible],['Moe'])
-            expected = {'Easy':12,'Medium':12,'Hard':13,'Very Hard':14}.get(difficulty,32)
-            self.assertEqual([g.GradeModifiers.ExpLevel for g in eligible],[expected])
-            self.assertIs(factory.PawnBalanceDefinition,original)
-
-    def test_easy_named_fixed_plus_two_preserves_native_moe_bands(self):
-        self.h.mod.enemy_difficulty.value = "Easy"
-        factory = self.data['z0_missiondata.population.pd_alphaskag_named1:populationfactorybalancedaipawn_20']
-        original = factory.PawnBalanceDefinition
-        before = deepcopy(original.Grades)
-        stage,clone = self.svc.plan(factory,60,80)
-        self.assertEqual(stage,80)
-        self.assertTrue(all(g.GradeModifiers.ExpLevel ==62 for g in clone.Grades))
-        self.assertEqual([(g.GameStageRequirement.MinGameStage,g.GameStageRequirement.MaxGameStage) for g in clone.Grades],
-                         [(g.GameStageRequirement.MinGameStage,g.GameStageRequirement.MaxGameStage) for g in original.Grades])
-        self.assertEqual([g.GradeModifiers.ExpLevel for g in original.Grades],
-                         [g.GradeModifiers.ExpLevel for g in before])
-
-    def test_rare_no_grade_definition_never_lowers_naturally_higher_default(self):
-        definition = Object('Custom.EnemyDefinition')
-        definition.DefaultExpLevel = aid(0)
-        definition.DefaultExpLevel.BaseValueAttribute = Object('gd_Balance.EnemyLevel.EnemyLevel_GameStage_plus5')
-        definition.Grades=[]
-        definition.Class=Object('WillowGame.AIPawnBalanceDefinition')
-        definition.Outer=Object('Custom')
-        definition.AIPawnArchetype=Object('Custom.Pawn')
-        definition.AIPawnArchetype.Allegiance=Object('gd_allegiance.HumanoidEnemy.BanditAllegiance')
-        factory=NS(PawnBalanceDefinition=definition)
-        for ticket in (50,70,99):
-            self.svc.roll=lambda:ticket
-            stage,clone=self.svc.plan(factory,10,10)
-            self.assertEqual(self.native_level((clone or definition).DefaultExpLevel,stage),15)
+        self.assertTrue(self.hostile(factory, original, original.AIPawnArchetype))
+        stage = self.svc.plan(factory, 10, 30)
+        self.assertEqual(stage, 30)
+        eligible = [g for g in original.Grades
+                    if g.GameStageRequirement.MinGameStage <= stage <= g.GameStageRequirement.MaxGameStage]
+        self.assertEqual([(g.GradeModifiers.DisplayName, g.GradeModifiers.ExpLevel) for g in eligible],
+                         [('Moe', 32)])
+        self.assertIs(factory.PawnBalanceDefinition, original)
 
     def test_native_floor_query_restores_original_mission_minimum_then_live_patch(self):
         source=self.data['z0_missions.missions.m_owedmoneydebt']

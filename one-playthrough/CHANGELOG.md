@@ -1,5 +1,46 @@
 # One Playthrough changelog
 
+## 6.2.0
+
+- Apply the loot level floor whenever the mod is enabled. Remove the separate loot setting.
+
+## 6.1.0
+
+- Enemy names follow native grade selection at the scaled area stage.
+- Keep the PT2 combat formula inputs from level 1.
+
+## 6.0.4
+
+- Remove the unused named-enemy grouping, redundant loot-floor code and stale comments.
+- Stop sampling HUD target state each frame. Manual diagnostics still report skull changes and errors.
+
+## 6.0.3
+
+- Read final names for Rakk Hive, Destroyer parasites, Rakk-Trap Hive minions
+  and additional Robolution enemies, including balances with no default pawn archetype.
+
+## 6.0.2
+
+- Read final names for base-game creatures and additional captured enemy grade
+  layouts, including Pup Skags, Robolution enemies and Rakk Hive minions.
+
+## 6.0.1
+
+- Include live enemy level, balance, grade, maximum health and shield in
+  manual diagnostic exports for comparing matched encounters.
+
+## 6.0.0
+
+- Replace difficulty presets, Adaptive and Debug with native enemy level and
+  grade rules at the scaled area stage.
+- Apply the captured PT2 enemy health, AI damage, Guardian shield and Vault
+  boss health exponent inputs during the supported first-campaign context.
+- Use final tier display names for recognized native enemy grades.
+- Default the optional loot level floor to off for new settings.
+- Retain mission and reward scaling, the +5 skull and manual diagnostics.
+- Validate native spawn forwarding, final name restoration and combat formula
+  restoration with local tests. Windows gameplay validation remains pending.
+
 ## 5.0.0 — 2026-11-18
 
 - Add saved Adaptive enemy difficulty, smoothly interpolating the agreed weights

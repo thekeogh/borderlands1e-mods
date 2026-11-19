@@ -3,6 +3,7 @@
 from .missions import Missions
 from .scaling import Grades, Regions, player_level
 from .spawns import Spawns
+from .combat import Combat
 from .loot import Loot
 from .hud_icons import HudIcons
 
@@ -16,6 +17,7 @@ class Runtime:
         self.grades = Grades()
         self.missions = Missions(self, store)
         self.spawns = Spawns(self)
+        self.combat = Combat(self)
         self.loot = Loot(self)
         self.hud_icons = HudIcons(self)
         self.problems = []
@@ -45,6 +47,7 @@ class Runtime:
                 self.restore()
                 return
             self.regions.update(level)
+            self.combat.update()
             self.missions.select(pc, level, loading=loading)
             # A profile PRE hook prepares regions only; mission data still belongs
             # to the old profile until the native profile application completes.
@@ -66,7 +69,7 @@ class Runtime:
     def restore(self):
         self.hud_icons.restore()
         self.loot.clear()
-        for error in self.missions.restore() + self.grades.restore() + self.spawns.restore():
+        for error in self.missions.restore() + self.grades.restore() + self.combat.restore():
             self.problem("restore", error)
         self.regions.restore()
 
@@ -76,7 +79,7 @@ class Runtime:
 
     def snapshot(self):
         return {"enabled": self.enabled, "world_base_level": self.regions.level,
-                "enemy_policy": self.spawns.snapshot(),
+                "enemy_policy": self.spawns.snapshot(), "combat": self.combat.snapshot(),
                 "regions": self.regions.snapshot(), "character": self.missions.key,
                 "mission_levels": dict(self.missions.levels),
                 "reward_scopes": len(self.missions.scopes),

@@ -18,6 +18,14 @@ VERSION = re.search(r'^version = "([^"]+)"', (SOURCE / "pyproject.toml").read_te
 NATIVE = json.loads((ROOT / "tests/fixtures/native.json").read_text())
 
 
+CAPTURED_COMBAT_BRANCHES = {
+    "HealthMultipliers.Enemy_Health_ByPlaythrough": (1.0, 2.0),
+    "DamageMultipliers.Enemy_Damage_ByPlaythrough": (0.75, 1.149999976158142),
+    "HealthMultipliers.Guardian_Shield_ByPlaythrough": (1.0, 2.0),
+    "HealthMultipliers.Enemy_Health_Exponent_ByPlaythrough_VAULTBOSS": (1.9500000476837158, 1.5),
+}
+
+
 class Object:
     def __init__(self, path):
         self.path = path
@@ -77,6 +85,17 @@ class Harness:
         self.sdk = ModuleType("unrealsdk")
         self.messages = []
         self.sdk.logging = NS(info=self.messages.append, error=self.messages.append)
+        self.combat_definitions = {}
+        playthrough = Object("d_attributes.Balance.PlayThroughCount")
+        for name, values in CAPTURED_COMBAT_BRANCHES.items():
+            path = "gd_Balance_HealthAndDamage." + name
+            definition = Object(path)
+            definition.ConditionalInitialization = NS(bEnabled=True, ConditionalExpressionList=[
+                NS(BaseValueIfTrue=aid(amount), Expressions=[NS(AttributeOperand1=playthrough,
+                   ComparisonOperator=0, Operand2Usage=0, AttributeOperand2=None, ConstantOperand2=index)])
+                for index, amount in enumerate(values, start=1)])
+            self.combat_definitions[path] = definition
+        self.sdk.find_object = lambda cls, path: self.combat_definitions.get(path)
         self.loads = []
         self.sdk.load_package = self.loads.append
         self.scans = []
@@ -191,7 +210,6 @@ class Harness:
             spec.loader.exec_module(module)
         self.mod = module
         self.runtime = module.runtime
-        self.runtime.spawns.roll = lambda: 0
 
     def unused_balance(self):
         definition = Object("Native.PT2.Balance")
@@ -241,7 +259,7 @@ class Tests(unittest.TestCase):
     def test_new_game_has_no_menu_intro_story_reset_or_save_edit_hooks(self):
         h = self.h
         h.enable()
-        self.assertEqual([o.identifier for o in h.registration["options"]], ["Enemy difficulty", "Loot level floor", "Export diagnostics"])
+        self.assertEqual([o.identifier for o in h.registration["options"]], ["Export diagnostics"])
         self.assertTrue(all(not any(x in path for x in ("GFxLobby", "PressStart", "LaunchNewGame"))
                             for path, _ in h.callbacks))
         self.assertEqual(h.pc.pt, 0)
@@ -437,7 +455,7 @@ class Tests(unittest.TestCase):
         count = len(h.rows())
         for level in (1, 20, 40, 69, 1): h.enable(level)
         self.assertEqual(len(h.rows()), count)
-        self.assertEqual(len(h.loads), 6)
+        self.assertEqual(len(h.loads), 7)
 
     def test_corrupt_acceptance_file_is_preserved_and_scaling_still_operates(self):
         h = self.h
@@ -547,6 +565,8 @@ class SpawnTests(unittest.TestCase):
                                             InitializationDefinition=None, BaseValueScaleConstant=1)
         self.definition.Grades = [NS(GameStageRequirement=NS(MinGameStage=30, MaxGameStage=50),
                                      GradeModifiers=NS(ExpLevel=1, HealthMultiplier=3, DamageMultiplier=2))]
+        self.definition.AIPawnArchetype = Object("Native.Enemy.Archetype")
+        self.definition.AIPawnArchetype.Allegiance = Object("gd_allegiance.HumanoidEnemy.BanditAllegiance")
         self.h.definitions.append(self.definition)
         self.factory = NS(PawnBalanceDefinition=self.definition)
         self.args = NS(Master=object(), SpawnLocationContextObject=object(), SpawnLocation=object(),
@@ -593,6 +613,35 @@ class SpawnTests(unittest.TestCase):
                             self.args.GameStage, self.args.AwesomeLevel)
             self.assertEqual(self.pawn.level, level + 3)
 
+    def test_scaled_spawn_preserves_native_grade_names_and_offsets(self):
+        self.definition.path = "gd_Balance_Enemies_Humans.Bandits.Common.Pawn_Balance_Grunt_Basic"
+        self.definition.Grades = [
+            NS(GameStageRequirement=NS(MinGameStage=low, MaxGameStage=high),
+               GradeModifiers=NS(DisplayName=name, ExpLevel=offset))
+            for low, high, name, offset in ((1, 32, "Bandit Thug", 1), (33, 49, "Bandit Goon", 2),
+                                           (50, 100, "Bandit Outlaw", 3))]
+        self.assertEqual(self.h.runtime.spawns.plan(self.factory, 16, 3), 16)
+        self.assertEqual([g.GradeModifiers.DisplayName for g in self.definition.Grades],
+                         ["Bandit Thug", "Bandit Goon", "Bandit Outlaw"])
+        self.assertEqual([g.GradeModifiers.ExpLevel for g in self.definition.Grades], [1, 2, 3])
+        self.assertEqual([g.GameStageRequirement.MinGameStage for g in self.definition.Grades], [1, 33, 50])
+
+    def test_captured_combat_branches_apply_and_restore_on_leaving_the_campaign(self):
+        snapshot = self.h.runtime.combat.snapshot()
+        self.assertEqual(snapshot["pt2_branches_applied"], {
+            name: pt2 for name, (_, pt2) in CAPTURED_COMBAT_BRANCHES.items()})
+        self.assertEqual(snapshot["missing"], [])
+        for name, (_, pt2) in CAPTURED_COMBAT_BRANCHES.items():
+            branches = self.h.combat_definitions["gd_Balance_HealthAndDamage." + name]
+            self.assertEqual([b.BaseValueIfTrue.BaseValueConstant for b in
+                              branches.ConditionalInitialization.ConditionalExpressionList], [pt2, pt2])
+        self.h.pc.pt = 1
+        self.h.runtime.sync(self.h.pc)
+        for name, values in CAPTURED_COMBAT_BRANCHES.items():
+            branches = self.h.combat_definitions["gd_Balance_HealthAndDamage." + name]
+            self.assertEqual(tuple(b.BaseValueIfTrue.BaseValueConstant for b in
+                                   branches.ConditionalInitialization.ConditionalExpressionList), values)
+
     def test_matching_native_stage_is_not_reinvoked(self):
         self.args.GameStage = 20
         self.assertIsNone(self.h.mod.create_pawn(self.factory, self.args, None, self.native))
@@ -606,7 +655,7 @@ class SpawnTests(unittest.TestCase):
     def test_vehicle_uses_native_stage_without_inventing_balance_data(self):
         factory = NS(VehicleBalanceDefinition=None)
         self.h.mod.create_vehicle(factory, self.args, None, self.native)
-        self.assertEqual(self.calls[0][4], 20)
+        self.assertEqual(self.calls, [])
 
     def test_failed_native_invocation_never_retries_or_duplicates(self):
         def fail(*args):

@@ -252,14 +252,11 @@ class NativeLootTests(unittest.TestCase):
         self.assertEqual(obj.required, 6)
         self.assertEqual(self.h.runtime.loot.raised, 0)
 
-    def test_disabled_toggle_or_mod_preserves_native_level(self):
-        for enabled in (False, True):
-            self.h.mod.loot_floor.value = enabled
-            if enabled:
-                self.h.mod.on_disable()
-            obj = self.item()
-            self.initialize(obj)
-            self.assertEqual(obj.required, 5)
+    def test_disabled_mod_preserves_native_level(self):
+        self.h.mod.on_disable()
+        obj = self.item()
+        self.initialize(obj)
+        self.assertEqual(obj.required, 5)
 
     def test_level_one_floor_at_player_levels_one_to_four(self):
         for player in range(1, 5):

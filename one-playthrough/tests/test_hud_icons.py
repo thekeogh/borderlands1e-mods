@@ -160,7 +160,7 @@ class HudIconTests(unittest.TestCase):
         self.assertIn('readback failed',self.svc.last_error)
         self.assertEqual(len(self.movie.calls),1)
 
-    def test_viewport_hook_runs_presentation_only_and_manual_export_has_state(self):
+    def test_viewport_hook_runs_presentation_only_and_manual_export_reports_changes(self):
         self.h.globals[0].LevelDifference_Impossible=5
         policy=self.h.runtime.spawns.snapshot()
         callback=self.h.callbacks[('Engine.GameViewportClient:PostRender','POST')]
@@ -170,7 +170,6 @@ class HudIconTests(unittest.TestCase):
         self.assertEqual(self.h.runtime.spawns.snapshot(),policy)
         report=json.loads(self.h.mod.export_diagnostics().read_text())
         self.assertEqual(report['hud_icons']['changed'],1)
-        self.assertEqual(report['hud_icons']['last_state']['level'],41)
         self.assertEqual(report['hud_icons']['rule'],'native warning to small skull at exactly player level +5')
 
     def test_cached_service_contains_only_primitive_movie_identity(self):
@@ -189,10 +188,9 @@ class HudIconTests(unittest.TestCase):
         self.assertEqual(self.svc.movie_address,self.movie._get_address())
         self.assertEqual(self.movie.values[ICON+'._currentframe'],3)
 
-    def test_unrecognized_display_text_is_retained_for_manual_diagnostics(self):
+    def test_unrecognized_display_text_leaves_icon_untouched(self):
         self.movie.values['p1.ring.elevel.text']='unknown'
         self.update()
-        self.assertEqual(self.svc.snapshot()['last_state']['level_text'],'unknown')
         self.assertEqual(self.movie.calls,[])
 
     def test_asset_contract_identifies_the_actual_skull_frame(self):
